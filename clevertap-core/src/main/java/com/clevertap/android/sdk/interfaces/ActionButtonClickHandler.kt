@@ -1,9 +1,11 @@
-package com.clevertap.android.sdk.interfaces;
+package com.clevertap.android.sdk.interfaces
 
-import android.content.Context;
-import android.os.Bundle;
+import android.content.Context
+import android.os.Bundle
+import androidx.annotation.RestrictTo
 
-public interface ActionButtonClickHandler extends NotificationHandler {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+interface ActionButtonClickHandler : NotificationHandler {
 
-    boolean onActionButtonClick(Context context, Bundle extras, int notificationId);
+    fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean
 }

@@ -1,18 +1,19 @@
-package com.clevertap.android.sdk.interfaces;
+package com.clevertap.android.sdk.interfaces
 
-import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.os.Bundle
+import androidx.annotation.RestrictTo
 
 /**
  * Generic Interface to parse different types of notification messages
- * @param <T> Type of notification message
+ * @param T Type of notification message
  */
-public interface INotificationParser<T> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+fun interface INotificationParser<T : Any> {
 
     /**
      * Parses notification message to Bundle
      * @param message notification message received from cloud messaging provider like firebase.
-     * @return {@link Bundle} object
+     * @return [Bundle] object
      */
-    Bundle toBundle(@NonNull T message);
+    fun toBundle(message: T): Bundle?
 }
