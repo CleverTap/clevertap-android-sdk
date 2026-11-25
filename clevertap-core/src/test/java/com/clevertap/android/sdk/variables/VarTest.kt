@@ -19,7 +19,7 @@ class VarTest : BaseTestCase() {
         ctVariables = mockk(relaxed = true)
         varCache = mockk(relaxed = true)
         every { ctVariables.getVarCache() } returns varCache
-        mockkStatic(Logger::class)
+        mockkObject(Logger.Companion)
         mockkStatic(Utils::class)
     }
 

@@ -33,7 +33,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         doSpy: Boolean = true
     ) {
         coreMetaData = CoreMetaData()
-        defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
+        defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")!!
         defConfig.setEncryptionLevel(level)
         deviceInfo = mockk(relaxed = true)
         cryptHandler = mockk(relaxed = true)

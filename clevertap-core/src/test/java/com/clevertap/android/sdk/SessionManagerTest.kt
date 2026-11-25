@@ -27,7 +27,7 @@ class SessionManagerTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        configDef = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
+        configDef = CleverTapInstanceConfig.createInstanceWithManifest(ManifestInfo.getInstance(application), "id", "token", "region", true)
         coreMetaData = CoreMetaData()
         validationConfig = mockk<ValidationConfig>(relaxed = true)
         localDataStoreDef = mockk<LocalDataStore>(relaxed = true)

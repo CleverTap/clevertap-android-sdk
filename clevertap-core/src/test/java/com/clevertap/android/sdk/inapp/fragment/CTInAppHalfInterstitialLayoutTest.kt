@@ -45,7 +45,7 @@ class CTInAppHalfInterstitialLayoutTest {
 
     @Before
     fun setUp() {
-        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")
+        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")!!
         mockkObject(InAppController.Companion)
     }
 

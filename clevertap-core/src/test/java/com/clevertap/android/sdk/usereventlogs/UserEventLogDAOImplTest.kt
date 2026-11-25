@@ -54,7 +54,7 @@ class UserEventLogDAOImplTest {
     fun setUp() {
         context = TestApplication.application
         logger = mockk(relaxed = true)
-        config = CleverTapInstanceConfig.createInstance(context, accID, accToken, accRegion)
+        config = CleverTapInstanceConfig.createInstance(context, accID, accToken, accRegion)!!
         table = Table.USER_EVENT_LOGS_TABLE
 
         databaseHelper = DatabaseHelper(context, config.accountId, TEST_DB_NAME, logger)

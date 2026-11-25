@@ -148,7 +148,7 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
             }
         } else {
             viewPager.visibility = View.VISIBLE
-            val tabs = styleConfig.tabs
+            val tabs = styleConfig.getTabs()
             val inboxTabAdapter = CTInboxTabAdapter(supportFragmentManager, tabs.size + 1)
             this.inboxTabAdapter = inboxTabAdapter
             tabLayout.visibility = View.VISIBLE

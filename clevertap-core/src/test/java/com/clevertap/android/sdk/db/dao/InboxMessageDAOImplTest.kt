@@ -34,7 +34,7 @@ class InboxMessageDAOImplTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
+        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)!!
         dbEncryptionHandler = DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.NONE)
         dbHelper = DatabaseHelper(
             context = appCtx,

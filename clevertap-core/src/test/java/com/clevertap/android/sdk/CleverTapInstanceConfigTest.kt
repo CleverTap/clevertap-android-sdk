@@ -142,7 +142,7 @@ class CleverTapInstanceConfigTest {
             true
         )
         val jsonString = originalConfig.toJSONString()
-        val configFromJson = CleverTapInstanceConfig.createInstance(jsonString)!!
+        val configFromJson = CleverTapInstanceConfig.createInstanceFromJson(jsonString)!!
 
         assertEquals(
             originalConfig.isEncryptionInTransitEnabled,

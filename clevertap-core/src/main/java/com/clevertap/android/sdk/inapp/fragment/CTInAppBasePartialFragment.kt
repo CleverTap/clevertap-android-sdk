@@ -48,13 +48,13 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
         setListener(
             // Application context, not requireContext(): instanceWithConfig may retain the Context
             // for the instance's lifetime, which would leak the Activity.
-            CleverTapAPI.instanceWithConfig(requireContext().applicationContext, config).coreState.inAppController
+            CleverTapAPI.instanceWithConfig(requireContext().applicationContext, config)!!.coreState.inAppController
         )
     }
 
     private fun registerInAppDisplayListener() {
         context?.let {
-            CleverTapAPI.instanceWithConfig(it.applicationContext, config)
+            CleverTapAPI.instanceWithConfig(it.applicationContext, config)!!
                 .coreState.inAppController
                 .registerInAppDisplayListener(this)
         }
@@ -62,7 +62,7 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
 
     private fun unregisterInAppDisplayListener() {
         context?.let {
-            CleverTapAPI.instanceWithConfig(it.applicationContext, config)
+            CleverTapAPI.instanceWithConfig(it.applicationContext, config)!!
                 .coreState.inAppController
                 .unregisterInAppDisplayListener()
         }

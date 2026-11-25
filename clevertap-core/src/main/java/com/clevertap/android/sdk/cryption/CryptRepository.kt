@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import android.content.Context
-import com.clevertap.android.sdk.CleverTapInstanceConfig.KEY_ENCRYPTION_LEVEL
+import com.clevertap.android.sdk.CleverTapInstanceConfig.Companion.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FAILURE_COUNT_KEY

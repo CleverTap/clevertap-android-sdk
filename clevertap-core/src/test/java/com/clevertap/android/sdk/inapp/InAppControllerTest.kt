@@ -91,7 +91,7 @@ class InAppControllerTest {
         // Default to a FragmentActivity — the normal host for header/footer in-apps.
         every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
 
-        mockkStatic(InAppNotificationActivity::class)
+        mockkObject(InAppNotificationActivity.Companion)
         every {
             InAppNotificationActivity.launchForInAppNotification(
                 any(),

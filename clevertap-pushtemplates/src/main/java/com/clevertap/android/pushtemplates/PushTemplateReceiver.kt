@@ -139,10 +139,7 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
 
             if (cleverTapAPI != null) {
                 try {
-                    // TODO(SDK-6368): use cleverTapAPI.getInstanceConfig() once SDK-6372 lands
-                    // (CoreState is Kotlin-internal in core; Java reached it through the @RestrictTo getter.)
-                    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-                    val ctConfig = cleverTapAPI!!.coreState.config
+                    val ctConfig = cleverTapAPI!!.getInstanceConfig()
                     this.config = ctConfig
                     val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
                     task.execute("PushTemplateReceiver#renderNotification") {

@@ -62,7 +62,9 @@ internal object PendingIntentFactory {
             /**
              * To support Android 12 trampoline restriction return activity pending intent
              */
-            return LaunchPendingIntentFactory.getActivityIntent(extras, context)
+            // Null only when the app has no launch intent; this threw before the Kotlin migration too
+            // (implicit platform-type null check), so keep failing the same way.
+            return LaunchPendingIntentFactory.getActivityIntent(extras, context)!!
         } else {
             launchIntent.putExtras(extras)
             launchIntent.removeExtra(Constants.WZRK_ACTIONS)
@@ -290,7 +292,8 @@ internal object PendingIntentFactory {
             )
         } else {
             extras.putString(Constants.DEEP_LINK_KEY, dl)
-            LaunchPendingIntentFactory.getActivityIntent(extras, context)
+            // See setPendingIntent: same pre-existing null behaviour.
+            LaunchPendingIntentFactory.getActivityIntent(extras, context)!!
         }
     }
 

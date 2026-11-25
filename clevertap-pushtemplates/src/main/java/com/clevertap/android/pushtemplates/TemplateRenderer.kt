@@ -374,7 +374,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 try {
                     val action = actions.getJSONObject(i)
                     val label = action.optString("l")
-                    val ico = action.optString(actionButtonIconKey)
+                    val ico = action.optString(getActionButtonIconKey())
                     val id = action.optString("id")
 
                     if (label.isEmpty() || id.isEmpty()) {
