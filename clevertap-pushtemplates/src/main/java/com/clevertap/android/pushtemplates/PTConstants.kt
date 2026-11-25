@@ -1,264 +1,265 @@
-package com.clevertap.android.pushtemplates;
+package com.clevertap.android.pushtemplates
 
-import java.util.Set;
-
-@SuppressWarnings("WeakerAccess")
 //Using common keys from core-sdk constants
-public class PTConstants {
+open class PTConstants {
 
-    public static final String LOG_TAG = "PTLog";
+    companion object {
 
-    public static final String PT_MANUAL_CAROUSEL_CURRENT = "pt_manual_carousel_current";
+        const val LOG_TAG: String = "PTLog"
 
-    public static final String PT_IMAGE_LIST = "pt_image_list";
+        const val PT_MANUAL_CAROUSEL_CURRENT: String = "pt_manual_carousel_current"
 
-    public static final String PT_COLLAPSE_KEY = "pt_ck";
+        const val PT_IMAGE_LIST: String = "pt_image_list"
 
-    public static final String PT_DEEPLINK_LIST = "pt_deeplink_list";
+        const val PT_COLLAPSE_KEY: String = "pt_ck"
 
-    public static final String PT_FLIP_INTERVAL = "pt_flip_interval";
+        const val PT_DEEPLINK_LIST: String = "pt_deeplink_list"
 
-    public static final String PT_DIR = "pt_dir";
+        const val PT_FLIP_INTERVAL: String = "pt_flip_interval"
 
-    public static final String PT_SOUND_FILE_NAME = "pt_silent_sound";
+        const val PT_DIR: String = "pt_dir"
 
-    public static final String PT_RATING_C2A_KEY = "rating_";
+        const val PT_SOUND_FILE_NAME: String = "pt_silent_sound"
 
-    public static final String PT_5CTA_C2A_KEY = "5cta_";
+        const val PT_RATING_C2A_KEY: String = "rating_"
 
-    public static final String PT_VT_C2A_KEY = "vt_btn";
+        const val PT_5CTA_C2A_KEY: String = "5cta_"
 
-    public static final String PT_VT_C2A_COLLAPSED_KEY = "vt_btn_collapsed";
+        const val PT_VT_C2A_KEY: String = "vt_btn"
 
-    public static final String PT_PRICE_LIST = "pt_price_list";
+        const val PT_VT_C2A_COLLAPSED_KEY: String = "vt_btn_collapsed"
 
-    public static final String PT_SMALLTEXT_LIST = "pt_small_text_list";
+        const val PT_PRICE_LIST: String = "pt_price_list"
 
-    public static final String PT_BIGTEXT_LIST = "pt_big_text_list";
+        const val PT_SMALLTEXT_LIST: String = "pt_small_text_list"
 
-    public static final String PT_MANUAL_CAROUSEL_TYPE = "pt_manual_carousel_type";
+        const val PT_BIGTEXT_LIST: String = "pt_big_text_list"
 
-    public static final String PT_MANUAL_CAROUSEL_FILMSTRIP = "filmstrip";
+        const val PT_MANUAL_CAROUSEL_TYPE: String = "pt_manual_carousel_type"
 
-    public static final int ONE_SECOND = 1000;
+        const val PT_MANUAL_CAROUSEL_FILMSTRIP: String = "filmstrip"
 
-    public static final long ONE_SECOND_LONG = 1000L;
+        const val ONE_SECOND: Int = 1000
 
-    public static final String DEFAULT_DL = "default_dl";
+        const val ONE_SECOND_LONG: Long = 1000L
 
-    public static final String PT_ID = "pt_id";
+        const val DEFAULT_DL: String = "default_dl"
 
-    // --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle ---
-    public static final String PT_PROGRESS = "pt_progress";
-    public static final String PT_PROGRESS_MAX = "pt_progress_max";
-    public static final String PT_PROGRESS_INDETERMINATE = "pt_progress_indeterminate";
-    public static final String PT_STYLED_BY_PROGRESS = "pt_styled_by_progress";
-    public static final String PT_PROGRESS_SEGMENTS = "pt_progress_segments"; // JSON array
-    public static final String PT_PROGRESS_POINTS = "pt_progress_points";     // JSON array
-    public static final String PT_PROGRESS_TRACKER_ICON = "pt_progress_tracker_icon";
-    public static final String PT_PROGRESS_START_ICON = "pt_progress_start_icon";
-    public static final String PT_PROGRESS_END_ICON = "pt_progress_end_icon";
-    public static final String PT_CHIP_TYPE = "pt_chip_type"; // text | timer | countdown | none
-    public static final String PT_CHIP_TEXT = "pt_chip_text";
-    public static final String PT_WHEN = "pt_when";
-    public static final String PT_COUNTDOWN = "pt_countdown";
-    public static final String PT_PROMOTE = "pt_promote";
-    public static final String PT_LA_EVENT = "wzrk_la_event"; // update | end (from LA wrapper)
+        const val PT_ID: String = "pt_id"
 
-    public static final String PT_NOTIF_ICON = "pt_ico";
+        // --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle ---
+        const val PT_PROGRESS: String = "pt_progress"
+        const val PT_PROGRESS_MAX: String = "pt_progress_max"
+        const val PT_PROGRESS_INDETERMINATE: String = "pt_progress_indeterminate"
+        const val PT_STYLED_BY_PROGRESS: String = "pt_styled_by_progress"
+        const val PT_PROGRESS_SEGMENTS: String = "pt_progress_segments" // JSON array
+        const val PT_PROGRESS_POINTS: String = "pt_progress_points"     // JSON array
+        const val PT_PROGRESS_TRACKER_ICON: String = "pt_progress_tracker_icon"
+        const val PT_PROGRESS_START_ICON: String = "pt_progress_start_icon"
+        const val PT_PROGRESS_END_ICON: String = "pt_progress_end_icon"
+        const val PT_CHIP_TYPE: String = "pt_chip_type" // text | timer | countdown | none
+        const val PT_CHIP_TEXT: String = "pt_chip_text"
+        const val PT_WHEN: String = "pt_when"
+        const val PT_COUNTDOWN: String = "pt_countdown"
+        const val PT_PROMOTE: String = "pt_promote"
+        const val PT_LA_EVENT: String = "wzrk_la_event" // update | end (from LA wrapper)
 
-    public static final String PT_TITLE = "pt_title";
+        const val PT_NOTIF_ICON: String = "pt_ico"
 
-    public static final String PT_MSG = "pt_msg";
+        const val PT_TITLE: String = "pt_title"
 
-    public static final String PT_MSG_SUMMARY = "pt_msg_summary";
+        const val PT_MSG: String = "pt_msg"
 
-    public static final String PT_TITLE_COLOR = "pt_title_clr";
+        const val PT_MSG_SUMMARY: String = "pt_msg_summary"
 
-    public static final String PT_DARK_MODE_SUFFIX = "_dark";
+        const val PT_TITLE_COLOR: String = "pt_title_clr"
 
-    public static final String PT_MSG_COLOR = "pt_msg_clr";
+        const val PT_DARK_MODE_SUFFIX: String = "_dark"
 
-    public static final String PT_BG = "pt_bg";
+        const val PT_MSG_COLOR: String = "pt_msg_clr"
 
-    public static final String ALT_TEXT_SUFFIX = "_alt_text";
+        const val PT_BG: String = "pt_bg"
 
-    public static final String PT_BIG_IMG = "pt_big_img";
+        const val ALT_TEXT_SUFFIX: String = "_alt_text"
 
-    public static final String PT_GIF = "pt_gif";
+        const val PT_BIG_IMG: String = "pt_big_img"
 
-    // GIF key for terminal notification of timer template
-    public static final String PT_GIF_ALT = "pt_gif_alt";
+        const val PT_GIF: String = "pt_gif"
 
-    public static final String PT_GIF_FRAMES = "pt_gif_frames";
+        // GIF key for terminal notification of timer template
+        const val PT_GIF_ALT: String = "pt_gif_alt"
 
-    public static final String PT_GIF_FRAMES_ALT = "pt_gif_frames_alt";
+        const val PT_GIF_FRAMES: String = "pt_gif_frames"
 
-    public static final String PT_SCALE_TYPE_ALT = "pt_scale_type_alt";
+        const val PT_GIF_FRAMES_ALT: String = "pt_gif_frames_alt"
 
-    public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
+        const val PT_SCALE_TYPE_ALT: String = "pt_scale_type_alt"
 
-    public static final String PT_STICKY = "pt_sticky";
+        const val PT_BIG_IMG_ALT_TEXT: String = "pt_big_img_alt_text"
 
-    public static final String PT_DISMISS = "pt_dismiss";
+        const val PT_STICKY: String = "pt_sticky"
 
-    // Keys for collapsed media in zero bezel
-    public static final String PT_GIF_COLLAPSED = "pt_gif_collapsed";
-    public static final String PT_GIF_FRAMES_COLLAPSED = "pt_gif_frames_collapsed";
-    public static final String PT_SCALE_TYPE_COLLAPSED = "pt_scale_type_collapsed";
-    public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
-    public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
+        const val PT_DISMISS: String = "pt_dismiss"
 
-    public static final String PT_JSON = "pt_json";
+        // Keys for collapsed media in zero bezel
+        const val PT_GIF_COLLAPSED: String = "pt_gif_collapsed"
+        const val PT_GIF_FRAMES_COLLAPSED: String = "pt_gif_frames_collapsed"
+        const val PT_SCALE_TYPE_COLLAPSED: String = "pt_scale_type_collapsed"
+        const val PT_BIG_IMG_COLLAPSED: String = "pt_big_img_collapsed"
+        const val PT_BIG_IMG_COLLAPSED_ALT_TEXT: String = "pt_big_img_collapsed_alt_text"
 
-    public static final String PT_BUY_NOW_DL = "pt_buy_now_dl";
+        const val PT_JSON: String = "pt_json"
 
-    public static final String PT_DEFAULT_DL = "pt_default_dl";
+        const val PT_BUY_NOW_DL: String = "pt_buy_now_dl"
 
-    public static final String PT_SMALL_VIEW = "pt_small_view";
+        const val PT_DEFAULT_DL: String = "pt_default_dl"
 
-    public static final String PT_TIMER_THRESHOLD = "pt_timer_threshold";
+        const val PT_SMALL_VIEW: String = "pt_small_view"
 
-    public static final String PT_RENDER_TERMINAL = "pt_render_terminal";
+        const val PT_TIMER_THRESHOLD: String = "pt_timer_threshold"
 
-    public static final String PT_INPUT_LABEL = "pt_input_label";
+        const val PT_RENDER_TERMINAL: String = "pt_render_terminal"
 
-    public static final String PT_INPUT_KEY = "pt_input_reply";
+        const val PT_INPUT_LABEL: String = "pt_input_label"
 
-    public static final String PT_INPUT_FEEDBACK = "pt_input_feedback";
+        const val PT_INPUT_KEY: String = "pt_input_reply"
 
-    public static final int PT_INPUT_TIMEOUT = 1300;
+        const val PT_INPUT_FEEDBACK: String = "pt_input_feedback"
 
-    public static final String PT_NOTIF_ID = "notificationId";
+        const val PT_INPUT_TIMEOUT: Int = 1300
 
-    public static final String PT_INPUT_AUTO_OPEN = "pt_input_auto_open";
+        const val PT_NOTIF_ID: String = "notificationId"
 
-    public static final String PT_EVENT_NAME_KEY = "pt_event_name";
+        const val PT_INPUT_AUTO_OPEN: String = "pt_input_auto_open"
 
-    public static final String PT_EVENT_PROPERTY_KEY = "pt_event_property";
+        const val PT_EVENT_NAME_KEY: String = "pt_event_name"
 
-    public static final String PT_EVENT_PROPERTY_SEPERATOR = "pt_event_property_";
+        const val PT_EVENT_PROPERTY_KEY: String = "pt_event_property"
 
-    public static final String PT_DISMISS_ON_CLICK = "pt_dismiss_on_click";
+        const val PT_EVENT_PROPERTY_SEPERATOR: String = "pt_event_property_"
 
-    public static final String PT_CHRONO_TITLE_COLOUR = "pt_chrono_title_clr";
+        const val PT_DISMISS_ON_CLICK: String = "pt_dismiss_on_click"
 
-    public static final String PT_CHRONO_BG_CLR = "pt_chrono_bg_clr";
-    public static final String PT_CHRONO_BORDER_CLR = "pt_chrono_border_clr";
-    public static final String PT_CHRONO_STYLE = "pt_chrono_style";
-    public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
-    public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
-    public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
-    public static final String PT_CHRONO_BORDER_RADIUS = "pt_chrono_border_radius";
-    public static final String PT_CHRONO_BORDER_WIDTH = "pt_chrono_border_width";
+        const val PT_CHRONO_TITLE_COLOUR: String = "pt_chrono_title_clr"
 
+        const val PT_CHRONO_BG_CLR: String = "pt_chrono_bg_clr"
+        const val PT_CHRONO_BORDER_CLR: String = "pt_chrono_border_clr"
+        const val PT_CHRONO_STYLE: String = "pt_chrono_style"
+        const val PT_CHRONO_GRAD_CLR1: String = "pt_chrono_grad_clr1"
+        const val PT_CHRONO_GRAD_CLR2: String = "pt_chrono_grad_clr2"
+        const val PT_CHRONO_GRAD_DIR: String = "pt_chrono_grad_dir"
+        const val PT_CHRONO_BORDER_RADIUS: String = "pt_chrono_border_radius"
+        const val PT_CHRONO_BORDER_WIDTH: String = "pt_chrono_border_width"
 
-    public static final String PT_PRODUCT_DISPLAY_ACTION = "pt_product_display_action";
 
-    public static final String PT_PRODUCT_DISPLAY_ACTION_COLOUR = "pt_product_display_action_clr";
+        const val PT_PRODUCT_DISPLAY_ACTION: String = "pt_product_display_action"
 
-    public static final String PT_TIMER_END = "pt_timer_end";
+        const val PT_PRODUCT_DISPLAY_ACTION_COLOUR: String = "pt_product_display_action_clr"
 
-    public static final String PT_TIMER_SPLIT = "\\$D_";
+        const val PT_TIMER_END: String = "pt_timer_end"
 
-    public static final int PT_TIMER_MIN_THRESHOLD = 10;
+        const val PT_TIMER_SPLIT: String = "\\\$D_"
 
-    public static final String PT_BIG_IMG_ALT = "pt_big_img_alt";
-    public static final String PT_BIG_IMG_ALT_ALT_TEXT = "pt_big_img_alt_alt_text";
+        const val PT_TIMER_MIN_THRESHOLD: Int = 10
 
-    public static final String PT_TITLE_ALT = "pt_title_alt";
+        const val PT_BIG_IMG_ALT: String = "pt_big_img_alt"
+        const val PT_BIG_IMG_ALT_ALT_TEXT: String = "pt_big_img_alt_alt_text"
 
-    public static final String PT_MSG_ALT = "pt_msg_alt";
+        const val PT_TITLE_ALT: String = "pt_title_alt"
 
-    public static final String PT_MSG_SUMMARY_ALT = "pt_msg_summary_alt";
+        const val PT_MSG_ALT: String = "pt_msg_alt"
 
-    public static final String PT_PRODUCT_DISPLAY_LINEAR = "pt_product_display_linear";
+        const val PT_MSG_SUMMARY_ALT: String = "pt_msg_summary_alt"
 
-    public static final String PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR = "pt_product_display_action_text_clr";
+        const val PT_PRODUCT_DISPLAY_LINEAR: String = "pt_product_display_linear"
 
-    public static final String PT_SMALL_ICON_COLOUR = "pt_small_icon_clr";
+        const val PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR: String = "pt_product_display_action_text_clr"
 
-    public static final String PT_META_CLR = "pt_meta_clr";
+        const val PT_SMALL_ICON_COLOUR: String = "pt_small_icon_clr"
 
-    public static final String PT_CANCEL_NOTIF_ID = "pt_cancel_notif_id";
+        const val PT_META_CLR: String = "pt_meta_clr"
 
-    public static final String PT_ACTION_ID = "actionId";
+        const val PT_CANCEL_NOTIF_ID: String = "pt_cancel_notif_id"
 
-    // Same key core action buttons use, read by the app's dismiss handler on icon taps
-    public static final String PT_AUTO_CANCEL = "autoCancel";
+        const val PT_ACTION_ID: String = "actionId"
 
-    public static final String PT_RIGHT_SWIPE = "right_swipe";
+        // Same key core action buttons use, read by the app's dismiss handler on icon taps
+        const val PT_AUTO_CANCEL: String = "autoCancel"
 
-    public static final String PT_MANUAL_CAROUSEL_FROM = "manual_carousel_from";
+        const val PT_RIGHT_SWIPE: String = "right_swipe"
 
-    public static final String PT_IMAGE_1 = "img1";
+        const val PT_MANUAL_CAROUSEL_FROM: String = "manual_carousel_from"
 
-    public static final String PT_CURRENT_POSITION = "pt_current_position";
+        const val PT_IMAGE_1: String = "img1"
 
-    public static final String PT_BUY_NOW = "buynow";
+        const val PT_CURRENT_POSITION: String = "pt_current_position"
 
-    public static final String PT_SCALE_TYPE = "pt_scale_type";
+        const val PT_BUY_NOW: String = "buynow"
 
-    public static final String TEXT_ONLY = "text_only";
+        const val PT_SCALE_TYPE: String = "pt_scale_type"
 
-    public static final String PT_SUBTITLE = "pt_subtitle";
+        const val TEXT_ONLY: String = "text_only"
 
-    public static final String PT_DISMISS_INTENT = "pt_dismiss_intent";
+        const val PT_SUBTITLE: String = "pt_subtitle"
 
-    public static final String PT_SILENT_CHANNEL_ID = "pt_silent_sound_channel";
+        const val PT_DISMISS_INTENT: String = "pt_dismiss_intent"
 
-    public static final CharSequence PT_SILENT_CHANNEL_NAME = "Silent Channel";
+        const val PT_SILENT_CHANNEL_ID: String = "pt_silent_sound_channel"
 
-    public static final String PT_SILENT_CHANNEL_DESC = "A channel to silently update notifications";
+        @JvmField
+        val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"
 
-    public static final String PT_RATING_TOAST = "pt_rating_toast";
+        const val PT_SILENT_CHANNEL_DESC: String = "A channel to silently update notifications"
 
-    public static final String PT_COLOUR_GREY = "#A6A6A6";
+        const val PT_RATING_TOAST: String = "pt_rating_toast"
 
-    public static final String PT_META_CLR_DEFAULTS = PT_COLOUR_GREY;
+        const val PT_COLOUR_GREY: String = "#A6A6A6"
 
-    public static final int PT_FLIP_INTERVAL_TIME = 4 * ONE_SECOND;
+        const val PT_META_CLR_DEFAULTS: String = PT_COLOUR_GREY
 
-    public static final String KEY_CLICKED_STAR = "clickedStar";
+        const val PT_FLIP_INTERVAL_TIME: Int = 4 * ONE_SECOND
 
-    public static final String KEY_REQUEST_CODES = "requestCodes";
+        const val KEY_CLICKED_STAR: String = "clickedStar"
 
-    // Vertical Image Template Keys
-    public static final String PT_TEXT1 = "pt_text1";
-    public static final String PT_TEXT2 = "pt_text2";
-    public static final String PT_TEXT1_COLOR = "pt_text1_clr";
-    public static final String PT_TEXT2_COLOR = "pt_text2_clr";
+        const val KEY_REQUEST_CODES: String = "requestCodes"
 
-    // Vertical Image Template - Button configuration
-    public static final String PT_BTN_NAME = "pt_btn_name";
-    public static final String PT_BTN_DL = "pt_btn_dl";
-    public static final String PT_BTN_STYLE = "pt_btn_style";
-    public static final String PT_BTN_CLR = "pt_btn_clr";
-    public static final String PT_BTN_BORDER_CLR = "pt_btn_border_clr";
-    public static final String PT_BTN_TEXT_CLR = "pt_btn_text_clr";
-    public static final String PT_BTN_GRAD_CLR1 = "pt_btn_grad_clr1";
-    public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
-    public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
-    public static final String PT_BTN_BORDER_RADIUS = "pt_btn_border_radius";
-    public static final String PT_BTN_BORDER_WIDTH = "pt_btn_border_width";
+        // Vertical Image Template Keys
+        const val PT_TEXT1: String = "pt_text1"
+        const val PT_TEXT2: String = "pt_text2"
+        const val PT_TEXT1_COLOR: String = "pt_text1_clr"
+        const val PT_TEXT2_COLOR: String = "pt_text2_clr"
 
-    public static final double PT_BTN_GRAD_DIR_DEFAULT = 90.0;
-    public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
-    public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
+        // Vertical Image Template - Button configuration
+        const val PT_BTN_NAME: String = "pt_btn_name"
+        const val PT_BTN_DL: String = "pt_btn_dl"
+        const val PT_BTN_STYLE: String = "pt_btn_style"
+        const val PT_BTN_CLR: String = "pt_btn_clr"
+        const val PT_BTN_BORDER_CLR: String = "pt_btn_border_clr"
+        const val PT_BTN_TEXT_CLR: String = "pt_btn_text_clr"
+        const val PT_BTN_GRAD_CLR1: String = "pt_btn_grad_clr1"
+        const val PT_BTN_GRAD_CLR2: String = "pt_btn_grad_clr2"
+        const val PT_BTN_GRAD_DIR: String = "pt_btn_grad_dir"
+        const val PT_BTN_BORDER_RADIUS: String = "pt_btn_border_radius"
+        const val PT_BTN_BORDER_WIDTH: String = "pt_btn_border_width"
 
-    // Image border configuration (applies to the main notification image across templates)
-    public static final String PT_IMG_BORDER_CLR = "pt_img_border_clr";
-    public static final String PT_IMG_CORNER_RADIUS = "pt_img_corner_radius";
-    public static final String PT_IMG_BORDER_WIDTH = "pt_img_border_width";
+        const val PT_BTN_GRAD_DIR_DEFAULT: Double = 90.0
+        const val PT_BTN_BORDER_RADIUS_DEFAULT: Float = 4f
+        const val PT_BTN_BORDER_WIDTH_DEFAULT: Float = 1f
 
-    // Vertical Image Template - Collapsed button configuration
-    public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
-    public static final String PT_BTN_BORDER_CLR_COLLAPSED = "pt_btn_border_clr_collapsed";
-    public static final String PT_BTN_TEXT_CLR_COLLAPSED = "pt_btn_text_clr_collapsed";
-    public static final String PT_BTN_GRAD_CLR1_COLLAPSED = "pt_btn_grad_clr1_collapsed";
-    public static final String PT_BTN_GRAD_CLR2_COLLAPSED = "pt_btn_grad_clr2_collapsed";
+        // Image border configuration (applies to the main notification image across templates)
+        const val PT_IMG_BORDER_CLR: String = "pt_img_border_clr"
+        const val PT_IMG_CORNER_RADIUS: String = "pt_img_corner_radius"
+        const val PT_IMG_BORDER_WIDTH: String = "pt_img_border_width"
 
-    public static final Set<String> COLOR_KEYS = Set.of(
+        // Vertical Image Template - Collapsed button configuration
+        const val PT_BTN_CLR_COLLAPSED: String = "pt_btn_clr_collapsed"
+        const val PT_BTN_BORDER_CLR_COLLAPSED: String = "pt_btn_border_clr_collapsed"
+        const val PT_BTN_TEXT_CLR_COLLAPSED: String = "pt_btn_text_clr_collapsed"
+        const val PT_BTN_GRAD_CLR1_COLLAPSED: String = "pt_btn_grad_clr1_collapsed"
+        const val PT_BTN_GRAD_CLR2_COLLAPSED: String = "pt_btn_grad_clr2_collapsed"
+
+        @JvmField
+        val COLOR_KEYS: Set<String> = java.util.Set.of(
             PT_TITLE_COLOR,
             PT_MSG_COLOR,
             PT_BG,
@@ -282,6 +283,7 @@ public class PTConstants {
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
             PT_BTN_GRAD_CLR2_COLLAPSED,
-            PT_IMG_BORDER_CLR);
-
+            PT_IMG_BORDER_CLR
+        )
+    }
 }

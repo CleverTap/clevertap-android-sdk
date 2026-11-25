@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
 import com.clevertap.android.pushtemplates.PushTemplateReceiver
-import com.clevertap.android.pushtemplates.PTConstants.KEY_CLICKED_STAR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.KEY_CLICKED_STAR
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Utils

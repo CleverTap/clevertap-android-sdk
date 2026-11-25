@@ -1,169 +1,173 @@
-package com.clevertap.android.pushtemplates;
+package com.clevertap.android.pushtemplates
 
-import static android.content.Context.NOTIFICATION_SERVICE;
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Context.NOTIFICATION_SERVICE
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.drawable.Drawable
+import android.media.AudioAttributes
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.text.TextUtils
+import android.text.format.DateUtils
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
+import com.clevertap.android.pushtemplates.PTConstants.Companion.ALT_TEXT_SUFFIX
+import com.clevertap.android.pushtemplates.PTConstants.Companion.COLOR_KEYS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DARK_MODE_SUFFIX
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.util.regex.Pattern
 
-import static com.clevertap.android.pushtemplates.PTConstants.ALT_TEXT_SUFFIX;
-import static com.clevertap.android.pushtemplates.PTConstants.COLOR_KEYS;
-import static com.clevertap.android.pushtemplates.PTConstants.PT_DARK_MODE_SUFFIX;
+/*
+ * Several helpers below collect Bundle.getString() results into ArrayList<String> / Map<String, String>.
+ * The Java version did the same through platform types, so a missing/non-string value travelled as a
+ * null element. The lists are built with nullable elements and handed out under the non-null type the
+ * Kotlin callers expect, which keeps that runtime behaviour byte-for-byte.
+ */
+@Suppress("WeakerAccess")
+internal object Utils {
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.ResolveInfo;
-import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
-import android.media.AudioAttributes;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.service.notification.StatusBarNotification;
-import android.text.TextUtils;
-import android.text.format.DateUtils;
-import android.widget.Toast;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.content.ContextCompat;
-
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-@SuppressWarnings("WeakerAccess")
-public class Utils {
-
-
-    public static Bitmap getAppIcon(final Context context) throws NullPointerException {
+    @JvmStatic
+    @Throws(NullPointerException::class)
+    fun getAppIcon(context: Context?): Bitmap {
         // Try to get the app logo first
-        try {
-            Drawable logo =
-                    context.getPackageManager().getApplicationLogo(context.getApplicationInfo());
-            if (logo == null) {
-                throw new Exception("Logo is null");
-            }
-            return drawableToBitmap(logo);
-        } catch (Exception e) {
+        return try {
+            val logo = context!!.packageManager.getApplicationLogo(context.applicationInfo)
+                ?: throw Exception("Logo is null")
+            drawableToBitmap(logo)
+        } catch (e: Exception) {
             // Try to get the app icon now
             // No error handling here - handle upstream
-            return drawableToBitmap(
-                    context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
+            drawableToBitmap(
+                context!!.packageManager.getApplicationIcon(context.applicationInfo)
+            )
         }
     }
 
-    static Bitmap drawableToBitmap(Drawable drawable)
-            throws NullPointerException {
+    @JvmStatic
+    @Throws(NullPointerException::class)
+    fun drawableToBitmap(drawable: Drawable): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
 
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-
-        return bitmap;
+        return bitmap
     }
 
-    @SuppressWarnings("SameParameterValue")
-    static String _getManifestStringValueForKey(Bundle manifest, String name) {
-        try {
-            Object o = manifest.get(name);
-            return (o != null) ? o.toString() : null;
-        } catch (Throwable t) {
-            return null;
+    @JvmStatic
+    @Suppress("SameParameterValue")
+    fun _getManifestStringValueForKey(manifest: Bundle?, name: String?): String? {
+        return try {
+            @Suppress("DEPRECATION")
+            val o = manifest!!.get(name)
+            o?.toString()
+        } catch (t: Throwable) {
+            null
         }
     }
 
-    static int getAppIconAsIntId(final Context context) {
-        ApplicationInfo ai = context.getApplicationInfo();
-        return ai.icon;
+    @JvmStatic
+    fun getAppIconAsIntId(context: Context): Int {
+        val ai = context.applicationInfo
+        return ai.icon
     }
 
-    static ArrayList<ImageData> getImageDataListFromExtras(Bundle extras, String defaultAltText) {
-        ArrayList<ImageData> imageList = new ArrayList<>();
-        int counter = 1;
-        for (String key : extras.keySet()) {
-            if (key.startsWith("pt_img") && key.length() > 6 && Character.isDigit(key.charAt(6)) && !key.endsWith(ALT_TEXT_SUFFIX)) {
-                String imageUrl = extras.getString(key);
-                String altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter);
-                imageList.add(new ImageData(imageUrl, altText));
-                counter++;
+    @JvmStatic
+    fun getImageDataListFromExtras(extras: Bundle, defaultAltText: String?): ArrayList<ImageData> {
+        val imageList = ArrayList<ImageData>()
+        var counter = 1
+        for (key in extras.keySet()) {
+            if (key.startsWith("pt_img") && key.length > 6 && Character.isDigit(key[6]) && !key.endsWith(
+                    ALT_TEXT_SUFFIX
+                )
+            ) {
+                val imageUrl = extras.getString(key)
+                val altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter)
+                imageList.add(ImageData(imageUrl, altText))
+                counter++
             }
         }
-        return imageList;
+        return imageList
     }
 
-    @SuppressWarnings("unused")
-    static ArrayList<String> getCTAListFromExtras(Bundle extras) {
-        ArrayList<String> ctaList = new ArrayList<>();
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    @Suppress("unused")
+    fun getCTAListFromExtras(extras: Bundle): ArrayList<String> {
+        val ctaList = ArrayList<String?>()
+        for (key in extras.keySet()) {
             if (key.contains("pt_cta")) {
-                ctaList.add(extras.getString(key));
+                ctaList.add(extras.getString(key))
             }
         }
-        return ctaList;
+        return ctaList.asPlatformList()
     }
 
-    static ArrayList<String> getDeepLinkListFromExtras(Bundle extras) {
-        ArrayList<String> dlList = new ArrayList<>();
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getDeepLinkListFromExtras(extras: Bundle): ArrayList<String> {
+        val dlList = ArrayList<String?>()
+        for (key in extras.keySet()) {
             if (key.contains("pt_dl")) {
-                dlList.add(extras.getString(key));
+                dlList.add(extras.getString(key))
             }
         }
-        return dlList;
+        return dlList.asPlatformList()
     }
 
-    static ArrayList<String> getBigTextFromExtras(Bundle extras) {
-        ArrayList<String> btList = new ArrayList<>();
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getBigTextFromExtras(extras: Bundle): ArrayList<String> {
+        val btList = ArrayList<String?>()
+        for (key in extras.keySet()) {
             if (key.contains("pt_bt")) {
-                btList.add(extras.getString(key));
+                btList.add(extras.getString(key))
             }
         }
-        return btList;
+        return btList.asPlatformList()
     }
 
-    static ArrayList<String> getSmallTextFromExtras(Bundle extras) {
-        ArrayList<String> stList = new ArrayList<>();
-        for (String key : extras.keySet()) {
-            if (key.startsWith("pt_st") && key.length() > 5
-                    && Character.isDigit(key.charAt(5))) {
-                stList.add(extras.getString(key));
+    @JvmStatic
+    fun getSmallTextFromExtras(extras: Bundle): ArrayList<String> {
+        val stList = ArrayList<String?>()
+        for (key in extras.keySet()) {
+            if (key.startsWith("pt_st") && key.length > 5
+                && Character.isDigit(key[5])
+            ) {
+                stList.add(extras.getString(key))
             }
         }
-        return stList;
+        return stList.asPlatformList()
     }
 
-    static ArrayList<String> getPriceFromExtras(Bundle extras) {
-        ArrayList<String> stList = new ArrayList<>();
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getPriceFromExtras(extras: Bundle): ArrayList<String> {
+        val stList = ArrayList<String?>()
+        for (key in extras.keySet()) {
             if (key.contains("pt_price") && !key.contains("pt_price_list")) {
-                stList.add(extras.getString(key));
+                stList.add(extras.getString(key))
             }
         }
-        return stList;
+        return stList.asPlatformList()
     }
 
     /**
@@ -172,16 +176,18 @@ public class Utils {
      * @param isDarkMode Whether to use dark mode colors
      * @return A map containing appropriate colors for the specified mode
      */
-    public static Map<String, String> createColorMap(Bundle extras, boolean isDarkMode) {
-        Map<String, String> colorMap = new HashMap<>();
+    @JvmStatic
+    fun createColorMap(extras: Bundle, isDarkMode: Boolean): Map<String, String> {
+        val colorMap = HashMap<String, String?>()
 
         // Process each color key
-        for (String key : COLOR_KEYS) {
-            String color = getDarkModeAdaptiveColor(extras, isDarkMode, key);
-            colorMap.put(key, color);
+        for (key in COLOR_KEYS) {
+            val color = getDarkModeAdaptiveColor(extras, isDarkMode, key)
+            colorMap[key] = color
         }
-        
-        return colorMap;
+
+        @Suppress("UNCHECKED_CAST")
+        return colorMap as Map<String, String>
     }
 
     /**
@@ -191,473 +197,496 @@ public class Utils {
      * @param key The color key to retrieve
      * @return The appropriate color for the specified mode
      */
-    static String getDarkModeAdaptiveColor(Bundle extras, boolean isDarkMode, String key) {
-        String colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX);
-        String color = extras.getString(key);
+    @JvmStatic
+    fun getDarkModeAdaptiveColor(extras: Bundle, isDarkMode: Boolean, key: String): String? {
+        val colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX)
+        val color = extras.getString(key)
 
-        if (isDarkMode && colorDark != null) {
-            return colorDark;
+        return if (isDarkMode && colorDark != null) {
+            colorDark
         } else {
-            return color;
+            color
         }
     }
 
-    public static boolean isDarkMode(Context context) {
-        int nightModeFlags = context.getResources().getConfiguration().uiMode
-                & Configuration.UI_MODE_NIGHT_MASK;
-        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+    @JvmStatic
+    fun isDarkMode(context: Context): Boolean {
+        val nightModeFlags = context.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK
+        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES
     }
 
-    public static String getTimeStamp(Context context, long timeMillis) {
-        return DateUtils.formatDateTime(context, timeMillis,
-                DateUtils.FORMAT_SHOW_TIME);
+    @JvmStatic
+    fun getTimeStamp(context: Context?, timeMillis: Long): String {
+        return DateUtils.formatDateTime(
+            context, timeMillis,
+            DateUtils.FORMAT_SHOW_TIME
+        )
     }
 
-    public static String getApplicationName(Context context) {
-        ApplicationInfo applicationInfo = context.getApplicationInfo();
-        int stringId = applicationInfo.labelRes;
-        return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString()
-                : context.getString(stringId);
+    @JvmStatic
+    fun getApplicationName(context: Context): String {
+        val applicationInfo = context.applicationInfo
+        val stringId = applicationInfo.labelRes
+        return if (stringId == 0) {
+            applicationInfo.nonLocalizedLabel.toString()
+        } else {
+            context.getString(stringId)
+        }
     }
 
-    @SuppressWarnings("ConstantConditions")
-    static Bundle fromJson(JSONObject s) {
-        Bundle bundle = new Bundle();
+    @JvmStatic
+    fun fromJson(s: JSONObject): Bundle {
+        val bundle = Bundle()
 
-        for (Iterator<String> it = s.keys(); it.hasNext(); ) {
-            String key = it.next();
-            JSONArray arr = s.optJSONArray(key);
-            String str = s.optString(key);
+        val it = s.keys()
+        while (it.hasNext()) {
+            val key = it.next()
+            val arr: JSONArray? = s.optJSONArray(key)
+            val str: String? = s.optString(key)
 
             if (arr != null && arr.length() <= 0) {
-                bundle.putStringArray(key, new String[]{});
+                bundle.putStringArray(key, arrayOf())
             } else if (arr != null && arr.optString(0) != null) {
-                String[] newarr = new String[arr.length()];
-                for (int i = 0; i < arr.length(); i++) {
-                    newarr[i] = arr.optString(i);
+                val newarr = arrayOfNulls<String>(arr.length())
+                for (i in 0 until arr.length()) {
+                    newarr[i] = arr.optString(i)
                 }
-                bundle.putStringArray(key, newarr);
+                bundle.putStringArray(key, newarr)
             } else if (str != null) {
-                bundle.putString(key, str);
+                bundle.putString(key, str)
             } else {
-                System.err.println("unable to transform json to bundle " + key);
+                System.err.println("unable to transform json to bundle $key")
             }
         }
 
-        return bundle;
+        return bundle
     }
 
-    static void cancelNotification(Context ctx, int notifyId) {
-        NotificationManager nMgr = (NotificationManager) ctx.getSystemService(NOTIFICATION_SERVICE);
-        nMgr.cancel(notifyId);
+    @JvmStatic
+    fun cancelNotification(ctx: Context?, notifyId: Int) {
+        val nMgr = ctx!!.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nMgr.cancel(notifyId)
     }
 
-    static int getTimerThreshold(Bundle extras) {
-        String val = "-1";
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getTimerThreshold(extras: Bundle): Int {
+        var value: String? = "-1"
+        for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_TIMER_THRESHOLD)) {
-                val = extras.getString(key);
+                value = extras.getString(key)
             }
         }
-        return Integer.parseInt(val != null ? val : "-1");
+        return Integer.parseInt(value ?: "-1")
     }
 
-    static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
-        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
-        String appPackageName = context.getPackageName();
-        for (ResolveInfo resolveInfo : resolveInfoList) {
-            if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
-                launchIntent.setPackage(appPackageName);
-                break;
+    @JvmStatic
+    fun setPackageNameFromResolveInfoList(context: Context, launchIntent: Intent) {
+        val resolveInfoList = context.packageManager.queryIntentActivities(launchIntent, 0)
+        val appPackageName = context.packageName
+        for (resolveInfo in resolveInfoList) {
+            if (appPackageName == resolveInfo.activityInfo.packageName) {
+                launchIntent.setPackage(appPackageName)
+                break
             }
         }
     }
 
-    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, Bundle extras) {
-
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+    @JvmStatic
+    fun raiseCleverTapEvent(context: Context?, config: CleverTapInstanceConfig?, extras: Bundle) {
+        val instance: CleverTapAPI? = if (config != null) {
+            CleverTapAPI.instanceWithConfig(context, config)
         } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
+            CleverTapAPI.getDefaultInstance(context)
         }
 
-        HashMap<String, Object> eProps;
-        eProps = getEventPropertiesFromExtras(extras);
+        val eProps: HashMap<String, Any?> = getEventPropertiesFromExtras(extras)
 
-        String eName = getEventNameFromExtras(extras);
+        val eName = getEventNameFromExtras(extras)
 
-        if (eName != null && !eName.isEmpty()) {
+        if (eName != null && eName.isNotEmpty()) {
             if (instance != null) {
-                instance.pushEvent(eName, eProps);
+                instance.pushEvent(eName, eProps)
             } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event");
+                PTLog.debug("CleverTap instance is NULL, not raising the event")
             }
         }
-
     }
 
-    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, Bundle extras, String key) {
-
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+    @JvmStatic
+    fun raiseCleverTapEvent(context: Context?, config: CleverTapInstanceConfig?, extras: Bundle, key: String?) {
+        val instance: CleverTapAPI? = if (config != null) {
+            CleverTapAPI.instanceWithConfig(context, config)
         } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
+            CleverTapAPI.getDefaultInstance(context)
         }
 
-        HashMap<String, Object> eProps;
-        String value = extras.getString(key);
+        val value = extras.getString(key)
 
-        eProps = getEventPropertiesFromExtras(extras, key, value);
+        val eProps: HashMap<String, Any?> = getEventPropertiesFromExtras(extras, key, value)
 
-        String eName = getEventNameFromExtras(extras);
+        val eName = getEventNameFromExtras(extras)
 
-        if (eName != null && !eName.isEmpty()) {
+        if (eName != null && eName.isNotEmpty()) {
             if (instance != null) {
-                instance.pushEvent(eName, eProps);
+                instance.pushEvent(eName, eProps)
             } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event");
+                PTLog.debug("CleverTap instance is NULL, not raising the event")
             }
         }
-
     }
 
-    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, String evtName,
-            HashMap<String, Object> eProps) {
-
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+    @JvmStatic
+    fun raiseCleverTapEvent(
+        context: Context?, config: CleverTapInstanceConfig?, evtName: String?,
+        eProps: HashMap<String, *>?
+    ) {
+        val instance: CleverTapAPI? = if (config != null) {
+            CleverTapAPI.instanceWithConfig(context, config)
         } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
+            CleverTapAPI.getDefaultInstance(context)
         }
 
-        if (evtName != null && !evtName.isEmpty()) {
+        if (evtName != null && evtName.isNotEmpty()) {
             if (instance != null) {
-                instance.pushEvent(evtName, eProps);
+                instance.pushEvent(evtName, eProps)
             } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event");
+                PTLog.debug("CleverTap instance is NULL, not raising the event")
             }
         }
-
     }
 
-    static HashMap<String, Object> convertRatingBundleObjectToHashMap(Bundle b) {
-        b.remove("config");
-        final HashMap<String, Object> map = new HashMap<>();
-        for (String s : b.keySet()) {
-            if (s.contains("wzrk_") || s.equals(PTConstants.PT_ID)) {
-                final Object o = b.get(s);
-                if (o instanceof Bundle) {
-                    map.putAll(convertRatingBundleObjectToHashMap((Bundle) o));
+    @JvmStatic
+    fun convertRatingBundleObjectToHashMap(b: Bundle): HashMap<String, Any?> {
+        b.remove("config")
+        val map = HashMap<String, Any?>()
+        for (s in b.keySet()) {
+            if (s.contains("wzrk_") || s == PTConstants.PT_ID) {
+                @Suppress("DEPRECATION")
+                val o = b.get(s)
+                if (o is Bundle) {
+                    map.putAll(convertRatingBundleObjectToHashMap(o))
                 } else {
-                    map.put(s, b.get(s));
+                    @Suppress("DEPRECATION")
+                    map[s] = b.get(s)
                 }
             }
         }
-        return map;
+        return map
     }
 
-    static String getEventNameFromExtras(Bundle extras) {
-        String eName = null;
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getEventNameFromExtras(extras: Bundle): String? {
+        var eName: String? = null
+        for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_NAME_KEY)) {
-                eName = extras.getString(key);
+                eName = extras.getString(key)
             }
         }
-        return eName;
+        return eName
     }
 
-    static HashMap<String, Object> getEventPropertiesFromExtras(Bundle extras, String pkey, String value) {
-        HashMap<String, Object> eProps = new HashMap<>();
+    @JvmStatic
+    fun getEventPropertiesFromExtras(extras: Bundle, pkey: String?, value: String?): HashMap<String, Any?> {
+        val eProps = HashMap<String, Any?>()
 
-        String[] eProp;
-        for (String key : extras.keySet()) {
+        var eProp: Array<String>
+        for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
-                if (extras.getString(key) != null && !extras.getString(key).isEmpty()) {
+                val propValue = extras.getString(key)
+                if (propValue != null && propValue.isNotEmpty()) {
                     if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = key.split(PTConstants.PT_EVENT_PROPERTY_SEPERATOR);
-                        if (extras.getString(key).equalsIgnoreCase(pkey)) {
-                            eProps.put(eProp[1], value);
-                            continue;
+                        eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
+                        if (propValue.equals(pkey, ignoreCase = true)) {
+                            eProps[eProp[1]] = value
+                            continue
                         }
-                        eProps.put(eProp[1], extras.getString(key));
+                        eProps[eProp[1]] = propValue
                     } else {
-                        PTLog.verbose("Property " + key + " does not have the separator");
+                        PTLog.verbose("Property $key does not have the separator")
                     }
-
                 } else {
-                    PTLog.verbose("Property Key is Empty. Skipping Property: " + key);
+                    PTLog.verbose("Property Key is Empty. Skipping Property: $key")
                 }
-
             }
         }
-        return eProps;
+        return eProps
     }
 
+    @JvmStatic
+    fun getEventPropertiesFromExtras(extras: Bundle): HashMap<String, Any?> {
+        val eProps = HashMap<String, Any?>()
 
-    static HashMap<String, Object> getEventPropertiesFromExtras(Bundle extras) {
-        HashMap<String, Object> eProps = new HashMap<>();
-
-        String[] eProp;
-        for (String key : extras.keySet()) {
+        var eProp: Array<String>
+        for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
-                if (extras.getString(key) != null && !extras.getString(key).isEmpty()) {
+                val propValue = extras.getString(key)
+                if (propValue != null && propValue.isNotEmpty()) {
                     if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = key.split(PTConstants.PT_EVENT_PROPERTY_SEPERATOR);
-                        eProps.put(eProp[1], extras.getString(key));
+                        eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
+                        eProps[eProp[1]] = propValue
                     } else {
-                        PTLog.verbose("Property " + key + " does not have the separator");
+                        PTLog.verbose("Property $key does not have the separator")
                     }
-
                 } else {
-                    PTLog.verbose("Property Key is Empty. Skipping Property: " + key);
+                    PTLog.verbose("Property Key is Empty. Skipping Property: $key")
                 }
-
             }
         }
-        return eProps;
+        return eProps
     }
 
-    public static int getTimerEnd(Bundle extras, long currentTs) {
-        String val = "-1";
-        for (String key : extras.keySet()) {
+    @JvmStatic
+    fun getTimerEnd(extras: Bundle, currentTs: Long): Int {
+        var value: String? = "-1"
+        for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_TIMER_END)) {
-                val = extras.getString(key);
+                value = extras.getString(key)
             }
         }
-        if (val.contains("$D_")) {
-            String[] temp = val.split(PTConstants.PT_TIMER_SPLIT);
-            val = temp[1];
+        if (value!!.contains("\$D_")) {
+            val temp = Pattern.compile(PTConstants.PT_TIMER_SPLIT).split(value)
+            value = temp[1]
         }
-        int diff = (int) (Long.parseLong(val) - (currentTs / 1000));
-        if (val.equals("-1")){
-            return Integer.MIN_VALUE;
-        }//For empty check in timer_end
-        return diff;
+        val diff = (java.lang.Long.parseLong(value) - (currentTs / 1000)).toInt()
+        if (value == "-1") {
+            return Int.MIN_VALUE
+        } //For empty check in timer_end
+        return diff
     }
 
+    @JvmStatic
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public static boolean isNotificationInTray(Context context, int notificationId) {
-        NotificationManager mNotificationManager = (NotificationManager) context
-                .getSystemService(NOTIFICATION_SERVICE);
-        StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
-        for (StatusBarNotification notification : notifications) {
-            if (notification.getId() == notificationId) {
-                return true;
+    fun isNotificationInTray(context: Context, notificationId: Int): Boolean {
+        val mNotificationManager = context
+            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notifications = mNotificationManager.activeNotifications
+        for (notification in notifications) {
+            if (notification.id == notificationId) {
+                return true
             }
         }
-        return false;
+        return false
     }
 
+    @JvmStatic
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public static Notification getNotificationById(Context context, int notificationId) {
-        NotificationManager mNotificationManager = (NotificationManager) context
-                .getSystemService(NOTIFICATION_SERVICE);
-        StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
-        for (StatusBarNotification notification : notifications) {
-            if (notification.getId() == notificationId) {
-                return notification.getNotification();
+    fun getNotificationById(context: Context, notificationId: Int): Notification? {
+        val mNotificationManager = context
+            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notifications = mNotificationManager.activeNotifications
+        for (notification in notifications) {
+            if (notification.id == notificationId) {
+                return notification.notification
             }
         }
-        return null;
+        return null
     }
 
-    public static ArrayList<Integer> getNotificationIds(Context context) {
-        ArrayList<Integer> ids = new ArrayList<>();
+    @JvmStatic
+    fun getNotificationIds(context: Context): ArrayList<Int> {
+        val ids = ArrayList<Int>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            NotificationManager mNotificationManager = (NotificationManager) context
-                    .getSystemService(NOTIFICATION_SERVICE);
-            StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
-            for (StatusBarNotification notification : notifications) {
-                if (notification.getPackageName().equalsIgnoreCase(context.getPackageName())) {
-                    ids.add(notification.getId());
+            val mNotificationManager = context
+                .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            val notifications = mNotificationManager.activeNotifications
+            for (notification in notifications) {
+                if (notification.packageName.equals(context.packageName, ignoreCase = true)) {
+                    ids.add(notification.id)
                 }
             }
         }
-        return ids;
+        return ids
     }
 
-    static void raiseNotificationClicked(Context context, Bundle extras, CleverTapInstanceConfig config) {
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+    @JvmStatic
+    fun raiseNotificationClicked(context: Context?, extras: Bundle?, config: CleverTapInstanceConfig?) {
+        val instance: CleverTapAPI? = if (config != null) {
+            CleverTapAPI.instanceWithConfig(context, config)
         } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
+            CleverTapAPI.getDefaultInstance(context)
         }
-        if (instance != null) {
-            instance.pushNotificationClickedEvent(extras);
-        }
-
+        instance?.pushNotificationClickedEvent(extras)
     }
 
-    static JSONArray getActionKeys(Bundle extras) {
-        JSONArray actions = null;
+    @JvmStatic
+    fun getActionKeys(extras: Bundle): JSONArray? {
+        var actions: JSONArray? = null
 
-        String actionsString = extras.getString(Constants.WZRK_ACTIONS);
+        val actionsString = extras.getString(Constants.WZRK_ACTIONS)
         if (actionsString != null) {
             try {
-                actions = new JSONArray(actionsString);
-            } catch (Throwable t) {
-                PTLog.debug("error parsing notification actions: " + t.getLocalizedMessage());
+                actions = JSONArray(actionsString)
+            } catch (t: Throwable) {
+                PTLog.debug("error parsing notification actions: " + t.localizedMessage)
             }
         }
-        return actions;
+        return actions
     }
 
-    static void showToast(final Context context, final String message,
-            final CleverTapInstanceConfig config) {
+    @JvmStatic
+    fun showToast(
+        context: Context?, message: String?,
+        config: CleverTapInstanceConfig?
+    ) {
         if (config != null) {
-            Task<Void> task = CTExecutorFactory.executors(config).mainTask();
-            task.execute("PushTemplatesUtils#showToast", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    if (!TextUtils.isEmpty(message)) {
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                    }
-                    return null;
+            val task = CTExecutorFactory.executors(config).mainTask<Void?>()
+            task.execute("PushTemplatesUtils#showToast") {
+                if (!TextUtils.isEmpty(message)) {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
-            });
+                null
+            }
         }
     }
 
-    static void createSilentNotificationChannel(Context context) {
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(NOTIFICATION_SERVICE);
-        if (notificationManager == null) {
-            return;
-        }
-        NotificationChannel notificationChannel;
+    @JvmStatic
+    fun createSilentNotificationChannel(context: Context) {
+        val notificationManager = context
+            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
+            ?: return
+        val notificationChannel: NotificationChannel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) == null || (
-                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
-                            && !isNotificationChannelEnabled(
-                            notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)))) {
-                Uri soundUri = Uri
-                        .parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/"
-                                + PTConstants.PT_SOUND_FILE_NAME);
-                notificationChannel = new NotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID,
-                        PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+                        notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
+                                && !isNotificationChannelEnabled(
+                            notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
+                        ))
+            ) {
+                val soundUri: Uri? = Uri
+                    .parse(
+                        ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/raw/"
+                                + PTConstants.PT_SOUND_FILE_NAME
+                    )
+                notificationChannel = NotificationChannel(
+                    PTConstants.PT_SILENT_CHANNEL_ID,
+                    PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
+                )
                 if (soundUri != null) {
-                    notificationChannel.setSound(soundUri,
-                            new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
+                    notificationChannel.setSound(
+                        soundUri,
+                        AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build()
+                    )
                 }
-                notificationChannel.setDescription(PTConstants.PT_SILENT_CHANNEL_DESC);
-                notificationChannel.setShowBadge(false);
-                notificationManager.createNotificationChannel(notificationChannel);
+                notificationChannel.description = PTConstants.PT_SILENT_CHANNEL_DESC
+                notificationChannel.setShowBadge(false)
+                notificationManager.createNotificationChannel(notificationChannel)
             }
         }
-
     }
 
-    static void deleteSilentNotificationChannel(Context context) {
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(NOTIFICATION_SERVICE);
-        if (notificationManager == null) {
-            return;
-        }
+    @JvmStatic
+    fun deleteSilentNotificationChannel(context: Context) {
+        val notificationManager = context
+            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
+            ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
-                    && isNotificationChannelEnabled(
-                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID))) {
-                notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID);
+                && isNotificationChannelEnabled(
+                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
+                )
+            ) {
+                notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
             }
         }
-
     }
 
-    static boolean isNotificationChannelEnabled(NotificationChannel channel) {
+    @JvmStatic
+    fun isNotificationChannelEnabled(channel: NotificationChannel?): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && channel != null) {
-            return channel.getImportance() != NotificationManager.IMPORTANCE_NONE;
+            return channel.importance != NotificationManager.IMPORTANCE_NONE
         }
-        return false;
+        return false
     }
 
-    public static Bitmap setBitMapColour(Context context, int resourceID, String clr, String defaultClr) {
-        int color = getColour(clr, defaultClr);
+    @JvmStatic
+    fun setBitMapColour(context: Context, resourceID: Int, clr: String?, defaultClr: String?): Bitmap? {
+        val color = getColour(clr, defaultClr)
 
-        try {
-            Drawable mDrawable = ContextCompat.getDrawable(context, resourceID);
-            if (mDrawable == null) {
-                return null;
-            }
+        return try {
+            var mDrawable = ContextCompat.getDrawable(context, resourceID) ?: return null
 
-            mDrawable = mDrawable.mutate();
-            mDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
-            return drawableToBitmap(mDrawable);
-        } catch (Exception e) {
-            return null;
+            mDrawable = mDrawable.mutate()
+            mDrawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            drawableToBitmap(mDrawable)
+        } catch (e: Exception) {
+            null
         }
     }
 
-    public static int getColour(String clr, String default_clr) {
-        try {
-            return Color.parseColor(clr);
-        } catch (Exception e) {
-            PTLog.debug("Can not parse colour value: " + clr + " Switching to default colour: " + default_clr);
-            return Color.parseColor(default_clr);
+    @JvmStatic
+    fun getColour(clr: String?, default_clr: String?): Int {
+        return try {
+            Color.parseColor(clr)
+        } catch (e: Exception) {
+            PTLog.debug("Can not parse colour value: $clr Switching to default colour: $default_clr")
+            Color.parseColor(default_clr)
         }
     }
 
     /**
      * Safely parses a color string (e.g., "#RRGGBB" or "#AARRGGBB") into an integer color value.
-     * <p>
-     * If the input is null, empty, or an invalid color format, this method returns {@code null} instead of throwing an exception.
-     * </p>
+     *
+     * If the input is null, empty, or an invalid color format, this method returns `null` instead of throwing an exception.
      *
      * @param clr the color string to parse (e.g., "#FF0000" for red)
-     * @return the parsed color as an {@link Integer}, or {@code null} if parsing fails
+     * @return the parsed color as an [Integer], or `null` if parsing fails
      */
-    @Nullable
-    public static Integer getColourOrNull(String clr) {
-        try {
-            return Color.parseColor(clr);
-        } catch (Exception e) {
-            PTLog.debug("Can not parse colour value: " + clr);
-            return null;
+    @JvmStatic
+    fun getColourOrNull(clr: String?): Int? {
+        return try {
+            Color.parseColor(clr)
+        } catch (e: Exception) {
+            PTLog.debug("Can not parse colour value: $clr")
+            null
         }
     }
 
-    public static int getFlipInterval(Bundle extras) {
-        String interval = extras.getString(PTConstants.PT_FLIP_INTERVAL);
+    @JvmStatic
+    fun getFlipInterval(extras: Bundle): Int {
+        val interval = extras.getString(PTConstants.PT_FLIP_INTERVAL)
         try {
             if (interval != null) {
-                int t = Integer.parseInt(interval);
-                return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME);
+                val t = Integer.parseInt(interval)
+                return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME)
             }
-        } catch (Exception e) {
-            PTLog.debug("Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: "
-                    + PTConstants.PT_FLIP_INTERVAL_TIME);
+        } catch (e: Exception) {
+            PTLog.debug(
+                "Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: "
+                        + PTConstants.PT_FLIP_INTERVAL_TIME
+            )
         }
-        return PTConstants.PT_FLIP_INTERVAL_TIME;
+        return PTConstants.PT_FLIP_INTERVAL_TIME
     }
 
-    static void deleteImageFromStorage(Context context, Intent intent) {
-        String pId = intent.getStringExtra(Constants.WZRK_PUSH_ID);
+    @JvmStatic
+    fun deleteImageFromStorage(context: Context, intent: Intent) {
+        val pId = intent.getStringExtra(Constants.WZRK_PUSH_ID)
 
-        ContextWrapper cw = new ContextWrapper(context.getApplicationContext());
-        File MyDirectory = cw.getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE);
-        String path = MyDirectory.getAbsolutePath();
-        String[] fileList = MyDirectory.list();
-        File fileToBeDeleted = null;
+        val cw = ContextWrapper(context.applicationContext)
+        val MyDirectory = cw.getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE)
+        val path = MyDirectory.absolutePath
+        val fileList = MyDirectory.list()
+        var fileToBeDeleted: File?
         if (fileList != null) {
-            for (String fileName : fileList) {
+            for (fileName in fileList) {
                 if (pId != null && fileName.contains(pId)) {
-                    fileToBeDeleted = new File(path + "/" + fileName);
-                    boolean wasDeleted = fileToBeDeleted.delete();
+                    fileToBeDeleted = File("$path/$fileName")
+                    val wasDeleted = fileToBeDeleted.delete()
                     if (!wasDeleted) {
-                        PTLog.debug("Failed to clean up the following file: " + fileName);
+                        PTLog.debug("Failed to clean up the following file: $fileName")
                     }
                 } else if (pId == null && fileName.contains("null")) {
-                    fileToBeDeleted = new File(path + "/" + fileName);
-                    boolean wasDeleted = fileToBeDeleted.delete();
+                    fileToBeDeleted = File("$path/$fileName")
+                    val wasDeleted = fileToBeDeleted.delete()
                     if (!wasDeleted) {
-                        PTLog.debug("Failed to clean up the following file: " + fileName);
+                        PTLog.debug("Failed to clean up the following file: $fileName")
                     }
                 }
             }
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun ArrayList<String?>.asPlatformList(): ArrayList<String> = this as ArrayList<String>
 }

@@ -1,55 +1,59 @@
-package com.clevertap.android.pushtemplates;
+package com.clevertap.android.pushtemplates
 
-import android.content.Context;
-import android.os.Bundle;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
-import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
-import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
-import com.clevertap.android.sdk.pushnotification.PushType;
+import android.content.Context
+import android.os.Bundle
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
+import com.clevertap.android.sdk.pushnotification.INotificationRenderer
+import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
+import com.clevertap.android.sdk.pushnotification.PushType
 
-public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
+open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
-    @Override
-    public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
-        String actionID = extras.getString(PTConstants.PT_ACTION_ID);
-        String dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK);
-        CleverTapInstanceConfig config = extras.getParcelable("config");
+    override fun onActionButtonClick(context: Context?, extras: Bundle, notificationId: Int): Boolean {
+        val actionID = extras.getString(PTConstants.PT_ACTION_ID)
+        val dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK)
+        @Suppress("DEPRECATION")
+        val config: CleverTapInstanceConfig? = extras.getParcelable("config")
 
-        if (dismissOnClick != null && dismissOnClick.equalsIgnoreCase("true")) {
+        if (dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)) {
 
             // For input box remind CTA,pt_dismiss_on_click must be true to raise event
             if (actionID != null && actionID.contains("remind")) {
-                Utils.raiseCleverTapEvent(context, config, extras);
+                Utils.raiseCleverTapEvent(context, config, extras)
             }
-            Utils.cancelNotification(context, notificationId);
-            return true;
+            Utils.cancelNotification(context, notificationId)
+            return true
         }
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onMessageReceived(final Context applicationContext, final Bundle message, final String pushType) {
+    override fun onMessageReceived(applicationContext: Context?, message: Bundle?, pushType: String?): Boolean {
         try {
-            PTLog.debug("Inside Push Templates");
+            PTLog.debug("Inside Push Templates")
             // initial setup
-            CleverTapAPI cleverTapAPI = CleverTapAPI
-                    .getGlobalInstance(applicationContext,
-                            PushNotificationUtil.getAccountIdFromNotificationBundle(message));
+            val cleverTapAPI = CleverTapAPI
+                .getGlobalInstance(
+                    applicationContext,
+                    PushNotificationUtil.getAccountIdFromNotificationBundle(message)
+                )
             if (cleverTapAPI != null) {
-                INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message, cleverTapAPI.getCoreState().getConfig());
-                cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
+                // TODO(SDK-6368): use cleverTapAPI.getInstanceConfig() once SDK-6372 lands
+                // (CoreState is Kotlin-internal in core; Java reached it through the @RestrictTo getter.)
+                @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+                val config = cleverTapAPI.coreState.config
+                val templateRenderer: INotificationRenderer =
+                    TemplateRenderer(applicationContext!!, message!!, config)
+                cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message)
             }
-        } catch (Throwable throwable) {
-            PTLog.verbose("Error parsing FCM payload", throwable);
+        } catch (throwable: Throwable) {
+            PTLog.verbose("Error parsing FCM payload", throwable)
         }
-        return true;
+        return true
     }
 
-    @Override
-    public boolean onNewToken(final Context applicationContext, final String token, final PushType pushType) {
-        return true;
+    override fun onNewToken(applicationContext: Context?, token: String?, pushType: PushType?): Boolean {
+        return true
     }
-
 }

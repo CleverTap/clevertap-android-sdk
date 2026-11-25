@@ -1,59 +1,53 @@
-package com.clevertap.android.pushtemplates;
+package com.clevertap.android.pushtemplates
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
-import java.util.concurrent.Callable;
+import android.content.Context
+import android.content.Intent
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver
+import com.clevertap.android.sdk.task.CTExecutorFactory
 
-public class PTPushNotificationReceiver extends CTPushNotificationReceiver {
+internal class PTPushNotificationReceiver : CTPushNotificationReceiver() {
 
-    @Override
-    public void onReceive(final Context context, final Intent intent) {
+    override fun onReceive(context: Context, intent: Intent) {
         //Removes the deeplink key from bundle if deepLink is not present and launch activity.
-        if (intent.getStringExtra(Constants.DEEP_LINK_KEY) == null){
-            intent.removeExtra(Constants.DEEP_LINK_KEY);
+        if (intent.getStringExtra(Constants.DEEP_LINK_KEY) == null) {
+            intent.removeExtra(Constants.DEEP_LINK_KEY)
         }
 
-        super.onReceive(context, intent);
+        super.onReceive(context, intent)
 
-        Bundle extras = intent.getExtras();
-        if (extras == null) {
-            return;
-        }
-        CleverTapAPI cleverTapAPI = CleverTapAPI
-                .getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY));
+        val extras = intent.extras ?: return
+        val cleverTapAPI = CleverTapAPI
+            .getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY))
 
         if (cleverTapAPI != null) {
             try {
-                CleverTapInstanceConfig config = cleverTapAPI.getCoreState().getConfig();
-                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-                task.execute("PTPushNotificationReceiver#cleanUpFiles", new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        try {
-                            Utils.deleteImageFromStorage(context, intent);
-                            Utils.deleteSilentNotificationChannel(context);
-                        } catch (Throwable t) {
-                            PTLog.verbose(
-                                    "Couldn't clean up images and/or couldn't delete silent notification channel: "
-                                            + t.getLocalizedMessage());
-                        }
-                        return null;
+                // TODO(SDK-6368): use cleverTapAPI.getInstanceConfig() once SDK-6372 lands
+                // (CoreState is Kotlin-internal in core; Java reached it through the @RestrictTo getter.)
+                @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+                val config = cleverTapAPI.coreState.config
+                val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
+                task.execute("PTPushNotificationReceiver#cleanUpFiles") {
+                    try {
+                        Utils.deleteImageFromStorage(context, intent)
+                        Utils.deleteSilentNotificationChannel(context)
+                    } catch (t: Throwable) {
+                        PTLog.verbose(
+                            "Couldn't clean up images and/or couldn't delete silent notification channel: "
+                                    + t.localizedMessage
+                        )
                     }
-                });
-            } catch (Exception e) {
-                PTLog.verbose("Couldn't clean up images and/or couldn't delete silent notification channel: " + e
-                        .getLocalizedMessage());
+                    null
+                }
+            } catch (e: Exception) {
+                PTLog.verbose(
+                    "Couldn't clean up images and/or couldn't delete silent notification channel: " + e
+                        .localizedMessage
+                )
             }
-
         } else {
-            PTLog.verbose("clevertap instance is null, not running PTPushNotificationReceiver#cleanUpFiles");
+            PTLog.verbose("clevertap instance is null, not running PTPushNotificationReceiver#cleanUpFiles")
         }
     }
 }
