@@ -238,7 +238,7 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
     @Test
     fun `the spinner shows while buffering and hides when the player is ready`() {
         bind(videoMessage("msg_V"))
-        val spinner = holder.progressBarFrameLayout
+        val spinner = holder.progressBarFrameLayout!!
 
         holder.playerBuffering()
         assertEquals(View.VISIBLE, spinner.visibility)
