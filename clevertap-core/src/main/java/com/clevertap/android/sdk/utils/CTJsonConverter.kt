@@ -1,269 +1,273 @@
-package com.clevertap.android.sdk.utils;
+package com.clevertap.android.sdk.utils
 
-import android.location.Location;
-import android.os.Build;
-import android.os.Bundle;
-import android.text.TextUtils;
+import android.os.Build
+import android.os.Bundle
+import android.text.TextUtils
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inbox.CTInboxMessage
+import com.clevertap.android.sdk.validation.ValidationResult
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Collections
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
+internal object CTJsonConverter {
 
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.ILogger;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.inapp.CTInAppNotification;
-import com.clevertap.android.sdk.inbox.CTInboxMessage;
-import com.clevertap.android.sdk.validation.ValidationResult;
+    private const val TAG = "CTJsonConverter"
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-@RestrictTo(Scope.LIBRARY)
-public class CTJsonConverter {
-    private static final String TAG = "CTJsonConverter";
-
-    @NonNull
-    public static JSONObject toJsonObject(String json, ILogger logger, String logtag) {
-        JSONObject cache = null;
+    @JvmStatic
+    fun toJsonObject(json: String?, logger: ILogger?, logtag: String?): JSONObject {
+        var cache: JSONObject? = null
         if (json != null) {
             try {
-                cache = new JSONObject(json);
-            } catch (Throwable t) {
+                cache = JSONObject(json)
+            } catch (t: Throwable) {
                 // no-op
-                logger.verbose(logtag, "Error reading guid cache: ", t);
+                logger!!.verbose(logtag, "Error reading guid cache: ", t)
             }
         }
 
-        return (cache != null) ? cache : new JSONObject();
+        return cache ?: JSONObject()
     }
 
-    public static JSONObject displayUnitFromExtras(Bundle extras) throws JSONException {
-        JSONObject r = new JSONObject();
+    @JvmStatic
+    @Throws(JSONException::class)
+    fun displayUnitFromExtras(extras: Bundle): JSONObject {
+        val r = JSONObject()
 
-        String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
-        Logger.v(TAG, "Received Display Unit via push payload: " + pushJsonPayload);
-        JSONArray displayUnits = new JSONArray();
-        r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
-        JSONObject testPushObject = new JSONObject(pushJsonPayload);
-        displayUnits.put(testPushObject);
+        val pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)
+        Logger.v(TAG, "Received Display Unit via push payload: $pushJsonPayload")
+        val displayUnits = JSONArray()
+        r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits)
+        val testPushObject = JSONObject(pushJsonPayload)
+        displayUnits.put(testPushObject)
 
-        return r;
+        return r
     }
 
     // Keys from() writes itself. A shared module version with one of these names would replace the real value
     // in af for every instance, so CoreMetaData rejects them. Keep in sync with from().
-    public static final Set<String> RESERVED_AF_KEYS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "Build", "Version", "OS Version", "SDK Version", "Latitude", "Longitude",
-            "GoogleAdID", Constants.MULTI_USER_PREFIX + "GoogleAdID", "GoogleAdIDLimit",
-            "Make", "Model", "Carrier", "useIP", "OS", "wdt", "hgt", "dpi", "dt", "locale", "abckt", "lib",
-            "proxyDomain", "spikyProxyDomain", "sslpin", "fcmsid", "cc",
-            "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC")));
+    @JvmField
+    val RESERVED_AF_KEYS: Set<String> = Collections.unmodifiableSet(
+        HashSet(
+            listOf(
+                "Build", "Version", "OS Version", "SDK Version", "Latitude", "Longitude",
+                "GoogleAdID", Constants.MULTI_USER_PREFIX + "GoogleAdID", "GoogleAdIDLimit",
+                "Make", "Model", "Carrier", "useIP", "OS", "wdt", "hgt", "dpi", "dt", "locale", "abckt", "lib",
+                "proxyDomain", "spikyProxyDomain", "sslpin", "fcmsid", "cc",
+                "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC"
+            )
+        )
+    )
 
-    public static JSONObject from(DeviceInfo deviceInfo, CoreMetaData coreMetaData, boolean enableNetworkInfoReporting
-            , boolean deviceIsMultiUser) throws JSONException {
+    @JvmStatic
+    @Throws(JSONException::class)
+    fun from(
+        deviceInfo: DeviceInfo,
+        coreMetaData: CoreMetaData,
+        enableNetworkInfoReporting: Boolean,
+        deviceIsMultiUser: Boolean
+    ): JSONObject {
+        val evtData = JSONObject()
+        val locationFromUser = coreMetaData.locationFromUser
 
-        final JSONObject evtData = new JSONObject();
-        Location locationFromUser = coreMetaData.getLocationFromUser();
-
-        evtData.put("Build", deviceInfo.getBuild() + "");
-        evtData.put("Version", deviceInfo.getVersionName());
-        evtData.put("OS Version", deviceInfo.getOsVersion());
-        evtData.put("SDK Version", deviceInfo.getSdkVersion());
+        evtData.put("Build", "${deviceInfo.build}")
+        evtData.put("Version", deviceInfo.versionName)
+        evtData.put("OS Version", deviceInfo.osVersion)
+        evtData.put("SDK Version", deviceInfo.sdkVersion)
 
         if (locationFromUser != null) {
-            evtData.put("Latitude", locationFromUser.getLatitude());
-            evtData.put("Longitude", locationFromUser.getLongitude());
+            evtData.put("Latitude", locationFromUser.latitude)
+            evtData.put("Longitude", locationFromUser.longitude)
         }
 
         // send up googleAdID
-        if (deviceInfo.getGoogleAdID() != null) {
-            String baseAdIDKey = "GoogleAdID";
-            String adIDKey = deviceIsMultiUser ? Constants.MULTI_USER_PREFIX + baseAdIDKey : baseAdIDKey;
-            evtData.put(adIDKey, deviceInfo.getGoogleAdID());
-            evtData.put("GoogleAdIDLimit", deviceInfo.isLimitAdTrackingEnabled());
+        if (deviceInfo.googleAdID != null) {
+            val baseAdIDKey = "GoogleAdID"
+            val adIDKey = if (deviceIsMultiUser) Constants.MULTI_USER_PREFIX + baseAdIDKey else baseAdIDKey
+            evtData.put(adIDKey, deviceInfo.googleAdID)
+            evtData.put("GoogleAdIDLimit", deviceInfo.isLimitAdTrackingEnabled)
         }
 
         try {
             // Device data
-            evtData.put("Make", deviceInfo.getManufacturer());
-            evtData.put("Model", deviceInfo.getModel());
-            evtData.put("Carrier", deviceInfo.getCarrier());
-            evtData.put("useIP", enableNetworkInfoReporting);
-            evtData.put("OS", deviceInfo.getOsName());
-            evtData.put("wdt", deviceInfo.getWidth());
-            evtData.put("hgt", deviceInfo.getHeight());
-            evtData.put("dpi", deviceInfo.getDPI());
-            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
-            evtData.put("locale", deviceInfo.getLocale());
+            evtData.put("Make", deviceInfo.manufacturer)
+            evtData.put("Model", deviceInfo.model)
+            evtData.put("Carrier", deviceInfo.carrier)
+            evtData.put("useIP", enableNetworkInfoReporting)
+            evtData.put("OS", deviceInfo.osName)
+            evtData.put("wdt", deviceInfo.width)
+            evtData.put("hgt", deviceInfo.height)
+            evtData.put("dpi", deviceInfo.dpi)
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.context))
+            evtData.put("locale", deviceInfo.locale)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                evtData.put("abckt", deviceInfo.getAppBucket());
+                evtData.put("abckt", deviceInfo.appBucket)
             }
-            if (deviceInfo.getLibrary() != null) {
-                evtData.put("lib", deviceInfo.getLibrary());
+            if (deviceInfo.library != null) {
+                evtData.put("lib", deviceInfo.library)
             }
 
-            String proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getProxyDomain();
+            val proxyDomain = ManifestInfo.getInstance(deviceInfo.context).proxyDomain
             if (!TextUtils.isEmpty(proxyDomain)) {
-                evtData.put("proxyDomain", proxyDomain);
+                evtData.put("proxyDomain", proxyDomain)
             }
 
-            String spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getSpikeyProxyDomain();
+            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.context).spikeyProxyDomain
             if (!TextUtils.isEmpty(spikyProxyDomain)) {
-                evtData.put("spikyProxyDomain", spikyProxyDomain);
+                evtData.put("spikyProxyDomain", spikyProxyDomain)
             }
 
-            boolean sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled();
+            val sslPinning = ManifestInfo.getInstance(deviceInfo.context).isSSLPinningEnabled
             if (sslPinning) {
-                evtData.put("sslpin", true);
+                evtData.put("sslpin", true)
             }
 
-            String fcmSenderId = ManifestInfo.getInstance(deviceInfo.getContext()).getFCMSenderId();
-            if (!TextUtils.isEmpty(fcmSenderId)) {//only for 4.3.0 for tracking custom sender ID users.
-                evtData.put("fcmsid", true);
+            val fcmSenderId = ManifestInfo.getInstance(deviceInfo.context).fcmSenderId
+            if (!TextUtils.isEmpty(fcmSenderId)) { //only for 4.3.0 for tracking custom sender ID users.
+                evtData.put("fcmsid", true)
             }
 
-            String cc = deviceInfo.getCountryCode();
-            if (cc != null && !cc.equals("")) {
-                evtData.put("cc", cc);
+            val cc = deviceInfo.countryCode
+            if (cc != null && cc != "") {
+                evtData.put("cc", cc)
             }
 
             if (enableNetworkInfoReporting) {
-                final Boolean isWifi = deviceInfo.isWifiConnected();
+                val isWifi = deviceInfo.isWifiConnected
                 if (isWifi != null) {
-                    evtData.put("wifi", isWifi);
+                    evtData.put("wifi", isWifi)
                 }
 
-                final Boolean isBluetoothEnabled = deviceInfo.isBluetoothEnabled();
+                val isBluetoothEnabled = deviceInfo.isBluetoothEnabled
                 if (isBluetoothEnabled != null) {
-                    evtData.put("BluetoothEnabled", isBluetoothEnabled);
+                    evtData.put("BluetoothEnabled", isBluetoothEnabled)
                 }
 
-                final String bluetoothVersion = deviceInfo.getBluetoothVersion();
+                val bluetoothVersion = deviceInfo.bluetoothVersion
                 if (bluetoothVersion != null) {
-                    evtData.put("BluetoothVersion", bluetoothVersion);
+                    evtData.put("BluetoothVersion", bluetoothVersion)
                 }
 
-                final String radio = deviceInfo.getNetworkType();
+                val radio = deviceInfo.networkType
                 if (radio != null) {
-                    evtData.put("Radio", radio);
+                    evtData.put("Radio", radio)
                 }
             }
             //Adds an extra field to send local inApp count in queueData.
-            evtData.put("LIAMC", deviceInfo.getLocalInAppCount());
+            evtData.put("LIAMC", deviceInfo.localInAppCount)
 
             // add custom sdk versions in "af" key of header.
-            Map<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
-            for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
-                evtData.put(entries.getKey(), entries.getValue());
+            val allCustomSdkVersions: Map<String, Int> = coreMetaData.allCustomSdkVersions
+            for ((key, value) in allCustomSdkVersions) {
+                evtData.put(key, value)
             }
-
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // Ignore
         }
 
-        return evtData;
+        return evtData
     }
 
     //Validation
-    public static JSONObject getErrorObject(ValidationResult vr) {
-        JSONObject error = new JSONObject();
+    @JvmStatic
+    fun getErrorObject(vr: ValidationResult): JSONObject {
+        val error = JSONObject()
         try {
-            error.put("c", vr.getErrorCode());
-            error.put("d", vr.getErrorDesc());
-        } catch (JSONException e) {
+            error.put("c", vr.errorCode)
+            error.put("d", vr.errorDesc)
+        } catch (e: JSONException) {
             // Won't reach here
         }
-        return error;
+        return error
     }
 
-    public static JSONArray pushIdsToJSONArray(String[] pushIds) {
-        JSONArray renderedTargets = new JSONArray();
-        for (String pushId : pushIds) {
-            Logger.v(TAG, "RTL IDs -" + pushId);
-            renderedTargets.put(pushId);
+    @JvmStatic
+    fun pushIdsToJSONArray(pushIds: Array<out String?>): JSONArray {
+        val renderedTargets = JSONArray()
+        for (pushId in pushIds) {
+            Logger.v(TAG, "RTL IDs -$pushId")
+            renderedTargets.put(pushId)
         }
-        return renderedTargets;
+        return renderedTargets
     }
 
-    public static JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        JSONObject jsonObject = root.getJsonDescription();
-        Iterator<String> iterator = jsonObject.keys();
+    @JvmStatic
+    @Throws(JSONException::class)
+    fun getWzrkFields(root: CTInAppNotification): JSONObject {
+        val fields = JSONObject()
+        val jsonObject = root.jsonDescription
+        val iterator = jsonObject.keys()
 
         while (iterator.hasNext()) {
-            String keyName = iterator.next();
+            val keyName = iterator.next()
             if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                fields.put(keyName, jsonObject.get(keyName));
+                fields.put(keyName, jsonObject.get(keyName))
             }
         }
 
-        return fields;
+        return fields
     }
 
-    public static JSONObject getWzrkFields(CTInboxMessage root) {
-        return root.getWzrkParams();
+    @JvmStatic
+    fun getWzrkFields(root: CTInboxMessage): JSONObject? {
+        return root.wzrkParams
     }
 
-    public static <T> Object[] toArray(@NonNull JSONArray jsonArray) {
-        Object[] array = new Object[jsonArray.length()];
+    @JvmStatic
+    fun <T> toArray(jsonArray: JSONArray): Array<Any?> {
+        val array = arrayOfNulls<Any>(jsonArray.length())
         try {
-            for (int i = 0; i < jsonArray.length(); i++) {
-                array[i] = jsonArray.get(i);
+            for (i in 0 until jsonArray.length()) {
+                array[i] = jsonArray.get(i)
             }
-        } catch (JSONException e) {
-            Logger.v(TAG, "Error converting JSONArray to array", e);
+        } catch (e: JSONException) {
+            Logger.v(TAG, "Error converting JSONArray to array", e)
         }
-        return array;
+        return array
     }
 
-    public static JSONArray toJsonArray(@NonNull List<?> list) {
-        JSONArray array = new JSONArray();
-        for (Object item : list) {
+    @JvmStatic
+    fun toJsonArray(list: List<*>): JSONArray {
+        val array = JSONArray()
+        for (item in list) {
             if (item != null) {
-                array.put(item);
+                array.put(item)
             }
         }
-        return array;
+        return array
     }
 
-    public static String toJsonString(Object value) {
-        String val = null;
+    @JvmStatic
+    fun toJsonString(value: Any?): String? {
+        var `val`: String? = null
 
         try {
-            val = value.toString();
-        } catch (Exception e) {
+            `val` = value!!.toString()
+        } catch (e: Exception) {
             // no-op
         }
 
-        return val;
+        return `val`
     }
 
-    public static ArrayList<?> toList(@NonNull JSONArray array) {
-        ArrayList<Object> list = new ArrayList<>();
-        for (int i = 0; i < array.length(); i++) {
+    @JvmStatic
+    fun toList(array: JSONArray): ArrayList<*> {
+        val list = ArrayList<Any?>()
+        for (i in 0 until array.length()) {
             try {
-                list.add(array.get(i));
-            } catch (JSONException e) {
-                Logger.v(TAG, "Error converting JSONArray to list", e);
+                list.add(array.get(i))
+            } catch (e: JSONException) {
+                Logger.v(TAG, "Error converting JSONArray to list", e)
             }
         }
-        return list;
+        return list
     }
-
 }

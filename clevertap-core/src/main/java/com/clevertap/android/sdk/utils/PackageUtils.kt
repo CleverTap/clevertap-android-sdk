@@ -1,32 +1,33 @@
-package com.clevertap.android.sdk.utils;
+package com.clevertap.android.sdk.utils
 
-import android.content.Context;
-import android.content.pm.PackageManager;
+import android.content.Context
+import android.content.pm.PackageManager
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailabilityLight
 
-import androidx.annotation.NonNull;
+internal object PackageUtils {
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailabilityLight;
+    private const val GOOGLE_PLAY_STORE_PACKAGE_OLD = "com.google.market"
 
-public class PackageUtils {
+    private const val GOOGLE_PLAY_STORE_PACKAGE = "com.android.vending"
 
-    private static final String GOOGLE_PLAY_STORE_PACKAGE_OLD = "com.google.market";
-
-    private static final String GOOGLE_PLAY_STORE_PACKAGE = "com.android.vending";
-
-    public static boolean isGooglePlayServicesAvailable(@NonNull Context context) {
-        try {
-            Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-            int status = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(context);
-            return status == ConnectionResult.SUCCESS;
-        } catch (ClassNotFoundException e) {
-            return false;
+    @JvmStatic
+    fun isGooglePlayServicesAvailable(context: Context): Boolean {
+        return try {
+            Class.forName("com.google.android.gms.common.GooglePlayServicesUtil")
+            val status = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(context)
+            status == ConnectionResult.SUCCESS
+        } catch (e: ClassNotFoundException) {
+            false
         }
     }
 
-    public static boolean isGooglePlayStoreAvailable(@NonNull Context context) {
-        return isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE) || isPackageAvailable(context,
-                GOOGLE_PLAY_STORE_PACKAGE_OLD);
+    @JvmStatic
+    fun isGooglePlayStoreAvailable(context: Context): Boolean {
+        return isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE) || isPackageAvailable(
+            context,
+            GOOGLE_PLAY_STORE_PACKAGE_OLD
+        )
     }
 
     /**
@@ -34,15 +35,15 @@ public class PackageUtils {
      *
      * @param context     The application context.
      * @param packageName The name of the package as a string.
-     * @return <code>true</code> if the given package is installed on the device,
-     * otherwise <code>false</code>
+     * @return `true` if the given package is installed on the device,
+     * otherwise `false`
      */
-    private static boolean isPackageAvailable(Context context, String packageName) {
-        try {
-            context.getPackageManager().getPackageInfo(packageName, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
+    private fun isPackageAvailable(context: Context, packageName: String): Boolean {
+        return try {
+            context.packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
         }
     }
 }

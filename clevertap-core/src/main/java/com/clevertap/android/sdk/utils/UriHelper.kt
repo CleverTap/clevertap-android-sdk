@@ -1,118 +1,103 @@
-package com.clevertap.android.sdk.utils;
+package com.clevertap.android.sdk.utils
 
-import android.net.Uri;
-import android.net.UrlQuerySanitizer;
-import android.os.Bundle;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import java.net.URLDecoder;
-import java.util.Set;
-import org.json.JSONObject;
+import android.net.Uri
+import android.net.UrlQuerySanitizer
+import android.os.Bundle
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import org.json.JSONObject
+import java.net.URLDecoder
 
-@RestrictTo(Scope.LIBRARY)
-public final class UriHelper {
+internal object UriHelper {
 
-    public static Bundle getAllKeyValuePairs(String url, boolean encodeValues) {
+    @JvmStatic
+    fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle {
         if (url == null) {
-            return new Bundle();
+            return Bundle()
         }
-        Bundle customPairs = new Bundle();
+        val customPairs = Bundle()
         try {
-            UrlQuerySanitizer sanitizer = new UrlQuerySanitizer();
-            sanitizer.setAllowUnregisteredParamaters(true);
-            sanitizer.setUnregisteredParameterValueSanitizer(UrlQuerySanitizer.getAllButNulLegal());
-            sanitizer.parseUrl(url);
-            Set<String> queryParams = sanitizer.getParameterSet();
-            for (String key : queryParams) {
-                String value = getValueForKey(key, sanitizer, false);
+            val sanitizer = UrlQuerySanitizer()
+            sanitizer.allowUnregisteredParamaters = true
+            sanitizer.unregisteredParameterValueSanitizer = UrlQuerySanitizer.getAllButNulLegal()
+            sanitizer.parseUrl(url)
+            val queryParams = sanitizer.parameterSet
+            for (key in queryParams) {
+                val value = getValueForKey(key, sanitizer, false)
                 if (value != null) {
                     // Don't encode wzrk_c2a - as the URL must be preserved
-                    if (encodeValues || key.equals("wzrk_c2a")) {
+                    if (encodeValues || key == "wzrk_c2a") {
                         // Already encoded
-                        customPairs.putString(key, value);
+                        customPairs.putString(key, value)
                     } else {
-                        customPairs.putString(key, URLDecoder.decode(value, "UTF-8"));
+                        customPairs.putString(key, URLDecoder.decode(value, "UTF-8"))
                     }
                 }
             }
-        } catch (Throwable ignore) {
+        } catch (ignore: Throwable) {
             // Won't happen
         }
-        return customPairs;
+        return customPairs
     }
 
     /*package*/
-    public static JSONObject getUrchinFromUri(Uri uri) {
-        JSONObject referrer = new JSONObject();
+    @JvmStatic
+    fun getUrchinFromUri(uri: Uri?): JSONObject {
+        val referrer = JSONObject()
         try {
-
-            UrlQuerySanitizer sanitizer = new UrlQuerySanitizer();
-            sanitizer.setAllowUnregisteredParamaters(true);
-            sanitizer.parseUrl(uri.toString());
+            val sanitizer = UrlQuerySanitizer()
+            sanitizer.allowUnregisteredParamaters = true
+            sanitizer.parseUrl(uri!!.toString())
 
             // Don't care for null values - they won't be added anyway
-            String source = getUtmOrWzrkValue("source", sanitizer);
-            String medium = getUtmOrWzrkValue("medium", sanitizer);
-            String campaign = getUtmOrWzrkValue("campaign", sanitizer);
+            val source = getUtmOrWzrkValue("source", sanitizer)
+            val medium = getUtmOrWzrkValue("medium", sanitizer)
+            val campaign = getUtmOrWzrkValue("campaign", sanitizer)
 
-            referrer.put("us", source);
-            referrer.put("um", medium);
-            referrer.put("uc", campaign);
+            referrer.put("us", source)
+            referrer.put("um", medium)
+            referrer.put("uc", campaign)
 
-            String wm = getWzrkValueForKey("medium", sanitizer);
-            if (wm != null && wm.matches("^email$|^social$|^search$")) {
-                referrer.put("wm", wm);
+            val wm = getWzrkValueForKey("medium", sanitizer)
+            if (wm != null && wm.matches("^email$|^social$|^search$".toRegex())) {
+                referrer.put("wm", wm)
             }
 
-            Logger.d("Referrer data: " + referrer.toString(4));
-        } catch (Throwable ignore) {
+            Logger.d("Referrer data: " + referrer.toString(4))
+        } catch (ignore: Throwable) {
             // Won't happen
         }
-        return referrer;
+        return referrer
     }
 
-    private static String getUtmOrWzrkValue(String utmKey, UrlQuerySanitizer sanitizer) {
+    private fun getUtmOrWzrkValue(utmKey: String, sanitizer: UrlQuerySanitizer): String? {
         // Give preference to utm_*, else, try to look for wzrk_*
-        String value;
-        if ((value = getUtmValueForKey(utmKey, sanitizer)) != null
-                || (value = getWzrkValueForKey(utmKey, sanitizer)) != null) {
-            return value;
-        } else {
-            return null;
-        }
+        return getUtmValueForKey(utmKey, sanitizer) ?: getWzrkValueForKey(utmKey, sanitizer)
     }
 
-    private static String getUtmValueForKey(String key, UrlQuerySanitizer sanitizer) {
-        key = "utm_" + key;
-        return getValueForKey(key, sanitizer, true);
+    private fun getUtmValueForKey(key: String, sanitizer: UrlQuerySanitizer): String? {
+        return getValueForKey("utm_$key", sanitizer, true)
     }
 
-    private static String getValueForKey(String key, UrlQuerySanitizer sanitizer, boolean truncate) {
+    private fun getValueForKey(key: String?, sanitizer: UrlQuerySanitizer?, truncate: Boolean): String? {
         if (key == null || sanitizer == null) {
-            return null;
+            return null
         }
         try {
-            String value = sanitizer.getValue(key);
+            val value = sanitizer.getValue(key) ?: return null
 
-            if (value == null) {
-                return null;
-            }
-            if (truncate && value.length() > Constants.MAX_KEY_LENGTH) {
-                return value.substring(0, Constants.MAX_KEY_LENGTH);
+            return if (truncate && value.length > Constants.MAX_KEY_LENGTH) {
+                value.substring(0, Constants.MAX_KEY_LENGTH)
             } else {
-                return value;
+                value
             }
-        } catch (Throwable t) {
-            Logger.v("Couldn't parse the URI", t);
-            return null;
+        } catch (t: Throwable) {
+            Logger.v("Couldn't parse the URI", t)
+            return null
         }
     }
 
-    private static String getWzrkValueForKey(String key, UrlQuerySanitizer sanitizer) {
-        key = "wzrk_" + key;
-        return getValueForKey(key, sanitizer, true);
+    private fun getWzrkValueForKey(key: String, sanitizer: UrlQuerySanitizer): String? {
+        return getValueForKey("wzrk_$key", sanitizer, true)
     }
-
 }

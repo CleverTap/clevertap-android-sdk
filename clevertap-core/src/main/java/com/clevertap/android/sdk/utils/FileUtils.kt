@@ -1,151 +1,143 @@
-package com.clevertap.android.sdk.utils;
+package com.clevertap.android.sdk.utils
 
-import android.content.Context;
-import android.text.TextUtils;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import androidx.annotation.WorkerThread;
-
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import org.json.JSONObject;
+import android.content.Context
+import android.text.TextUtils
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileWriter
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 
 @WorkerThread
-@RestrictTo(Scope.LIBRARY_GROUP)
-public class FileUtils {
+internal open class FileUtils(
+    private val context: Context,
+    private val config: CleverTapInstanceConfig
+) {
 
-    private final CleverTapInstanceConfig config;
-
-    private final Context context;
-
-    public FileUtils(@NonNull final Context context, @NonNull final CleverTapInstanceConfig config) {
-        this.context = context;
-        this.config = config;
-    }
-
-    public void deleteDirectory(String dirName) {
+    open fun deleteDirectory(dirName: String?) {
         if (TextUtils.isEmpty(dirName)) {
-            return;
+            return
         }
         try {
-            synchronized (FileUtils.class) {
-                File file = new File(context.getFilesDir(), dirName);
-                if (file.exists() && file.isDirectory()) {
-                    String[] children = file.list();
-                    for (String child : children) {
-                        boolean deleted = new File(file, child).delete();
-                        config.getLogger().verbose(config.getAccountId(),
-                                "File" + child + " isDeleted:" + deleted);
+            synchronized(FileUtils::class.java) {
+                val file = File(context.filesDir, dirName!!)
+                if (file.exists() && file.isDirectory) {
+                    val children = file.list()
+                    for (child in children!!) {
+                        val deleted = File(file, child).delete()
+                        config.logger.verbose(
+                            config.accountId,
+                            "File$child isDeleted:$deleted"
+                        )
                     }
                 }
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "deleteDirectory: failed: "  + dirName, e);
+        } catch (e: Exception) {
+            config.logger.verbose(
+                config.accountId,
+                "deleteDirectory: failed: $dirName", e
+            )
         }
     }
 
-    public void deleteFile(String fileName) {
+    open fun deleteFile(fileName: String?) {
         if (TextUtils.isEmpty(fileName)) {
-            return;
+            return
         }
         try {
-            synchronized (FileUtils.class) {
-                File file = new File(context.getFilesDir(), fileName);
+            synchronized(FileUtils::class.java) {
+                val file = File(context.filesDir, fileName!!)
                 if (file.exists()) {
                     if (file.delete()) {
-                        config.getLogger().verbose(config.getAccountId(), "File Deleted:" + fileName);
+                        config.logger.verbose(config.accountId, "File Deleted:$fileName")
                     } else {
-                        config.getLogger().verbose(config.getAccountId(), "Failed to delete file" + fileName);
+                        config.logger.verbose(config.accountId, "Failed to delete file$fileName")
                     }
                 }
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "deleteFile: failed: "  + fileName, e);
+        } catch (e: Exception) {
+            config.logger.verbose(
+                config.accountId,
+                "deleteFile: failed: $fileName", e
+            )
         }
     }
 
-    public String readFromFile(String fileNameWithPath) throws IOException {
-
-        String content = "";
-        InputStream inputStream = null;
-        InputStreamReader inputStreamReader = null;
-        BufferedReader bufferedReader = null;
+    @Throws(IOException::class)
+    open fun readFromFile(fileNameWithPath: String?): String {
+        var content = ""
+        var inputStream: InputStream? = null
+        var inputStreamReader: InputStreamReader? = null
+        var bufferedReader: BufferedReader? = null
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
-            String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
-            File yourFile = new File(yourFilePath);
+            val yourFilePath = context.filesDir.toString() + "/" + fileNameWithPath
+            val yourFile = File(yourFilePath)
             //Make an InputStream with your File in the constructor
-            inputStream = new FileInputStream(yourFile);
-            StringBuilder stringBuilder = new StringBuilder();
+            inputStream = FileInputStream(yourFile)
+            val stringBuilder = StringBuilder()
             //Check to see if your inputStream is null
             //If it isn't use the inputStream to make a InputStreamReader
             //Use that to make a BufferedReader
             //Also create an empty String
-            inputStreamReader = new InputStreamReader(inputStream);
-            bufferedReader = new BufferedReader(inputStreamReader);
-            String receiveString;
+            inputStreamReader = InputStreamReader(inputStream)
+            bufferedReader = BufferedReader(inputStreamReader)
+            var receiveString: String?
             //Use a while loop to append the lines from the Buffered reader
-            while ((receiveString = bufferedReader.readLine()) != null) {
-                stringBuilder.append(receiveString);
+            while (bufferedReader.readLine().also { receiveString = it } != null) {
+                stringBuilder.append(receiveString)
             }
             //Close your InputStream and save stringBuilder as a String
-            inputStream.close();
-            content = stringBuilder.toString();
-        } catch (Exception e) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "readFromFile: failed for " + fileNameWithPath, e);
+            inputStream.close()
+            content = stringBuilder.toString()
+        } catch (e: Exception) {
+            config.logger
+                .verbose(config.accountId, "readFromFile: failed for $fileNameWithPath", e)
             //Log your error with Log.e
-        }finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (inputStreamReader != null) {
-                inputStreamReader.close();
-            }
-            if (bufferedReader != null) {
-                bufferedReader.close();
-            }
+        } finally {
+            inputStream?.close()
+            inputStreamReader?.close()
+            bufferedReader?.close()
         }
-        return content;
+        return content
     }
 
-    public void writeJsonToFile(String dirName,
-            String fileName, JSONObject jsonObject) throws IOException {
-        FileWriter writer = null;
+    @Throws(IOException::class)
+    open fun writeJsonToFile(
+        dirName: String?,
+        fileName: String?, jsonObject: JSONObject?
+    ) {
+        var writer: FileWriter? = null
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
-                return;
+                return
             }
-            synchronized (FileUtils.class) {
-                File file = new File(context.getFilesDir(), dirName);
+            synchronized(FileUtils::class.java) {
+                val file = File(context.filesDir, dirName!!)
                 if (!file.exists()) {
                     if (!file.mkdir()) {
-                        return;// if directory is not created don't proceed and return
+                        return  // if directory is not created don't proceed and return
                     }
                 }
 
-                File file1 = new File(file, fileName);
-                writer = new FileWriter(file1, false);
-                writer.append(jsonObject.toString());
-                writer.flush();
+                val file1 = File(file, fileName!!)
+                writer = FileWriter(file1, false)
+                writer!!.append(jsonObject.toString())
+                writer!!.flush()
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "writeJsonToFile: failed for dir=" + dirName + ", file=" + fileName, e);
-        }finally {
-            if(writer != null){
-                writer.close();
-            }
+        } catch (e: Exception) {
+            config.logger.verbose(
+                config.accountId,
+                "writeJsonToFile: failed for dir=$dirName, file=$fileName", e
+            )
+        } finally {
+            writer?.close()
         }
     }
 }
