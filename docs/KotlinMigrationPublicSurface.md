@@ -181,3 +181,86 @@ baseline but every wrapper keeps compiling. Proper accessors can replace them la
   no API root, and some public Kotlin API classes leak internal caches/stores through constructors
   (e.g. `CTCaches`, `FileResourcesRepoImpl`, `InAppAssetsStore`). Out of scope for the Java
   conversion but the same BCV baseline will surface them.
+
+---
+
+## Outcome (migration done, 2026-11-25)
+
+All Java in `clevertap-core`, `-geofence`, `-hms`, `-pushtemplates`, `sample` and every unit test is
+Kotlin, except `pushnotification/work/CTWorkManagerAccessor.java`, kept Java on purpose (its own
+comment: SDK-6153 WorkManager `$Companion` issue).
+
+**Verification on `feat/kotlin-migration`:** all unit tests pass (core 4027 / 26 skipped,
+pushtemplates 661, geofence 121, hms 34 / 2 skipped, 0 failures; baseline was all green),
+`apiCheck` green, `:sample` compiles.
+
+### Public API (BCV) diff vs the Java baseline
+
+- **Removed:** 85 non-API classes (buckets B–F: now `internal` or `@RestrictTo`).
+- **Removed members of A types:** only the sanctioned ones: `Var(CTVariables)` constructor and the
+  two `Var.define(..., CTVariables)` overloads; `CleverTapAPI.get/setGeofenceCallback`.
+- **Changed modifiers (binary-compatible):** former statics are `public static final` (`@JvmStatic`
+  is always final); 17 Kotlin interface methods went abstract → default (`-jvm-default=enable`).
+- **Added:** Kotlin artefacts only: `Companion` fields/classes, `INotificationRenderer$DefaultImpls`,
+  enum `getEntries`, and ~190 `synthetic` members (Kotlin-only property accessors, private-ctor
+  bridges). Synthetic members are not callable from Java.
+
+### Source-compatibility patterns used for bucket-A types
+
+- Every Java `getX()/setX()/isX()` stays an open function with the exact JVM name, **plus** a
+  Kotlin-only property (`@JvmSynthetic @JvmName("ktGetX") inline get() = getX()`), so Kotlin callers
+  can keep writing either `obj.x` or `obj.getX()`. Accessors are `inline` so mockk sees one method.
+- Single-method listeners are `fun interface` (SAM lambdas keep working).
+- Statics: `companion object` + `@JvmStatic` / `@JvmField` / `const val`; classes that were
+  non-final stay `open`.
+- `-jvm-default=enable` (gradle-scripts/commons.gradle) so interface default methods stay real JVM
+  defaults for Java implementors.
+
+### Kotlin source changes customers may hit (for the 9.0.0 changelog)
+
+Java callers and the binary API are unaffected. Kotlin callers may need small edits:
+- **Nullable factory returns** (user decision): `CleverTapAPI.getDefaultInstance`,
+  `getGlobalInstance`, `instanceWithConfig`, `CleverTapInstanceConfig.createInstance` /
+  `getDefaultInstance` → add `?.` / `!!`.
+- Getters that returned null in Java are now typed nullable (e.g. `cleverTapID`, `getProperty`,
+  `getInboxMessageForId`, `getDisplayUnitForId`, listener getters, `CleverTapDisplayUnit` getters,
+  `CTInboxStyleConfig`/`UTMDetail` getters, instance-config region/proxy/domain getters).
+- Boxed results are nullable: `CTFeatureFlagsController.get`, product config
+  `getBoolean/getDouble/getLong`.
+- Listener callback parameter nullability is now fixed by the declaration (Kotlin overrides must
+  match): core listeners take nullable params; `VariableCallback.onValueChanged`,
+  `DisplayUnitListener.onDisplayUnitsLoaded` and geofence `CTGeofenceEventsListener` take non-null.
+- Constants moved into companions (`HmsConstants`, `PTConstants`, `CTGeofenceSettings.ACCURACY_*`,
+  `CTGeofenceAPI.GEOFENCE_LOG_TAG`): qualified use (`HmsConstants.HPS`) still works; a Kotlin
+  `import ...HmsConstants.HPS` must become `import ...HmsConstants.Companion.HPS`.
+- `DisplayUnitCache` and `INotificationRenderer` (interfaces customers implement) have no property
+  syntax: use `getAllDisplayUnits()` / `getActionButtonIconKey()`.
+- Previously-public internals are `internal` now (Kotlin callers lose them; Java callers still link).
+
+### Possible latent bugs found during conversion (behaviour deliberately preserved)
+
+- `LocalDataStore` static `EXECUTOR_THREAD_ID` written cross-thread without `volatile`.
+- `ControllerManager._initializeInbox` reads `deviceInfo.deviceID` three times (racy).
+- `synchronized(this)` inside anonymous Callables (feature flags, product config,
+  ProductConfigSettings) locks the Callable, protecting nothing.
+- `LoginController.asyncProfileSwitchUser` logs field `cachedGUID` instead of param `cacheGuid`.
+- `ValidationResultStack.getPendingValidationResults` returns the live list outside its lock.
+- `CTInboxMessageContent.writeToParcel` NPEs for content without an "action" object.
+- `CTInboxMessage.getCarouselImagesData()` throws when a content lacks media/alt text.
+- Inbox view holders pass `bgColor`/`titleColor` to `Color.parseColor` unguarded; carousel holders
+  index `dots[0]` without an empty check; `CTInboxActivity.onDestroy` uses fields `onCreate` may
+  not have set.
+- pushtemplates `PendingIntentFactory` throws when the app has no launch intent (was an implicit
+  platform-type NPE; now an explicit `!!`).
+- `CTGeofenceSettings.hashCode()` is identity-based while `equals()` compares values (and NPEs on a
+  null id); pushtemplates `Utils.getTimerEnd` parses before checking for "-1".
+- `CleverTapAPI.buildPushProvidersFromManifest` has an always-true `splits != null` check.
+
+### Small intentional differences
+
+- `CTHmsMessageHandler.createNotification(ctx, null)` returns `false` without calling the parser
+  (its "Invalid Notification Message" debug log no longer appears).
+- `Logger` asserts non-null messages before `android.util.Log` (Logcat already NPEs on null on a
+  device; under Robolectric this is new).
+- Unit tests use `kotlin.test`; hamcrest stays only for `samePropertyValuesAs` (5 sites: no
+  `kotlin.test` equivalent, compared types have no value `equals()`).
