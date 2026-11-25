@@ -33,6 +33,9 @@ android {
         // keep the Kotlin metadata at 2.0 so apps on older Kotlin can still use the SDK
         languageVersion = "2.0"
         apiVersion = "2.0"
+        // Compile interface bodies to real JVM default methods (keeping DefaultImpls for binary
+        // compatibility), so Java implementors of converted interfaces don't inherit abstract methods.
+        freeCompilerArgs += ["-jvm-default=enable"]
     }
     buildFeatures {
         buildConfig = true

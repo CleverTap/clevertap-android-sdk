@@ -1928,17 +1928,17 @@ public final class com/clevertap/android/sdk/inapp/pipsdk/PIPAnimationConfig$Mov
 }
 
 public abstract interface class com/clevertap/android/sdk/inapp/pipsdk/PIPCallbacks {
-	public abstract fun onAction ()V
-	public abstract fun onApiDismiss ()V
-	public abstract fun onClose ()V
-	public abstract fun onCloseButtonClick ()V
-	public abstract fun onCollapse ()V
-	public abstract fun onExpand ()V
-	public abstract fun onMediaError (Ljava/lang/String;Ljava/lang/String;)V
-	public abstract fun onPlaybackPaused ()V
-	public abstract fun onPlaybackStarted ()V
-	public abstract fun onShow ()V
-	public abstract fun onShowFailed (Lcom/clevertap/android/sdk/inapp/pipsdk/PIPMediaType;)V
+	public fun onAction ()V
+	public fun onApiDismiss ()V
+	public fun onClose ()V
+	public fun onCloseButtonClick ()V
+	public fun onCollapse ()V
+	public fun onExpand ()V
+	public fun onMediaError (Ljava/lang/String;Ljava/lang/String;)V
+	public fun onPlaybackPaused ()V
+	public fun onPlaybackStarted ()V
+	public fun onShow ()V
+	public fun onShowFailed (Lcom/clevertap/android/sdk/inapp/pipsdk/PIPMediaType;)V
 }
 
 public final class com/clevertap/android/sdk/inapp/pipsdk/PIPCallbacks$DefaultImpls {
@@ -2938,8 +2938,8 @@ public abstract interface class com/clevertap/android/sdk/utils/Clock {
 	public static final field Companion Lcom/clevertap/android/sdk/utils/Clock$Companion;
 	public static final field SYSTEM Lcom/clevertap/android/sdk/utils/Clock;
 	public abstract fun currentTimeMillis ()J
-	public abstract fun currentTimeSeconds ()J
-	public abstract fun currentTimeSecondsInt ()I
+	public fun currentTimeSeconds ()J
+	public fun currentTimeSecondsInt ()I
 	public abstract fun newDate ()Ljava/util/Date;
 }
 
@@ -3432,7 +3432,7 @@ public final class com/clevertap/android/sdk/validation/pipeline/RemovedItem {
 
 public abstract interface class com/clevertap/android/sdk/validation/pipeline/ValidationPipeline {
 	public abstract fun execute (Ljava/lang/Object;Lcom/clevertap/android/sdk/validation/ValidationConfig;)Ljava/lang/Object;
-	public abstract fun logValidationOutcome (Lcom/clevertap/android/sdk/ILogger;Ljava/lang/String;Lcom/clevertap/android/sdk/validation/ValidationOutcome;)V
+	public fun logValidationOutcome (Lcom/clevertap/android/sdk/ILogger;Ljava/lang/String;Lcom/clevertap/android/sdk/validation/ValidationOutcome;)V
 }
 
 public final class com/clevertap/android/sdk/validation/pipeline/ValidationPipeline$DefaultImpls {
@@ -3450,7 +3450,7 @@ public final class com/clevertap/android/sdk/validation/pipeline/ValidationPipel
 
 public abstract interface class com/clevertap/android/sdk/validation/pipeline/ValidationResult {
 	public abstract fun getOutcome ()Lcom/clevertap/android/sdk/validation/ValidationOutcome;
-	public abstract fun shouldDrop ()Z
+	public fun shouldDrop ()Z
 }
 
 public final class com/clevertap/android/sdk/validation/pipeline/ValidationResult$DefaultImpls {
@@ -3606,7 +3606,7 @@ public abstract interface class com/clevertap/android/sdk/video/InAppVideoPlayer
 	public static final field PLAYER_WIDTH_TABLET_DP F
 	public static final field VOLUME_MUTED F
 	public static final field VOLUME_UNMUTED F
-	public abstract fun detachSurface ()V
+	public fun detachSurface ()V
 	public abstract fun initExoplayer (Landroid/content/Context;Ljava/lang/String;)V
 	public abstract fun initPlayerView (Landroid/content/Context;Z)V
 	public abstract fun pause ()V
@@ -3614,7 +3614,7 @@ public abstract interface class com/clevertap/android/sdk/video/InAppVideoPlayer
 	public abstract fun setActionClickListener (Lkotlin/jvm/functions/Function0;)V
 	public abstract fun setFullscreenClickListener (Lkotlin/jvm/functions/Function1;)V
 	public abstract fun setMuteClickListener ()V
-	public abstract fun softPause ()V
+	public fun softPause ()V
 	public abstract fun switchToFullScreen (Z)V
 	public abstract fun videoSurface ()Landroid/view/View;
 }
