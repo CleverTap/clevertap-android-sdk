@@ -1,7 +1,7 @@
-package com.clevertap.android.sdk.featureFlags;
+package com.clevertap.android.sdk.featureFlags
 
-public interface CTFeatureFlagConstants {
+internal object CTFeatureFlagConstants {
 
-    String CACHED_FILE_NAME = "ff_cache.json";
-    String DIR_FEATURE_FLAG = "Feature_Flag";
+    const val CACHED_FILE_NAME = "ff_cache.json"
+    const val DIR_FEATURE_FLAG = "Feature_Flag"
 }

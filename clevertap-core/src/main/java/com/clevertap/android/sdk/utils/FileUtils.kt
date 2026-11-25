@@ -15,7 +15,7 @@ import java.io.InputStreamReader
 
 @WorkerThread
 internal open class FileUtils(
-    private val context: Context,
+    private val context: Context?,
     private val config: CleverTapInstanceConfig
 ) {
 
@@ -25,7 +25,7 @@ internal open class FileUtils(
         }
         try {
             synchronized(FileUtils::class.java) {
-                val file = File(context.filesDir, dirName!!)
+                val file = File(context!!.filesDir, dirName!!)
                 if (file.exists() && file.isDirectory) {
                     val children = file.list()
                     for (child in children!!) {
@@ -51,7 +51,7 @@ internal open class FileUtils(
         }
         try {
             synchronized(FileUtils::class.java) {
-                val file = File(context.filesDir, fileName!!)
+                val file = File(context!!.filesDir, fileName!!)
                 if (file.exists()) {
                     if (file.delete()) {
                         config.logger.verbose(config.accountId, "File Deleted:$fileName")
@@ -77,7 +77,7 @@ internal open class FileUtils(
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
-            val yourFilePath = context.filesDir.toString() + "/" + fileNameWithPath
+            val yourFilePath = context!!.filesDir.toString() + "/" + fileNameWithPath
             val yourFile = File(yourFilePath)
             //Make an InputStream with your File in the constructor
             inputStream = FileInputStream(yourFile)
@@ -119,7 +119,7 @@ internal open class FileUtils(
                 return
             }
             synchronized(FileUtils::class.java) {
-                val file = File(context.filesDir, dirName!!)
+                val file = File(context!!.filesDir, dirName!!)
                 if (!file.exists()) {
                     if (!file.mkdir()) {
                         return  // if directory is not created don't proceed and return
