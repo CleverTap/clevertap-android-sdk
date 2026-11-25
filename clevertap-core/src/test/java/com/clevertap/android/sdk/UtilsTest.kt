@@ -213,7 +213,7 @@ class UtilsTest : BaseTestCase() {
 
         string = ""
         stringConverted = Utils.convertToTitleCase(string)
-        assertEquals(0, stringConverted.length)
+        assertEquals(0, stringConverted!!.length)
 
         // Camel case strings are converted to Title case
         string = "CamelCaseHasWordsWithCapitalFirstLetter"

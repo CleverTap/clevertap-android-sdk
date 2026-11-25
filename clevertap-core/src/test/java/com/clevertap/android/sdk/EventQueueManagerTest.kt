@@ -796,7 +796,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { corestate.deviceInfo.deviceID } returns expectedDeviceID
                 every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
                 every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
-                every { corestate.deviceInfo.isErrorDeviceId() } returns false
+                every { corestate.deviceInfo.isErrorDeviceId } returns false
 
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
