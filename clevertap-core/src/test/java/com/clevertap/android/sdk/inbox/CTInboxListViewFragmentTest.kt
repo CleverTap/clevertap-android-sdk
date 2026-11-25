@@ -23,6 +23,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -602,14 +603,14 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
-    fun test_onPause_releases_the_player_of_the_media_recycler() {
+    fun test_onPause_keeps_the_player_of_the_media_recycler() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
         fragment.mediaRecyclerView = media
 
         fragment.onPause()
 
-        verify(exactly = 1) { media.releasePlayer() }
+        verify(exactly = 0) { media.releasePlayer() }
     }
 
     @Test
@@ -618,10 +619,12 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         fragment.mediaRecyclerView = null
 
         fragment.onPause()
+
+        assertNull(fragment.mediaRecyclerView)
     }
 
     @Test
-    fun test_onResume_after_onPause_brings_the_player_back() {
+    fun test_onResume_after_onPause_restarts_the_player_without_releasing_it() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
         fragment.mediaRecyclerView = media
@@ -629,6 +632,45 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         fragment.onPause()
         fragment.onResume()
 
+        verify(exactly = 0) { media.releasePlayer() }
+        verify(exactly = 1) { media.onRestartPlayer() }
+    }
+
+    @Test
+    fun test_onPageHidden_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onPageHidden()
+
+        verify(exactly = 1) { media.releasePlayer() }
+    }
+
+    @Test
+    fun test_onPageHidden_without_a_media_recycler_does_nothing() {
+        val fragment = viewReadyFragment()
+        fragment.mediaRecyclerView = null
+
+        fragment.onPageHidden()
+
+        assertNull(fragment.mediaRecyclerView)
+    }
+
+    @Test
+    fun test_onPageHidden_then_onResume_brings_the_player_back() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onPageHidden() // another tab came to rest
+        fragment.onResume() // the user comes back to this tab
+
+        // Hidden first, then brought back: the other way round would leave the tab without a player
+        verifyOrder {
+            media.releasePlayer()
+            media.onRestartPlayer()
+        }
         verify(exactly = 1) { media.releasePlayer() }
         verify(exactly = 1) { media.onRestartPlayer() }
     }

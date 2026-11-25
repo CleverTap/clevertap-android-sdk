@@ -166,6 +166,29 @@ class CTInboxActivityTest : BaseTestCase() {
     }
 
     @Test
+    fun `page selected hides the other tabs at once`() {
+        val tabOne = RecordingInboxListFragment()
+        val tabTwo = RecordingInboxListFragment()
+        val tabThree = RecordingInboxListFragment()
+
+        pageSettledListener(tabOne, tabTwo, tabThree, currentItem = 1).onPageSelected(1)
+
+        assertEquals(1, tabOne.onPageHiddenCalls)
+        assertEquals(0, tabTwo.onPageHiddenCalls)
+        assertEquals(1, tabThree.onPageHiddenCalls)
+    }
+
+    @Test
+    fun `page selected does not start the video of the new tab`() {
+        val tabOne = RecordingInboxListFragment()
+        val tabTwo = RecordingInboxListFragment()
+
+        pageSettledListener(tabOne, tabTwo, currentItem = 1).onPageSelected(1)
+
+        assertEquals(0, tabTwo.onPageSettledCalls)
+    }
+
+    @Test
     fun `page settled listener notifies the fragment that came to rest`() {
         val tabOne = RecordingInboxListFragment()
         val tabTwo = RecordingInboxListFragment()
@@ -175,6 +198,88 @@ class CTInboxActivityTest : BaseTestCase() {
 
         assertEquals(0, tabOne.onPageSettledCalls)
         assertEquals(1, tabTwo.onPageSettledCalls)
+    }
+
+    @Test
+    fun `page settled listener tells the other tabs they are hidden`() {
+        val tabOne = RecordingInboxListFragment()
+        val tabTwo = RecordingInboxListFragment()
+        val tabThree = RecordingInboxListFragment()
+
+        pageSettledListener(tabOne, tabTwo, tabThree, currentItem = 1)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(1, tabOne.onPageHiddenCalls)
+        assertEquals(0, tabTwo.onPageHiddenCalls)
+        assertEquals(1, tabThree.onPageHiddenCalls)
+    }
+
+    @Test
+    fun `page settled listener does not hide the tab that came to rest`() {
+        val tab = RecordingInboxListFragment()
+
+        pageSettledListener(tab, currentItem = 0)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(0, tab.onPageHiddenCalls)
+        assertEquals(1, tab.onPageSettledCalls)
+    }
+
+    @Test
+    fun `page settled listener does not hide any tab while the pager is moving`() {
+        val tabOne = RecordingInboxListFragment()
+        val tabTwo = RecordingInboxListFragment()
+        val listener = pageSettledListener(tabOne, tabTwo, currentItem = 1)
+
+        listener.onPageScrollStateChanged(ViewPager.SCROLL_STATE_DRAGGING)
+        listener.onPageScrollStateChanged(ViewPager.SCROLL_STATE_SETTLING)
+
+        assertEquals(0, tabOne.onPageHiddenCalls)
+        assertEquals(0, tabTwo.onPageHiddenCalls)
+    }
+
+    @Test
+    fun `page listener tolerates a tab that has no fragment yet`() {
+        val activity = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+        val adapter = CTInboxTabAdapter(activity.supportFragmentManager, 2)
+        val inboxTab = RecordingInboxListFragment()
+        adapter.addFragment(inboxTab, "tab1", 1) // slot 0 stays empty
+        val pager = mockk<ViewPager>()
+        every { pager.currentItem } returns 1
+        val listener = CTInboxActivity.createPageSettledListener(pager, adapter)
+
+        listener.onPageSelected(1)
+        listener.onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(1, inboxTab.onPageSettledCalls)
+        assertEquals(0, inboxTab.onPageHiddenCalls)
+    }
+
+    @Test
+    fun `page settled listener tolerates a non-inbox fragment in another tab`() {
+        val inboxTab = RecordingInboxListFragment()
+
+        pageSettledListener(Fragment(), inboxTab, currentItem = 1)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(1, inboxTab.onPageSettledCalls)
+        assertEquals(0, inboxTab.onPageHiddenCalls)
+    }
+
+    @Test
+    fun `page settled listener hides the other tabs before it starts the video of the current one`() {
+        val order = mutableListOf<String>()
+        val hidden = object : RecordingInboxListFragment() {
+            override fun onPageHidden() { order += "hidden" }
+        }
+        val current = object : RecordingInboxListFragment() {
+            override fun onPageSettled() { order += "settled" }
+        }
+
+        pageSettledListener(hidden, current, currentItem = 1)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(listOf("hidden", "settled"), order)
     }
 
     @Test

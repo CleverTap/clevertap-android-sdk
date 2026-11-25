@@ -249,10 +249,12 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        // A tab that is not the current one must not keep a player and its decoder
+    /**
+     * Called by {@link CTInboxActivity} once another tab has come to rest: this tab must not keep a
+     * player and its decoder. A pause of the whole screen (a dialog, a split-screen window) does not
+     * release it, because the inbox is still visible then; {@link #onStop()} releases it.
+     */
+    void onPageHidden() {
         if (mediaRecyclerView != null) {
             mediaRecyclerView.releasePlayer();
         }

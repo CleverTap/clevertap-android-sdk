@@ -18,9 +18,16 @@ public class RecordingInboxListFragment extends CTInboxListViewFragment {
 
     public int onPageSettledCalls = 0;
 
+    public int onPageHiddenCalls = 0;
+
     @Override
     void refreshList() {
         refreshListCalls++;
+    }
+
+    @Override
+    void onPageHidden() {
+        onPageHiddenCalls++;
     }
 
     @Override
