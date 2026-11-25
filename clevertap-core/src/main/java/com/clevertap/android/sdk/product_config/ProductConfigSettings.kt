@@ -1,336 +1,352 @@
-package com.clevertap.android.sdk.product_config;
+package com.clevertap.android.sdk.product_config
 
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_NO_OF_CALLS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_WINDOW_LENGTH_MINS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS;
-
-import android.text.TextUtils;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.OnSuccessListener;
-import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.FileUtils;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.text.TextUtils
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_NO_OF_CALLS
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_WINDOW_LENGTH_MINS
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS
+import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.OnSuccessListener
+import com.clevertap.android.sdk.utils.FileUtils
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Collections
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 
 /**
- * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
- *      Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
- * </p>
+ * Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
  */
-@Deprecated
-public class ProductConfigSettings {
+@Suppress("DEPRECATION")
+@Deprecated("This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
+open class ProductConfigSettings @Deprecated(
+    "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
+) internal constructor(
+    private var guidValue: String?,
+    private val config: CleverTapInstanceConfig,
+    private val fileUtils: FileUtils
+) {
 
-    private final CleverTapInstanceConfig config;
+    private val settingsMap: MutableMap<String, String> = Collections.synchronizedMap(HashMap())
 
-    private String guid;
-
-    private final FileUtils fileUtils;
-
-    private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    ProductConfigSettings(String guid, CleverTapInstanceConfig config, FileUtils fileUtils) {
-        this.guid = guid;
-        this.config = config;
-        this.fileUtils = fileUtils;
-        initDefaults();
+    init {
+        initDefaults()
     }
 
-    void eraseStoredSettingsFile(final FileUtils fileUtils) {
+    internal fun eraseStoredSettingsFile(fileUtils: FileUtils?) {
         if (fileUtils == null) {
-            throw new IllegalArgumentException("FileUtils can't be null");
+            throw IllegalArgumentException("FileUtils can't be null")
         }
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-        task.execute("ProductConfigSettings#eraseStoredSettingsFile", new Callable<Void>() {
-            @Override
-            public Void call() {
-                synchronized (this) {
+        val task = CTExecutorFactory.executors(config).ioTask<Void?>()
+        task.execute("ProductConfigSettings#eraseStoredSettingsFile", object : Callable<Void?> {
+            override fun call(): Void? {
+                // Locks on this Callable instance, exactly like the Java original's synchronized (this).
+                synchronized(this) {
                     try {
-                        String fileName = getFullPath();
-                        fileUtils.deleteFile(fileName);
-                        config.getLogger()
-                                .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
-                    } catch (Exception e) {
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Error while resetting settings", e);
+                        val fileName = fullPath
+                        fileUtils.deleteFile(fileName)
+                        config.logger
+                            .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file$fileName")
+                    } catch (e: Exception) {
+                        config.logger.verbose(
+                            ProductConfigUtil.getLogTag(config),
+                            "Error while resetting settings", e
+                        )
                     }
-                    return null;
+                    return null
                 }
             }
-        });
+        })
     }
 
-    String getDirName() {
-        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
-    }
+    internal val dirName: String
+        get() = CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.accountId + "_" + guidValue
 
-    String getFullPath() {
-        return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
-    }
+    internal val fullPath: String
+        get() = dirName + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS
 
     /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
-    @Deprecated
-    public String getGuid() {
-        return guid;
+    @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
+    open fun getGuid(): String? {
+        return guidValue
     }
 
-    void setGuid(final String guid) {
-        this.guid = guid;
+    internal fun setGuid(guid: String?) {
+        this.guidValue = guid
     }
 
-    JSONObject getJsonObject(final String content) {
+    /** Kotlin property syntax, equivalent to [getGuid]; the setter stays SDK-internal as in Java. */
+    @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
+    var guid: String?
+        @JvmSynthetic @JvmName("ktGetGuid") inline get() = getGuid()
+        @JvmSynthetic @JvmName("ktSetGuid") internal inline set(value) = setGuid(value)
+
+    internal fun getJsonObject(content: String?): JSONObject? {
         if (!TextUtils.isEmpty(content)) {
             try {
-                return new JSONObject(content);
-            } catch (JSONException e) {
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "LoadSettings failed", e);
+                return JSONObject(content!!)
+            } catch (e: JSONException) {
+                config.logger.verbose(
+                    ProductConfigUtil.getLogTag(config),
+                    "LoadSettings failed", e
+                )
             }
         }
-        return null;
+        return null
     }
 
-    synchronized long getLastFetchTimeStampInMillis() {
-        long lastFetchedTimeStamp = 0L;
-        String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
-        try {
-            if (!TextUtils.isEmpty(value)) {
-                lastFetchedTimeStamp = (long) Double.parseDouble(value);
+    internal var lastFetchTimeStampInMillis: Long
+        @Synchronized get() {
+            var lastFetchedTimeStamp = 0L
+            val value = settingsMap[KEY_LAST_FETCHED_TIMESTAMP]
+            try {
+                if (!TextUtils.isEmpty(value)) {
+                    lastFetchedTimeStamp = value!!.toDouble().toLong()
+                }
+            } catch (e: Exception) {
+                config.logger.verbose(
+                    ProductConfigUtil.getLogTag(config),
+                    "GetLastFetchTimeStampInMillis failed", e
+                )
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetLastFetchTimeStampInMillis failed", e);
+            return lastFetchedTimeStamp
         }
-        return lastFetchedTimeStamp;
-    }
-
-    synchronized void setLastFetchTimeStampInMillis(long timeStampInMillis) {
-        long lastFetchTimeStampInMillis = getLastFetchTimeStampInMillis();
-        if (timeStampInMillis >= 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
-            settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(timeStampInMillis));
-            updateConfigToFile();
+        @Synchronized set(timeStampInMillis) {
+            val lastFetchTimeStampInMillis = lastFetchTimeStampInMillis
+            if (timeStampInMillis >= 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
+                settingsMap[KEY_LAST_FETCHED_TIMESTAMP] = timeStampInMillis.toString()
+                updateConfigToFile()
+            }
         }
-    }
 
-    long getNextFetchIntervalInSeconds() {
-        long minFetchIntervalInSecondsSDK = getMinFetchIntervalInSeconds();
-        long minFetchIntervalInSecondsServer = TimeUnit.MINUTES
-                .toSeconds(getWindowIntervalInMinutes() / getNoOfCallsInAllowedWindow());
-        return Math.max(minFetchIntervalInSecondsServer, minFetchIntervalInSecondsSDK);
-    }
+    internal val nextFetchIntervalInSeconds: Long
+        get() {
+            val minFetchIntervalInSecondsSDK = getMinFetchIntervalInSeconds()
+            val minFetchIntervalInSecondsServer = TimeUnit.MINUTES
+                .toSeconds((getWindowIntervalInMinutes() / getNoOfCallsInAllowedWindow()).toLong())
+            return Math.max(minFetchIntervalInSecondsServer, minFetchIntervalInSecondsSDK)
+        }
 
-    void initDefaults() {
-        settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(DEFAULT_NO_OF_CALLS));
-        settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
-        settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
-        settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-        config.getLogger()
-                .verbose(ProductConfigUtil.getLogTag(config),
-                        "Settings loaded with default values: " + settingsMap);
+    internal fun initDefaults() {
+        settingsMap[PRODUCT_CONFIG_NO_OF_CALLS] = DEFAULT_NO_OF_CALLS.toString()
+        settingsMap[PRODUCT_CONFIG_WINDOW_LENGTH_MINS] = DEFAULT_WINDOW_LENGTH_MINS.toString()
+        settingsMap[KEY_LAST_FETCHED_TIMESTAMP] = 0.toString()
+        settingsMap[PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS] = DEFAULT_MIN_FETCH_INTERVAL_SECONDS.toString()
+        config.logger
+            .verbose(
+                ProductConfigUtil.getLogTag(config),
+                "Settings loaded with default values: $settingsMap"
+            )
     }
 
     /**
      * loads settings from file.
      * It's a sync call, please make sure to call this from a background thread
      */
-    synchronized void loadSettings(FileUtils fileUtils) {
+    @Synchronized
+    internal fun loadSettings(fileUtils: FileUtils?) {
         if (fileUtils == null) {
-            throw new IllegalArgumentException("fileutils can't be null");
+            throw IllegalArgumentException("fileutils can't be null")
         }
         try {
-            String content = fileUtils.readFromFile(getFullPath());
-            JSONObject jsonObject = getJsonObject(content);
-            populateMapWithJson(jsonObject);
-        } catch (Exception e) {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "LoadSettings failed while reading file", e);
+            val content = fileUtils.readFromFile(fullPath)
+            val jsonObject = getJsonObject(content)
+            populateMapWithJson(jsonObject)
+        } catch (e: Exception) {
+            config.logger.verbose(
+                ProductConfigUtil.getLogTag(config),
+                "LoadSettings failed while reading file", e
+            )
         }
     }
 
-    synchronized void populateMapWithJson(final JSONObject jsonObject) {
+    @Synchronized
+    internal fun populateMapWithJson(jsonObject: JSONObject?) {
         if (jsonObject == null) {
-            return;
+            return
         }
-        Iterator<String> iterator = jsonObject.keys();
+        val iterator = jsonObject.keys()
         while (iterator.hasNext()) {
-            String key = iterator.next();
+            val key = iterator.next()
             if (!TextUtils.isEmpty(key)) {
-                String value;
+                val value: String
                 try {
-                    Object obj = jsonObject.get(key);
-                    value = String.valueOf(obj);
-                } catch (Exception e) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Failed loading setting for key " + key, e);
-                    continue;
+                    val obj = jsonObject.get(key)
+                    value = obj.toString()
+                } catch (e: Exception) {
+                    config.logger.verbose(
+                        ProductConfigUtil.getLogTag(config),
+                        "Failed loading setting for key $key", e
+                    )
+                    continue
                 }
                 if (!TextUtils.isEmpty(value)) {
-                    settingsMap.put(key, value);
+                    settingsMap[key] = value
                 }
             }
         }
-        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                "LoadSettings completed with settings: " + settingsMap);
+        config.logger.verbose(
+            ProductConfigUtil.getLogTag(config),
+            "LoadSettings completed with settings: $settingsMap"
+        )
     }
 
-    void reset(final FileUtils fileUtils) {
-        initDefaults();
-        eraseStoredSettingsFile(fileUtils);
+    internal fun reset(fileUtils: FileUtils?) {
+        initDefaults()
+        eraseStoredSettingsFile(fileUtils)
     }
 
-    void setARPValue(JSONObject arp) {
+    internal fun setARPValue(arp: JSONObject?) {
         if (arp != null) {
-            final Iterator<String> keys = arp.keys();
+            val keys = arp.keys()
             while (keys.hasNext()) {
-                final String key = keys.next();
+                val key = keys.next()
                 try {
                     if (!TextUtils.isEmpty(key)) {
-                        final Object object = arp.get(key);
-                        if (object instanceof Number) {
-                            final int update = (int) ((Number) object).doubleValue();
-                            if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                                    || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS
-                                    .equalsIgnoreCase(key)) {
-                                setProductConfigValuesFromARP(key, update);
+                        val `object` = arp.get(key)
+                        if (`object` is Number) {
+                            val update = `object`.toDouble().toInt()
+                            if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equals(key, ignoreCase = true) ||
+                                CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS
+                                    .equals(key, ignoreCase = true)
+                            ) {
+                                setProductConfigValuesFromARP(key, update)
                             }
                         }
                     }
-
-                } catch (Exception e) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config setARPValue failed", e);
+                } catch (e: Exception) {
+                    config.logger.verbose(
+                        ProductConfigUtil.getLogTag(config),
+                        "Product Config setARPValue failed", e
+                    )
                 }
             }
         }
     }
 
-    synchronized void setMinimumFetchIntervalInSeconds(long intervalInSeconds) {
-        long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
+    @Synchronized
+    internal fun setMinimumFetchIntervalInSeconds(intervalInSeconds: Long) {
+        val minFetchIntervalInSeconds = getMinFetchIntervalInSeconds()
         if (intervalInSeconds > 0 && minFetchIntervalInSeconds != intervalInSeconds) {
-            settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
+            settingsMap[PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS] = intervalInSeconds.toString()
         }
     }
 
-    private long getMinFetchIntervalInSeconds() {
-        long minInterVal = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
-        String value = settingsMap.get(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+    private fun getMinFetchIntervalInSeconds(): Long {
+        var minInterVal = DEFAULT_MIN_FETCH_INTERVAL_SECONDS
+        val value = settingsMap[PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS]
         try {
             if (!TextUtils.isEmpty(value)) {
-                minInterVal = (long) Double.parseDouble(value);
+                minInterVal = value!!.toDouble().toLong()
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetMinFetchIntervalInSeconds failed", e);
+        } catch (e: Exception) {
+            config.logger.verbose(
+                ProductConfigUtil.getLogTag(config),
+                "GetMinFetchIntervalInSeconds failed", e
+            )
         }
-        return minInterVal;
+        return minInterVal
     }
 
-    synchronized private int getNoOfCallsInAllowedWindow() {
-        int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
-        String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
+    @Synchronized
+    private fun getNoOfCallsInAllowedWindow(): Int {
+        var noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS
+        val value = settingsMap[PRODUCT_CONFIG_NO_OF_CALLS]
         try {
             if (!TextUtils.isEmpty(value)) {
-                noCallsAllowedInWindow = (int) Double.parseDouble(value);
+                noCallsAllowedInWindow = value!!.toDouble().toInt()
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetNoOfCallsInAllowedWindow failed", e);
+        } catch (e: Exception) {
+            config.logger.verbose(
+                ProductConfigUtil.getLogTag(config),
+                "GetNoOfCallsInAllowedWindow failed", e
+            )
         }
-        return noCallsAllowedInWindow;
+        return noCallsAllowedInWindow
     }
 
-    private synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
-        long noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow();
-        if (callsInAllowedWindow > 0 && noOfCallsInAllowedWindow != callsInAllowedWindow) {
-            settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(callsInAllowedWindow));
-            updateConfigToFile();
+    @Synchronized
+    private fun setNoOfCallsInAllowedWindow(callsInAllowedWindow: Int) {
+        val noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow().toLong()
+        if (callsInAllowedWindow > 0 && noOfCallsInAllowedWindow != callsInAllowedWindow.toLong()) {
+            settingsMap[PRODUCT_CONFIG_NO_OF_CALLS] = callsInAllowedWindow.toString()
+            updateConfigToFile()
         }
     }
 
-    synchronized private int getWindowIntervalInMinutes() {
-        int windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS;
-        String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
+    @Synchronized
+    private fun getWindowIntervalInMinutes(): Int {
+        var windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS
+        val value = settingsMap[PRODUCT_CONFIG_WINDOW_LENGTH_MINS]
         try {
             if (!TextUtils.isEmpty(value)) {
-                windowIntervalInMinutes = (int) Double.parseDouble(value);
+                windowIntervalInMinutes = value!!.toDouble().toInt()
             }
-        } catch (Exception e) {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetWindowIntervalInMinutes failed", e);
+        } catch (e: Exception) {
+            config.logger.verbose(
+                ProductConfigUtil.getLogTag(config),
+                "GetWindowIntervalInMinutes failed", e
+            )
         }
-        return windowIntervalInMinutes;
+        return windowIntervalInMinutes
     }
 
-    private synchronized void setWindowIntervalInMinutes(int intervalInMinutes) {
-        int windowIntervalInMinutes = getWindowIntervalInMinutes();
+    @Synchronized
+    private fun setWindowIntervalInMinutes(intervalInMinutes: Int) {
+        val windowIntervalInMinutes = getWindowIntervalInMinutes()
         if (intervalInMinutes > 0 && windowIntervalInMinutes != intervalInMinutes) {
-            settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(intervalInMinutes));
-            updateConfigToFile();
+            settingsMap[PRODUCT_CONFIG_WINDOW_LENGTH_MINS] = intervalInMinutes.toString()
+            updateConfigToFile()
         }
     }
 
-    private void setProductConfigValuesFromARP(String key, int value) {
-        switch (key) {
-            case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
-                setNoOfCallsInAllowedWindow(value);
-                break;
-            case CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
-                setWindowIntervalInMinutes(value);
-                break;
+    private fun setProductConfigValuesFromARP(key: String, value: Int) {
+        when (key) {
+            CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS -> setNoOfCallsInAllowedWindow(value)
+            CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS -> setWindowIntervalInMinutes(value)
         }
     }
 
-    private synchronized void updateConfigToFile() {
-        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
-            @Override
-            public void onSuccess(final Boolean isSuccess) {
-                if (isSuccess) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config settings: writing Success " + settingsMap);
-                } else {
-                    config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config),
-                                    "Product Config settings: writing Failed");
-                }
+    @Synchronized
+    private fun updateConfigToFile() {
+        val task = CTExecutorFactory.executors(config).ioTask<Boolean>()
+        task.addOnSuccessListener(OnSuccessListener { isSuccess ->
+            if (isSuccess) {
+                config.logger.verbose(
+                    ProductConfigUtil.getLogTag(config),
+                    "Product Config settings: writing Success $settingsMap"
+                )
+            } else {
+                config.logger
+                    .verbose(
+                        ProductConfigUtil.getLogTag(config),
+                        "Product Config settings: writing Failed"
+                    )
             }
-        }).execute("ProductConfigSettings#updateConfigToFile", new Callable<Boolean>() {
-            @Override
-            public Boolean call() {
-                try {
-                    //Ensure that we are not saving min interval in seconds
-                    HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
-                    toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+        }).execute("ProductConfigSettings#updateConfigToFile", Callable {
+            try {
+                //Ensure that we are not saving min interval in seconds
+                val toWriteMap = HashMap(settingsMap)
+                toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS)
 
-                    fileUtils.writeJsonToFile(getDirName(),
-                            CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
-                } catch (Exception e) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "UpdateConfigToFile failed", e);
-                    return false;
-                }
-                return true;
+                fileUtils.writeJsonToFile(
+                    dirName,
+                    CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, JSONObject(toWriteMap as Map<*, *>)
+                )
+            } catch (e: Exception) {
+                config.logger.verbose(
+                    ProductConfigUtil.getLogTag(config),
+                    "UpdateConfigToFile failed", e
+                )
+                return@Callable false
             }
-        });
+            true
+        })
     }
 }
