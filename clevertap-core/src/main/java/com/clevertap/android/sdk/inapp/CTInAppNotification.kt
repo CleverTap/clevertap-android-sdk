@@ -16,74 +16,74 @@ import org.json.JSONException
 import org.json.JSONObject
 import kotlin.reflect.KClass
 
-class CTInAppNotification : Parcelable {
+public class CTInAppNotification : Parcelable {
 
-    var id: String? = null
+    public var id: String? = null
         private set
 
-    var campaignId: String? = null
+    public var campaignId: String? = null
         private set
 
-    var inAppType: CTInAppType? = null
+    public var inAppType: CTInAppType? = null
         private set
 
-    var isExcludeFromCaps: Boolean = false
+    public var isExcludeFromCaps: Boolean = false
         private set
 
     private var _actionExtras: JSONObject? = null
-    val actionExtras: JSONObject?
+    public val actionExtras: JSONObject?
         get() = _actionExtras?.copy()
 
     private var _jsonDescription: JSONObject
-    val jsonDescription
+    public val jsonDescription: JSONObject
         get() = _jsonDescription.copy()
 
-    var landscapeImageUrl: String? = null
+    public var landscapeImageUrl: String? = null
         private set
 
-    var maxPerSession: Int = 0
+    public var maxPerSession: Int = 0
         private set
 
     private var _buttons = ArrayList<CTInAppNotificationButton>()
 
-    val buttons: List<CTInAppNotificationButton>
+    public val buttons: List<CTInAppNotificationButton>
         get() = _buttons
 
-    var isLandscape: Boolean = false
+    public var isLandscape: Boolean = false
         private set
 
-    var isPortrait: Boolean = false
+    public var isPortrait: Boolean = false
         private set
 
-    var title: String? = null
+    public var title: String? = null
         private set
 
-    var message: String? = null
+    public var message: String? = null
         private set
 
-    var timeToLive: Long = 0
+    public var timeToLive: Long = 0
         private set
 
-    var totalDailyCount: Int = 0
+    public var totalDailyCount: Int = 0
         private set
 
-    var totalLifetimeCount: Int = 0
+    public var totalLifetimeCount: Int = 0
         private set
 
-    var isLocalInApp: Boolean = false
+    public var isLocalInApp: Boolean = false
         private set
 
-    var fallBackToNotificationSettings = false
+    public var fallBackToNotificationSettings: Boolean = false
         private set
 
-    var isRequestForPushPermission: Boolean = false
+    public var isRequestForPushPermission: Boolean = false
         private set
 
     /**
      * Per-campaign dismiss-gesture flag. Default to `true` when the JSON key is absent or an
      * explicit null (parsed null-safely via [org.json.JSONObject.optBoolean]).
      */
-    var swipeToDismiss: Boolean = true
+    public var swipeToDismiss: Boolean = true
         private set
 
     internal var customTemplateData: CustomTemplateInAppData? = null
@@ -629,13 +629,13 @@ class CTInAppNotification : Parcelable {
         }
     }
 
-    companion object {
-        const val HTML_DEFAULT_ASPECT_RATIO: Double = -1.0
+    public companion object {
+        public const val HTML_DEFAULT_ASPECT_RATIO: Double = -1.0
 
         private const val EMPTY_JSON = "{}"
 
         @JvmField
-        val CREATOR: Parcelable.Creator<CTInAppNotification> =
+        public val CREATOR: Parcelable.Creator<CTInAppNotification> =
             object : Parcelable.Creator<CTInAppNotification> {
                 override fun createFromParcel(`in`: Parcel): CTInAppNotification {
                     return CTInAppNotification(`in`)
@@ -647,7 +647,7 @@ class CTInAppNotification : Parcelable {
             }
 
         @JvmStatic
-        fun defaultTtl(): Long {
+        public fun defaultTtl(): Long {
             return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000
         }
 

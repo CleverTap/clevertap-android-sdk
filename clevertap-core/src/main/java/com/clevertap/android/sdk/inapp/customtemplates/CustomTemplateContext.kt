@@ -22,7 +22,7 @@ import java.lang.ref.WeakReference
  * current values of the arguments. Use [setPresented] and [setDismissed] to notify the SDK of the current state of
  * this invocation.
  */
-sealed class CustomTemplateContext private constructor(
+public sealed class CustomTemplateContext private constructor(
     template: CustomTemplate,
     internal val notification: CTInAppNotification,
     inAppListener: InAppListener,
@@ -65,8 +65,8 @@ sealed class CustomTemplateContext private constructor(
         }
     }
 
-    val templateName = template.name
-    protected val argumentValues = mergeArguments(template.args, notification.customTemplateData?.getArguments())
+    public val templateName: String = template.name
+    protected val argumentValues: Map<String, Any> = mergeArguments(template.args, notification.customTemplateData?.getArguments())
     internal val inAppListenerRef = WeakReference(inAppListener)
     private val isAction = notification.customTemplateData?.isAction ?: false
     private val isVisual = template.isVisual
@@ -76,7 +76,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getString(name: String): String? {
+    public fun getString(name: String): String? {
         return getValue(name)
     }
 
@@ -85,7 +85,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getBoolean(name: String): Boolean? {
+    public fun getBoolean(name: String): Boolean? {
         return getValue(name)
     }
 
@@ -94,7 +94,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getByte(name: String): Byte? {
+    public fun getByte(name: String): Byte? {
         return getValue(name)
     }
 
@@ -103,7 +103,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getShort(name: String): Short? {
+    public fun getShort(name: String): Short? {
         return getValue(name)
     }
 
@@ -112,7 +112,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getInt(name: String): Int? {
+    public fun getInt(name: String): Int? {
         return getValue(name)
     }
 
@@ -121,7 +121,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getLong(name: String): Long? {
+    public fun getLong(name: String): Long? {
         return getValue(name)
     }
 
@@ -130,7 +130,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getFloat(name: String): Float? {
+    public fun getFloat(name: String): Float? {
         return getValue(name)
     }
 
@@ -139,7 +139,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getDouble(name: String): Double? {
+    public fun getDouble(name: String): Double? {
         return getValue(name)
     }
 
@@ -148,7 +148,7 @@ sealed class CustomTemplateContext private constructor(
      * values are converted to their defined type in the [CustomTemplate]. Action arguments are mapped to their
      * name as [String]. Returns `null` if no arguments are found for the requested map.
      */
-    fun getMap(name: String): Map<String, Any>? {
+    public fun getMap(name: String): Map<String, Any>? {
         val mapPrefix = "$name."
         val mapContent = argumentValues.filterKeys { key ->
             key.startsWith(mapPrefix)
@@ -190,7 +190,7 @@ sealed class CustomTemplateContext private constructor(
      *
      * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
      */
-    fun getFile(name: String): String? {
+    public fun getFile(name: String): String? {
         return getValue<String?>(name)?.let {
             resourceProvider.cachedFilePath(it)
         }
@@ -199,7 +199,7 @@ sealed class CustomTemplateContext private constructor(
     /**
      * Notify the SDK that the current [CustomTemplate] is presented.
      */
-    open fun setPresented() {
+    public open fun setPresented() {
         if (isAction) {
             return
         }
@@ -217,7 +217,7 @@ sealed class CustomTemplateContext private constructor(
      * visible to the user until this method is called. Since the SDK can show only one InApp message at a time, all
      * other messages will be queued until the current one is dismissed.
      */
-    fun setDismissed() {
+    public fun setDismissed() {
         dismissListener?.onDismissContext(this)
         dismissListener = null
 
@@ -307,7 +307,7 @@ sealed class CustomTemplateContext private constructor(
     /**
      * See [CustomTemplateContext].
      */
-    class TemplateContext internal constructor(
+    public class TemplateContext internal constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
@@ -320,7 +320,8 @@ sealed class CustomTemplateContext private constructor(
          * Trigger an action argument by name. Open url actions could require an [activityContext] to be launched
          * from a specific activity, otherwise they would be launched with [android.content.Intent.FLAG_ACTIVITY_NEW_TASK]
          */
-        fun triggerActionArgument(actionArgumentName: String, activityContext: Context? = null) {
+        @JvmOverloads
+        public fun triggerActionArgument(actionArgumentName: String, activityContext: Context? = null) {
             val actionValue = argumentValues[actionArgumentName]
             if (actionValue !is CTInAppAction) {
                 logger.info(
@@ -348,7 +349,7 @@ sealed class CustomTemplateContext private constructor(
     /**
      * See [CustomTemplateContext].
      */
-    class FunctionContext internal constructor(
+    public class FunctionContext internal constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
