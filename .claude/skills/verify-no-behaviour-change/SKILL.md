@@ -14,7 +14,9 @@ no UI changes. Reading the diff is not enough, so compare the compiled output.
    `./gradlew :<changed-module>:compileDebugKotlin :<changed-module>:compileDebugJavaWithJavac`
    (use the module you changed, for example `clevertap-core` or `clevertap-geofence`; repeat for each one).
    For `sample`, which has flavors (`local`, `remote`, `staging`), use the flavor task and path instead, for example
-   `:sample:compileLocalDebugKotlin` and `build/tmp/kotlin-classes/localDebug`.
+   `:sample:compileLocalDebugKotlin` with `build/tmp/kotlin-classes/localDebug`, and
+   `:sample:compileLocalDebugJavaWithJavac` with
+   `build/intermediates/javac/localDebug/compileLocalDebugJavaWithJavac/classes`.
    Copy these folders, relative to `<changed-module>/`: `build/tmp/kotlin-classes/debug` and
    `build/intermediates/javac/debug/compileDebugJavaWithJavac/classes` to a scratch folder.
 2. Check out your branch, build the same module the same way, and copy the same folders to a second scratch folder.
