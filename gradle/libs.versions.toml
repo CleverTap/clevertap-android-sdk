@@ -89,6 +89,7 @@ android-gif-drawable = { module = "pl.droidsonroids.gif:android-gif-drawable", v
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
 detekt_gradle_plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" , version.ref= "detekt_gradle_plugin"}
+detekt_rules_libraries = { module = "io.gitlab.arturbosch.detekt:detekt-rules-libraries", version.ref = "detekt_gradle_plugin" }
 firebase_gradle_crashlytics = { module = "com.google.firebase:firebase-crashlytics-gradle" , version.ref= "firebase_gradle_crashlytics"}
 
 # AndroidX
