@@ -8,12 +8,12 @@ import android.os.Bundle
  * Class for handling activity lifecycle events
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class ActivityLifecycleCallback {
+public class ActivityLifecycleCallback {
 
-    companion object {
+    public companion object {
 
         @JvmField
-        var registered: Boolean = false
+        public var registered: Boolean = false
 
         private var cleverTapId: String? = null
 
@@ -51,7 +51,7 @@ class ActivityLifecycleCallback {
          * @param application App's Application object
          */
         @JvmStatic
-        fun register(application: Application?) {
+        public fun register(application: Application?) {
             register(application, null)
         }
 
@@ -62,7 +62,7 @@ class ActivityLifecycleCallback {
          * @param cleverTapID Custom CleverTap ID
          */
         @JvmStatic
-        fun register(application: Application?, cleverTapID: String?) {
+        public fun register(application: Application?, cleverTapID: String?) {
             if (application == null) {
                 Logger.i("Application instance is null/system API is too old")
                 return

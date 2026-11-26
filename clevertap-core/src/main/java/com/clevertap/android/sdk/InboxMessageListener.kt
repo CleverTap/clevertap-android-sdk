@@ -2,7 +2,7 @@ package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 
-fun interface InboxMessageListener {
+public fun interface InboxMessageListener {
     /**
      * This callback notifies about the following:
      * - App Inbox item click
@@ -15,5 +15,5 @@ fun interface InboxMessageListener {
      *                       the App Inbox, which supports up to three CTAs.
      *                       A value of -1 indicates an app inbox item click.
      */
-    fun onInboxItemClicked(message: CTInboxMessage?, contentPageIndex: Int, buttonIndex: Int)
+    public fun onInboxItemClicked(message: CTInboxMessage?, contentPageIndex: Int, buttonIndex: Int)
 }

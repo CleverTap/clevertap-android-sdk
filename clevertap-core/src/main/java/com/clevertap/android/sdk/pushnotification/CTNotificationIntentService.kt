@@ -30,7 +30,7 @@ import androidx.annotation.RestrictTo
 @Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
 @Suppress("DEPRECATION")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
+public open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
 
     @Deprecated("Deprecated in Java")
     override fun onHandleIntent(intent: Intent?) {
@@ -109,10 +109,10 @@ open class CTNotificationIntentService : IntentService("CTNotificationIntentServ
         }
     }
 
-    companion object {
+    public companion object {
 
-        const val MAIN_ACTION: String = "com.clevertap.PUSH_EVENT"
+        public const val MAIN_ACTION: String = "com.clevertap.PUSH_EVENT"
 
-        const val TYPE_BUTTON_CLICK: String = "com.clevertap.ACTION_BUTTON_CLICK"
+        public const val TYPE_BUTTON_CLICK: String = "com.clevertap.ACTION_BUTTON_CLICK"
     }
 }

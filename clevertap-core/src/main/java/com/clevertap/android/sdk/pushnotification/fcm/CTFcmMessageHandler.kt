@@ -14,11 +14,11 @@ import com.google.firebase.messaging.RemoteMessage
 /**
  * implementation of [IFcmMessageHandler] and [IPushAmpHandler] for Firebase notification message
  */
-open class CTFcmMessageHandler internal constructor(
+public open class CTFcmMessageHandler internal constructor(
     private val parser: INotificationParser<RemoteMessage>
 ) : IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
 
-    constructor() : this(FcmNotificationParser())
+    public constructor() : this(FcmNotificationParser())
 
     /**
      * {@inheritDoc}

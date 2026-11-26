@@ -17,11 +17,11 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 // Public (restricted) because already-Kotlin public types (e.g. network.FetchInAppListener)
 // take it in their signatures.
 @RestrictTo(Scope.LIBRARY_GROUP)
-abstract class BaseCallbackManager {
+public abstract class BaseCallbackManager {
 
-    abstract fun _notifyInboxInitialized()
+    public abstract fun _notifyInboxInitialized()
 
-    abstract fun _notifyInboxMessagesDidUpdate()
+    public abstract fun _notifyInboxMessagesDidUpdate()
 
     internal abstract var failureFlushListener: FailureFlushListener?
 
@@ -29,54 +29,54 @@ abstract class BaseCallbackManager {
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    abstract var featureFlagListener: CTFeatureFlagsListener?
+    public abstract var featureFlagListener: CTFeatureFlagsListener?
 
-    abstract var geofenceCallback: GeofenceCallback?
+    public abstract var geofenceCallback: GeofenceCallback?
 
     internal abstract var scDomainListener: SCDomainListener?
 
-    abstract var inAppNotificationButtonListener: InAppNotificationButtonListener?
+    public abstract var inAppNotificationButtonListener: InAppNotificationButtonListener?
 
-    abstract var inAppNotificationListener: InAppNotificationListener?
+    public abstract var inAppNotificationListener: InAppNotificationListener?
 
-    abstract val pushPermissionResponseListenerList: MutableList<PushPermissionResponseListener?>
+    public abstract val pushPermissionResponseListenerList: MutableList<PushPermissionResponseListener?>
 
-    abstract var inboxListener: CTInboxListener?
+    public abstract var inboxListener: CTInboxListener?
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    abstract var productConfigListener: CTProductConfigListener?
+    public abstract var productConfigListener: CTProductConfigListener?
 
-    abstract var pushAmpListener: CTPushAmpListener?
+    public abstract var pushAmpListener: CTPushAmpListener?
 
-    abstract var pushNotificationListener: CTPushNotificationListener?
+    public abstract var pushNotificationListener: CTPushNotificationListener?
 
-    abstract var syncListener: SyncListener?
+    public abstract var syncListener: SyncListener?
 
-    abstract fun notifyDisplayUnitsLoaded(displayUnits: ArrayList<CleverTapDisplayUnit>?)
+    public abstract fun notifyDisplayUnitsLoaded(displayUnits: ArrayList<CleverTapDisplayUnit>?)
 
     //Profile
-    abstract fun notifyUserProfileInitialized(deviceID: String?)
+    public abstract fun notifyUserProfileInitialized(deviceID: String?)
 
-    abstract fun notifyUserProfileInitialized()
+    public abstract fun notifyUserProfileInitialized()
 
-    abstract fun setDisplayUnitListener(listener: DisplayUnitListener?)
+    public abstract fun setDisplayUnitListener(listener: DisplayUnitListener?)
 
-    abstract fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
+    public abstract fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
 
-    abstract fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
+    public abstract fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
 
-    abstract fun addOnInitCleverTapIDListener(listener: OnInitCleverTapIDListener?)
+    public abstract fun addOnInitCleverTapIDListener(listener: OnInitCleverTapIDListener?)
 
-    abstract fun removeOnInitCleverTapIDListener(listener: OnInitCleverTapIDListener?)
+    public abstract fun removeOnInitCleverTapIDListener(listener: OnInitCleverTapIDListener?)
 
-    abstract fun notifyCleverTapIDChanged(id: String?)
+    public abstract fun notifyCleverTapIDChanged(id: String?)
 
-    abstract var fetchVariablesCallback: FetchVariablesCallback?
+    public abstract var fetchVariablesCallback: FetchVariablesCallback?
 
-    abstract var fetchInAppsCallback: FetchInAppsCallback?
+    public abstract var fetchInAppsCallback: FetchInAppsCallback?
 
     internal abstract var batchListener: BatchListener?
 

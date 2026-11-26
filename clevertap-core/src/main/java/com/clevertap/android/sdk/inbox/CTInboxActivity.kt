@@ -30,17 +30,17 @@ import java.lang.ref.WeakReference
  * Stays public: [CleverTapAPI] implements the nested [InboxActivityListener].
  */
 @RestrictTo(Scope.LIBRARY)
-open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxListener,
+public open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxListener,
     DidClickForHardPermissionListener {
 
-    interface InboxActivityListener {
+    public interface InboxActivityListener {
 
-        fun messageDidClick(
+        public fun messageDidClick(
             ctInboxActivity: CTInboxActivity?, contentPageIndex: Int, inboxMessage: CTInboxMessage?, data: Bundle?,
             keyValue: HashMap<String, String>?, buttonIndex: Int
         )
 
-        fun messageDidShow(ctInboxActivity: CTInboxActivity?, inboxMessage: CTInboxMessage?, data: Bundle?)
+        public fun messageDidShow(ctInboxActivity: CTInboxActivity?, inboxMessage: CTInboxMessage?, data: Bundle?)
     }
 
     internal var styleConfig: CTInboxStyleConfig? = null
@@ -277,7 +277,7 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
         listener?.messageDidShow(this, inboxMessage, data)
     }
 
-    companion object {
+    public companion object {
 
         internal var orientation: Int = 0
 

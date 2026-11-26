@@ -26,7 +26,7 @@ import androidx.annotation.RestrictTo
  */
 @Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class CTPushNotificationReceiver : BroadcastReceiver() {
+public open class CTPushNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 

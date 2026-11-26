@@ -4,9 +4,9 @@ import androidx.annotation.RestrictTo
 import org.json.JSONObject
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-interface GeofenceCallback {
+public interface GeofenceCallback {
 
-    fun handleGeoFences(jsonObject: JSONObject?)
+    public fun handleGeoFences(jsonObject: JSONObject?)
 
-    fun triggerLocation()
+    public fun triggerLocation()
 }

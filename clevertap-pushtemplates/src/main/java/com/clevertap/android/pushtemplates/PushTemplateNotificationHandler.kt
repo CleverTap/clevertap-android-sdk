@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.pushnotification.PushType
 
-open class PushTemplateNotificationHandler : ActionButtonClickHandler {
+public open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
     override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {
         // A null extras threw here in Java as well (the caller logs the failure).

@@ -11,38 +11,38 @@ import org.json.JSONObject
 /**
  * Public facing model class for type of InboxMessage
  */
-open class CTInboxMessage : Parcelable {
+public open class CTInboxMessage : Parcelable {
 
     private var _actionUrl: String? = null
 
-    open fun getActionUrl(): String? = _actionUrl
+    public open fun getActionUrl(): String? = _actionUrl
 
     /** Kotlin property syntax, equivalent to [getActionUrl]. */
-    val actionUrl: String?
+    public val actionUrl: String?
         @JvmSynthetic @JvmName("ktGetActionUrl") inline get() = getActionUrl()
 
     private var _bgColor: String? = null
 
-    open fun getBgColor(): String? = _bgColor
+    public open fun getBgColor(): String? = _bgColor
 
     /** Kotlin property syntax, equivalent to [getBgColor]. */
-    val bgColor: String?
+    public val bgColor: String?
         @JvmSynthetic @JvmName("ktGetBgColor") inline get() = getBgColor()
 
     private var _body: String? = null
 
-    open fun getBody(): String? = _body
+    public open fun getBody(): String? = _body
 
     /** Kotlin property syntax, equivalent to [getBody]. */
-    val body: String?
+    public val body: String?
         @JvmSynthetic @JvmName("ktGetBody") inline get() = getBody()
 
     private var _campaignId: String? = null
 
-    open fun getCampaignId(): String? = _campaignId
+    public open fun getCampaignId(): String? = _campaignId
 
     /** Kotlin property syntax, equivalent to [getCampaignId]. */
-    val campaignId: String?
+    public val campaignId: String?
         @JvmSynthetic @JvmName("ktGetCampaignId") inline get() = getCampaignId()
 
     private var _customData: JSONObject = JSONObject()
@@ -52,42 +52,42 @@ open class CTInboxMessage : Parcelable {
      *
      * Never `null` for a message built from JSON; only a malformed [Parcel] could leave it unset.
      */
-    open fun getCustomData(): JSONObject = _customData
+    public open fun getCustomData(): JSONObject = _customData
 
     /** Kotlin property syntax, equivalent to [getCustomData]. */
-    val customData: JSONObject
+    public val customData: JSONObject
         @JvmSynthetic @JvmName("ktGetCustomData") inline get() = getCustomData()
 
     private var _data: JSONObject = JSONObject()
 
-    open fun getData(): JSONObject = _data
+    public open fun getData(): JSONObject = _data
 
     /** Kotlin property syntax, equivalent to [getData]. */
-    val data: JSONObject
+    public val data: JSONObject
         @JvmSynthetic @JvmName("ktGetData") inline get() = getData()
 
     private var _date: Long = 0
 
-    open fun getDate(): Long = _date
+    public open fun getDate(): Long = _date
 
     /** Kotlin property syntax, equivalent to [getDate]. */
-    val date: Long
+    public val date: Long
         @JvmSynthetic @JvmName("ktGetDate") inline get() = getDate()
 
     private var _expires: Long = 0
 
-    open fun getExpires(): Long = _expires
+    public open fun getExpires(): Long = _expires
 
     /** Kotlin property syntax, equivalent to [getExpires]. */
-    val expires: Long
+    public val expires: Long
         @JvmSynthetic @JvmName("ktGetExpires") inline get() = getExpires()
 
     private var _imageUrl: String? = null
 
-    open fun getImageUrl(): String? = _imageUrl
+    public open fun getImageUrl(): String? = _imageUrl
 
     /** Kotlin property syntax, equivalent to [getImageUrl]. */
-    val imageUrl: String?
+    public val imageUrl: String?
         @JvmSynthetic @JvmName("ktGetImageUrl") inline get() = getImageUrl()
 
     private var _inboxMessageContents: ArrayList<CTInboxMessageContent> = ArrayList()
@@ -99,10 +99,10 @@ open class CTInboxMessage : Parcelable {
      *
      * @return ArrayList of [CTInboxMessageContent] objects
      */
-    open fun getInboxMessageContents(): ArrayList<CTInboxMessageContent> = _inboxMessageContents
+    public open fun getInboxMessageContents(): ArrayList<CTInboxMessageContent> = _inboxMessageContents
 
     /** Kotlin property syntax, equivalent to [getInboxMessageContents]. */
-    val inboxMessageContents: ArrayList<CTInboxMessageContent>
+    public val inboxMessageContents: ArrayList<CTInboxMessageContent>
         @JvmSynthetic @JvmName("ktGetInboxMessageContents") inline get() = getInboxMessageContents()
 
     private var read = false
@@ -112,10 +112,10 @@ open class CTInboxMessage : Parcelable {
     /**
      * Never `null`: "0" when the payload has no id.
      */
-    open fun getMessageId(): String = _messageId
+    public open fun getMessageId(): String = _messageId
 
     /** Kotlin property syntax, equivalent to [getMessageId]. */
-    val messageId: String
+    public val messageId: String
         @JvmSynthetic @JvmName("ktGetMessageId") inline get() = getMessageId()
 
     private var _orientation: String? = null
@@ -126,10 +126,10 @@ open class CTInboxMessage : Parcelable {
      * @return Returns "l" for landscape
      * Returns "p" for portrait
      */
-    open fun getOrientation(): String? = _orientation
+    public open fun getOrientation(): String? = _orientation
 
     /** Kotlin property syntax, equivalent to [getOrientation]. */
-    val orientation: String?
+    public val orientation: String?
         @JvmSynthetic @JvmName("ktGetOrientation") inline get() = getOrientation()
 
     private var _tags: MutableList<String> = ArrayList()
@@ -139,31 +139,31 @@ open class CTInboxMessage : Parcelable {
      *
      * @return List of Strings
      */
-    open fun getTags(): MutableList<String> = _tags
+    public open fun getTags(): MutableList<String> = _tags
 
     /** Kotlin property syntax, equivalent to [getTags]. */
-    val tags: MutableList<String>
+    public val tags: MutableList<String>
         @JvmSynthetic @JvmName("ktGetTags") inline get() = getTags()
 
     private var _title: String? = null
 
-    open fun getTitle(): String? = _title
+    public open fun getTitle(): String? = _title
 
     /** Kotlin property syntax, equivalent to [getTitle]. */
-    val title: String?
+    public val title: String?
         @JvmSynthetic @JvmName("ktGetTitle") inline get() = getTitle()
 
     private var _type: CTInboxMessageType? = null
 
-    open fun getType(): CTInboxMessageType? = _type
+    public open fun getType(): CTInboxMessageType? = _type
 
     /** Kotlin property syntax, equivalent to [getType]. */
-    val type: CTInboxMessageType?
+    public val type: CTInboxMessageType?
         @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
     private var _wzrkParams: JSONObject? = null
 
-    constructor(jsonObject: JSONObject) {
+    public constructor(jsonObject: JSONObject) {
         this._data = jsonObject
         try {
             this._messageId = if (jsonObject.has(Constants.KEY_ID)) jsonObject.getString(Constants.KEY_ID) else "0"
@@ -261,7 +261,7 @@ open class CTInboxMessage : Parcelable {
      *
      * @return ArrayList of CTInboxImageData
      */
-    open fun getCarouselImagesData(): ArrayList<CTInboxImageData> =
+    public open fun getCarouselImagesData(): ArrayList<CTInboxImageData> =
         getInboxMessageContents().mapTo(ArrayList()) { content ->
             // CTInboxImageData takes non-null values; Java callers got this NullPointerException too.
             CTInboxImageData(
@@ -272,7 +272,7 @@ open class CTInboxMessage : Parcelable {
         }
 
     /** Kotlin property syntax, equivalent to [getCarouselImagesData]. */
-    val carouselImagesData: ArrayList<CTInboxImageData>
+    public val carouselImagesData: ArrayList<CTInboxImageData>
         @JvmSynthetic @JvmName("ktGetCarouselImagesData") inline get() = getCarouselImagesData()
 
     /**
@@ -280,10 +280,10 @@ open class CTInboxMessage : Parcelable {
      *
      * @return ArrayList of Strings
      */
-    open fun getCarouselImages(): ArrayList<String?> = getInboxMessageContents().mapTo(ArrayList()) { it.getMedia() }
+    public open fun getCarouselImages(): ArrayList<String?> = getInboxMessageContents().mapTo(ArrayList()) { it.getMedia() }
 
     /** Kotlin property syntax, equivalent to [getCarouselImages]. */
-    val carouselImages: ArrayList<String?>
+    public val carouselImages: ArrayList<String?>
         @JvmSynthetic @JvmName("ktGetCarouselImages") inline get() = getCarouselImages()
 
     /**
@@ -291,16 +291,16 @@ open class CTInboxMessage : Parcelable {
      *
      * @return JSONObject of wzrk_* parameters
      */
-    open fun getWzrkParams(): JSONObject = _wzrkParams ?: JSONObject()
+    public open fun getWzrkParams(): JSONObject = _wzrkParams ?: JSONObject()
 
     /** Kotlin property syntax, equivalent to [getWzrkParams]. */
-    val wzrkParams: JSONObject
+    public val wzrkParams: JSONObject
         @JvmSynthetic @JvmName("ktGetWzrkParams") inline get() = getWzrkParams()
 
-    open fun isRead(): Boolean = read
+    public open fun isRead(): Boolean = read
 
     /** Kotlin property syntax, equivalent to [isRead]. */
-    val isRead: Boolean
+    public val isRead: Boolean
         @JvmSynthetic @JvmName("ktIsRead") inline get() = isRead()
 
     internal fun setRead(read: Boolean) {
@@ -341,16 +341,16 @@ open class CTInboxMessage : Parcelable {
     private fun Parcel.readNonNullString(): String =
         readString() ?: throw NullPointerException("Malformed CTInboxMessage parcel")
 
-    companion object {
+    public companion object {
 
         @JvmField
-        val CREATOR: Parcelable.Creator<CTInboxMessage> = object : Parcelable.Creator<CTInboxMessage> {
+        public val CREATOR: Parcelable.Creator<CTInboxMessage> = object : Parcelable.Creator<CTInboxMessage> {
             override fun createFromParcel(`in`: Parcel): CTInboxMessage = CTInboxMessage(`in`)
 
             override fun newArray(size: Int): Array<CTInboxMessage?> = arrayOfNulls(size)
         }
 
         @JvmStatic
-        fun getCREATOR(): Parcelable.Creator<CTInboxMessage> = CREATOR
+        public fun getCREATOR(): Parcelable.Creator<CTInboxMessage> = CREATOR
     }
 }

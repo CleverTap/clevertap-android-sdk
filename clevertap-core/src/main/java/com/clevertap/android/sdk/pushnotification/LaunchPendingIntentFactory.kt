@@ -17,7 +17,7 @@ import java.util.Random
  * published push templates artifacts built against the former Java class call it statically.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LaunchPendingIntentFactory {
+public object LaunchPendingIntentFactory {
 
     private const val FLAGS_LAUNCH_PENDING_INTENT = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 
@@ -25,7 +25,7 @@ object LaunchPendingIntentFactory {
      * Returns null on Android 12+ when the app has no launch intent and the payload has no deep link.
      */
     @JvmStatic
-    fun getLaunchPendingIntent(extras: Bundle, context: Context): PendingIntent? {
+    public fun getLaunchPendingIntent(extras: Bundle, context: Context): PendingIntent? {
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
             return getActivityIntent(extras, context)
         }
@@ -41,7 +41,7 @@ object LaunchPendingIntentFactory {
      * Returns null when the app has no launch intent and the payload has no deep link.
      */
     @JvmStatic
-    fun getActivityIntent(extras: Bundle, context: Context): PendingIntent? {
+    public fun getActivityIntent(extras: Bundle, context: Context): PendingIntent? {
         val deepLink = extras.getString(Constants.DEEP_LINK_KEY)
         val launchIntent = if (extras.containsKey(Constants.DEEP_LINK_KEY) && deepLink != null) {
             Intent(Intent.ACTION_VIEW, Uri.parse(deepLink)).also {

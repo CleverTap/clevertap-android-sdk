@@ -454,7 +454,7 @@ internal fun String?.isNotNullAndBlank(): Boolean {
  * ```
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: MarginLayoutParams) -> Unit) {
+public fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val bars: Insets = insets.getInsets(
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()

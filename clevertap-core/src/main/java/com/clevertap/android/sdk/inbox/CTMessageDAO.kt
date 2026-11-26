@@ -13,13 +13,13 @@ import java.util.regex.Pattern
  * Message Data Access Object class interfacing with Database
  */
 @RestrictTo(Scope.LIBRARY)
-open class CTMessageDAO() {
+public open class CTMessageDAO() {
 
-    var campaignId: String? = null
+    public var campaignId: String? = null
 
-    var date: Long = 0
+    public var date: Long = 0
 
-    var expires: Long = 0
+    public var expires: Long = 0
 
     private var _id: String? = null
 
@@ -27,21 +27,21 @@ open class CTMessageDAO() {
      * Message id. Always set for a DAO that came from [initWithJSON] or the database; reading it
      * before it is set throws, where the Java getter returned null.
      */
-    var id: String
+    public var id: String
         get() = checkNotNull(_id) { "CTMessageDAO id read before it was set" }
         set(value) {
             _id = value
         }
 
-    var jsonData: JSONObject? = null
+    public var jsonData: JSONObject? = null
 
     private var read = false
 
     private var tagsList: MutableList<String> = ArrayList()
 
-    var userId: String? = null
+    public var userId: String? = null
 
-    var wzrkParams: JSONObject? = null
+    public var wzrkParams: JSONObject? = null
 
     internal var source: InboxMessageSource? = null
 
@@ -52,7 +52,7 @@ open class CTMessageDAO() {
      * [InboxIndexState.INDEXED] via the DAO's `markIndexed`
      * once the fetch backend has confirmed them.
      */
-    var indexState: String? = InboxIndexState.PENDING_INDEXING
+    public var indexState: String? = InboxIndexState.PENDING_INDEXING
 
     internal open fun containsVideoOrAudio(): Boolean {
         Logger.d("CTMessageDAO:containsVideoOrAudio() called")
@@ -64,7 +64,7 @@ open class CTMessageDAO() {
      * Tags joined with ",". Setting splits the value on "," and appends the parts to the
      * existing tags.
      */
-    var tags: String
+    public var tags: String
         get() = tagsList.joinToString(",")
         set(tags) {
             // java.lang.String.split semantics (trailing empty strings dropped), as before.
@@ -72,13 +72,13 @@ open class CTMessageDAO() {
         }
 
     /** 1 when read, 0 otherwise (the database column's value). */
-    var isRead: Int
+    public var isRead: Int
         get() = if (read) 1 else 0
         set(value) {
             read = value == 1
         }
 
-    fun toJSON(): JSONObject {
+    public fun toJSON(): JSONObject {
         val jsonObject = JSONObject()
         return try {
             jsonObject.apply {
@@ -97,7 +97,7 @@ open class CTMessageDAO() {
         }
     }
 
-    companion object {
+    public companion object {
 
         internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO? {
             return try {

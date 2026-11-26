@@ -37,8 +37,8 @@ import org.json.JSONObject
 // Public (restricted) because already-Kotlin public types (e.g. inapp.TriggerManager) take it in
 // their signatures.
 @RestrictTo(Scope.LIBRARY_GROUP)
-open class DeviceInfo internal constructor(
-    val context: Context,
+public open class DeviceInfo internal constructor(
+    public val context: Context,
     private val config: CleverTapInstanceConfig,
     @Suppress("UNUSED_PARAMETER") cleverTapID: String?,
     private val coreMetaData: CoreMetaData,
@@ -239,7 +239,7 @@ open class DeviceInfo internal constructor(
     @RestrictTo(Scope.LIBRARY_GROUP)
     @IntDef(SMART_PHONE, TABLET, TV, UNKNOWN, NULL)
     @Retention(AnnotationRetention.SOURCE)
-    annotation class DeviceType
+    public annotation class DeviceType
 
     private val adIDLock = Any()
 
@@ -253,13 +253,13 @@ open class DeviceInfo internal constructor(
 
     private var googleAdIDValue: String? = null
 
-    open var library: String? = null
+    public open var library: String? = null
 
     private var limitAdTracking = false
 
     private val validationResults = ArrayList<ValidationResult>()
 
-    var customLocale: String? = null
+    public var customLocale: String? = null
 
     /** Log tag of the device-id resolution path. */
     private val asyncDeviceIdTag: String
@@ -277,11 +277,11 @@ open class DeviceInfo internal constructor(
     private val deviceCachedInfo: DeviceCachedInfo
         get() = cachedInfo ?: DeviceCachedInfo().also { cachedInfo = it }
 
-    fun forceNewDeviceID() {
+    public fun forceNewDeviceID() {
         forceUpdateDeviceId(generateGUID())
     }
 
-    fun forceUpdateCustomCleverTapID(cleverTapID: String?): String? {
+    public fun forceUpdateCustomCleverTapID(cleverTapID: String?): String? {
         if (Utils.validateCTID(cleverTapID)) {
             config.logger.info(config.accountId, "Setting CleverTap ID to custom CleverTap ID : $cleverTapID")
             val id = Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID
@@ -303,7 +303,7 @@ open class DeviceInfo internal constructor(
      * @param id The new device ID
      */
     @SuppressLint("CommitPrefEdits")
-    fun forceUpdateDeviceId(id: String?) {
+    public fun forceUpdateDeviceId(id: String?) {
         config.logger.verbose(config.accountId, "Force updating the device ID to $id")
         synchronized(deviceIDLock) {
             StorageHelper.putString(context, deviceIdStorageKey, id)
@@ -311,7 +311,7 @@ open class DeviceInfo internal constructor(
     }
 
     //Event
-    open val appLaunchedFields: JSONObject
+    public open val appLaunchedFields: JSONObject
         get() = try {
             val deviceIsMultiUser = googleAdID != null && LoginInfoProvider(context, config).deviceIsMultiUser()
             CTJsonConverter.from(this, coreMetaData, enableNetworkInfoReporting, deviceIsMultiUser)
@@ -320,62 +320,62 @@ open class DeviceInfo internal constructor(
             JSONObject()
         }
 
-    open val bluetoothVersion: String?
+    public open val bluetoothVersion: String?
         get() = deviceCachedInfo.bluetoothVersion
 
-    open val build: Int
+    public open val build: Int
         get() = deviceCachedInfo.build
 
-    open val carrier: String?
+    public open val carrier: String?
         get() = deviceCachedInfo.carrier
 
-    open val countryCode: String?
+    public open val countryCode: String?
         get() = deviceCachedInfo.countryCode
 
-    open val dpi: Int
+    public open val dpi: Int
         get() = deviceCachedInfo.dpi
 
-    open val deviceID: String?
+    public open val deviceID: String?
         get() = storedDeviceID() ?: fallbackDeviceID
 
-    open val googleAdID: String?
+    public open val googleAdID: String?
         get() = synchronized(adIDLock) { googleAdIDValue }
 
-    open val height: Double
+    public open val height: Double
         get() = deviceCachedInfo.height
 
-    open val manufacturer: String?
+    public open val manufacturer: String?
         get() = deviceCachedInfo.manufacturer
 
-    open val appBucket: String?
+    public open val appBucket: String?
         get() = deviceCachedInfo.appBucket
 
-    open val model: String?
+    public open val model: String?
         get() = deviceCachedInfo.model
 
-    open val networkType: String?
+    public open val networkType: String?
         get() = networkMonitor?.getNetworkTypeString()
 
-    open val osName: String?
+    public open val osName: String?
         get() = deviceCachedInfo.osName
 
-    open val osVersion: String?
+    public open val osVersion: String?
         get() = deviceCachedInfo.osVersion
 
-    open val sdkVersion: Int
+    public open val sdkVersion: Int
         get() = deviceCachedInfo.sdkVersion
 
-    val localInAppCount: Int
+    public val localInAppCount: Int
         get() = deviceCachedInfo.localInAppCount
 
-    fun incrementLocalInAppCount() {
+    public fun incrementLocalInAppCount() {
         deviceCachedInfo.localInAppCount++
     }
 
-    val deviceLocale: String?
+    public val deviceLocale: String?
         get() = deviceCachedInfo.locale
 
-    val locale: String?
+    public val locale: String?
         // If locale is set by the client then use that, otherwise fetch it from the device
         get() = if (customLocale.isNullOrEmpty()) deviceLocale else customLocale
 
@@ -386,13 +386,13 @@ open class DeviceInfo internal constructor(
         return pending
     }
 
-    open val versionName: String?
+    public open val versionName: String?
         get() = deviceCachedInfo.versionName
 
-    open val width: Double
+    public open val width: Double
         get() = deviceCachedInfo.width
 
-    open val isBluetoothEnabled: Boolean?
+    public open val isBluetoothEnabled: Boolean?
         @SuppressLint("MissingPermission")
         get() = try {
             val hasBluetoothPermission =
@@ -408,13 +408,13 @@ open class DeviceInfo internal constructor(
             null
         }
 
-    val isErrorDeviceId: Boolean
+    public val isErrorDeviceId: Boolean
         get() = deviceID?.startsWith(Constants.ERROR_PROFILE_PREFIX) == true
 
-    open val isLimitAdTrackingEnabled: Boolean
+    public open val isLimitAdTrackingEnabled: Boolean
         get() = synchronized(adIDLock) { limitAdTracking }
 
-    open val isWifiConnected: Boolean?
+    public open val isWifiConnected: Boolean?
         get() = when {
             PackageManager.PERMISSION_GRANTED !=
                 context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE) -> null
@@ -424,7 +424,7 @@ open class DeviceInfo internal constructor(
             else -> networkMonitor.isWifiConnected()
         }
 
-    fun enableDeviceNetworkInfoReporting(value: Boolean) {
+    public fun enableDeviceNetworkInfoReporting(value: Boolean) {
         enableNetworkInfoReporting = value
         StorageHelper.putBoolean(context, config.accountId, Constants.NETWORK_INFO, enableNetworkInfoReporting)
         config.logger.verbose(
@@ -433,13 +433,13 @@ open class DeviceInfo internal constructor(
         )
     }
 
-    open val attributionID: String?
+    public open val attributionID: String?
         get() = deviceID
 
     // Caches immutable device properties (model, screen size, carrier, …) off the caller thread.
     // Device-id resolution itself now happens in CleverTapFactory's device-id barrier via
     // initDeviceID(), not here (SDK-6254).
-    open fun cacheDeviceInfoAsync() {
+    public open fun cacheDeviceInfoAsync() {
         config.logger.verbose(asyncDeviceIdTag, "DeviceInfo() called")
         CTExecutorFactory.executors(config).ioTask<Void?>().execute("getDeviceCachedInfo") {
             deviceCachedInfo
@@ -447,7 +447,7 @@ open class DeviceInfo internal constructor(
         }
     }
 
-    fun setCurrentUserOptOutStateFromStorage() {
+    public fun setCurrentUserOptOutStateFromStorage() {
         val key = optOutKey()
         if (key == null) {
             config.logger.verbose(
@@ -464,7 +464,7 @@ open class DeviceInfo internal constructor(
         )
     }
 
-    fun saveOptOutState(userOptOut: Boolean) {
+    public fun saveOptOutState(userOptOut: Boolean) {
         // persist the new optOut state
         val key = optOutKey()
         if (key == null) {
@@ -475,7 +475,7 @@ open class DeviceInfo internal constructor(
         config.logger.verbose(config.accountId, "Set current user OptOut state to: $userOptOut")
     }
 
-    fun setSystemEventsAllowedStateFromStorage() {
+    public fun setSystemEventsAllowedStateFromStorage() {
         val key = allowedSystemEventsKey()
         if (key == null) {
             config.logger.verbose(
@@ -492,7 +492,7 @@ open class DeviceInfo internal constructor(
         )
     }
 
-    fun saveAllowedSystemEventsState(allowedSystemEvents: Boolean) {
+    public fun saveAllowedSystemEventsState(allowedSystemEvents: Boolean) {
         val key = allowedSystemEventsKey()
         if (key == null) {
             config.logger.verbose(
@@ -512,7 +512,7 @@ open class DeviceInfo internal constructor(
 
     private fun allowedSystemEventsKey(): String? = deviceID?.let { "allowSystemEvents:$it" }
 
-    fun setDeviceNetworkInfoReportingFromStorage() {
+    public fun setDeviceNetworkInfoReportingFromStorage() {
         val enabled = StorageHelper.getBooleanFromPrefs(context, config.accountId, Constants.NETWORK_INFO)
         config.logger.verbose(config.accountId, "Setting device network info reporting state from storage to $enabled")
         enableNetworkInfoReporting = enabled
@@ -592,7 +592,7 @@ open class DeviceInfo internal constructor(
 
     private fun generateGUID(): String = GUID_PREFIX + UUID.randomUUID().toString().replace("-", "")
 
-    fun initDeviceID(cleverTapID: String?): String? {
+    public fun initDeviceID(cleverTapID: String?): String? {
         config.logger.verbose(asyncDeviceIdTag, "Called initDeviceID()")
         //Show logging as per Manifest flag
         if (config.enableCustomCleverTapId) {
@@ -661,7 +661,7 @@ open class DeviceInfo internal constructor(
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
-    companion object {
+    public companion object {
 
         private const val TAG = "DeviceInfo"
 
@@ -678,27 +678,27 @@ open class DeviceInfo internal constructor(
         /**
          * Device is a smart phone
          */
-        const val SMART_PHONE: Int = 1
+        public const val SMART_PHONE: Int = 1
 
         /**
          * Device is a tablet
          */
-        const val TABLET: Int = 2
+        public const val TABLET: Int = 2
 
         /**
          * Device is a television
          */
-        const val TV: Int = 3
+        public const val TV: Int = 3
 
         /**
          * Device type is not known
          */
-        const val UNKNOWN: Int = 0
+        public const val UNKNOWN: Int = 0
 
         /**
          * Initial state of device type before determining
          */
-        const val NULL: Int = -1
+        public const val NULL: Int = -1
 
         /** Device type resolved once per app run by [getDeviceType]. */
         @DeviceType
@@ -710,7 +710,7 @@ open class DeviceInfo internal constructor(
          * @param context The Android context
          * @return The integer identifier for the image resource
          */
-        fun getAppIconAsIntId(context: Context): Int = context.applicationInfo.icon
+        public fun getAppIconAsIntId(context: Context): Int = context.applicationInfo.icon
 
         /**
          * Determines if a device is tablet, smart phone or TV
@@ -719,7 +719,7 @@ open class DeviceInfo internal constructor(
          * @return one of the possible value of [DeviceType]
          */
         @DeviceType
-        fun getDeviceType(context: Context?): Int {
+        public fun getDeviceType(context: Context?): Int {
             if (cachedDeviceType != NULL) {
                 return cachedDeviceType
             }

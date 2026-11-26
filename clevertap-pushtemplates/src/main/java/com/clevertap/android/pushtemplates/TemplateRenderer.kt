@@ -61,7 +61,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
-class TemplateRenderer @JvmOverloads constructor(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+public class TemplateRenderer @JvmOverloads constructor(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
@@ -73,11 +73,11 @@ class TemplateRenderer @JvmOverloads constructor(context: Context, private val e
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
-    enum class LogLevel(private val value: Int) {
+    public enum class LogLevel(private val value: Int) {
         @Suppress("unused")
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
-        fun intValue(): Int {
+        public fun intValue(): Int {
             return value
         }
     }
@@ -526,7 +526,7 @@ class TemplateRenderer @JvmOverloads constructor(context: Context, private val e
         }
     }
 
-    companion object {
+    public companion object {
         /**
          * Returns the log level set for PushTemplates
          *
@@ -540,6 +540,6 @@ class TemplateRenderer @JvmOverloads constructor(context: Context, private val e
          * 2(shows debug output)
          */
         @JvmStatic
-        var debugLevel = LogLevel.INFO.intValue()
+        public var debugLevel: Int = LogLevel.INFO.intValue()
     }
 }

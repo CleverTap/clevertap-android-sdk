@@ -6,7 +6,7 @@ import com.google.firebase.messaging.RemoteMessage
 /**
  * Clevertap's Implementation for Firebase Message service
  */
-open class FcmMessageListenerService : FirebaseMessagingService() {
+public open class FcmMessageListenerService : FirebaseMessagingService() {
 
     private val handler: IFcmMessageHandler = CTFcmMessageHandler()
 

@@ -29,7 +29,7 @@ import org.json.JSONObject
  * formerly public member keeps its JVM signature.
  */
 @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
-open class LocalDataStore internal constructor(
+public open class LocalDataStore internal constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val cryptHandler: ICryptHandler,
@@ -56,7 +56,7 @@ open class LocalDataStore internal constructor(
     private val normalizedEventNames: MutableMap<String?, String?> = HashMap()
 
     @WorkerThread
-    fun changeUser() {
+    public fun changeUser() {
         userNormalizedEventLogKeys.clear()
         resetLocalProfileSync()
     }
@@ -65,7 +65,7 @@ open class LocalDataStore internal constructor(
      * @deprecated since `v7.1.0`. Use [readUserEventLog]
      */
     @Deprecated("since v7.1.0. Use readUserEventLog(String)")
-    fun getEventDetail(eventName: String?): EventDetail? = try {
+    public fun getEventDetail(eventName: String?): EventDetail? = try {
         if (!config.isPersonalizationEnabled) {
             null
         } else {
@@ -80,7 +80,7 @@ open class LocalDataStore internal constructor(
      * @deprecated since `v7.1.0`. Use [readUserEventLogs]
      */
     @Deprecated("since v7.1.0. Use readUserEventLogs()")
-    fun getEventHistory(context: Context?): MutableMap<String, EventDetail>? = try {
+    public fun getEventHistory(context: Context?): MutableMap<String, EventDetail>? = try {
         // A null context throws here and is caught below, as in Java.
         val prefs = StorageHelper.getPreferences(requireNotNull(context), accountEventNamespace)
         prefs.all.mapValuesTo(HashMap<String, EventDetail>()) { (eventName, value) ->
@@ -98,7 +98,7 @@ open class LocalDataStore internal constructor(
      */
     @Deprecated("since v7.1.0. Use persistUserEventLog(String)")
     @WorkerThread
-    fun persistEvent(context: Context, event: JSONObject?, type: Int) {
+    public fun persistEvent(context: Context, event: JSONObject?, type: Int) {
         if (event == null) {
             return
         }
@@ -113,7 +113,7 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun persistUserEventLogsInBulk(eventNames: Set<String?>): Boolean {
+    public fun persistUserEventLogsInBulk(eventNames: Set<String?>): Boolean {
         val setOfActualAndNormalizedEventNamePair = eventNames.mapTo(HashSet()) { actualEventName ->
             Pair(actualEventName, getOrPutNormalizedEventName(actualEventName))
         }
@@ -123,7 +123,7 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun persistUserEventLog(eventName: String?): Boolean {
+    public fun persistUserEventLog(eventName: String?): Boolean {
         if (eventName == null) {
             return false
         }
@@ -150,7 +150,7 @@ open class LocalDataStore internal constructor(
     // as the former Java code did once it reached the DAO.
 
     @WorkerThread
-    fun updateUserEventLog(eventName: String?): Boolean {
+    public fun updateUserEventLog(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
         val updatedEventByDeviceID = userEventLogDAO()
@@ -172,7 +172,7 @@ open class LocalDataStore internal constructor(
         normalizedEventNames.getOrPut(actualEventName) { Utils.getNormalizedName(actualEventName) }
 
     @WorkerThread
-    fun insertUserEventLog(eventName: String?): Boolean {
+    public fun insertUserEventLog(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
         val rowId = userEventLogDAO().insertEvent(
@@ -185,7 +185,7 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun isUserEventLogExists(eventName: String?): Boolean {
+    public fun isUserEventLogExists(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
         val eventExists = userEventLogDAO()
@@ -195,7 +195,7 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun isUserEventLogFirstTime(eventName: String?): Boolean {
+    public fun isUserEventLogFirstTime(eventName: String?): Boolean {
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
         if (normalizedEventName in userNormalizedEventLogKeys) {
             return false
@@ -209,14 +209,14 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun cleanUpExtraEvents(threshold: Int, numberOfRowsToCleanup: Int): Boolean {
+    public fun cleanUpExtraEvents(threshold: Int, numberOfRowsToCleanup: Int): Boolean {
         val cleanUpExtraEvents = userEventLogDAO().cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
         logger.verbose("cleanUpExtraEvents boolean= $cleanUpExtraEvents")
         return cleanUpExtraEvents
     }
 
     @WorkerThread
-    fun readUserEventLog(eventName: String?): UserEventLog? {
+    public fun readUserEventLog(eventName: String?): UserEventLog? {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
         return userEventLogDAO()
@@ -228,20 +228,20 @@ open class LocalDataStore internal constructor(
         .readEventCountByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), checkNotNull(normalizedEventName))
 
     @WorkerThread
-    fun readUserEventLogCount(eventName: String?): Int =
+    public fun readUserEventLogCount(eventName: String?): Int =
         readEventCount(deviceInfo.deviceID, getOrPutNormalizedEventName(eventName))
 
     @WorkerThread
-    fun readUserEventLogs(): List<UserEventLog> {
+    public fun readUserEventLogs(): List<UserEventLog> {
         val deviceID = deviceInfo.deviceID
         return userEventLogDAO().allEventsByDeviceID(checkNotNull(deviceID))
     }
 
     @WorkerThread
-    fun readEventLogsForAllUsers(): List<UserEventLog> = userEventLogDAO().allEvents()
+    public fun readEventLogsForAllUsers(): List<UserEventLog> = userEventLogDAO().allEvents()
 
     @WorkerThread
-    fun setDataSyncFlag(event: JSONObject) {
+    public fun setDataSyncFlag(event: JSONObject) {
         try {
             // Check the personalisation flag
             if (!config.isPersonalizationEnabled) {
@@ -281,7 +281,7 @@ open class LocalDataStore internal constructor(
         }
     }
 
-    val profile: JSONObject
+    public val profile: JSONObject
         get() = try {
             synchronized(profileFields) {
                 JSONObject(profileFields.toString())
@@ -291,7 +291,7 @@ open class LocalDataStore internal constructor(
             JSONObject()
         }
 
-    fun getProfileProperty(key: String?): Any? {
+    public fun getProfileProperty(key: String?): Any? {
         if (key == null) {
             return null
         }
@@ -344,7 +344,7 @@ open class LocalDataStore internal constructor(
     }
 
     // local cache/profile key expiry handling
-    fun inflateLocalProfileAsync(context: Context) {
+    public fun inflateLocalProfileAsync(context: Context) {
         val accountID = config.accountId
 
         postAsyncSafely("LocalDataStore#inflateLocalProfileAsync") {
@@ -509,7 +509,7 @@ open class LocalDataStore internal constructor(
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
-    companion object {
+    public companion object {
         // Written by the executor thread, read by callers; not volatile, exactly as in Java.
         private var executorThreadId: Long = 0
     }

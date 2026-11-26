@@ -20,15 +20,15 @@ import org.json.JSONArray
  * Renders a CleverTap push notification. Pass an implementation to
  * [com.clevertap.android.sdk.CleverTapAPI.renderPushNotification].
  */
-interface INotificationRenderer {
+public interface INotificationRenderer {
 
-    fun getCollapseKey(extras: Bundle): Any?
+    public fun getCollapseKey(extras: Bundle): Any?
 
-    fun getMessage(extras: Bundle): String?
+    public fun getMessage(extras: Bundle): String?
 
-    fun getTitle(extras: Bundle, context: Context): String?
+    public fun getTitle(extras: Bundle, context: Context): String?
 
-    fun renderNotification(
+    public fun renderNotification(
         extras: Bundle,
         context: Context,
         nb: NotificationCompat.Builder,
@@ -36,11 +36,11 @@ interface INotificationRenderer {
         notificationId: Int
     ): NotificationCompat.Builder?
 
-    fun setSmallIcon(smallIcon: Int, context: Context)
+    public fun setSmallIcon(smallIcon: Int, context: Context)
 
-    fun getActionButtonIconKey(): String
+    public fun getActionButtonIconKey(): String
 
-    fun setActionButtons(
+    public fun setActionButtons(
         context: Context?,
         extras: Bundle?,
         notificationId: Int,

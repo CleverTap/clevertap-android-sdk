@@ -14,31 +14,31 @@ import org.jetbrains.annotations.TestOnly
  */
 // todo lp Remove context dependency from here
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class ManifestInfo(
-    val accountId: String?,
-    val accountToken: String?,
+public open class ManifestInfo(
+    public val accountId: String?,
+    public val accountToken: String?,
     accountRegion: String?,
     proxyDomain: String?,
     spikyProxyDomain: String?,
     handshakeDomain: String?,
     private val useADID: Boolean,
-    val isAppLaunchedDisabled: Boolean,
-    val notificationIcon: String?,
-    val excludedActivities: String?,
+    public val isAppLaunchedDisabled: Boolean,
+    public val notificationIcon: String?,
+    public val excludedActivities: String?,
     private val sslPinning: Boolean,
-    val isBackgroundSync: Boolean,
+    public val isBackgroundSync: Boolean,
     private val useCustomID: Boolean,
     @get:JvmName("getFCMSenderId")
-    val fcmSenderId: String?,
-    val packageName: String?,
+    public val fcmSenderId: String?,
+    public val packageName: String?,
     private val beta: Boolean,
-    val intentServiceName: String?,
-    val devDefaultPushChannelId: String?,
-    val profileKeys: Array<String>?,
-    val encryptionLevel: Int,
-    val vendorOneProvider: String?,
-    val vendorTwoProvider: String?,
-    val encryptionInTransit: String?,
+    public val intentServiceName: String?,
+    public val devDefaultPushChannelId: String?,
+    public val profileKeys: Array<String>?,
+    public val encryptionLevel: Int,
+    public val vendorOneProvider: String?,
+    public val vendorTwoProvider: String?,
+    public val encryptionInTransit: String?,
     /**
      * Whether custom-html header/footer in-apps may fall back to a WindowManager overlay when the
      * host Activity is not a [androidx.fragment.app.FragmentActivity]. Opt-in (default false),
@@ -46,53 +46,53 @@ open class ManifestInfo(
      * manifest flag; only set from the manifest.
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    val isFragmentlessInAppBannersEnabled: Boolean = false
+    public val isFragmentlessInAppBannersEnabled: Boolean = false
 ) {
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
-    val accountRegion: String? = accountRegion
+    public val accountRegion: String? = accountRegion
         get() {
             Logger.v("ManifestInfo: getAccountRegion called, returning region:$field")
             return field
         }
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
-    val proxyDomain: String? = proxyDomain
+    public val proxyDomain: String? = proxyDomain
         get() {
             Logger.v("ManifestInfo: getProxyDomain called, returning proxyDomain:$field")
             return field
         }
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
-    val spikeyProxyDomain: String? = spikyProxyDomain
+    public val spikeyProxyDomain: String? = spikyProxyDomain
         get() {
             Logger.v("ManifestInfo: getSpikeyProxyDomain called, returning spikeyProxyDomain:$field")
             return field
         }
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
-    val handshakeDomain: String? = handshakeDomain
+    public val handshakeDomain: String? = handshakeDomain
         get() {
             Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:$field")
             return field
         }
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
-    val isSSLPinningEnabled: Boolean
+    public val isSSLPinningEnabled: Boolean
         get() = sslPinning
 
-    fun enableBeta(): Boolean = beta
+    public fun enableBeta(): Boolean = beta
 
-    fun useCustomId(): Boolean = useCustomID
+    public fun useCustomId(): Boolean = useCustomID
 
-    fun useGoogleAdId(): Boolean = useADID
+    public fun useGoogleAdId(): Boolean = useADID
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    companion object {
+    public companion object {
 
         private const val LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID"
         private const val LABEL_TOKEN = "CLEVERTAP_TOKEN"
-        const val LABEL_NOTIFICATION_ICON: String = "CLEVERTAP_NOTIFICATION_ICON"
+        public const val LABEL_NOTIFICATION_ICON: String = "CLEVERTAP_NOTIFICATION_ICON"
         private const val LABEL_INAPP_EXCLUDE = "CLEVERTAP_INAPP_EXCLUDE"
         private const val LABEL_REGION = "CLEVERTAP_REGION"
         private const val LABEL_PROXY_DOMAIN = "CLEVERTAP_PROXY_DOMAIN"
@@ -122,7 +122,7 @@ open class ManifestInfo(
         private const val LABEL_INAPP_FRAGMENTLESS_BANNERS = "CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS"
 
         // Module versions from manifest meta-data, sent in af even if the app never uses the module
-        const val LABEL_MODULE_SDK_VERSION_PREFIX: String = "com.clevertap.sdk.version."
+        public const val LABEL_MODULE_SDK_VERSION_PREFIX: String = "com.clevertap.sdk.version."
 
         private var instance: ManifestInfo? = null // singleton
 
@@ -136,30 +136,30 @@ open class ManifestInfo(
         // End - Capture the credentials from ChangeCredentials
 
         // Locks on ManifestInfo.class, the monitor the former `static synchronized` method used.
-        fun getInstance(context: Context?): ManifestInfo = synchronized(ManifestInfo::class.java) {
+        public fun getInstance(context: Context?): ManifestInfo = synchronized(ManifestInfo::class.java) {
             instance ?: fromManifest(context).also { instance = it }
         }
 
         // Only added for testing
         @TestOnly
-        fun clearPreloadedManifestInfo() {
+        public fun clearPreloadedManifestInfo() {
             instance = null
         }
 
-        fun changeCredentials(id: String?, token: String?, region: String?) {
+        public fun changeCredentials(id: String?, token: String?, region: String?) {
             ccAccountId = id
             ccAccountToken = token
             ccAccountRegion = region
         }
 
-        fun changeCredentials(id: String?, token: String?, proxyDomain: String?, spikyProxyDomain: String?) {
+        public fun changeCredentials(id: String?, token: String?, proxyDomain: String?, spikyProxyDomain: String?) {
             ccAccountId = id
             ccAccountToken = token
             ccProxyDomain = proxyDomain
             ccSpikyProxyDomain = spikyProxyDomain
         }
 
-        fun changeCredentials(
+        public fun changeCredentials(
             id: String?,
             token: String?,
             proxyDomain: String?,
@@ -249,7 +249,7 @@ open class ManifestInfo(
             null
         }
 
-        fun registerModuleSdkVersions(metaData: Bundle) {
+        public fun registerModuleSdkVersions(metaData: Bundle) {
             try {
                 for (key in metaData.keySet()) {
                     if (key == null || !key.startsWith(LABEL_MODULE_SDK_VERSION_PREFIX)) {
