@@ -76,9 +76,6 @@
     <ID>ForbiddenMethodCall:PTLog.kt$PTLog$v(PTConstants.LOG_TAG, message, t)</ID>
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(1000)</ID>
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(PTConstants.PT_INPUT_TIMEOUT.toLong())</ID>
-    <ID>ForbiddenVoid:PTPushNotificationReceiver.kt$PTPushNotificationReceiver$Void?</ID>
-    <ID>ForbiddenVoid:PushTemplateReceiver.kt$PushTemplateReceiver$Void?</ID>
-    <ID>ForbiddenVoid:Utils.kt$Utils$Void?</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_bg: String?</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg: String?</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg_summary: String?</ID>
@@ -298,24 +295,7 @@
     <ID>ReturnCount:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
     <ID>ReturnCount:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
     <ID>ReturnCount:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
-    <ID>SwallowedException:ProgressStyle.kt$ProgressStyle$t: Throwable</ID>
-    <ID>SwallowedException:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$ex: ClassNotFoundException</ID>
-    <ID>SwallowedException:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$t: Throwable</ID>
-    <ID>SwallowedException:Utils.kt$Utils$e: Exception</ID>
-    <ID>SwallowedException:Utils.kt$Utils$t: Throwable</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$IllegalArgumentException()</ID>
-    <ID>TooGenericExceptionCaught:InputBoxStyle.kt$InputBoxStyle$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PTPushNotificationReceiver.kt$PTPushNotificationReceiver$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:PTPushNotificationReceiver.kt$PTPushNotificationReceiver$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:ProgressPayloadParser.kt$ProgressPayloadParser$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:ProgressStyle.kt$ProgressStyle$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PushTemplateNotificationHandler.kt$PushTemplateNotificationHandler$throwable: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PushTemplateReceiver.kt$PushTemplateReceiver$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:PushTemplateReceiver.kt$PushTemplateReceiver$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:TemplateRenderer.kt$TemplateRenderer$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:Utils.kt$Utils$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:Utils.kt$Utils$t: Throwable</ID>
     <ID>TooGenericExceptionThrown:InputBoxStyle.kt$InputBoxStyle$throw Exception("Failed to fetch big picture!")</ID>
     <ID>TooGenericExceptionThrown:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$throw Exception("Failed to fetch big picture!")</ID>
     <ID>TooGenericExceptionThrown:Utils.kt$Utils$throw Exception("Logo is null")</ID>

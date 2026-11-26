@@ -131,6 +131,16 @@ style:
         reason: 'Log through com.clevertap.android.sdk.Logger (respects the configured debug level)'
       - value: 'android.util.Log.e'
         reason: 'Log through com.clevertap.android.sdk.Logger (respects the configured debug level)'
+  # Java interop needs `Void` as a type argument (Callable<Void>, Task<Void>, AsyncTask) - only flag
+  # Void used as a plain Kotlin type.
+  ForbiddenVoid:
+    active: true
+    ignoreOverridden: true
+    ignoreUsageInGenerics: true
+  # Non-const `val` constants compile to a private field + getter (Java then needs
+  # X.Companion.getFOO()); `const val` gives Java a real static final field.
+  MayBeConst:
+    active: true
   # Repo convention: braces on every if/else.
   BracesOnIfStatements:
     active: true
@@ -172,15 +182,20 @@ naming:
 # ==============================================================================
 # 5. EXCEPTIONS & NULL SAFETY
 # ==============================================================================
-# The SDK deliberately catches Throwable so it never crashes the host app. Existing cases are
-# baselined; a NEW one must be an explicit decision:
-#   @Suppress("TooGenericExceptionCaught") // SDK must never crash the host app
+# SDK policy: the SDK catches broadly (including Throwable) and may swallow failures on purpose so it
+# never crashes or disturbs the host app (native, Flutter or React Native). Rules that fight that
+# policy are OFF - do not re-enable them:
+#   - TooGenericExceptionCaught: catching Exception/Throwable at SDK boundaries is intended.
+#   - SwallowedException: not rethrowing is intended; failures are logged through Logger.
+# Still on: PrintStackTrace (log through Logger instead), TooGenericExceptionThrown (don't throw
+# raw Exception/RuntimeException), and empty-blocks' EmptyCatchBlock, which only asks to name a
+# deliberately ignored exception `ignored`/`expected`/`_` so the intent is visible.
 exceptions:
   active: true
   SwallowedException:
-    active: true
+    active: false
   TooGenericExceptionCaught:
-    active: true
+    active: false
   PrintStackTrace:
     active: true
 
@@ -203,3 +218,16 @@ potential-bugs:
   # A `var` holding a mutable collection: two ways to mutate the same state.
   DoubleMutabilityForCollection:
     active: true
+  # Casts that can never succeed.
+  UnsafeCast:
+    active: true
+  # toUpperCase()/toLowerCase()/String.format without a Locale: on a Turkish/Azeri device "I"
+  # lower-cases to a dotless "ı", which silently changes event names and profile keys.
+  # (Kotlin's lowercase()/uppercase() are locale-invariant and are fine.)
+  ImplicitDefaultLocale:
+    active: true
+  # Deliberately OFF: the SDK uses lateinit for lifecycle-bound internals (views bound in
+  # onCreateView, framework-injected fields). The real risk - a PUBLIC lateinit that a host app or
+  # wrapper can read before it is set - is checked separately: no public-API type exposes one.
+  LateinitUsage:
+    active: false

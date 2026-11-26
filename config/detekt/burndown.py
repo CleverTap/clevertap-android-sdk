@@ -40,9 +40,12 @@ GUIDE = {
     "FunctionParameterNaming": ("Naming", "camelCase parameters."),
     "PackageNaming": ("Naming", "Lower-case package segments (e.g. `product_config`, `featureFlags`) - public API packages, needs a deprecation plan."),
     "ClassNaming": ("Naming", "PascalCase classes."),
-    "TooGenericExceptionCaught": ("Exceptions", "SDK policy: keep only where the host app must be protected, with `@Suppress(\"TooGenericExceptionCaught\") // SDK must never crash the host app`; otherwise catch specific types."),
-    "SwallowedException": ("Exceptions", "Log or rethrow; never drop silently."),
     "PrintStackTrace": ("Exceptions", "Log through `Logger`."),
+    "ImplicitDefaultLocale": ("Null safety", "Pass `Locale.ROOT`/`Locale.US` for keys and identifiers (Turkish dotless-i); keep the default locale only for user-facing text."),
+    "UnsafeCast": ("Null safety", "The cast can never succeed - fix the type."),
+    "ForbiddenVoid": ("Idioms", "`Unit` instead of `Void` outside Java generic type arguments."),
+    "MayBeConst": ("Idioms", "`const val` so Java gets a static final field."),
+    "EmptyCatchBlock": ("Exceptions", "Name a deliberately ignored exception `ignored`/`expected`/`_`, or log it via Logger."),
     "TooGenericExceptionThrown": ("Exceptions", "Throw a specific exception type."),
     "ThrowingExceptionsWithoutMessageOrCause": ("Exceptions", "Add a message/cause."),
     "LongMethod": ("Complexity", "Extract private functions (threshold 30 lines)."),
@@ -117,7 +120,7 @@ for cat in ORDER:
 
 out.append("## Suggested order for the burn-down pass\n")
 out.append("1. **Null safety + idioms** (mechanical, highest value, follows the SDK-6375 patterns).\n"
-           "2. **Exceptions**: annotate the deliberate `catch (Throwable)` sites with the SDK-policy suppression, narrow the rest, never swallow silently.\n"
+           "2. **Exceptions**: catching broadly and swallowing is SDK policy (those rules are off); only fix printStackTrace, raw Exception throws and unnamed empty catches.\n"
            "3. **Library safety**: public data classes and explicit return types (or turn on `explicitApi()`).\n"
            "4. **Naming/style** in internal code (not public API, keys, reflection-referenced names).\n"
            "5. **Complexity**: opportunistically when touching a method; don't refactor for the metric alone.\n"

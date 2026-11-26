@@ -4,14 +4,6 @@
   <CurrentIssues>
     <ID>BracesOnIfStatements:CTHmsMessageHandler.kt$CTHmsMessageHandler$else</ID>
     <ID>BracesOnIfStatements:CTHmsMessageHandler.kt$CTHmsMessageHandler$if</ID>
-    <ID>SwallowedException:HmsSdkHandler.kt$HmsSdkHandler$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:CTHmsMessageHandler.kt$CTHmsMessageHandler$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:CTHmsMessageHandler.kt$CTHmsMessageHandler$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:CTHmsMessageHandler.kt$CTHmsMessageHandler$throwable: Throwable</ID>
-    <ID>TooGenericExceptionCaught:HmsNotificationParser.kt$HmsNotificationParser$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:HmsSdkHandler.kt$HmsSdkHandler$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:HmsSdkHandler.kt$HmsSdkHandler$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:HmsSdkHandler.kt$HmsSdkHandler$t: Throwable</ID>
     <ID>UndocumentedPublicClass:HmsConstants.kt$HmsConstants</ID>
     <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$@JvmField val HPS: PushType = PushType( HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS )</ID>
     <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val APP_ID_KEY: String = "client/app_id"</ID>

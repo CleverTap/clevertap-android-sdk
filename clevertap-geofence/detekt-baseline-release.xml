@@ -30,10 +30,7 @@
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)</ID>
-    <ID>ForbiddenVoid:CTGeofenceAdapter.kt$CTGeofenceAdapter$Void</ID>
-    <ID>ForbiddenVoid:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$Void</ID>
     <ID>ForbiddenVoid:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$Void?</ID>
-    <ID>ForbiddenVoid:GoogleLocationAdapter.kt$GoogleLocationAdapter$Void</ID>
     <ID>LargeClass:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
     <ID>LongMethod:BackgroundLocationWork.kt$BackgroundLocationWork$override fun startWork(): ListenableFuture&lt;Result&gt;</ID>
     <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) override fun handleGeoFences(fenceList: JSONObject?)</ID>
@@ -78,31 +75,6 @@
     <ID>ReturnCount:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
     <ID>ReturnCount:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun writeJsonToFile( context: Context?, dirName: String?, fileName: String?, jsonObject: JSONObject? ): Boolean</ID>
     <ID>ReturnCount:Utils.kt$Utils$@JvmStatic @WorkerThread fun initCTGeofenceApiIfRequired(context: Context): Boolean</ID>
-    <ID>SwallowedException:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver.&lt;no name provided&gt;$e: TimeoutException</ID>
-    <ID>SwallowedException:GeofenceStorageHelper.kt$GeofenceStorageHelper$t: Throwable</ID>
-    <ID>SwallowedException:GoogleLocationAdapter.kt$GoogleLocationAdapter$t: NoClassDefFoundError</ID>
-    <ID>SwallowedException:Utils.kt$Utils$e: ClassNotFoundException</ID>
-    <ID>SwallowedException:Utils.kt$Utils$e: Exception</ID>
-    <ID>SwallowedException:Utils.kt$Utils$e: JSONException</ID>
-    <ID>SwallowedException:Utils.kt$Utils$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:BackgroundLocationWork.kt$BackgroundLocationWork$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTGeofenceAPI.kt$CTGeofenceAPI$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver.&lt;no name provided&gt;$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTGeofenceReceiver.kt$CTGeofenceReceiver$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTGeofenceReceiver.kt$CTGeofenceReceiver.&lt;no name provided&gt;$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTGeofenceTaskManager.kt$CTGeofenceTaskManager$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver.&lt;no name provided&gt;$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:FileUtils.kt$FileUtils$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:GeofenceStorageHelper.kt$GeofenceStorageHelper$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:GeofenceUpdateTask.kt$GeofenceUpdateTask$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:GoogleLocationAdapter.kt$GoogleLocationAdapter$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:GoogleLocationAdapter.kt$GoogleLocationAdapter$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PushGeofenceEventTask.kt$PushGeofenceEventTask$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:PushLocationEventTask.kt$PushLocationEventTask$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:Utils.kt$Utils$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:Utils.kt$Utils$t: Throwable</ID>
     <ID>TooManyFunctions:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
     <ID>UndocumentedPublicClass:CTGeofenceAPI.kt$CTGeofenceAPI$OnGeofenceApiInitializedListener</ID>

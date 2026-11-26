@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 4334**  
-core: 3513 · geofence: 186 · hms: 24 · pushtemplates: 611
+**Total baselined findings: 4048**  
+core: 3283 · geofence: 158 · hms: 16 · pushtemplates: 591
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -12,14 +12,14 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Category | Findings | Rules |
 |---|---|---|
 | Null safety | 418 | NullableToStringCall (158), UnsafeCallOnNullableType (141), CanBeNonNullable (88), MapGetWithNotNullAssertionOperator (17), UnnecessarySafeCall (13), UnnecessaryNotNullOperator (1) |
-| Idioms | 67 | UseOrEmpty (31), UseCheckOrError (11), UseLet (7), VarCouldBeVal (6), UnnecessaryLet (6), UseRequire (3), UseIsNullOrEmpty (3) |
-| Exceptions | 268 | TooGenericExceptionCaught (176), SwallowedException (82), TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
+| Idioms | 69 | UseOrEmpty (31), UseCheckOrError (11), UseLet (7), VarCouldBeVal (6), UnnecessaryLet (6), UseRequire (3), UseIsNullOrEmpty (3), MayBeConst (1), ForbiddenVoid (1) |
+| Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
 | Library safety | 21 | DoubleMutabilityForCollection (21) |
 | Naming | 38 | FunctionParameterNaming (14), FunctionNaming (9), VariableNaming (8), PackageNaming (7) |
 | Style | 792 | BracesOnIfStatements (246), MaxLineLength (219), MagicNumber (190), ReturnCount (83), ForbiddenMethodCall (54) |
 | Complexity | 773 | LongMethod (232), NestedBlockDepth (189), LongParameterList (124), CyclomaticComplexMethod (124), TooManyFunctions (69), LargeClass (27), ComplexCondition (8) |
 | Public docs | 1661 | UndocumentedPublicProperty (978), UndocumentedPublicFunction (535), UndocumentedPublicClass (148) |
-| Other | 296 | NewLineAtEndOfFile (168), ForbiddenVoid (29), LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (15), EmptyFunctionBlock (8), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), WildcardImport (5), UnusedPrivateProperty (5), UnusedParameter (4), ThrowsCount (4), UnnecessaryApply (3), SafeCast (2), ObjectLiteralToLambda (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), MayBeConst (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
+| Other | 266 | NewLineAtEndOfFile (168), LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (15), EmptyFunctionBlock (8), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), WildcardImport (5), UnusedPrivateProperty (5), UnusedParameter (4), ThrowsCount (4), UnnecessaryApply (3), SafeCast (2), ObjectLiteralToLambda (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
 
@@ -54,13 +54,13 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `GifDecoder.kt` (1), `PushProviders.kt` (1), `Utils.kt` (1)
 - **UseIsNullOrEmpty: 3** (geofence 3). `isNullOrEmpty()`.  
   Top files: `GoogleGeofenceAdapter.kt` (2), `CTGeofenceAPI.kt` (1)
+- **MayBeConst: 1** (pushtemplates 1). `const val` so Java gets a static final field.  
+  Top files: `PTConstants.kt` (1)
+- **ForbiddenVoid: 1** (geofence 1). `Unit` instead of `Void` outside Java generic type arguments.  
+  Top files: `GoogleGeofenceAdapter.kt` (1)
 
 ### Exceptions
 
-- **TooGenericExceptionCaught: 176** (core 139, geofence 18, pushtemplates 12, hms 7). SDK policy: keep only where the host app must be protected, with `@Suppress("TooGenericExceptionCaught") // SDK must never crash the host app`; otherwise catch specific types.  
-  Top files: `Utils.kt` (6), `DeviceInfo.kt` (5), `CleverTapInstanceConfig.kt` (4), `ActivityLifeCycleManager.kt` (3), `CTHmsMessageHandler.kt` (3), `HmsSdkHandler.kt` (3)
-- **SwallowedException: 82** (core 69, geofence 7, pushtemplates 5, hms 1). Log or rethrow; never drop silently.  
-  Top files: `Utils.kt` (8), `PushProviders.kt` (5), `CleverTapInstanceConfig.kt` (3), `GifImageView.kt` (3), `InAppStore.kt` (3), `ActivityLifeCycleManager.kt` (2)
 - **TooGenericExceptionThrown: 5** (pushtemplates 3, core 2). Throw a specific exception type.  
   Top files: `Utils.kt` (2), `CleverTapFactory.kt` (1), `InputBoxStyle.kt` (1), `PushTemplateReceiver.kt` (1)
 - **ThrowingExceptionsWithoutMessageOrCause: 5** (core 4, pushtemplates 1). Add a message/cause.  
@@ -125,8 +125,6 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 - **NewLineAtEndOfFile: 168** (core 119, pushtemplates 49). See https://detekt.dev/docs/rules  
   Top files: `ExoplayerHandle.kt` (2), `Extensions.kt` (2), `Media3Handle.kt` (2), `AESCrypt.kt` (1), `AESGCMCrypt.kt` (1), `AnalyticsManagerBundler.kt` (1)
-- **ForbiddenVoid: 29** (core 22, geofence 4, pushtemplates 3). See https://detekt.dev/docs/rules  
-  Top files: `ActivityLifeCycleManager.kt` (2), `CTProductConfigController.kt` (2), `CleverTapAPI.kt` (2), `ProductConfigSettings.kt` (2), `GoogleGeofenceAdapter.kt` (2), `AnalyticsManager.kt` (1)
 - **LoopWithTooManyJumpStatements: 22** (core 21, pushtemplates 1). See https://detekt.dev/docs/rules  
   Top files: `EventDataNormalizer.kt` (2), `CTInboxController.kt` (1), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `EventDAOImpl.kt` (1), `GifDecoder.kt` (1)
 - **UnnecessaryAbstractClass: 15** (core 13, pushtemplates 2). See https://detekt.dev/docs/rules  
@@ -163,8 +161,6 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CTProductConfigController.kt` (1)
 - **SpreadOperator: 1** (core 1). See https://detekt.dev/docs/rules  
   Top files: `DeviceInfo.kt` (1)
-- **MayBeConst: 1** (pushtemplates 1). See https://detekt.dev/docs/rules  
-  Top files: `PTConstants.kt` (1)
 - **HasPlatformType: 1** (core 1). See https://detekt.dev/docs/rules  
   Top files: `NetworkEncryptionManager.kt` (1)
 - **FunctionOnlyReturningConstant: 1** (core 1). See https://detekt.dev/docs/rules  
@@ -179,7 +175,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 ## Suggested order for the burn-down pass
 
 1. **Null safety + idioms** (mechanical, highest value, follows the SDK-6375 patterns).
-2. **Exceptions**: annotate the deliberate `catch (Throwable)` sites with the SDK-policy suppression, narrow the rest, never swallow silently.
+2. **Exceptions**: catching broadly and swallowing is SDK policy (those rules are off); only fix printStackTrace, raw Exception throws and unnamed empty catches.
 3. **Library safety**: public data classes and explicit return types (or turn on `explicitApi()`).
 4. **Naming/style** in internal code (not public API, keys, reflection-referenced names).
 5. **Complexity**: opportunistically when touching a method; don't refactor for the metric alone.
