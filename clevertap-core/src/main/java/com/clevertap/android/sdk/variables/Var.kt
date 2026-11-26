@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
  * Character, String, or Map. You may nest maps arbitrarily.
  * @author Ansh Sachdeva
  */
-open class Var<T> internal constructor(
+public open class Var<T> internal constructor(
     private val ctVariables: CTVariables,
     private val name: String,
     private val nameComponents: Array<String>,
@@ -21,7 +21,7 @@ open class Var<T> internal constructor(
 ) {
 
     @JvmField
-    var stringValue: String? = null
+    public var stringValue: String? = null
 
     private var numberValue: Double? = null
 
@@ -39,7 +39,7 @@ open class Var<T> internal constructor(
      * optionally calls [triggerValueChanged]
      */
     @Synchronized
-    open fun update() {
+    public open fun update() {
         val oldValue = value
         value = ctVariables.varCache.getMergedValueFromComponentArray<T>(nameComponents)
         if (value == null && oldValue == null) {
@@ -146,17 +146,17 @@ open class Var<T> internal constructor(
         }
     }
 
-    open fun name(): String? = name
+    public open fun name(): String? = name
 
-    open fun nameComponents(): Array<String>? = nameComponents
+    public open fun nameComponents(): Array<String>? = nameComponents
 
-    open fun kind(): String? = kind
-
-    @Suppress("UNCHECKED_CAST")
-    open fun defaultValue(): T = defaultValue as T
+    public open fun kind(): String? = kind
 
     @Suppress("UNCHECKED_CAST")
-    open fun value(): T {
+    public open fun defaultValue(): T = defaultValue as T
+
+    @Suppress("UNCHECKED_CAST")
+    public open fun value(): T {
         warnIfNotStarted()
         return if (isFileKind) {
             ctVariables.varCache.filePathFromDisk(stringValue) as T
@@ -167,7 +167,7 @@ open class Var<T> internal constructor(
 
     internal fun rawFileValue(): String? = if (isFileKind) stringValue else null
 
-    open fun addValueChangedCallback(callback: VariableCallback<T>?) {
+    public open fun addValueChangedCallback(callback: VariableCallback<T>?) {
         if (callback == null) {
             log("Invalid callback parameter provided.")
             return
@@ -182,13 +182,13 @@ open class Var<T> internal constructor(
         }
     }
 
-    open fun removeValueChangedHandler(handler: VariableCallback<T>?) {
+    public open fun removeValueChangedHandler(handler: VariableCallback<T>?) {
         synchronized(valueChangedHandlers) {
             valueChangedHandlers.remove(handler)
         }
     }
 
-    open fun triggerFileIsReady() {
+    public open fun triggerFileIsReady() {
         synchronized(fileReadyHandlers) {
             for (callback in fileReadyHandlers) {
                 callback.setVariable(this)
@@ -197,12 +197,12 @@ open class Var<T> internal constructor(
         }
     }
 
-    open fun numberValue(): Number? {
+    public open fun numberValue(): Number? {
         warnIfNotStarted()
         return numberValue
     }
 
-    open fun stringValue(): String? {
+    public open fun stringValue(): String? {
         warnIfNotStarted()
         return if (isFileKind) {
             ctVariables.varCache.filePathFromDisk(stringValue)
@@ -215,7 +215,7 @@ open class Var<T> internal constructor(
         hadStarted = false
     }
 
-    open fun addFileReadyHandler(handler: VariableCallback<T>) {
+    public open fun addFileReadyHandler(handler: VariableCallback<T>) {
         synchronized(fileReadyHandlers) {
             fileReadyHandlers.add(handler)
         }
@@ -226,13 +226,13 @@ open class Var<T> internal constructor(
      *
      * @param handler Handler to be removed.
      */
-    open fun removeFileReadyHandler(handler: VariableCallback<T>) {
+    public open fun removeFileReadyHandler(handler: VariableCallback<T>) {
         synchronized(fileReadyHandlers) {
             fileReadyHandlers.remove(handler)
         }
     }
 
-    companion object {
+    public companion object {
 
         private const val TAG = "variable"
 

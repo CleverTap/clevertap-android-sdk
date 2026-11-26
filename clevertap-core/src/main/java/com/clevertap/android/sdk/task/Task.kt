@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException
  * Definition of task is to execute some work & return success or failure callbacks
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class Task<TResult> internal constructor(
+public open class Task<TResult> internal constructor(
     protected val config: CleverTapInstanceConfig?,
     protected val executor: Executor,
     protected val defaultCallbackExecutor: Executor,
@@ -39,7 +39,7 @@ open class Task<TResult> internal constructor(
      * @return task
      */
     @Synchronized
-    open fun addOnFailureListener(
+    public open fun addOnFailureListener(
         executor: Executor,
         listener: OnFailureListener<Exception>?
     ): Task<TResult> {
@@ -55,7 +55,7 @@ open class Task<TResult> internal constructor(
      * @param listener  - failure listener
      * @return task
      */
-    open fun addOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> =
+    public open fun addOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> =
         addOnFailureListener(defaultCallbackExecutor, listener)
 
     /**
@@ -65,7 +65,7 @@ open class Task<TResult> internal constructor(
      * @param listener  - success listener
      * @return task
      */
-    open fun addOnSuccessListener(
+    public open fun addOnSuccessListener(
         executor: Executor,
         listener: OnSuccessListener<TResult>?
     ): Task<TResult> {
@@ -81,7 +81,7 @@ open class Task<TResult> internal constructor(
      * @param listener  - success listener
      * @return task
      */
-    open fun addOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> =
+    public open fun addOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> =
         addOnSuccessListener(defaultCallbackExecutor, listener)
 
     /**
@@ -90,7 +90,7 @@ open class Task<TResult> internal constructor(
      * @param logTag   - tag name to identify the task state in logs.
      * @param callable - piece of code to run
      */
-    open fun execute(logTag: String?, callable: Callable<TResult>?) {
+    public open fun execute(logTag: String?, callable: Callable<TResult>?) {
         executor.execute(newRunnableForTask(logTag, callable))
     }
 
@@ -98,7 +98,7 @@ open class Task<TResult> internal constructor(
      * Returns the state of task
      * Ref[STATE]
      */
-    open val isSuccess: Boolean
+    public open val isSuccess: Boolean
         get() = taskState == STATE.SUCCESS
 
     /***
@@ -107,7 +107,7 @@ open class Task<TResult> internal constructor(
      * @return task
      */
     @Suppress("unused")
-    open fun removeOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> {
+    public open fun removeOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> {
         failureExecutables.removeAll { it.failureListener === listener }
         return this
     }
@@ -118,7 +118,7 @@ open class Task<TResult> internal constructor(
      * @return task
      */
     @Suppress("unused")
-    open fun removeOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> {
+    public open fun removeOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> {
         successExecutables.removeAll { it.successListener === listener }
         return this
     }
@@ -129,7 +129,7 @@ open class Task<TResult> internal constructor(
      * @param logTag   - tag name to identify the task state in logs.
      * @param callable - piece of code to run
      */
-    open fun submit(logTag: String?, callable: Callable<TResult>?): Future<*> {
+    public open fun submit(logTag: String?, callable: Callable<TResult>?): Future<*> {
         if (executor !is ExecutorService) {
             throw UnsupportedOperationException(
                 "Can't use this method without ExecutorService, Use Execute alternatively "
@@ -147,7 +147,7 @@ open class Task<TResult> internal constructor(
      * @return result of callable or null
      */
     // TODO This method does not set state of the task correctly.
-    open fun submitAndGetResult(logTag: String?, callable: Callable<TResult>?, timeoutMillis: Long): TResult? {
+    public open fun submitAndGetResult(logTag: String?, callable: Callable<TResult>?, timeoutMillis: Long): TResult? {
         if (executor !is ExecutorService) {
             throw UnsupportedOperationException(
                 "Can't use this method without ExecutorService, Use Execute alternatively "

@@ -17,14 +17,14 @@ import kotlin.Exception
  * @param hashFunction A function to generate a unique hash from the provided key. By default, it uses a [UrlHashGenerator].
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class DiskMemory(
+public class DiskMemory(
     private val directory: File,
     private val maxFileSizeKb: Int,
     private val logger: ILogger? = null,
     internal val hashFunction: (key: String) -> String = UrlHashGenerator.hash()
 ) {
 
-    companion object {
+    public companion object {
         //private const val DIGEST_ALGO = "SHA256"
         private const val FILE_PREFIX = "CT_FILE"
     }
@@ -35,7 +35,7 @@ class DiskMemory(
      * @param value The [ByteArray] representing the file content.
      * @return `true` if the file was successfully stored, `false` otherwise.
      */
-    fun add(key: String, value: ByteArray) : Boolean {
+    public fun add(key: String, value: ByteArray) : Boolean {
         return try {
             addAndReturnFileInstance(key, value)
             true
@@ -52,7 +52,7 @@ class DiskMemory(
      * @return The [File] instance of the stored file.
      * @throws [IllegalArgumentException] if the file size exceeds the maximum limit.
      */
-    fun addAndReturnFileInstance(key: String, value: ByteArray) : File {
+    public fun addAndReturnFileInstance(key: String, value: ByteArray) : File {
         if (value.sizeInKb() > maxFileSizeKb) {
             remove(key = key)
             throw IllegalArgumentException("File size exceeds the maximum limit of $maxFileSizeKb")
@@ -76,7 +76,7 @@ class DiskMemory(
      * @param key The unique key associated with the file.
      * @return The [File] instance of the stored file if found, `null` otherwise.
      */
-    fun get(key: String): File? {
+    public fun get(key: String): File? {
         val file = fetchFile(key)
 
         return if (file.exists()) {
@@ -91,7 +91,7 @@ class DiskMemory(
      * @param key The unique key associated with the file.
      * @return `true` if the file exists, `false` if it didn't exist.
      */
-    fun remove(key: String): Boolean {
+    public fun remove(key: String): Boolean {
         val file = fetchFile(key)
         return if (file.exists()) {
             file.delete()
@@ -105,7 +105,7 @@ class DiskMemory(
      *
      * @return `true` if the directory was successfully deleted, `false` otherwise.
      */
-    fun empty() : Boolean {
+    public fun empty() : Boolean {
         return directory.deleteRecursively()
     }
     /**

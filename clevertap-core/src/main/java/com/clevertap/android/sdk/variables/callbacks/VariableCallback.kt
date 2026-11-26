@@ -5,11 +5,11 @@ import com.clevertap.android.sdk.variables.Var
 /**
  * Callback registered individually to a Var object.
  */
-abstract class VariableCallback<T> : Runnable {
+public abstract class VariableCallback<T> : Runnable {
 
     private var variable: Var<T>? = null
 
-    open fun setVariable(variable: Var<T>?) {
+    public open fun setVariable(variable: Var<T>?) {
         this.variable = variable
     }
 
@@ -21,5 +21,5 @@ abstract class VariableCallback<T> : Runnable {
         }
     }
 
-    abstract fun onValueChanged(variable: Var<T>)
+    public abstract fun onValueChanged(variable: Var<T>)
 }

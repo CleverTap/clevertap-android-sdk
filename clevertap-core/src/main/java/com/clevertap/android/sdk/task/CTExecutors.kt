@@ -12,19 +12,19 @@ import java.util.concurrent.Executor
  * webservice requests).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class CTExecutors {
+public open class CTExecutors {
 
     @JvmField
-    val IO_EXECUTOR: IOExecutor
+    public val IO_EXECUTOR: IOExecutor
 
     @JvmField
-    val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()
+    public val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()
 
     @JvmField
-    val CURRENT_THREAD_EXECUTOR: Executor = Executor { it.run() }
+    public val CURRENT_THREAD_EXECUTOR: Executor = Executor { it.run() }
 
     @JvmField
-    val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR
+    public val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR
 
     @JvmField
     protected val config: CleverTapInstanceConfig?
@@ -56,7 +56,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTask(): Task<TResult> =
+    public open fun <TResult> ioTask(): Task<TResult> =
         taskOnExecutorWithName(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "ioTask")
 
     /**
@@ -64,7 +64,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTaskNonUi(): Task<TResult> =
+    public open fun <TResult> ioTaskNonUi(): Task<TResult> =
         taskOnExecutorWithName(IO_EXECUTOR, IO_EXECUTOR, "ioTaskNonUi")
 
     /**
@@ -72,7 +72,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTaskWithCallbackOnCurrentThread(): Task<TResult> =
+    public open fun <TResult> ioTaskWithCallbackOnCurrentThread(): Task<TResult> =
         taskOnExecutorWithName(IO_EXECUTOR, CURRENT_THREAD_EXECUTOR, "ioTaskWithCallbackOnCurrentThread")
 
     /**
@@ -80,7 +80,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> mainTask(): Task<TResult> =
+    public open fun <TResult> mainTask(): Task<TResult> =
         taskOnExecutorWithName(MAIN_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "Main")
 
     /**
@@ -89,7 +89,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> postAsyncSafelyTask(featureTag: String?): Task<TResult> {
+    public open fun <TResult> postAsyncSafelyTask(featureTag: String?): Task<TResult> {
         requireNotNull(featureTag) { "Tag can't be null" }
         val postAsyncSafelyExecutor = postAsyncSafelyTasks.getOrPut(featureTag) { PostAsyncSafelyExecutor() }
         return taskOnExecutorWithName(postAsyncSafelyExecutor, DEFAULT_CALLBACK_EXECUTOR, "PostAsyncSafely")
@@ -101,7 +101,7 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> postAsyncSafelyTask(): Task<TResult> =
+    public open fun <TResult> postAsyncSafelyTask(): Task<TResult> =
         postAsyncSafelyTask(if (config != null) config.accountId else singleThreadExecutorTag)
 
     /**
@@ -111,7 +111,7 @@ open class CTExecutors {
      * @param TResult
      * @return - task
      */
-    open fun <TResult> taskOnExecutor(taskExecutor: Executor?, taskName: String?): Task<TResult> =
+    public open fun <TResult> taskOnExecutor(taskExecutor: Executor?, taskName: String?): Task<TResult> =
         taskOnExecutorWithName(taskExecutor, DEFAULT_CALLBACK_EXECUTOR, taskName)
 
     /**
@@ -122,7 +122,7 @@ open class CTExecutors {
      * @param TResult
      * @return - task
      */
-    open fun <TResult> taskOnExecutorWithName(
+    public open fun <TResult> taskOnExecutorWithName(
         taskExecutor: Executor?,
         callbackExecutor: Executor?,
         taskName: String?

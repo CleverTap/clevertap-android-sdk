@@ -219,7 +219,7 @@ internal class DatabaseHelper internal constructor(
     }
 }
 
- enum class Table(val tableName: String) {
+ public enum class Table(public val tableName: String) {
     EVENTS("events"),
     PROFILE_EVENTS("profileEvents"),
     USER_PROFILES("userProfiles"),

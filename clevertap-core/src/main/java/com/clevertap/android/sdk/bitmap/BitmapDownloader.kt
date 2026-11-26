@@ -12,13 +12,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class BitmapDownloader(
+public class BitmapDownloader(
     private val httpUrlConnectionParams: HttpUrlConnectionParams,
     private val bitmapInputStreamReader: IBitmapInputStreamReader,
     private val sizeConstrainedPair: Pair<Boolean, Int> = Pair(false, 0)
 ) {
-    companion object {
-        const val NETWORK_TAG_DOWNLOAD_REQUESTS = 21
+    public companion object {
+        public const val NETWORK_TAG_DOWNLOAD_REQUESTS: Int = 21
         private const val TAG = "BitmapDownloader"
     }
 
@@ -26,7 +26,7 @@ class BitmapDownloader(
     private lateinit var connection: HttpURLConnection
     private lateinit var srcUrl: String
 
-    fun downloadBitmap(srcUrl: String): DownloadedBitmap {
+    public fun downloadBitmap(srcUrl: String): DownloadedBitmap {
         Logger.v(TAG, "Initiating bitmap download in BitmapDownloader...")
 
         this.srcUrl = srcUrl

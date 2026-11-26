@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmap.Status.SUCCESS
  * Factory class for creating instances of DownloadedBitmap.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object DownloadedBitmapFactory {
+public object DownloadedBitmapFactory {
 
     /**
      * Creates a DownloadedBitmap instance with a null bitmap and the provided status.
@@ -19,7 +19,7 @@ object DownloadedBitmapFactory {
      * @return A DownloadedBitmap instance with a null bitmap and the provided status.
      */
     @JvmOverloads
-    fun nullBitmapWithStatus(status: Status, failureReason: String? = null): DownloadedBitmap {
+    public fun nullBitmapWithStatus(status: Status, failureReason: String? = null): DownloadedBitmap {
         return DownloadedBitmap(null, status, -1, null, failureReason)
     }
 
@@ -31,7 +31,7 @@ object DownloadedBitmapFactory {
      * @param downloadTime The time taken for the download operation in millis.
      * @return The DownloadedBitmap object with the specified bitmap, success status, and download time.
      */
-    fun successBitmap(
+    public fun successBitmap(
         bitmap: Bitmap,
         downloadTime: Long,
         data: ByteArray? = null
@@ -43,7 +43,7 @@ object DownloadedBitmapFactory {
             bytes = data
         )
     }
-    fun successBytes(
+    public fun successBytes(
         downloadTime: Long,
         data: ByteArray
     ): DownloadedBitmap {

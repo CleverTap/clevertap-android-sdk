@@ -12,10 +12,10 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class BitmapInputStreamDecoder(
-    val saveBytes: Boolean = false,
-    val saveBitmap : Boolean = true,
-    val logger: Logger? = null
+public open class BitmapInputStreamDecoder(
+    public val saveBytes: Boolean = false,
+    public val saveBitmap : Boolean = true,
+    public val logger: Logger? = null
 ) : IBitmapInputStreamReader {
 
     override fun readInputStream(

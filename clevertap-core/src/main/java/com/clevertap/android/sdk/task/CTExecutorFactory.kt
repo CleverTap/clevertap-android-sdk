@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Uses API-level optimized approaches with lifecycle management
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object CTExecutorFactory {
+public object CTExecutorFactory {
 
     private const val TAG_RESOURCE_DOWNLOADER = "Resource Downloader"
 
@@ -19,7 +19,7 @@ object CTExecutorFactory {
     private val executorMap = ConcurrentHashMap<String, CTExecutors>()
 
     @JvmStatic
-    fun executors(config: CleverTapInstanceConfig?): CTExecutors {
+    public fun executors(config: CleverTapInstanceConfig?): CTExecutors {
         requireNotNull(config) { "Can't create task for null config" }
 
         val accountId = config.accountId
@@ -34,10 +34,10 @@ object CTExecutorFactory {
     }
 
     @JvmStatic
-    fun executorResourceDownloader(): CTExecutors = executorResourceDownloader(8)
+    public fun executorResourceDownloader(): CTExecutors = executorResourceDownloader(8)
 
     @JvmStatic
-    fun executorResourceDownloader(ioPoolSize: Int): CTExecutors {
+    public fun executorResourceDownloader(ioPoolSize: Int): CTExecutors {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // API 24+
             // Use computeIfAbsent for optimal performance on API 24+
             executorMap.computeIfAbsent(TAG_RESOURCE_DOWNLOADER) { CTExecutors(ioPoolSize) }
@@ -71,7 +71,7 @@ object CTExecutorFactory {
      * Remove executor for specific account (for cleanup)
      */
     @JvmStatic
-    fun removeExecutor(accountId: String): Boolean {
+    public fun removeExecutor(accountId: String): Boolean {
         val removed = executorMap.remove(accountId)
         return removed != null
     }

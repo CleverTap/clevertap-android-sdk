@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.Task
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class BitmapDownloadRequestHandlerWithTimeLimit(
+public class BitmapDownloadRequestHandlerWithTimeLimit(
     private val iBitmapDownloadRequestHandler: IBitmapDownloadRequestHandler
 ) : IBitmapDownloadRequestHandler {
 

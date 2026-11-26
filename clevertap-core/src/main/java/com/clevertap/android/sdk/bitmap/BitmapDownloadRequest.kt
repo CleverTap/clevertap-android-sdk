@@ -5,7 +5,7 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-data class BitmapDownloadRequest @JvmOverloads constructor(
+public data class BitmapDownloadRequest @JvmOverloads constructor(
     var bitmapPath: String?,
     var fallbackToAppIcon: Boolean = false,
     val context: Context? = null,

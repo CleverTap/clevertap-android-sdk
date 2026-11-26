@@ -14,7 +14,7 @@ import androidx.annotation.RestrictTo
  * </p>
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-interface ICTPreference {
+public interface ICTPreference {
 
     /**
      * Reads a string from the shared preferences.
@@ -23,7 +23,7 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The string value associated with the key, or the default value if not found.
      */
-    fun readString(key: String, default: String): String?
+    public fun readString(key: String, default: String): String?
 
     /**
      * Reads a boolean from the shared preferences.
@@ -32,7 +32,7 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The boolean value associated with the key, or the default value if not found.
      */
-    fun readBoolean(key: String, default: Boolean): Boolean
+    public fun readBoolean(key: String, default: Boolean): Boolean
 
     /**
      * Reads an integer from the shared preferences.
@@ -41,7 +41,7 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The integer value associated with the key, or the default value if not found.
      */
-    fun readInt(key: String, default: Int): Int
+    public fun readInt(key: String, default: Int): Int
 
     /**
      * Reads a long from the shared preferences.
@@ -50,7 +50,7 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The long value associated with the key, or the default value if not found.
      */
-    fun readLong(key: String, default: Long): Long
+    public fun readLong(key: String, default: Long): Long
 
     /**
      * Reads a float from the shared preferences.
@@ -59,7 +59,7 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The float value associated with the key, or the default value if not found.
      */
-    fun readFloat(key: String, default: Float): Float
+    public fun readFloat(key: String, default: Float): Float
 
     /**
      * Reads a string set from the shared preferences.
@@ -68,14 +68,14 @@ interface ICTPreference {
      * @param default The default value to return if the key is not present.
      * @return The string set associated with the key, or the default value if not found.
      */
-    fun readStringSet(key: String, default: Set<String>): Set<String>?
+    public fun readStringSet(key: String, default: Set<String>): Set<String>?
 
     /**
      * Reads all key-value pairs from the shared preferences.
      *
      * @return A map containing all key-value pairs in the shared preferences.
      */
-    fun readAll(): Map<String, *>?
+    public fun readAll(): Map<String, *>?
 
     /**
      * Writes a string to the shared preferences.
@@ -83,7 +83,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The string value to be stored.
      */
-    fun writeString(key: String, value: String)
+    public fun writeString(key: String, value: String)
 
     /**
      * Writes a boolean to the shared preferences.
@@ -91,7 +91,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The boolean value to be stored.
      */
-    fun writeBoolean(key: String, value: Boolean)
+    public fun writeBoolean(key: String, value: Boolean)
 
     /**
      * Writes an integer to the shared preferences.
@@ -99,7 +99,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The integer value to be stored.
      */
-    fun writeInt(key: String, value: Int)
+    public fun writeInt(key: String, value: Int)
 
     /**
      * Writes a long to the shared preferences.
@@ -107,7 +107,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The long value to be stored.
      */
-    fun writeLong(key: String, value: Long)
+    public fun writeLong(key: String, value: Long)
 
     /**
      * Writes a float to the shared preferences.
@@ -115,7 +115,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The float value to be stored.
      */
-    fun writeFloat(key: String, value: Float)
+    public fun writeFloat(key: String, value: Float)
 
     /**
      * Writes a string set to the shared preferences.
@@ -123,7 +123,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The string set value to be stored.
      */
-    fun writeStringSet(key: String, value: Set<String>)
+    public fun writeStringSet(key: String, value: Set<String>)
 
     /**
      * Writes a map to the shared preferences.
@@ -131,7 +131,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The map value to be stored.
      */
-    fun writeMap(key: String, value: Map<String, *>)
+    public fun writeMap(key: String, value: Map<String, *>)
 
     /**
      * Writes a string to the shared preferences immediately (without applying changes asynchronously).
@@ -139,7 +139,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The string value to be stored.
      */
-    fun writeStringImmediate(key: String, value: String)
+    public fun writeStringImmediate(key: String, value: String)
 
     /**
      * Writes a boolean to the shared preferences immediately (without applying changes asynchronously).
@@ -147,7 +147,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The boolean value to be stored.
      */
-    fun writeBooleanImmediate(key: String, value: Boolean)
+    public fun writeBooleanImmediate(key: String, value: Boolean)
 
     /**
      * Writes an integer to the shared preferences immediately (without applying changes asynchronously).
@@ -155,7 +155,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The integer value to be stored.
      */
-    fun writeIntImmediate(key: String, value: Int)
+    public fun writeIntImmediate(key: String, value: Int)
 
     /**
      * Writes a long to the shared preferences immediately (without applying changes asynchronously).
@@ -163,7 +163,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The long value to be stored.
      */
-    fun writeLongImmediate(key: String, value: Long)
+    public fun writeLongImmediate(key: String, value: Long)
 
     /**
      * Writes a float to the shared preferences immediately (without applying changes asynchronously).
@@ -171,7 +171,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The float value to be stored.
      */
-    fun writeFloatImmediate(key: String, value: Float)
+    public fun writeFloatImmediate(key: String, value: Float)
 
     /**
      * Writes a string set to the shared preferences immediately (without applying changes asynchronously).
@@ -179,7 +179,7 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The string set value to be stored.
      */
-    fun writeStringSetImmediate(key: String, value: Set<String>)
+    public fun writeStringSetImmediate(key: String, value: Set<String>)
 
     /**
      * Writes a map to the shared preferences immediately (without applying changes asynchronously).
@@ -187,28 +187,28 @@ interface ICTPreference {
      * @param key The key associated with the value.
      * @param value The map value to be stored.
      */
-    fun writeMapImmediate(key: String, value: Map<String, *>)
+    public fun writeMapImmediate(key: String, value: Map<String, *>)
 
     /**
      * Checks if the shared preferences are empty.
      *
      * @return `true` if no key-value pairs are present, otherwise `false`.
      */
-    fun isEmpty(): Boolean
+    public fun isEmpty(): Boolean
 
     /**
      * Gets the size (number of key-value pairs) of the shared preferences.
      *
      * @return The number of key-value pairs in the shared preferences.
      */
-    fun size(): Int
+    public fun size(): Int
 
     /**
      * Removes a key and its associated value from the shared preferences.
      *
      * @param key The key to be removed.
      */
-    fun remove(key: String)
+    public fun remove(key: String)
 
     /**
      * Removes a key and its associated value from the shared preferences immediately
@@ -216,12 +216,12 @@ interface ICTPreference {
      *
      * @param key The key to be removed.
      */
-    fun removeImmediate(key: String)
+    public fun removeImmediate(key: String)
 
     /**
      * Changes the name of the shared preferences.
      *
      * @param prefName The new name for the shared preferences.
      */
-    fun changePreferenceName(prefName: String)
+    public fun changePreferenceName(prefName: String)
 }

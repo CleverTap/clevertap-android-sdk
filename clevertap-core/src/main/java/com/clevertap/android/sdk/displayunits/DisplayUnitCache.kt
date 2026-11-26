@@ -18,19 +18,19 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
  * fires for server-pipeline activity. Replacing the cache or mutating its
  * contents from outside the SDK does not synthesise a listener fire.
  */
-interface DisplayUnitCache {
+public interface DisplayUnitCache {
 
     /**
      * @return all units currently held; `null` or empty if none.
      */
-    fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>?
+    public fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>?
 
     /**
      * @param unitID the unit identifier; implementations must tolerate
      *               `null` or empty input by returning `null`.
      * @return the unit with the given id, or `null` if absent.
      */
-    fun getDisplayUnitForID(unitID: String?): CleverTapDisplayUnit?
+    public fun getDisplayUnitForID(unitID: String?): CleverTapDisplayUnit?
 
     /**
      * Called by the SDK when a server response delivers an updated set of
@@ -41,10 +41,10 @@ interface DisplayUnitCache {
      */
     // @JvmSuppressWildcards keeps the Java signature `List<CleverTapDisplayUnit>` (not
     // `List<? extends CleverTapDisplayUnit>`) so existing Java implementations still @Override it.
-    fun updateDisplayUnits(displayUnits: List<@JvmSuppressWildcards CleverTapDisplayUnit>?)
+    public fun updateDisplayUnits(displayUnits: List<@JvmSuppressWildcards CleverTapDisplayUnit>?)
 
     /**
      * Clears all units. Called by the SDK on logout / reset flows.
      */
-    fun reset()
+    public fun reset()
 }

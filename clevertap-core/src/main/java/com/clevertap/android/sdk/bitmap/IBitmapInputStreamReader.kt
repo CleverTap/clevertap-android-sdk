@@ -6,9 +6,9 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-interface IBitmapInputStreamReader {
+public interface IBitmapInputStreamReader {
 
-    fun readInputStream(
+    public fun readInputStream(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long

@@ -11,7 +11,7 @@ import android.graphics.Bitmap
  * @property downloadTime The time taken to download the bitmap, in milliseconds.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-data class DownloadedBitmap constructor(
+public data class DownloadedBitmap constructor(
     val bitmap: Bitmap?,
     val status: Status,
     val downloadTime: Long,
@@ -24,7 +24,7 @@ data class DownloadedBitmap constructor(
      *
      * @property statusValue The value associated with the status.
      */
-    enum class Status(val statusValue: String) {
+    public enum class Status(public val statusValue: String) {
         NO_IMAGE("NO_IMAGE"),
         SUCCESS("SUCCESS"),
         DOWNLOAD_FAILED("DOWNLOAD_FAILED"),
