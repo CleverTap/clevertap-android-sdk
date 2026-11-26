@@ -20,6 +20,11 @@ public open class Var<T> internal constructor(
     private val kind: String?
 ) {
 
+    /**
+     * The current value as a string, kept up to date by the SDK: the string itself, a number's string
+     * form, or `null` for a map or `null` value. For a file variable this is the file's URL; use
+     * [stringValue] (the function) for the local path. Don't modify it.
+     */
     @JvmField
     public var stringValue: String? = null
 
@@ -147,15 +152,42 @@ public open class Var<T> internal constructor(
         }
     }
 
+    /**
+     * Returns the variable's full name, as passed to `CleverTapAPI.defineVariable`.
+     *
+     * @return the name, for example `group.subgroup.name`
+     */
     public open fun name(): String? = name
 
+    /**
+     * Returns the variable's name split at each ".".
+     *
+     * @return the name components, for example `["group", "subgroup", "name"]`
+     */
     public open fun nameComponents(): Array<String>? = nameComponents
 
+    /**
+     * Returns the variable's kind: `string`, `boolean`, `number`, `group` (a map) or `file`.
+     *
+     * @return the kind
+     */
     public open fun kind(): String? = kind
 
+    /**
+     * Returns the default value the variable was defined with.
+     *
+     * @return the default value; `null` only for a file variable defined without one
+     */
     @Suppress("UNCHECKED_CAST")
     public open fun defaultValue(): T = defaultValue as T
 
+    /**
+     * Returns the current value: the latest value received from the server, otherwise the default
+     * value. For a file variable it is the local path of the downloaded file, or `null` while
+     * the file is not cached. Logs a warning (once) if called before the first fetch completed.
+     *
+     * @return the current value
+     */
     @Suppress("UNCHECKED_CAST")
     public open fun value(): T {
         warnIfNotStarted()
@@ -168,6 +200,15 @@ public open class Var<T> internal constructor(
 
     internal fun rawFileValue(): String? = if (isFileKind) { stringValue } else { null }
 
+    /**
+     * Registers a callback for changes of this variable's value.
+     *
+     * If variables have already been fetched, the callback is also invoked immediately, on the calling
+     * thread. Later changes are delivered on the main thread.
+     *
+     * @param callback the callback; `null` is ignored (and logged)
+     * @see removeValueChangedHandler
+     */
     public open fun addValueChangedCallback(callback: VariableCallback<T>?) {
         if (callback == null) {
             log("Invalid callback parameter provided.")
@@ -183,12 +224,21 @@ public open class Var<T> internal constructor(
         }
     }
 
+    /**
+     * Removes a callback registered with [addValueChangedCallback].
+     *
+     * @param handler the callback to remove
+     */
     public open fun removeValueChangedHandler(handler: VariableCallback<T>?) {
         synchronized(valueChangedHandlers) {
             valueChangedHandlers.remove(handler)
         }
     }
 
+    /**
+     * Invokes the handlers registered with [addFileReadyHandler], each on the main thread. The SDK
+     * calls this when a file variable's file has been downloaded and cached.
+     */
     public open fun triggerFileIsReady() {
         synchronized(fileReadyHandlers) {
             for (callback in fileReadyHandlers) {
@@ -198,11 +248,24 @@ public open class Var<T> internal constructor(
         }
     }
 
+    /**
+     * Returns the current value as a number (a [Double]). A string value is parsed; if it isn't numeric,
+     * the numeric default value is used. Logs a warning (once) if called before the first fetch
+     * completed.
+     *
+     * @return the value as a number, or `null` for a non-numeric variable
+     */
     public open fun numberValue(): Number? {
         warnIfNotStarted()
         return numberValue
     }
 
+    /**
+     * Returns the current value as a string. For a file variable it is the local path of the
+     * downloaded file. Logs a warning (once) if called before the first fetch completed.
+     *
+     * @return the value as a string, or `null` for a map value, or for a file that is not cached
+     */
     public open fun stringValue(): String? {
         warnIfNotStarted()
         return if (isFileKind) {
@@ -216,6 +279,13 @@ public open class Var<T> internal constructor(
         hadStarted = false
     }
 
+    /**
+     * Registers a handler that is invoked, on the main thread, when this file variable's file has been
+     * downloaded and cached and [value] returns its local path.
+     *
+     * @param handler the handler
+     * @see removeFileReadyHandler
+     */
     public open fun addFileReadyHandler(handler: VariableCallback<T>) {
         synchronized(fileReadyHandlers) {
             fileReadyHandlers.add(handler)
