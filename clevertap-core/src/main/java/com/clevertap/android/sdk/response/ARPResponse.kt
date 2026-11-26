@@ -23,22 +23,22 @@ internal open class ARPResponse(
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         // Handle "arp" (additional request parameters)
         try {
-            if (response!!.has("arp")) {
-                val arp = response.get("arp") as JSONObject
-                if (arp.length() > 0) {
-                    ctProductConfigController?.setArpValue(arp)
-                    //Handle Discarded events in ARP
-                    try {
-                        processDiscardedEventsList(arp)
-                    } catch (t: Throwable) {
-                        logger
-                            .verbose("Error handling discarded events response: " + t.localizedMessage)
-                    }
-                    arpRepo.handleARPUpdate(context, arp)
+            val response = checkNotNull(jsonBody) { "response JSON is null" }
+            if (!response.has("arp")) {
+                return
+            }
+            val arp = response.get("arp") as JSONObject
+            if (arp.length() > 0) {
+                ctProductConfigController?.setArpValue(arp)
+                //Handle Discarded events in ARP
+                try {
+                    processDiscardedEventsList(arp)
+                } catch (t: Throwable) {
+                    logger.verbose("Error handling discarded events response: ${t.localizedMessage}")
                 }
+                arpRepo.handleARPUpdate(context, arp)
             }
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "Failed to process ARP", t)
@@ -58,19 +58,16 @@ internal open class ARPResponse(
         }
 
         try {
-            val discardedEventsSet: MutableSet<String> = HashSet()
             val discardedEventsArray = response.getJSONArray(Constants.DISCARDED_EVENT_JSON_KEY)
-
-            for (i in 0 until discardedEventsArray.length()) {
-                discardedEventsSet.add(discardedEventsArray.getString(i))
-            }
+            val discardedEventsSet = (0 until discardedEventsArray.length())
+                .mapTo(HashSet()) { discardedEventsArray.getString(it) }
             if (validationConfig != null) {
                 validationConfig.updateDiscardedEventNames(discardedEventsSet)
             } else {
                 logger.verbose(config.accountId, "ValidationConfig object is NULL")
             }
         } catch (e: JSONException) {
-            logger.verbose(config.accountId, "Error parsing discarded events list" + e.localizedMessage)
+            logger.verbose(config.accountId, "Error parsing discarded events list${e.localizedMessage}")
         }
     }
 }

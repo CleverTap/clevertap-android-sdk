@@ -12,19 +12,18 @@ internal open class ConsoleResponse(private val config: CleverTapInstanceConfig)
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
+        // Both sections below silently ignore a null body.
+        val response = jsonBody ?: return
         // Handle "console" - print them as info to the console
         try {
             /*
              * Console info is no longer used
              * But the feature was to enable logs from LCr
              */
-            if (response!!.has("console")) {
+            if (response.has("console")) {
                 val console = response.get("console") as JSONArray
-                if (console.length() > 0) {
-                    for (i in 0 until console.length()) {
-                        logger.debug(config.accountId, console.get(i).toString())
-                    }
+                for (i in 0 until console.length()) {
+                    logger.debug(config.accountId, console.get(i).toString())
                 }
             }
         } catch (t: Throwable) {
@@ -33,7 +32,7 @@ internal open class ConsoleResponse(private val config: CleverTapInstanceConfig)
 
         // Handle server set debug level
         try {
-            if (response!!.has("dbg_lvl")) {
+            if (response.has("dbg_lvl")) {
                 val debugLevel = response.getInt("dbg_lvl")
                 if (debugLevel >= 0) {
                     CleverTapAPI.setDebugLevel(debugLevel)

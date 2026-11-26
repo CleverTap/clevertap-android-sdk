@@ -16,9 +16,7 @@ internal abstract class CleverTapResponse {
      * Lets [ClevertapResponseHandler] decide inclusion polymorphically instead of checking
      * concrete types.
      */
-    open fun runsDuringUserSwitch(): Boolean {
-        return true
-    }
+    open fun runsDuringUserSwitch(): Boolean = true
 
     @WorkerThread
     open fun processResponse(

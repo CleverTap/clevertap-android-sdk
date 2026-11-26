@@ -22,14 +22,12 @@ internal open class InboxResponse(
 
     private val inboxControllerLock: Any = ctLockManager.inboxControllerLock
 
-    override fun runsDuringUserSwitch(): Boolean {
-        return false // inbox is reset and re-fetched for the new user after the switch
-    }
+    // inbox is reset and re-fetched for the new user after the switch
+    override fun runsDuringUserSwitch(): Boolean = false
 
     //NotificationInbox
     @WorkerThread
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         if (config.isAnalyticsOnly) {
             logger.verbose(
                 config.accountId,
@@ -40,13 +38,15 @@ internal open class InboxResponse(
 
         logger.verbose(config.accountId, "Inbox: Processing response")
 
-        if (!response!!.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
+        // A null body throws here, as the Java original did (it dereferenced it unchecked).
+        val response = checkNotNull(jsonBody) { "Inbox: response JSON is null" }
+        if (!response.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
             logger.verbose(config.accountId, "Inbox: Response JSON object doesn't contain the inbox key")
             // process PushAmp response
             return
         }
         try {
-            _processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY))
+            processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY))
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "InboxResponse: Failed to parse response", t)
         }
@@ -54,16 +54,14 @@ internal open class InboxResponse(
 
     // always call async
     @WorkerThread
-    private fun _processInboxMessages(messages: JSONArray) {
+    private fun processInboxMessages(messages: JSONArray) {
         synchronized(inboxControllerLock) {
             if (controllerManager.ctInboxController == null) {
                 controllerManager.initializeInbox()
             }
-            if (controllerManager.ctInboxController != null) {
-                val update = controllerManager.ctInboxController!!.updateMessages(messages)
-                if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate()
-                }
+            val updated = controllerManager.ctInboxController?.updateMessages(messages) ?: false
+            if (updated) {
+                callbackManager._notifyInboxMessagesDidUpdate()
             }
         }
     }

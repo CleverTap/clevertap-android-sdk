@@ -15,7 +15,6 @@ internal open class GeofenceResponse(
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         logger.verbose(config.accountId, "Processing GeoFences response...")
 
         if (config.isAnalyticsOnly) {
@@ -26,44 +25,41 @@ internal open class GeofenceResponse(
             return
         }
 
-        if (response == null) {
+        if (jsonBody == null) {
             logger.verbose(
                 config.accountId,
-                Constants.LOG_TAG_GEOFENCES + "Can't parse Geofences Response, JSON response object is null"
+                "${Constants.LOG_TAG_GEOFENCES}Can't parse Geofences Response, JSON response object is null"
             )
             return
         }
 
-        if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
+        if (!jsonBody.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
             logger.verbose(
                 config.accountId,
-                Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key"
+                "${Constants.LOG_TAG_GEOFENCES}JSON object doesn't contain the Geofences key"
             )
             return
         }
         try {
-            if (callbackManager.geofenceCallback != null) {
+            val geofenceCallback = callbackManager.geofenceCallback
+            if (geofenceCallback != null) {
                 val jsonObject = JSONObject()
-                jsonObject.put("geofences", response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY))
+                jsonObject.put("geofences", jsonBody.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY))
 
-                logger
-                    .verbose(
-                        config.accountId,
-                        Constants.LOG_TAG_GEOFENCES + "Processing Geofences response"
-                    )
-                callbackManager.geofenceCallback!!.handleGeoFences(jsonObject)
+                logger.verbose(config.accountId, "${Constants.LOG_TAG_GEOFENCES}Processing Geofences response")
+                geofenceCallback.handleGeoFences(jsonObject)
             } else {
                 logger.debug(
                     config.accountId,
-                    Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response"
+                    "${Constants.LOG_TAG_GEOFENCES}Geofence SDK has not been initialized to handle the response"
                 )
             }
         } catch (t: Throwable) {
-            logger
-                .verbose(
-                    config.accountId,
-                    Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t
-                )
+            logger.verbose(
+                config.accountId,
+                "${Constants.LOG_TAG_GEOFENCES}Failed to handle Geofences response",
+                t
+            )
         }
     }
 }

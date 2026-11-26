@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.CtCacheType
@@ -31,6 +32,10 @@ internal open class InAppResponse(
 
     private val logger: Logger = config.logger
 
+    // A missing controller fails inside processResponse's catch-all, as the Java NPE did.
+    private val inAppController: InAppController
+        get() = checkNotNull(controllerManager.inAppController) { "InAppController is not initialised" }
+
     override fun processResponse(
         jsonBody: JSONObject?,
         stringBody: String?,
@@ -45,9 +50,6 @@ internal open class InAppResponse(
         context: Context,
         responseContext: ResponseContext
     ) {
-        val response = jsonBody
-        val isUserSwitching = responseContext.isUserSwitching
-        val isFullResponse = responseContext.isFullResponse
         try {
             if (config.isAnalyticsOnly) {
                 logger.verbose(
@@ -58,7 +60,7 @@ internal open class InAppResponse(
                 return
             }
 
-            if (response == null || response.length() == 0) {
+            if (jsonBody == null || jsonBody.length() == 0) {
                 logger.verbose(
                     config.accountId,
                     "There is no inapps data to handle"
@@ -66,7 +68,7 @@ internal open class InAppResponse(
                 return
             }
 
-            val res = InAppResponseAdapter(response, templatesManager)
+            val res = InAppResponseAdapter(jsonBody, templatesManager)
             val impressionStore = storeRegistry.impressionStore
             val inAppStore = storeRegistry.inAppStore
             val inAppAssetStore = storeRegistry.inAppAssetsStore
@@ -83,10 +85,11 @@ internal open class InAppResponse(
             val perSession = res.inAppsPerSession
             val perDay = res.inAppsPerDay
 
-            if (!isSendTest && controllerManager.inAppFCManager != null) {
+            val inAppFCManager = controllerManager.inAppFCManager
+            if (!isSendTest && inAppFCManager != null) {
                 Logger.v("Updating InAppFC Limits")
-                controllerManager.inAppFCManager!!.updateLimits(context, perDay, perSession)
-                controllerManager.inAppFCManager!!.processResponse(context, response)
+                inAppFCManager.updateLimits(context, perDay, perSession)
+                inAppFCManager.processResponse(context, jsonBody)
             } else {
                 logger.verbose(
                     config.accountId,
@@ -94,9 +97,9 @@ internal open class InAppResponse(
                 )
             }
 
-            val inappStaleList = res.staleInApps
-            if (inappStaleList.first) {
-                clearStaleInAppCache(inappStaleList.second!!,impressionStore, triggerManager)
+            val (hasStaleInApps, staleInApps) = res.staleInApps
+            if (hasStaleInApps) {
+                clearStaleInAppCache(checkNotNull(staleInApps), impressionStore, triggerManager)
             }
 
             val mode = res.inAppMode
@@ -104,7 +107,7 @@ internal open class InAppResponse(
                 inAppStore.mode = mode
             }
 
-            if (isUserSwitching) {
+            if (responseContext.isUserSwitching) {
                 return
             }
 
@@ -112,17 +115,18 @@ internal open class InAppResponse(
             // arbitration window so the app-launch winner below is held and merged with the /content
             // winner rather than shown twice. Content-fetch responses never open a window, and never
             // feed their directive into the Option 2 fast path (so the list stays empty).
-            var contentFetchItems: List<ContentFetchItem> = emptyList()
-            if (responseContext.source != CTResponseSource.CONTENT_FETCH) {
-                contentFetchItems = res.contentFetchItems
-                controllerManager.inAppController!!.openAppLaunchArbitrationWindowIfNeeded(contentFetchItems)
-            }
+            val contentFetchItems: List<ContentFetchItem> =
+                if (responseContext.source != CTResponseSource.CONTENT_FETCH) {
+                    res.contentFetchItems.also { inAppController.openAppLaunchArbitrationWindowIfNeeded(it) }
+                } else {
+                    emptyList()
+                }
 
             handleLegacyInApps(res)
             handleAppLaunchInApps(res, contentFetchItems)
             handleClientSideInApps(res, inAppStore, responseContext.source)
             handleServerSideInAppsMeta(res, inAppStore)
-            preloadAssetsAndEvictStaleFiles(res, context, isFullResponse)
+            preloadAssetsAndEvictStaleFiles(res, context, responseContext.isFullResponse)
         } catch (t: Throwable) {
             Logger.v("InAppManager: Failed to parse response", t)
         }
@@ -141,8 +145,7 @@ internal open class InAppResponse(
 
         val partitionedLegacyMetaInApps = res.partitionedLegacyMetaInApps
         if (partitionedLegacyMetaInApps.hasInActionInApps()) {
-            controllerManager.inAppController!!
-                .scheduleInActionInApps(partitionedLegacyMetaInApps.inActionInApps)
+            inAppController.scheduleInActionInApps(partitionedLegacyMetaInApps.inActionInApps)
         }
     }
 
@@ -151,14 +154,14 @@ internal open class InAppResponse(
     private fun handleAppLaunchInApps(res: InAppResponseAdapter, contentFetchItems: List<ContentFetchItem>) {
         val partitionedAppLaunchServerSideInApps = res.partitionedAppLaunchServerSideInApps
         if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
-            controllerManager.inAppController!!.onAppLaunchServerSideInAppsResponse(
+            inAppController.onAppLaunchServerSideInAppsResponse(
                 partitionedAppLaunchServerSideInApps.immediateInApps,
                 contentFetchItems,
                 coreMetaData.locationFromUser
             )
         }
         if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
-            controllerManager.inAppController!!.onAppLaunchServerSideDelayedInAppsResponse(
+            inAppController.onAppLaunchServerSideDelayedInAppsResponse(
                 partitionedAppLaunchServerSideInApps.delayedInApps,
                 coreMetaData.locationFromUser
             )
@@ -166,11 +169,10 @@ internal open class InAppResponse(
 
         val partitionedAppLaunchServerSideMetaInApps = res.partitionedAppLaunchServerSideMetaInApps
         if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
-            controllerManager.inAppController!!
-                .onAppLaunchServerSideInactionInAppsResponse(
-                    partitionedAppLaunchServerSideMetaInApps.inActionInApps,
-                    coreMetaData.locationFromUser
-                )
+            inAppController.onAppLaunchServerSideInactionInAppsResponse(
+                partitionedAppLaunchServerSideMetaInApps.inActionInApps,
+                coreMetaData.locationFromUser
+            )
         }
     }
 
@@ -209,8 +211,7 @@ internal open class InAppResponse(
     private fun preloadAssetsAndEvictStaleFiles(res: InAppResponseAdapter, context: Context, isFullResponse: Boolean) {
         val preloadAssetsMeta: List<Pair<String, CtCacheType>> = res.preloadAssetsMeta
 
-        val assetRepo = FileResourcesRepoFactory
-            .createFileResourcesRepo(context, logger, storeRegistry)
+        val assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry)
         if (preloadAssetsMeta.isNotEmpty()) {
             assetRepo.preloadFilesAndCache(preloadAssetsMeta)
         }
@@ -224,7 +225,8 @@ internal open class InAppResponse(
     }
 
     private fun clearStaleInAppCache(
-        inappStaleList: JSONArray, impressionStore: ImpressionStore,
+        inappStaleList: JSONArray,
+        impressionStore: ImpressionStore,
         triggerManager: TriggerManager
     ) {
         //Stale in-app ids used to remove in-app counts and triggers
@@ -239,22 +241,21 @@ internal open class InAppResponse(
         // Fire the first notification, if any
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>(Constants.TAG_FEATURE_IN_APPS)
         task.execute("InAppResponse#processResponse") {
-            controllerManager.inAppController!!.addInAppNotificationsToQueue(inappNotifsList)
+            inAppController.addInAppNotificationsToQueue(inappNotifsList)
             null
         }
     }
 
     private fun scheduleDelayedLegacyInApps(delayedLegacyInApps: List<JSONObject>) {
-        val inAppController = controllerManager.inAppController!!
+        val controller = inAppController
 
         // Schedule using delay functionality
-        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false)
+        controller.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false)
 
+        val activeDelays = controller.getActiveDelayedInAppsCount()
         logger.verbose(
             config.accountId,
-            "InApp: scheduling " + delayedLegacyInApps.size +
-                    " delayed in-apps. Active delays: " +
-                    inAppController.getActiveDelayedInAppsCount()
+            "InApp: scheduling ${delayedLegacyInApps.size} delayed in-apps. Active delays: $activeDelays"
         )
     }
 }
