@@ -69,43 +69,6 @@
     <ID>ReturnCount:Utils.kt$Utils$@JvmStatic @WorkerThread fun initCTGeofenceApiIfRequired(context: Context): Boolean</ID>
     <ID>TooManyFunctions:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
-    <ID>UndocumentedPublicClass:CTGeofenceAPI.kt$CTGeofenceAPI$OnGeofenceApiInitializedListener</ID>
-    <ID>UndocumentedPublicClass:Logger.kt$Logger</ID>
-    <ID>UndocumentedPublicClass:Logger.kt$Logger$LogLevel</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener?</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener?</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getGeofenceSettings(): CTGeofenceSettings?</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?)</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?)</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$@JvmStatic public fun getLogger(): Logger</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI.OnGeofenceApiInitializedListener$@Suppress("FunctionName") public fun OnGeofenceApiInitialized()</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$@LogLevel public open fun getLogLevel(): Int</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getFastestInterval(): Long</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getGeofenceMonitoringCount(): Int</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getGeofenceNotificationResponsiveness(): Int</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getId(): String?</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getInterval(): Long</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getLocationAccuracy(): Int</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getLocationFetchMode(): Int</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getSmallestDisplacement(): Float</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun isBackgroundLocationUpdatesEnabled(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings.Builder$public fun build(): CTGeofenceSettings</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun setDebugLevel(@LogLevel level: Int)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun verbose(suffix: String?, message: String?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun verbose(suffix: String?, message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(suffix: String?, message: String?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(suffix: String?, message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(suffix: String?, message: String?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(suffix: String?, message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun verbose(message: String?, t: Throwable?)</ID>
-    <ID>UndocumentedPublicProperty:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$public const val GEOFENCE_LOG_TAG: String = "CTGeofence"</ID>
-    <ID>UndocumentedPublicProperty:CTGeofenceSettings.kt$CTGeofenceSettings.Companion$public const val DEFAULT_GEO_MONITOR_COUNT: Int = 50</ID>
-    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val DEBUG: Int = 2</ID>
-    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val INFO: Int = 0</ID>
-    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val OFF: Int = -1</ID>
-    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val VERBOSE: Int = 3</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI!!</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapApi!!</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$ctGeofenceAdapter!!</ID>

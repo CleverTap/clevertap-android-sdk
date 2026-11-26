@@ -315,6 +315,14 @@ Java ones. Public API classes in the BCV dumps went from 390 to 140.
 - `CTGeofenceSettings.hashCode()` is identity-based while `equals()` compares values (and NPEs on a
   null id); pushtemplates `Utils.getTimerEnd` parses before checking for "-1".
 - `CleverTapAPI.buildPushProvidersFromManifest` has an always-true `splits != null` check.
+- Found while writing the customer KDoc (SDK-6388), documented as-is:
+  - `CTInboxMessage.getTitle/getBody/getImageUrl/getActionUrl` and `CTInAppNotification.actionExtras` /
+    `landscapeImageUrl` are only restored from a Parcel and never set by the JSON parser, so they are
+    always `null` on messages the SDK builds.
+  - The SDK never calls `SyncListener.profileDataUpdated`.
+  - `CTInboxMessage.getExpires()` falls back to now + 24h **in milliseconds** when `wzrk_ttl` is
+    absent, while the payload value is in seconds.
+  - `TemplateRenderer.debugLevel` has two stacked KDoc blocks.
 
 ### Small intentional differences
 
