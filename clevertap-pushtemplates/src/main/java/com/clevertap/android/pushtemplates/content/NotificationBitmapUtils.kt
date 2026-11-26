@@ -170,11 +170,7 @@ internal object NotificationBitmapUtils {
 
         // Keep the stroke and radius within half the shorter side for portrait images.
         val halfShortSide = minOf(width, height) / 2f
-        val strokeWidth = if (border.hasBorder) {
-            resolveBorderWidthPx(height, border.borderWidthValue).coerceAtMost(halfShortSide)
-        } else {
-            0f
-        }
+        val strokeWidth = resolveStrokeWidthPx(border, height, halfShortSide)
         val safeRadius = resolveCornerRadiusPx(height, border.cornerRadiusPercent)
             .coerceAtMost(halfShortSide)
 
@@ -187,13 +183,7 @@ internal object NotificationBitmapUtils {
         val output = createBitmap(width, height)
         val canvas = Canvas(output)
 
-        val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
-            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
-                if (scale != 1f) {
-                    setLocalMatrix(Matrix().apply { setScale(scale, scale) })
-                }
-            }
-        }
+        val imagePaint = scaledImagePaint(source, scale)
         canvas.drawRoundRect(
             RectF(0f, 0f, width.toFloat(), height.toFloat()),
             safeRadius, safeRadius, imagePaint
@@ -216,6 +206,27 @@ internal object NotificationBitmapUtils {
         }
 
         return output
+    }
+
+    /** Border stroke width in px, at most [halfShortSide]; 0 when [border] has no border. */
+    private fun resolveStrokeWidthPx(border: ImageBorderData, height: Int, halfShortSide: Float): Float =
+        if (border.hasBorder) {
+            resolveBorderWidthPx(height, border.borderWidthValue).coerceAtMost(halfShortSide)
+        } else {
+            0f
+        }
+
+    /** A paint that fills with [source], scaled by [scale]. */
+    private fun scaledImagePaint(source: Bitmap, scale: Float): Paint {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        val shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        if (scale != 1f) {
+            val matrix = Matrix()
+            matrix.setScale(scale, scale)
+            shader.setLocalMatrix(matrix)
+        }
+        paint.shader = shader
+        return paint
     }
 
     private fun logStyledImageScale(source: Bitmap, maxHeightPx: Int, scale: Float, width: Int, height: Int) {

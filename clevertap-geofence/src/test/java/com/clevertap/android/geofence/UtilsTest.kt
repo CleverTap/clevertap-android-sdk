@@ -65,6 +65,29 @@ class UtilsTest : BaseTestCase() {
     }
 
     @Test
+    fun testIsFusedLocationApiDependencyAvailableWhenClassesOnClasspath() {
+        ReflectionHelpers.setStaticField(Utils::class.java, "isPlayServicesDependencyAvailable", null)
+        ReflectionHelpers.setStaticField(Utils::class.java, "isFusedLocationDependencyAvailable", null)
+        try {
+            assertTrue(Utils.isFusedLocationApiDependencyAvailable())
+        } finally {
+            ReflectionHelpers.setStaticField(Utils::class.java, "isFusedLocationDependencyAvailable", null)
+        }
+    }
+
+    @Test
+    fun testIsFusedLocationApiDependencyAvailableWhenPlayServicesMissing() {
+        ReflectionHelpers.setStaticField(Utils::class.java, "isPlayServicesDependencyAvailable", false)
+        ReflectionHelpers.setStaticField(Utils::class.java, "isFusedLocationDependencyAvailable", null)
+        try {
+            assertFalse(Utils.isFusedLocationApiDependencyAvailable())
+        } finally {
+            ReflectionHelpers.setStaticField(Utils::class.java, "isPlayServicesDependencyAvailable", null)
+            ReflectionHelpers.setStaticField(Utils::class.java, "isFusedLocationDependencyAvailable", null)
+        }
+    }
+
+    @Test
     fun testEmptyIfNull() {
         //when string is null
         val actualWhenStringIsNull = Utils.emptyIfNull(null)

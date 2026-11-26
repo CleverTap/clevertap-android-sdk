@@ -88,7 +88,7 @@ internal object Utils {
     fun getImageDataListFromExtras(extras: Bundle, defaultAltText: String?): ArrayList<ImageData> {
         val imageList = ArrayList<ImageData>()
         for (key in extras.keySet()) {
-            if (key.startsWith("pt_img") && key.length > 6 && key[6].isDigit() && !key.endsWith(ALT_TEXT_SUFFIX)) {
+            if (isImageUrlKey(key)) {
                 val imageUrl = extras.getString(key)
                 val altText = extras.getString("$key$ALT_TEXT_SUFFIX", "$defaultAltText${imageList.size + 1}")
                 imageList.add(ImageData(imageUrl, altText))
@@ -96,6 +96,10 @@ internal object Utils {
         }
         return imageList
     }
+
+    /** `pt_img<digit>...` keys hold image URLs; the matching `...<ALT_TEXT_SUFFIX>` keys hold their alt text. */
+    private fun isImageUrlKey(key: String): Boolean =
+        key.startsWith("pt_img") && key.length > 6 && key[6].isDigit() && !key.endsWith(ALT_TEXT_SUFFIX)
 
     @Suppress("unused")
     fun getCTAListFromExtras(extras: Bundle): ArrayList<String> {
@@ -284,15 +288,16 @@ internal object Utils {
         b.remove("config")
         val map = HashMap<String, Any?>()
         for (s in b.keySet()) {
-            if (s.contains("wzrk_") || s == PTConstants.PT_ID) {
+            if (!s.contains("wzrk_") && s != PTConstants.PT_ID) {
+                continue
+            }
+            @Suppress("DEPRECATION")
+            val o = b.get(s)
+            if (o is Bundle) {
+                map.putAll(convertRatingBundleObjectToHashMap(o))
+            } else {
                 @Suppress("DEPRECATION")
-                val o = b.get(s)
-                if (o is Bundle) {
-                    map.putAll(convertRatingBundleObjectToHashMap(o))
-                } else {
-                    @Suppress("DEPRECATION")
-                    map[s] = b.get(s)
-                }
+                map[s] = b.get(s)
             }
         }
         return map
@@ -307,20 +312,34 @@ internal object Utils {
 
         for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
-                val propValue = extras.getString(key)
-                if (!propValue.isNullOrEmpty()) {
-                    if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
-                        eProps[eProp[1]] = if (propValue.equals(pkey, ignoreCase = true)) { value } else { propValue }
-                    } else {
-                        PTLog.verbose("Property $key does not have the separator")
-                    }
-                } else {
-                    PTLog.verbose("Property Key is Empty. Skipping Property: $key")
-                }
+                putEventProperty(eProps, key, extras.getString(key), pkey, value)
             }
         }
         return eProps
+    }
+
+    /**
+     * Puts the property named by the part of [key] after the separator into [eProps], with [value]
+     * in place of [propValue] when [propValue] equals [pkey] (ignoring case). Empty values and keys
+     * without the separator are logged and skipped.
+     */
+    private fun putEventProperty(
+        eProps: HashMap<String, Any?>,
+        key: String,
+        propValue: String?,
+        pkey: String?,
+        value: String?
+    ) {
+        if (propValue.isNullOrEmpty()) {
+            PTLog.verbose("Property Key is Empty. Skipping Property: $key")
+            return
+        }
+        if (!key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
+            PTLog.verbose("Property $key does not have the separator")
+            return
+        }
+        val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
+        eProps[eProp[1]] = if (propValue.equals(pkey, ignoreCase = true)) { value } else { propValue }
     }
 
     fun getEventPropertiesFromExtras(extras: Bundle): HashMap<String, Any?> {
@@ -328,17 +347,8 @@ internal object Utils {
 
         for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
-                val propValue = extras.getString(key)
-                if (!propValue.isNullOrEmpty()) {
-                    if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
-                        eProps[eProp[1]] = propValue
-                    } else {
-                        PTLog.verbose("Property $key does not have the separator")
-                    }
-                } else {
-                    PTLog.verbose("Property Key is Empty. Skipping Property: $key")
-                }
+                // A null pkey never matches a non-empty value, so every property keeps its own value.
+                putEventProperty(eProps, key, extras.getString(key), pkey = null, value = null)
             }
         }
         return eProps

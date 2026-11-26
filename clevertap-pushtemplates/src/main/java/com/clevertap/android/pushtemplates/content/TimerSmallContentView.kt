@@ -75,26 +75,26 @@ internal open class TimerSmallContentView(
         cornerRadius: Float,
         borderWidth: Float?
     ) {
-        val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
+        val borderColor = colorOrNull(borderColorStr)
         val bitmap = when (style) {
             ButtonStyle.GRADIENT_LINEAR -> {
-                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
-                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                val color1 = colorOrNull(gradientColor1) ?: return
+                val color2 = colorOrNull(gradientColor2) ?: return
                 NotificationBitmapUtils.createLinearGradientBitmap(
                     color1, color2, gradientDirection,
                     CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
                 )
             }
             ButtonStyle.GRADIENT_RADIAL -> {
-                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
-                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                val color1 = colorOrNull(gradientColor1) ?: return
+                val color2 = colorOrNull(gradientColor2) ?: return
                 NotificationBitmapUtils.createRadialBitmap(
                     color1, color2,
                     CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
                 )
             }
             ButtonStyle.SOLID -> {
-                val bgColor = bgColorStr?.let { Utils.getColourOrNull(it) } ?: return
+                val bgColor = colorOrNull(bgColorStr) ?: return
                 NotificationBitmapUtils.createSolidBitmap(
                     bgColor, borderColor,
                     CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderWidth
@@ -104,6 +104,9 @@ internal open class TimerSmallContentView(
         remoteView.setImageViewBitmap(R.id.chronometer_bg, bitmap)
         remoteView.setViewVisibility(R.id.chronometer_bg, View.VISIBLE)
     }
+
+    /** The parsed [colour], or `null` when it is missing or invalid. */
+    private fun colorOrNull(colour: String?): Int? = colour?.let { Utils.getColourOrNull(it) }
 
     private fun setCustomContentViewChronometerTitleColour(
         chronometerTitleColour: String?,

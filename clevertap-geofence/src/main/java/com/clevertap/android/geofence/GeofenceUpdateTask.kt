@@ -110,6 +110,32 @@ internal class GeofenceUpdateTask(context: Context, private val fenceList: JSONO
 
         val fenceSubList = JSONObject()
 
+        geofenceMoitoringCount = putTopGeofences(geofenceObject, fenceSubList, geofenceMoitoringCount)
+
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Writing $geofenceMoitoringCount new geofences to file..."
+        )
+
+        writeGeofencesToFile(fenceSubList)
+
+        val ctGeofenceList: List<CTGeofence> = CTGeofence.from(fenceSubList)
+
+        ctGeofenceAdapter.addAllGeofence(ctGeofenceList, OnSuccessListener {
+            if (onCompleteListener != null) {
+                onCompleteListener!!.onComplete()
+            }
+        })
+    }
+
+    /**
+     * Puts the first [requestedCount] geofences of [geofenceObject] into [fenceSubList], capping the
+     * count at the number of available geofences. Failures are logged and leave [fenceSubList] as is.
+     *
+     * @return the monitoring count after capping, used for logging by the caller
+     */
+    private fun putTopGeofences(geofenceObject: JSONObject, fenceSubList: JSONObject, requestedCount: Int): Int {
+        var geofenceMoitoringCount = requestedCount
         try {
             val geofenceObjectJSONArray = geofenceObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES)
 
@@ -145,12 +171,14 @@ internal class GeofenceUpdateTask(context: Context, private val fenceList: JSONO
                 "Failed to create geofence sublist", e
             )
         }
+        return geofenceMoitoringCount
+    }
 
-        CTGeofenceAPI.getLogger().debug(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG,
-            "Writing $geofenceMoitoringCount new geofences to file..."
-        )
-
+    /**
+     * Overwrites the cached geofence file with [fenceSubList], reporting a failure to CleverTap SDK.
+     */
+    @WorkerThread
+    private fun writeGeofencesToFile(fenceSubList: JSONObject) {
         //add new geofences, this will overwrite old ones
         val writeJsonToFile = FileUtils.writeJsonToFile(
             context, FileUtils.getCachedDirName(context),
@@ -173,13 +201,5 @@ internal class GeofenceUpdateTask(context: Context, private val fenceList: JSONO
                     .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Failed to write new geofences to file")
             }
         }
-
-        val ctGeofenceList: List<CTGeofence> = CTGeofence.from(fenceSubList)
-
-        ctGeofenceAdapter.addAllGeofence(ctGeofenceList, OnSuccessListener {
-            if (onCompleteListener != null) {
-                onCompleteListener!!.onComplete()
-            }
-        })
     }
 }

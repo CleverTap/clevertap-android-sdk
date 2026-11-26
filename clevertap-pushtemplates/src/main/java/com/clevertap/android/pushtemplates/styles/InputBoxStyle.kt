@@ -98,34 +98,44 @@ internal class InputBoxStyle(
         context: Context,
         notificationBuilder: NotificationCompat.Builder
     ): NotificationCompat.Builder {
-        var bigPictureStyle: NotificationCompat.Style
+        val bigPictureStyle: NotificationCompat.Style
         if (data.imageData.url.isNotNullAndEmpty() && data.imageData.url.startsWith("http")) {
-            try {
-                val bpMap = renderer.templateMediaManager.getNotificationBitmap(data.imageData.url, false, context)
-                    ?: throw Exception("Failed to fetch big picture!")
-
-                val summaryText = data.textData.messageSummary ?: data.textData.message
-                bigPictureStyle = NotificationCompat.BigPictureStyle()
-                    .setSummaryText(summaryText)
-                    .bigPicture(bpMap)
-
-                if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-                    bigPictureStyle.setContentDescription(data.imageData.altText)
-                }
-            } catch (t: Throwable) {
-                bigPictureStyle = NotificationCompat.BigTextStyle()
-                    .bigText(data.textData.message)
-                PTLog.verbose(
-                    "Falling back to big text notification, couldn't fetch big picture",
-                    t
-                )
-            }
+            bigPictureStyle = bigPictureStyleOrBigText(context, data.imageData.url)
         } else {
             bigPictureStyle = NotificationCompat.BigTextStyle()
                 .bigText(data.textData.message)
         }
         notificationBuilder.setStyle(bigPictureStyle)
         return notificationBuilder
+    }
+
+    /**
+     * A big picture style showing [imageUrl], or a big text style with the message when the image
+     * cannot be fetched.
+     */
+    private fun bigPictureStyleOrBigText(context: Context, imageUrl: String): NotificationCompat.Style {
+        var bigPictureStyle: NotificationCompat.Style
+        try {
+            val bpMap = renderer.templateMediaManager.getNotificationBitmap(imageUrl, false, context)
+                ?: throw Exception("Failed to fetch big picture!")
+
+            val summaryText = data.textData.messageSummary ?: data.textData.message
+            bigPictureStyle = NotificationCompat.BigPictureStyle()
+                .setSummaryText(summaryText)
+                .bigPicture(bpMap)
+
+            if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+                bigPictureStyle.setContentDescription(data.imageData.altText)
+            }
+        } catch (t: Throwable) {
+            bigPictureStyle = NotificationCompat.BigTextStyle()
+                .bigText(data.textData.message)
+            PTLog.verbose(
+                "Falling back to big text notification, couldn't fetch big picture",
+                t
+            )
+        }
+        return bigPictureStyle
     }
 
     override fun makePendingIntent(
