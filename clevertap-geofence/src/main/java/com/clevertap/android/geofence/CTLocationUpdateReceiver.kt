@@ -40,26 +40,7 @@ internal class CTLocationUpdateReceiver : BroadcastReceiver() {
             if (locationResult != null && locationResult.lastLocation != null) {
                 val thread: Thread = object : Thread() {
                     override fun run() {
-                        val pushLocationEventTask = PushLocationEventTask(context, locationResult)
-
-                        val future = CTGeofenceTaskManager.getInstance()
-                            .postAsyncSafely("PushLocationEvent", pushLocationEventTask)
-
-                        try {
-                            future?.get(BROADCAST_INTENT_TIME_MS, TimeUnit.MILLISECONDS)
-                        } catch (e: TimeoutException) {
-                            CTGeofenceAPI.getLogger().debug(
-                                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Timeout location receiver execution limit of 10 secs"
-                            )
-                        } catch (e: Exception) {
-                            CTGeofenceAPI.getLogger().debug(
-                                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Exception while processing location receiver intent", e
-                            )
-                        }
-
-                        finishPendingIntent(result)
+                        pushLocationEvent(context, locationResult, result)
                     }
                 }
 
@@ -85,6 +66,33 @@ internal class CTLocationUpdateReceiver : BroadcastReceiver() {
             CTGeofenceAPI.GEOFENCE_LOG_TAG,
             "Returning from Location Updates Receiver"
         )
+    }
+
+    /**
+     * Runs on the receiver worker thread: queues a [PushLocationEventTask] for [locationResult],
+     * waits up to [BROADCAST_INTENT_TIME_MS] for it and finishes the pending broadcast [result].
+     */
+    private fun pushLocationEvent(context: Context, locationResult: LocationResult, result: PendingResult?) {
+        val pushLocationEventTask = PushLocationEventTask(context, locationResult)
+
+        val future = CTGeofenceTaskManager.getInstance()
+            .postAsyncSafely("PushLocationEvent", pushLocationEventTask)
+
+        try {
+            future?.get(BROADCAST_INTENT_TIME_MS, TimeUnit.MILLISECONDS)
+        } catch (e: TimeoutException) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Timeout location receiver execution limit of 10 secs"
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Exception while processing location receiver intent", e
+            )
+        }
+
+        finishPendingIntent(result)
     }
 
     private fun finishPendingIntent(result: PendingResult?) {
