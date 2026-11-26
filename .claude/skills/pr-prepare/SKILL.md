@@ -12,7 +12,8 @@ Work through the steps in order. If a step fails, stop and tell the user. Do not
 - Name: `task/SDK-1234/short-name` or `bug/SDK-1234/short-name`. The other accepted prefixes are in
   `.github/workflows/on_pr_from_task_to_develop.yml`.
 - A branch whose name does not start with an accepted prefix gets no CI. Rename it before opening the PR.
-- The base branch is `develop`. A PR into any other branch (for example a release branch) also gets no CI.
+- The base branch is `develop`. The only other normal base is `master`, for the release PR (`develop` to `master`,
+  see the `release` skill); it has its own checks. A PR into any other branch (for example a release branch) gets no CI.
 
 ## 2. Commits and title
 
@@ -30,7 +31,8 @@ checkstyle, make sure the files you touched have no new warnings.
 
 ## 5. Secrets and local files
 
-Look at `git status` and `git diff --stat`. There must be no `local.properties`, tokens, signing files, or real
+Check what will be pushed, not only the working tree: `git status`, then `git diff origin/develop...HEAD` and
+`git log -p origin/develop..HEAD` (a secret removed in a later commit is still in history). There must be no `local.properties`, tokens, signing files, or real
 account values in `sample/src/main/AndroidManifest.xml`.
 
 ## 6. Description

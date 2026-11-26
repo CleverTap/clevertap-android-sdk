@@ -77,9 +77,12 @@ def get_service():
             creds = InstalledAppFlow.from_client_secrets_file(
                 CLIENT_SECRET, SCOPES
             ).run_local_server(port=0)
-        with open(TOKEN, "w") as fh:
+        # holds a refresh token: create the file private from the start
+        tmp = TOKEN + ".tmp"
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as fh:
             fh.write(creds.to_json())
-        os.chmod(TOKEN, 0o600)  # holds a refresh token — keep it private
+        os.replace(tmp, TOKEN)
 
     return build("drive", "v3", credentials=creds)
 
@@ -130,7 +133,7 @@ def upload(svc, path, folder_id, replace=False, anyone=False):
     print(f"{verb} {name} ({size_mb:.1f} MB)")
     resp = None
     while resp is None:
-        status, resp = req.next_chunk()
+        status, resp = req.next_chunk(num_retries=3)
         if status:
             print(f"  {int(status.progress() * 100):3d}%", end="\r", flush=True)
     print("  100%")
@@ -154,13 +157,18 @@ def main():
                     help="also grant 'anyone with the link' read access")
     args = ap.parse_args()
 
+    missing = [p for p in args.files if not os.path.isfile(p)]
+    if missing:
+        sys.exit("File not found: " + ", ".join(missing))
+
     svc = get_service()
 
     links = []
     for path in args.files:
         try:
-            links.append((os.path.basename(path),
-                          upload(svc, path, args.folder, args.replace, args.anyone)))
+            link = upload(svc, path, args.folder, args.replace, args.anyone)
+            print(f"  done: {os.path.basename(path)} -> {link}")
+            links.append((os.path.basename(path), link))
         except HttpError as err:
             if "accessNotConfigured" in str(err) or "has not been used in project" in str(err):
                 sys.exit(

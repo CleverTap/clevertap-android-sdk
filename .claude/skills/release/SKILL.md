@@ -156,7 +156,8 @@ existing tag or branch that would collide. Stop and ask if any check fails.
    touched — `docs/CTGEOFENCE.md`, `docs/CTPUSHTEMPLATES.md` and others change because their
    embedded version strings were re-substituted. That is correct. See `refs/mined-patterns.md` §2.
 9. 🚦 Commit. Preview the message first. Stage production files only.
-10. 🚦 Push the chores branch
+10. 🚦 Push the release branch first if it is not on the remote yet (the PR base must exist there), confirm
+    that push separately, then push the chores branch
 11. 🚦 Open the PR — title `docs changes and version bump <JIRA-ID>`, base = the release branch
 
 ### 🛑 Human gate — PR review
@@ -225,8 +226,15 @@ changed.** A bad `8.4.0` can only be answered with `8.4.1`, forever.
 Then wait for it to go live — 5 to 10 minutes — by polling:
 
 ```bash
-curl -sI https://repo1.maven.org/maven2/com/clevertap/android/clevertap-android-sdk/8.4.0/clevertap-android-sdk-8.4.0.aar
+# one ARTIFACT:VERSION pair for every module in the release manifest, not only core
+for PAIR in clevertap-android-sdk:8.4.0; do
+  A=${PAIR%%:*}; V=${PAIR##*:}
+  curl -sI -o /dev/null -w "$A $V %{http_code}\n" \
+    "https://repo1.maven.org/maven2/com/clevertap/android/$A/$V/$A-$V.aar"
+done
 ```
+
+Go on only when every module prints `200`.
 
 Search indexing on `search.maven.org` takes about two hours. Not being there yet is normal and
 does not mean the release failed.
@@ -400,7 +408,8 @@ human choice, not derivable.
 **Upload with the script** — set up and verified working on 2026-07-30:
 
 ```bash
-~/.venvs/br-drive/bin/python .claude/skills/release/scripts/upload_br_apks.py \
+# SDK_DIR = the path of this SDK repo (the working directory may be CT-Apps by now)
+~/.venvs/br-drive/bin/python "$SDK_DIR/.claude/skills/release/scripts/upload_br_apks.py" \
   <release.apk> <debug.apk>
 ```
 
