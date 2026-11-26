@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.pipsdk
 
 import android.graphics.Color
 import com.clevertap.android.sdk.inapp.CTInAppAction
+import androidx.annotation.RestrictTo
 
 /**
  * Immutable configuration for a PIP session.
@@ -11,7 +12,8 @@ import com.clevertap.android.sdk.inapp.CTInAppAction
  * PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE)
  * ```
  */
-data class PIPConfig internal constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class PIPConfig internal constructor(
     // Media
     val mediaUrl: String,
     val mediaType: PIPMediaType,

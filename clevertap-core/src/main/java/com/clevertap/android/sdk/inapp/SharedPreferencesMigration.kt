@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp
 
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.StorageHelper
+import androidx.annotation.RestrictTo
 
 /**
  * A utility class for migrating data between two instances of SharedPreferences with optional type filtering.
@@ -13,7 +14,8 @@ import com.clevertap.android.sdk.StorageHelper
  *                  When provided, only values that satisfy this condition will be migrated.
  *                  Defaults to a condition that allows all values when not specified.
  */
-class SharedPreferencesMigration<T>(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class SharedPreferencesMigration<T>(
     private val oldSharedPreferences: SharedPreferences,
     private val newSharedPreferences: SharedPreferences,
     private val valueType: Class<T>,
