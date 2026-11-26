@@ -948,68 +948,68 @@ class UtilsTest {
         assertEquals(customAltText, result[0].altText)
     }
 
-    // Tests for _getManifestStringValueForKey method
+    // Tests for getManifestStringValueForKey method
 
     @Test
-    fun `_getManifestStringValueForKey should return string value when object exists`() {
+    fun `getManifestStringValueForKey should return string value when object exists`() {
         // Given
         val keyName = "test_key"
         every { mockBundle.get(keyName) } returns "test_value"
 
         // When
-        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+        val result = Utils.getManifestStringValueForKey(mockBundle, keyName)
 
         // Then
         assertEquals("test_value", result)
     }
 
     @Test
-    fun `_getManifestStringValueForKey should return string representation of non-string object`() {
+    fun `getManifestStringValueForKey should return string representation of non-string object`() {
         // Given
         val keyName = "number_key"
         every { mockBundle.get(keyName) } returns 12345
 
         // When
-        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+        val result = Utils.getManifestStringValueForKey(mockBundle, keyName)
 
         // Then
         assertEquals("12345", result)
     }
 
     @Test
-    fun `_getManifestStringValueForKey should return null when object is null`() {
+    fun `getManifestStringValueForKey should return null when object is null`() {
         // Given
         val keyName = "null_key"
         every { mockBundle.get(keyName) } returns null
 
         // When
-        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+        val result = Utils.getManifestStringValueForKey(mockBundle, keyName)
 
         // Then
         assertNull(result)
     }
 
     @Test
-    fun `_getManifestStringValueForKey should return null when exception is thrown`() {
+    fun `getManifestStringValueForKey should return null when exception is thrown`() {
         // Given
         val keyName = "exception_key"
         every { mockBundle.get(keyName) } throws RuntimeException("Test exception")
 
         // When
-        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+        val result = Utils.getManifestStringValueForKey(mockBundle, keyName)
 
         // Then
         assertNull(result)
     }
 
     @Test
-    fun `_getManifestStringValueForKey should handle boolean values`() {
+    fun `getManifestStringValueForKey should handle boolean values`() {
         // Given
         val keyName = "boolean_key"
         every { mockBundle.get(keyName) } returns true
 
         // When
-        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+        val result = Utils.getManifestStringValueForKey(mockBundle, keyName)
 
         // Then
         assertEquals("true", result)

@@ -71,7 +71,7 @@ class TimerTemplateHandlerTest {
         timerTemplateData = createSampleTimerTemplateData()
 
         // Mock static methods
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
         mockkObject(ValidatorFactory)
         mockkStatic(PushNotificationUtil::class)
         mockkObject(CleverTapAPI.Companion)

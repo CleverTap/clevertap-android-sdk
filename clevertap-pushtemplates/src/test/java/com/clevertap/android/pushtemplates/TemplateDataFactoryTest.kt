@@ -111,7 +111,7 @@ class TemplateDataFactoryTest {
         mockBundle = mockk<Bundle>(relaxed = true)
         
         // Mock static methods
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
         
         // Default mock behaviors
         every { Utils.fromJson(any()) } returns mockBundle

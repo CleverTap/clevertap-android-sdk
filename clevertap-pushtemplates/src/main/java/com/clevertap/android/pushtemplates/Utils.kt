@@ -19,7 +19,6 @@ import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.text.TextUtils
 import android.text.format.DateUtils
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -45,25 +44,21 @@ import java.util.regex.Pattern
 @Suppress("WeakerAccess")
 internal object Utils {
 
-    @JvmStatic
-    @Throws(NullPointerException::class)
+    /** Throws a [NullPointerException] for a null [context], for the callers to handle. */
     fun getAppIcon(context: Context?): Bitmap {
+        context ?: throw NullPointerException("context")
         // Try to get the app logo first
         return try {
-            val logo = context!!.packageManager.getApplicationLogo(context.applicationInfo)
+            val logo = context.packageManager.getApplicationLogo(context.applicationInfo)
                 ?: throw Exception("Logo is null")
             drawableToBitmap(logo)
         } catch (e: Exception) {
             // Try to get the app icon now
             // No error handling here - handle upstream
-            drawableToBitmap(
-                context!!.packageManager.getApplicationIcon(context.applicationInfo)
-            )
+            drawableToBitmap(context.packageManager.getApplicationIcon(context.applicationInfo))
         }
     }
 
-    @JvmStatic
-    @Throws(NullPointerException::class)
     fun drawableToBitmap(drawable: Drawable): Bitmap {
         val bitmap = Bitmap.createBitmap(
             drawable.intrinsicWidth,
@@ -76,98 +71,76 @@ internal object Utils {
         return bitmap
     }
 
-    @JvmStatic
-    @Suppress("SameParameterValue")
-    fun _getManifestStringValueForKey(manifest: Bundle?, name: String?): String? {
-        return try {
-            @Suppress("DEPRECATION")
-            val o = manifest!!.get(name)
-            o?.toString()
-        } catch (t: Throwable) {
-            null
-        }
+    @Suppress("DEPRECATION")
+    fun getManifestStringValueForKey(manifest: Bundle?, name: String?): String? = try {
+        manifest?.get(name)?.toString()
+    } catch (t: Throwable) {
+        null
     }
 
-    @JvmStatic
-    fun getAppIconAsIntId(context: Context): Int {
-        val ai = context.applicationInfo
-        return ai.icon
-    }
+    fun getAppIconAsIntId(context: Context): Int = context.applicationInfo.icon
 
-    @JvmStatic
     fun getImageDataListFromExtras(extras: Bundle, defaultAltText: String?): ArrayList<ImageData> {
         val imageList = ArrayList<ImageData>()
-        var counter = 1
         for (key in extras.keySet()) {
-            if (key.startsWith("pt_img") && key.length > 6 && Character.isDigit(key[6]) && !key.endsWith(
-                    ALT_TEXT_SUFFIX
-                )
-            ) {
+            if (key.startsWith("pt_img") && key.length > 6 && key[6].isDigit() && !key.endsWith(ALT_TEXT_SUFFIX)) {
                 val imageUrl = extras.getString(key)
-                val altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter)
+                val altText = extras.getString("$key$ALT_TEXT_SUFFIX", "$defaultAltText${imageList.size + 1}")
                 imageList.add(ImageData(imageUrl, altText))
-                counter++
             }
         }
         return imageList
     }
 
-    @JvmStatic
     @Suppress("unused")
     fun getCTAListFromExtras(extras: Bundle): ArrayList<String> {
-        val ctaList = ArrayList<String?>()
+        val values = ArrayList<String?>()
         for (key in extras.keySet()) {
             if (key.contains("pt_cta")) {
-                ctaList.add(extras.getString(key))
+                values.add(extras.getString(key))
             }
         }
-        return ctaList.asPlatformList()
+        return values.asPlatformList()
     }
 
-    @JvmStatic
     fun getDeepLinkListFromExtras(extras: Bundle): ArrayList<String> {
-        val dlList = ArrayList<String?>()
+        val values = ArrayList<String?>()
         for (key in extras.keySet()) {
             if (key.contains("pt_dl")) {
-                dlList.add(extras.getString(key))
+                values.add(extras.getString(key))
             }
         }
-        return dlList.asPlatformList()
+        return values.asPlatformList()
     }
 
-    @JvmStatic
     fun getBigTextFromExtras(extras: Bundle): ArrayList<String> {
-        val btList = ArrayList<String?>()
+        val values = ArrayList<String?>()
         for (key in extras.keySet()) {
             if (key.contains("pt_bt")) {
-                btList.add(extras.getString(key))
+                values.add(extras.getString(key))
             }
         }
-        return btList.asPlatformList()
+        return values.asPlatformList()
     }
 
-    @JvmStatic
     fun getSmallTextFromExtras(extras: Bundle): ArrayList<String> {
-        val stList = ArrayList<String?>()
+        val values = ArrayList<String?>()
         for (key in extras.keySet()) {
-            if (key.startsWith("pt_st") && key.length > 5
-                && Character.isDigit(key[5])
-            ) {
-                stList.add(extras.getString(key))
+            if (key.startsWith("pt_st") && key.length > 5 && key[5].isDigit()) {
+                values.add(extras.getString(key))
             }
         }
-        return stList.asPlatformList()
+        return values.asPlatformList()
     }
 
-    @JvmStatic
     fun getPriceFromExtras(extras: Bundle): ArrayList<String> {
-        val stList = ArrayList<String?>()
+        val values = ArrayList<String?>()
         for (key in extras.keySet()) {
             if (key.contains("pt_price") && !key.contains("pt_price_list")) {
-                stList.add(extras.getString(key))
+                values.add(extras.getString(key))
             }
         }
-        return stList.asPlatformList()
+        return values.asPlatformList()
     }
 
     /**
@@ -176,14 +149,9 @@ internal object Utils {
      * @param isDarkMode Whether to use dark mode colors
      * @return A map containing appropriate colors for the specified mode
      */
-    @JvmStatic
     fun createColorMap(extras: Bundle, isDarkMode: Boolean): Map<String, String> {
-        val colorMap = HashMap<String, String?>()
-
-        // Process each color key
-        for (key in COLOR_KEYS) {
-            val color = getDarkModeAdaptiveColor(extras, isDarkMode, key)
-            colorMap[key] = color
+        val colorMap = COLOR_KEYS.associateWithTo(HashMap<String, String?>()) { key ->
+            getDarkModeAdaptiveColor(extras, isDarkMode, key)
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -197,34 +165,18 @@ internal object Utils {
      * @param key The color key to retrieve
      * @return The appropriate color for the specified mode
      */
-    @JvmStatic
     fun getDarkModeAdaptiveColor(extras: Bundle, isDarkMode: Boolean, key: String): String? {
-        val colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX)
+        val colorDark = extras.getString("$key$PT_DARK_MODE_SUFFIX")
         val color = extras.getString(key)
-
-        return if (isDarkMode && colorDark != null) {
-            colorDark
-        } else {
-            color
-        }
+        return if (isDarkMode && colorDark != null) colorDark else color
     }
 
-    @JvmStatic
-    fun isDarkMode(context: Context): Boolean {
-        val nightModeFlags = context.resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK
-        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES
-    }
+    fun isDarkMode(context: Context): Boolean =
+        (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
-    @JvmStatic
-    fun getTimeStamp(context: Context?, timeMillis: Long): String {
-        return DateUtils.formatDateTime(
-            context, timeMillis,
-            DateUtils.FORMAT_SHOW_TIME
-        )
-    }
+    fun getTimeStamp(context: Context?, timeMillis: Long): String =
+        DateUtils.formatDateTime(context, timeMillis, DateUtils.FORMAT_SHOW_TIME)
 
-    @JvmStatic
     fun getApplicationName(context: Context): String {
         val applicationInfo = context.applicationInfo
         val stringId = applicationInfo.labelRes
@@ -235,24 +187,17 @@ internal object Utils {
         }
     }
 
-    @JvmStatic
     fun fromJson(s: JSONObject): Bundle {
         val bundle = Bundle()
 
-        val it = s.keys()
-        while (it.hasNext()) {
-            val key = it.next()
+        for (key in s.keys()) {
             val arr: JSONArray? = s.optJSONArray(key)
             val str: String? = s.optString(key)
 
             if (arr != null && arr.length() <= 0) {
                 bundle.putStringArray(key, arrayOf())
             } else if (arr != null && arr.optString(0) != null) {
-                val newarr = arrayOfNulls<String>(arr.length())
-                for (i in 0 until arr.length()) {
-                    newarr[i] = arr.optString(i)
-                }
-                bundle.putStringArray(key, newarr)
+                bundle.putStringArray(key, Array(arr.length()) { i -> arr.optString(i) })
             } else if (str != null) {
                 bundle.putString(key, str)
             } else {
@@ -263,13 +208,14 @@ internal object Utils {
         return bundle
     }
 
-    @JvmStatic
     fun cancelNotification(ctx: Context?, notifyId: Int) {
-        val nMgr = ctx!!.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        nMgr.cancel(notifyId)
+        // Java dereferenced a null context as well (callers log the failure).
+        val notificationManager = requireNotNull(ctx) { "cancelNotification needs a context" }
+            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(notifyId)
     }
 
-    @JvmStatic
+    /** The value of the last `pt_timer_threshold*` key ("-1" when there is none or it is not a string). */
     fun getTimerThreshold(extras: Bundle): Int {
         var value: String? = "-1"
         for (key in extras.keySet()) {
@@ -277,86 +223,55 @@ internal object Utils {
                 value = extras.getString(key)
             }
         }
-        return Integer.parseInt(value ?: "-1")
+        return (value ?: "-1").toInt()
     }
 
-    @JvmStatic
     fun setPackageNameFromResolveInfoList(context: Context, launchIntent: Intent) {
-        val resolveInfoList = context.packageManager.queryIntentActivities(launchIntent, 0)
         val appPackageName = context.packageName
-        for (resolveInfo in resolveInfoList) {
-            if (appPackageName == resolveInfo.activityInfo.packageName) {
-                launchIntent.setPackage(appPackageName)
-                break
-            }
+        val resolvesToApp = context.packageManager.queryIntentActivities(launchIntent, 0)
+            .any { it.activityInfo.packageName == appPackageName }
+        if (resolvesToApp) {
+            launchIntent.setPackage(appPackageName)
         }
     }
 
-    @JvmStatic
+    private fun instanceFor(context: Context?, config: CleverTapInstanceConfig?): CleverTapAPI? =
+        if (config != null) {
+            CleverTapAPI.instanceWithConfig(context, config)
+        } else {
+            CleverTapAPI.getDefaultInstance(context)
+        }
+
     fun raiseCleverTapEvent(context: Context?, config: CleverTapInstanceConfig?, extras: Bundle) {
-        val instance: CleverTapAPI? = if (config != null) {
-            CleverTapAPI.instanceWithConfig(context, config)
-        } else {
-            CleverTapAPI.getDefaultInstance(context)
-        }
-
-        val eProps: HashMap<String, Any?> = getEventPropertiesFromExtras(extras)
-
-        val eName = getEventNameFromExtras(extras)
-
-        if (eName != null && eName.isNotEmpty()) {
-            if (instance != null) {
-                instance.pushEvent(eName, eProps)
-            } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event")
-            }
-        }
+        val instance = instanceFor(context, config)
+        val eProps = getEventPropertiesFromExtras(extras)
+        pushEventIfNamed(instance, getEventNameFromExtras(extras), eProps)
     }
 
-    @JvmStatic
     fun raiseCleverTapEvent(context: Context?, config: CleverTapInstanceConfig?, extras: Bundle, key: String?) {
-        val instance: CleverTapAPI? = if (config != null) {
-            CleverTapAPI.instanceWithConfig(context, config)
-        } else {
-            CleverTapAPI.getDefaultInstance(context)
-        }
-
-        val value = extras.getString(key)
-
-        val eProps: HashMap<String, Any?> = getEventPropertiesFromExtras(extras, key, value)
-
-        val eName = getEventNameFromExtras(extras)
-
-        if (eName != null && eName.isNotEmpty()) {
-            if (instance != null) {
-                instance.pushEvent(eName, eProps)
-            } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event")
-            }
-        }
+        val instance = instanceFor(context, config)
+        val eProps = getEventPropertiesFromExtras(extras, key, extras.getString(key))
+        pushEventIfNamed(instance, getEventNameFromExtras(extras), eProps)
     }
 
-    @JvmStatic
     fun raiseCleverTapEvent(
         context: Context?, config: CleverTapInstanceConfig?, evtName: String?,
-        eProps: HashMap<String, *>?
+        eProps: Map<String, *>?
     ) {
-        val instance: CleverTapAPI? = if (config != null) {
-            CleverTapAPI.instanceWithConfig(context, config)
-        } else {
-            CleverTapAPI.getDefaultInstance(context)
-        }
+        pushEventIfNamed(instanceFor(context, config), evtName, eProps)
+    }
 
-        if (evtName != null && evtName.isNotEmpty()) {
-            if (instance != null) {
-                instance.pushEvent(evtName, eProps)
-            } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event")
-            }
+    private fun pushEventIfNamed(instance: CleverTapAPI?, eventName: String?, eProps: Map<String, *>?) {
+        if (eventName.isNullOrEmpty()) {
+            return
+        }
+        if (instance != null) {
+            instance.pushEvent(eventName, eProps)
+        } else {
+            PTLog.debug("CleverTap instance is NULL, not raising the event")
         }
     }
 
-    @JvmStatic
     fun convertRatingBundleObjectToHashMap(b: Bundle): HashMap<String, Any?> {
         b.remove("config")
         val map = HashMap<String, Any?>()
@@ -375,33 +290,20 @@ internal object Utils {
         return map
     }
 
-    @JvmStatic
-    fun getEventNameFromExtras(extras: Bundle): String? {
-        var eName: String? = null
-        for (key in extras.keySet()) {
-            if (key.contains(PTConstants.PT_EVENT_NAME_KEY)) {
-                eName = extras.getString(key)
-            }
-        }
-        return eName
-    }
+    /** The value of the last event name key, as in Java (a later key overrides an earlier one). */
+    fun getEventNameFromExtras(extras: Bundle): String? =
+        extras.keySet().lastOrNull { it.contains(PTConstants.PT_EVENT_NAME_KEY) }?.let { extras.getString(it) }
 
-    @JvmStatic
     fun getEventPropertiesFromExtras(extras: Bundle, pkey: String?, value: String?): HashMap<String, Any?> {
         val eProps = HashMap<String, Any?>()
 
-        var eProp: Array<String>
         for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
                 val propValue = extras.getString(key)
-                if (propValue != null && propValue.isNotEmpty()) {
+                if (!propValue.isNullOrEmpty()) {
                     if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
-                        if (propValue.equals(pkey, ignoreCase = true)) {
-                            eProps[eProp[1]] = value
-                            continue
-                        }
-                        eProps[eProp[1]] = propValue
+                        val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
+                        eProps[eProp[1]] = if (propValue.equals(pkey, ignoreCase = true)) value else propValue
                     } else {
                         PTLog.verbose("Property $key does not have the separator")
                     }
@@ -413,17 +315,15 @@ internal object Utils {
         return eProps
     }
 
-    @JvmStatic
     fun getEventPropertiesFromExtras(extras: Bundle): HashMap<String, Any?> {
         val eProps = HashMap<String, Any?>()
 
-        var eProp: Array<String>
         for (key in extras.keySet()) {
             if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
                 val propValue = extras.getString(key)
-                if (propValue != null && propValue.isNotEmpty()) {
+                if (!propValue.isNullOrEmpty()) {
                     if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
+                        val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
                         eProps[eProp[1]] = propValue
                     } else {
                         PTLog.verbose("Property $key does not have the separator")
@@ -436,7 +336,6 @@ internal object Utils {
         return eProps
     }
 
-    @JvmStatic
     fun getTimerEnd(extras: Bundle, currentTs: Long): Int {
         var value: String? = "-1"
         for (key in extras.keySet()) {
@@ -444,87 +343,53 @@ internal object Utils {
                 value = extras.getString(key)
             }
         }
-        if (value!!.contains("\$D_")) {
-            val temp = Pattern.compile(PTConstants.PT_TIMER_SPLIT).split(value)
-            value = temp[1]
+        // A non-string timer end threw in Java as well.
+        var timerEnd = checkNotNull(value) { "pt_timer_end is not a string" }
+        if (timerEnd.contains("\$D_")) {
+            timerEnd = Pattern.compile(PTConstants.PT_TIMER_SPLIT).split(timerEnd)[1]
         }
-        val diff = (java.lang.Long.parseLong(value) - (currentTs / 1000)).toInt()
-        if (value == "-1") {
+        // Parsed before the "-1" check, as before: a malformed value throws.
+        val diff = (timerEnd.toLong() - (currentTs / 1000)).toInt()
+        if (timerEnd == "-1") {
             return Int.MIN_VALUE
         } //For empty check in timer_end
         return diff
     }
 
-    @JvmStatic
     @RequiresApi(api = Build.VERSION_CODES.M)
-    fun isNotificationInTray(context: Context, notificationId: Int): Boolean {
-        val mNotificationManager = context
-            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val notifications = mNotificationManager.activeNotifications
-        for (notification in notifications) {
-            if (notification.id == notificationId) {
-                return true
-            }
-        }
-        return false
-    }
+    fun isNotificationInTray(context: Context, notificationId: Int): Boolean =
+        (context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .activeNotifications.any { it.id == notificationId }
 
-    @JvmStatic
     @RequiresApi(api = Build.VERSION_CODES.M)
-    fun getNotificationById(context: Context, notificationId: Int): Notification? {
-        val mNotificationManager = context
-            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val notifications = mNotificationManager.activeNotifications
-        for (notification in notifications) {
-            if (notification.id == notificationId) {
-                return notification.notification
-            }
-        }
-        return null
-    }
+    fun getNotificationById(context: Context, notificationId: Int): Notification? =
+        (context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .activeNotifications.firstOrNull { it.id == notificationId }?.notification
 
-    @JvmStatic
     fun getNotificationIds(context: Context): ArrayList<Int> {
-        val ids = ArrayList<Int>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val mNotificationManager = context
-                .getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val notifications = mNotificationManager.activeNotifications
-            for (notification in notifications) {
-                if (notification.packageName.equals(context.packageName, ignoreCase = true)) {
-                    ids.add(notification.id)
-                }
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return ArrayList()
         }
-        return ids
+        return (context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .activeNotifications
+            .filter { it.packageName.equals(context.packageName, ignoreCase = true) }
+            .mapTo(ArrayList()) { it.id }
     }
 
-    @JvmStatic
     fun raiseNotificationClicked(context: Context?, extras: Bundle?, config: CleverTapInstanceConfig?) {
-        val instance: CleverTapAPI? = if (config != null) {
-            CleverTapAPI.instanceWithConfig(context, config)
-        } else {
-            CleverTapAPI.getDefaultInstance(context)
-        }
-        instance?.pushNotificationClickedEvent(extras)
+        instanceFor(context, config)?.pushNotificationClickedEvent(extras)
     }
 
-    @JvmStatic
     fun getActionKeys(extras: Bundle): JSONArray? {
-        var actions: JSONArray? = null
-
-        val actionsString = extras.getString(Constants.WZRK_ACTIONS)
-        if (actionsString != null) {
-            try {
-                actions = JSONArray(actionsString)
-            } catch (t: Throwable) {
-                PTLog.debug("error parsing notification actions: " + t.localizedMessage)
-            }
+        val actionsString = extras.getString(Constants.WZRK_ACTIONS) ?: return null
+        return try {
+            JSONArray(actionsString)
+        } catch (t: Throwable) {
+            PTLog.debug("error parsing notification actions: ${t.localizedMessage}")
+            null
         }
-        return actions
     }
 
-    @JvmStatic
     fun showToast(
         context: Context?, message: String?,
         config: CleverTapInstanceConfig?
@@ -532,7 +397,7 @@ internal object Utils {
         if (config != null) {
             val task = CTExecutorFactory.executors(config).mainTask<Void?>()
             task.execute("PushTemplatesUtils#showToast") {
-                if (!TextUtils.isEmpty(message)) {
+                if (!message.isNullOrEmpty()) {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
                 null
@@ -540,88 +405,67 @@ internal object Utils {
         }
     }
 
-    @JvmStatic
     fun createSilentNotificationChannel(context: Context) {
         val notificationManager = context
             .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
             ?: return
-        val notificationChannel: NotificationChannel
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) == null || (
-                        notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
-                                && !isNotificationChannelEnabled(
-                            notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
-                        ))
-            ) {
-                val soundUri: Uri? = Uri
-                    .parse(
-                        ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/raw/"
-                                + PTConstants.PT_SOUND_FILE_NAME
-                    )
-                notificationChannel = NotificationChannel(
-                    PTConstants.PT_SILENT_CHANNEL_ID,
-                    PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
-                )
-                if (soundUri != null) {
-                    notificationChannel.setSound(
-                        soundUri,
-                        AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build()
-                    )
-                }
-                notificationChannel.description = PTConstants.PT_SILENT_CHANNEL_DESC
-                notificationChannel.setShowBadge(false)
-                notificationManager.createNotificationChannel(notificationChannel)
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
         }
+        val existingChannel = notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
+        if (existingChannel != null && isNotificationChannelEnabled(existingChannel)) {
+            return
+        }
+        val soundUri: Uri? = Uri.parse(
+            "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/raw/${PTConstants.PT_SOUND_FILE_NAME}"
+        )
+        val notificationChannel = NotificationChannel(
+            PTConstants.PT_SILENT_CHANNEL_ID,
+            PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
+        )
+        if (soundUri != null) {
+            notificationChannel.setSound(
+                soundUri,
+                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build()
+            )
+        }
+        notificationChannel.description = PTConstants.PT_SILENT_CHANNEL_DESC
+        notificationChannel.setShowBadge(false)
+        notificationManager.createNotificationChannel(notificationChannel)
     }
 
-    @JvmStatic
     fun deleteSilentNotificationChannel(context: Context) {
         val notificationManager = context
             .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
             ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
-                && isNotificationChannelEnabled(
-                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
-                )
-            ) {
-                notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            isNotificationChannelEnabled(notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID))
+        ) {
+            notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)
         }
     }
 
-    @JvmStatic
-    fun isNotificationChannelEnabled(channel: NotificationChannel?): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && channel != null) {
-            return channel.importance != NotificationManager.IMPORTANCE_NONE
-        }
-        return false
-    }
+    fun isNotificationChannelEnabled(channel: NotificationChannel?): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && channel != null &&
+                channel.importance != NotificationManager.IMPORTANCE_NONE
 
-    @JvmStatic
     fun setBitMapColour(context: Context, resourceID: Int, clr: String?, defaultClr: String?): Bitmap? {
         val color = getColour(clr, defaultClr)
 
         return try {
-            var mDrawable = ContextCompat.getDrawable(context, resourceID) ?: return null
-
-            mDrawable = mDrawable.mutate()
-            mDrawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-            drawableToBitmap(mDrawable)
+            val drawable = ContextCompat.getDrawable(context, resourceID)?.mutate() ?: return null
+            drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            drawableToBitmap(drawable)
         } catch (e: Exception) {
             null
         }
     }
 
-    @JvmStatic
-    fun getColour(clr: String?, default_clr: String?): Int {
-        return try {
-            Color.parseColor(clr)
-        } catch (e: Exception) {
-            PTLog.debug("Can not parse colour value: $clr Switching to default colour: $default_clr")
-            Color.parseColor(default_clr)
-        }
+    fun getColour(clr: String?, defaultClr: String?): Int = try {
+        Color.parseColor(clr)
+    } catch (e: Exception) {
+        PTLog.debug("Can not parse colour value: $clr Switching to default colour: $defaultClr")
+        Color.parseColor(defaultClr)
     }
 
     /**
@@ -632,57 +476,36 @@ internal object Utils {
      * @param clr the color string to parse (e.g., "#FF0000" for red)
      * @return the parsed color as an [Integer], or `null` if parsing fails
      */
-    @JvmStatic
-    fun getColourOrNull(clr: String?): Int? {
-        return try {
-            Color.parseColor(clr)
-        } catch (e: Exception) {
-            PTLog.debug("Can not parse colour value: $clr")
-            null
-        }
+    fun getColourOrNull(clr: String?): Int? = try {
+        Color.parseColor(clr)
+    } catch (e: Exception) {
+        PTLog.debug("Can not parse colour value: $clr")
+        null
     }
 
-    @JvmStatic
     fun getFlipInterval(extras: Bundle): Int {
-        val interval = extras.getString(PTConstants.PT_FLIP_INTERVAL)
-        try {
-            if (interval != null) {
-                val t = Integer.parseInt(interval)
-                return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME)
-            }
+        val interval = extras.getString(PTConstants.PT_FLIP_INTERVAL) ?: return PTConstants.PT_FLIP_INTERVAL_TIME
+        return try {
+            maxOf(interval.toInt(), PTConstants.PT_FLIP_INTERVAL_TIME)
         } catch (e: Exception) {
             PTLog.debug(
-                "Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: "
-                        + PTConstants.PT_FLIP_INTERVAL_TIME
+                "Flip Interval couldn't be converted to number: $interval - Defaulting to base value: " +
+                        "${PTConstants.PT_FLIP_INTERVAL_TIME}"
             )
+            PTConstants.PT_FLIP_INTERVAL_TIME
         }
-        return PTConstants.PT_FLIP_INTERVAL_TIME
     }
 
-    @JvmStatic
     fun deleteImageFromStorage(context: Context, intent: Intent) {
         val pId = intent.getStringExtra(Constants.WZRK_PUSH_ID)
 
-        val cw = ContextWrapper(context.applicationContext)
-        val MyDirectory = cw.getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE)
-        val path = MyDirectory.absolutePath
-        val fileList = MyDirectory.list()
-        var fileToBeDeleted: File?
-        if (fileList != null) {
-            for (fileName in fileList) {
-                if (pId != null && fileName.contains(pId)) {
-                    fileToBeDeleted = File("$path/$fileName")
-                    val wasDeleted = fileToBeDeleted.delete()
-                    if (!wasDeleted) {
-                        PTLog.debug("Failed to clean up the following file: $fileName")
-                    }
-                } else if (pId == null && fileName.contains("null")) {
-                    fileToBeDeleted = File("$path/$fileName")
-                    val wasDeleted = fileToBeDeleted.delete()
-                    if (!wasDeleted) {
-                        PTLog.debug("Failed to clean up the following file: $fileName")
-                    }
-                }
+        val directory = ContextWrapper(context.applicationContext).getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE)
+        val path = directory.absolutePath
+        // Images are named after their push id; those of a push without one carry "null".
+        val fileList = directory.list() ?: return
+        for (fileName in fileList) {
+            if (fileName.contains(pId ?: "null") && !File("$path/$fileName").delete()) {
+                PTLog.debug("Failed to clean up the following file: $fileName")
             }
         }
     }

@@ -2,59 +2,46 @@ package com.clevertap.android.pushtemplates
 
 import android.util.Log
 
-internal class PTLog internal constructor(private val debugLevel: Int) {
+/** Push templates' Logcat logger, filtered by [TemplateRenderer.debugLevel]. */
+internal object PTLog {
 
-    @Suppress("unused")
-    private fun getDebugLevel(): Int {
-        return debugLevel
+    private fun isEnabled(level: TemplateRenderer.LogLevel): Boolean =
+        TemplateRenderer.debugLevel >= level.intValue()
+
+    fun debug(message: String) {
+        if (isEnabled(TemplateRenderer.LogLevel.DEBUG)) {
+            Log.d(PTConstants.LOG_TAG, message)
+        }
     }
 
-    companion object {
-
-        private fun getStaticDebugLevel(): Int {
-            return TemplateRenderer.debugLevel
+    fun info(message: String) {
+        if (isEnabled(TemplateRenderer.LogLevel.INFO)) {
+            Log.i(PTConstants.LOG_TAG, message)
         }
+    }
 
-        @JvmStatic
-        fun debug(message: String) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.DEBUG.intValue()) {
-                Log.d(PTConstants.LOG_TAG, message)
-            }
+    fun verbose(message: String) {
+        if (isEnabled(TemplateRenderer.LogLevel.VERBOSE)) {
+            Log.v(PTConstants.LOG_TAG, message)
         }
+    }
 
-        @JvmStatic
-        fun info(message: String) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.INFO.intValue()) {
-                Log.i(PTConstants.LOG_TAG, message)
-            }
+    // Gated on INFO, not DEBUG, as it always was.
+    fun debug(message: String?, t: Throwable?) {
+        if (isEnabled(TemplateRenderer.LogLevel.INFO)) {
+            Log.d(PTConstants.LOG_TAG, message, t)
         }
+    }
 
-        @JvmStatic
-        fun verbose(message: String) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.VERBOSE.intValue()) {
-                Log.v(PTConstants.LOG_TAG, message)
-            }
+    fun info(message: String?, t: Throwable?) {
+        if (isEnabled(TemplateRenderer.LogLevel.INFO)) {
+            Log.i(PTConstants.LOG_TAG, message, t)
         }
+    }
 
-        @JvmStatic
-        fun debug(message: String?, t: Throwable?) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.INFO.intValue()) {
-                Log.d(PTConstants.LOG_TAG, message, t)
-            }
-        }
-
-        @JvmStatic
-        fun info(message: String?, t: Throwable?) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.INFO.intValue()) {
-                Log.i(PTConstants.LOG_TAG, message, t)
-            }
-        }
-
-        @JvmStatic
-        fun verbose(message: String?, t: Throwable?) {
-            if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.VERBOSE.intValue()) {
-                Log.v(PTConstants.LOG_TAG, message, t)
-            }
+    fun verbose(message: String?, t: Throwable?) {
+        if (isEnabled(TemplateRenderer.LogLevel.VERBOSE)) {
+            Log.v(PTConstants.LOG_TAG, message, t)
         }
     }
 }
