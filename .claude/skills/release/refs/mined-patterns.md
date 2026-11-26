@@ -99,7 +99,7 @@ copy { from 'templates'; exclude "README.md"
 So: four edits inside two version files, plus the changelogs. `sample/build.gradle` is the one to
 be careful with — it carries the version in four separate places.
 
-### Generated — never hand-edit
+### Generated — never hand-edit (change `templates/`, then run `copyTemplates`)
 
 | Generated file | Source |
 |---|---|

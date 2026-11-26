@@ -20,7 +20,7 @@ Follow the `conventional-commits` skill for every commit and for the PR title.
 
 ## 3. Release files
 
-If the change is visible to SDK users, use the `changelog` skill (entries go in `docs/` and `templates/`). The release PR (`develop` to `master`) also needs `CHANGELOG.md` and the
+If the change is visible to SDK users, use the `changelog` skill (edit `templates/`, then run `copyTemplates` to regenerate `docs/`). The release PR (`develop` to `master`) also needs `CHANGELOG.md` and the
 version in `gradle/libs.versions.toml`; the release owner updates those unless the user asks you to.
 
 ## 4. Checks

@@ -38,8 +38,8 @@ Reports are in `<module>/build/reports/`. The `build-test-verify` skill has the 
 1. Run the unit tests of every module you changed.
 2. Run lint, detekt and checkstyle for those modules. Detekt and checkstyle only report, they never
    fail the build, so open the report and check that the files you touched have no new warnings.
-3. Add a changelog entry for changes that SDK users can see: `docs/CT<MODULE>CHANGELOG.md` and the
-   matching file in `templates/`. The `develop` to `master` PR fails unless `CHANGELOG.md`, one file in
+3. Add a changelog entry for changes that SDK users can see: edit `templates/CT<MODULE>CHANGELOG.md`, then
+   run `./gradlew copyTemplates` to regenerate `docs/` (never hand-edit `docs/`). The `develop` to `master` PR fails unless `CHANGELOG.md`, one file in
    `docs/`, one file in `templates/` and the version in `gradle/libs.versions.toml` were all changed
    when `src/` changed, so the release owner needs them.
 4. Do not commit real values in `sample/src/main/AndroidManifest.xml` (account id, token, region).

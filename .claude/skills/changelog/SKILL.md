@@ -10,14 +10,17 @@ dependency). Pure refactors, tests and CI changes need none.
 
 ## Which files
 
-| Module | Files (both, with the same text) |
+| Module | File you edit |
 |---|---|
-| Core | `docs/CTCORECHANGELOG.md` and `templates/CTCORECHANGELOG.md` |
-| Push Templates | `docs/CTPUSHTEMPLATESCHANGELOG.md` and `templates/CTPUSHTEMPLATESCHANGELOG.md` |
-| Geofence | `docs/CTGEOFENCECHANGELOG.md` and `templates/CTGEOFENCECHANGELOG.md` |
-| HMS | `docs/CTHUAWEIPUSHCHANGELOG.md` and `templates/CTHUAWEIPUSHCHANGELOG.md` |
+| Core | `templates/CTCORECHANGELOG.md` |
+| Push Templates | `templates/CTPUSHTEMPLATESCHANGELOG.md` |
+| Geofence | `templates/CTGEOFENCECHANGELOG.md` |
+| HMS | `templates/CTHUAWEIPUSHCHANGELOG.md` |
 
-The `docs/` and `templates/` copies of a file must stay identical.
+`docs/CT*CHANGELOG.md` is generated from `templates/` by the `copyTemplates` task. Edit only `templates/`,
+then run `./gradlew copyTemplates` and commit the regenerated `docs/` file too. Never hand-edit `docs/`.
+Check `git status` afterwards: other `docs/` files may change if their version strings were out of date.
+The changelog templates have no `${...}` tokens today, so `docs/` ends up identical to `templates/`.
 
 ## Format
 
@@ -48,4 +51,5 @@ The release PR (`develop` to `master`) also needs:
 - The module version in `gradle/libs.versions.toml`. The root `build.gradle` task `copyTemplates` reads
   versions from there, so do not edit the generated version files by hand.
 
-The workflow `mandatory_filechanges` blocks a release PR that changes a module's `src/` without these files.
+The workflow `mandatory_filechanges` needs both a `docs/` and a `templates/` changelog file to change, which
+`copyTemplates` gives you. It blocks a release PR that changes a module's `src/` without these files.
