@@ -109,9 +109,9 @@ Kotlin:
 
 
 
-> ❗️ Proguard
+> ❗️ Proguard / R8
 > 
-> It is mandatory to skip your classes from Proguard when using the `@Variable` annotation, because changing the names of the fields lead to runtime errors:
+> The variable name is taken from the field name, so `@Variable` fields must keep their names in release builds. From CleverTap Android SDK 9.0.0 the SDK ships a consumer rule that keeps the names of all `@Variable`-annotated fields automatically. On older SDK versions, keep your classes yourself:
 > 
 > ```groovy
 > -keep class com.package.MyClass {
@@ -163,9 +163,9 @@ Kotlin:
 
 
 
-> ❗️ Proguard
+> ❗️ Proguard / R8
 > 
-> It is mandatory to skip your classes from Proguard when using the `@Variable` annotation, because changing the names of the fields lead to runtime errors:
+> The variable name is taken from the field name, so `@Variable` fields must keep their names in release builds. From CleverTap Android SDK 9.0.0 the SDK ships a consumer rule that keeps the names of all `@Variable`-annotated fields automatically. On older SDK versions, keep your classes yourself:
 > 
 > ```groovy
 > -keep class com.package.MyClass {
