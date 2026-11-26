@@ -60,6 +60,18 @@ Reports are in `<module>/build/reports/`. The `build-test-verify` skill has the 
   `fix(SDK-1234): short description`. See the `conventional-commits` skill.
 - One logical change per PR. Task PRs are usually squash-merged, so the PR title becomes the commit message.
 
+## Ask the user first
+
+Do not do these without the user saying so in this session:
+
+- Post comments or reviews on a PR or issue, or resolve review threads.
+- Merge a PR, push to `develop` or `master`, force-push, or delete a branch.
+- Release steps: version bumps, tags, publishing to Maven Central, GitHub releases (the `release` skill
+  asks at every step).
+- Commit or push the user's own uncommitted changes. Stage only what you changed.
+- Commit `sample/src/main/AndroidManifest.xml` with real account values, `local.properties`, signing files or tokens.
+- Change public API, licenses or dependencies' versions as a side effect of another task.
+
 ## Skills
 
 Project skills are in `.claude/skills/`. Use the one that matches the task.
