@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>BracesOnIfStatements:FileUtils.kt$FileUtils$else</ID>
-    <ID>BracesOnIfStatements:FileUtils.kt$FileUtils$if</ID>
     <ID>CanBeNonNullable:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI: CleverTapAPI?</ID>
     <ID>CanBeNonNullable:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$result: PendingResult?</ID>
     <ID>CanBeNonNullable:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$result: PendingResult?</ID>
@@ -58,8 +56,6 @@
     <ID>MagicNumber:Logger.kt$Logger$4000</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$1001001</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$10100111</ID>
-    <ID>MaxLineLength:CTGeofenceSettings.kt$CTGeofenceSettings$@JvmSynthetic @JvmName("ktGetGeofenceNotificationResponsiveness") inline get() = getGeofenceNotificationResponsiveness()</ID>
-    <ID>MaxLineLength:CTGeofenceSettings.kt$CTGeofenceSettings$@JvmSynthetic @JvmName("ktIsBackgroundLocationUpdatesEnabled") inline get() = isBackgroundLocationUpdatesEnabled()</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"Critical issue :: After calling CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"</ID>
     <ID>MemberNameEqualsClassName:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$private var ctGeofenceAPI: CTGeofenceAPI? = null</ID>
     <ID>NestedBlockDepth:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
