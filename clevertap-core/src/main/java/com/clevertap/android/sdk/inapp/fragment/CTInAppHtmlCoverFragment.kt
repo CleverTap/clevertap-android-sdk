@@ -10,6 +10,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import androidx.annotation.RestrictTo
 
+/** The close button is inset from the corner by a quarter of its touch target. */
+private const val CLOSE_BUTTON_MARGIN_DIVISOR = 4
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppHtmlCoverFragment : CTInAppBaseFullHtmlFragment() {
 
@@ -19,7 +22,7 @@ internal class CTInAppHtmlCoverFragment : CTInAppBaseFullHtmlFragment() {
         closeIvLp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
         closeIvLp.addRule(RelativeLayout.ALIGN_PARENT_TOP)
 
-        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / 4
+        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / CLOSE_BUTTON_MARGIN_DIVISOR
         closeIvLp.setMargins(0, sub, sub, 0)
         return closeIvLp
     }

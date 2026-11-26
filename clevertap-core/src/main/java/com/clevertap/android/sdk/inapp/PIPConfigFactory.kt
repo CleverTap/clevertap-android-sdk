@@ -22,6 +22,8 @@ import androidx.annotation.RestrictTo
 internal object PIPConfigFactory {
 
     private const val LOG_TAG = "PIPConfigFactory"
+    private const val MAX_ANIMATION_DURATION_MS = 5000L
+    private const val CUBIC_BEZIER_PARAM_COUNT = 4
 
     fun create(
         inAppNotification: CTInAppNotification,
@@ -63,16 +65,20 @@ internal object PIPConfigFactory {
 
         // Margins (percentage of screen)
         val margins = pipJson.optJSONObject("margins")
-        val verticalMargin = margins?.optInt("vertical", 3) ?: 3
-        val horizontalMargin = margins?.optInt("horizontal", 3) ?: 3
+        val verticalMargin = margins?.optInt("vertical", PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT)
+            ?: PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT
+        val horizontalMargin = margins?.optInt("horizontal", PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT)
+            ?: PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT
 
         // Width
-        val widthPercent = pipJson.optInt("width", 35)
+        val widthPercent = pipJson.optInt("width", PIPConfig.DEFAULT_WIDTH_PERCENT)
 
         // Aspect ratio
         val arJson = pipJson.optJSONObject("aspectRatio")
-        val arNum = arJson?.optDouble("numerator", 16.0)?.takeIf { it > 0.0 } ?: 16.0
-        val arDen = arJson?.optDouble("denominator", 9.0)?.takeIf { it > 0.0 } ?: 9.0
+        val arNum = arJson?.optDouble("numerator", PIPConfig.DEFAULT_ASPECT_RATIO_NUMERATOR)?.takeIf { it > 0.0 }
+            ?: PIPConfig.DEFAULT_ASPECT_RATIO_NUMERATOR
+        val arDen = arJson?.optDouble("denominator", PIPConfig.DEFAULT_ASPECT_RATIO_DENOMINATOR)?.takeIf { it > 0.0 }
+            ?: PIPConfig.DEFAULT_ASPECT_RATIO_DENOMINATOR
 
         // Controls visibility
         val ctrl = pipJson.optJSONObject("controls")
@@ -159,7 +165,7 @@ internal object PIPConfigFactory {
         }
 
         val durationMs = animJson.optLong("duration", PIPAnimationConfig.DEFAULT_DURATION_MS)
-            .coerceIn(0, 5000)
+            .coerceIn(0, MAX_ANIMATION_DURATION_MS)
 
         val interpolator = mapEasing(
             animJson.optString("easing", ""),
@@ -190,7 +196,7 @@ internal object PIPConfigFactory {
 
     private fun parseBezier(bezier: String): TimeInterpolator? {
         val parts = bezier.split(",").mapNotNull { it.trim().toFloatOrNull() }
-        if (parts.size != 4) {
+        if (parts.size != CUBIC_BEZIER_PARAM_COUNT) {
             return null
         }
         return try {

@@ -21,14 +21,14 @@ internal data class PIPConfig internal constructor(
     val mediaContentDescription: String = "",  // from media.alt_text JSON field (accessibility)
 
     // Sizing
-    val widthPercent: Int = 35,
-    val aspectRatioNumerator: Double = 16.0,
-    val aspectRatioDenominator: Double = 9.0,
+    val widthPercent: Int = DEFAULT_WIDTH_PERCENT,
+    val aspectRatioNumerator: Double = DEFAULT_ASPECT_RATIO_NUMERATOR,
+    val aspectRatioDenominator: Double = DEFAULT_ASPECT_RATIO_DENOMINATOR,
 
     // Positioning
     val initialPosition: PIPPosition = PIPPosition.BOTTOM_RIGHT,
-    val horizontalEdgeMarginPercent: Int = 3,   // left/right margin as % of screen width
-    val verticalEdgeMarginPercent: Int = 3,     // top/bottom margin as % of screen height
+    val horizontalEdgeMarginPercent: Int = DEFAULT_EDGE_MARGIN_PERCENT, // left/right margin as % of screen width
+    val verticalEdgeMarginPercent: Int = DEFAULT_EDGE_MARGIN_PERCENT, // top/bottom margin as % of screen height
 
     // Animation
     val animationConfig: PIPAnimationConfig = PIPAnimationConfig(),
@@ -54,10 +54,21 @@ internal data class PIPConfig internal constructor(
 ) {
     init {
         require(mediaUrl.isNotBlank()) { "mediaUrl must not be blank" }
-        require(widthPercent in 10..90) { "widthPercent must be 10–90, got $widthPercent" }
+        require(widthPercent in MIN_WIDTH_PERCENT..MAX_WIDTH_PERCENT) {
+            "widthPercent must be 10–90, got $widthPercent"
+        }
         require(aspectRatioNumerator > 0.0) { "aspectRatioNumerator must be > 0" }
         require(aspectRatioDenominator > 0.0) { "aspectRatioDenominator must be > 0" }
         require(cornerRadiusDp >= 0) { "cornerRadiusDp must be >= 0" }
         require(borderWidthDp >= 0) { "borderWidthDp must be >= 0" }
+    }
+
+    internal companion object {
+        const val DEFAULT_WIDTH_PERCENT = 35
+        const val MIN_WIDTH_PERCENT = 10
+        const val MAX_WIDTH_PERCENT = 90
+        const val DEFAULT_ASPECT_RATIO_NUMERATOR = 16.0
+        const val DEFAULT_ASPECT_RATIO_DENOMINATOR = 9.0
+        const val DEFAULT_EDGE_MARGIN_PERCENT = 3
     }
 }

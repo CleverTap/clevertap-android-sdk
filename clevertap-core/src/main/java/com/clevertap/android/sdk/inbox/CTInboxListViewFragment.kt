@@ -189,7 +189,7 @@ internal open class CTInboxListViewFragment : Fragment() {
             mediaRecyclerView = mediaList
             mediaList.visibility = View.VISIBLE
             mediaList.layoutManager = linearLayoutManager
-            mediaList.addItemDecoration(VerticalSpaceItemDecoration(18))
+            mediaList.addItemDecoration(VerticalSpaceItemDecoration(LIST_ITEM_SPACING))
             mediaList.itemAnimator = DefaultItemAnimator()
 
             mediaList.adapter = adapter
@@ -198,7 +198,7 @@ internal open class CTInboxListViewFragment : Fragment() {
 
             if (firstTime && shouldAutoPlayOnFirstLaunch()) {
                 // Plays whichever list is current by then
-                Handler(Looper.getMainLooper()).postDelayed({ mediaRecyclerView?.playVideo() }, 1000)
+                Handler(Looper.getMainLooper()).postDelayed({ mediaRecyclerView?.playVideo() }, FIRST_AUTOPLAY_DELAY_MS)
                 firstTime = false
             }
         } else {
@@ -206,7 +206,7 @@ internal open class CTInboxListViewFragment : Fragment() {
             recyclerView = plainList
             plainList.visibility = View.VISIBLE
             plainList.layoutManager = linearLayoutManager
-            plainList.addItemDecoration(VerticalSpaceItemDecoration(18))
+            plainList.addItemDecoration(VerticalSpaceItemDecoration(LIST_ITEM_SPACING))
             plainList.itemAnimator = DefaultItemAnimator()
             plainList.adapter = adapter
             adapter.notifyDataSetChanged()
@@ -516,6 +516,10 @@ internal open class CTInboxListViewFragment : Fragment() {
     private fun shouldAutoPlayOnFirstLaunch(): Boolean = tabPosition <= 0
 
     companion object {
+        private const val LIST_ITEM_SPACING = 18
+
+        /** Delay before the first video auto-plays, so the list has been laid out. */
+        private const val FIRST_AUTOPLAY_DELAY_MS = 1000L
 
         /** @return how many fresh copies were upgraded to read. */
         internal fun mergeReadStateForward(

@@ -26,6 +26,8 @@ internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFra
     companion object {
         private const val SWIPE_MIN_DISTANCE = 120
         private const val SWIPE_THRESHOLD_VELOCITY = 200
+        private const val SWIPE_DISMISS_DISTANCE = 50
+        private const val SWIPE_DISMISS_DURATION_MS = 300L
     }
 
     private inner class GestureListener : SimpleOnGestureListener() {
@@ -54,13 +56,13 @@ internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFra
             val animSet = AnimationSet(true)
             val anim: TranslateAnimation?
             if (ltr) {
-                anim = TranslateAnimation(0f, getScaledPixels(50).toFloat(), 0f, 0f)
+                anim = TranslateAnimation(0f, getScaledPixels(SWIPE_DISMISS_DISTANCE).toFloat(), 0f, 0f)
             } else {
-                anim = TranslateAnimation(0f, -getScaledPixels(50).toFloat(), 0f, 0f)
+                anim = TranslateAnimation(0f, -getScaledPixels(SWIPE_DISMISS_DISTANCE).toFloat(), 0f, 0f)
             }
             animSet.addAnimation(anim)
             animSet.addAnimation(AlphaAnimation(1f, 0f))
-            animSet.setDuration(300)
+            animSet.setDuration(SWIPE_DISMISS_DURATION_MS)
             animSet.setFillAfter(true)
             animSet.isFillEnabled = true
             animSet.setAnimationListener(object : Animation.AnimationListener {

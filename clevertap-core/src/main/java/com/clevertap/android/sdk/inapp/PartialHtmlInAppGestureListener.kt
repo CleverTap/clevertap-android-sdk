@@ -53,13 +53,13 @@ internal class PartialHtmlInAppGestureListener(
         onSwipeStart()
         val animSet = AnimationSet(true)
         val anim = if (ltr) {
-            TranslateAnimation(0f, scaledPixels(50).toFloat(), 0f, 0f)
+            TranslateAnimation(0f, scaledPixels(SWIPE_DISMISS_DISTANCE).toFloat(), 0f, 0f)
         } else {
-            TranslateAnimation(0f, -scaledPixels(50).toFloat(), 0f, 0f)
+            TranslateAnimation(0f, -scaledPixels(SWIPE_DISMISS_DISTANCE).toFloat(), 0f, 0f)
         }
         animSet.addAnimation(anim)
         animSet.addAnimation(AlphaAnimation(1f, 0f))
-        animSet.duration = 300
+        animSet.duration = SWIPE_DISMISS_DURATION_MS
         animSet.fillAfter = true
         animSet.isFillEnabled = true
         animSet.setAnimationListener(object : Animation.AnimationListener {
@@ -82,5 +82,7 @@ internal class PartialHtmlInAppGestureListener(
     companion object {
         const val SWIPE_MIN_DISTANCE = 120
         const val SWIPE_THRESHOLD_VELOCITY = 200
+        private const val SWIPE_DISMISS_DISTANCE = 50
+        private const val SWIPE_DISMISS_DURATION_MS = 300L
     }
 }

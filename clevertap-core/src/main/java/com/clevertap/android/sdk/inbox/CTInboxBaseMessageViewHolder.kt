@@ -99,7 +99,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
             when {
                 orientation.equals("l", ignoreCase = true) -> {
                     val imageHeight = checkNotNull(mediaImage).measuredHeight
-                    (imageHeight * 1.76f).roundToInt() to imageHeight
+                    (imageHeight * LANDSCAPE_WIDTH_TO_HEIGHT_RATIO).roundToInt() to imageHeight
                 }
 
                 orientation.equals("p", ignoreCase = true) -> {
@@ -113,7 +113,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
                     val measuredHeight = defaultImage?.measuredHeight ?: 0
                     if (defaultImage == null || measuredWidth == 0 || measuredHeight == 0) {
                         val halfWidth = displayMetrics.widthPixels / 2
-                        halfWidth to (halfWidth * 0.5625f).roundToInt()
+                        halfWidth to (halfWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
                     } else {
                         measuredWidth to measuredHeight
                     }
@@ -123,9 +123,10 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
             val fullWidth = displayMetrics.widthPixels
             val orientation = message.requireOrientation()
             val rowHeight = when {
-                orientation.equals("l", ignoreCase = true) -> (fullWidth * 0.5625f).roundToInt()
+                orientation.equals("l", ignoreCase = true) -> (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
                 orientation.equals("p", ignoreCase = true) -> fullWidth
-                else -> defaultImage?.measuredHeight?.takeIf { it != 0 } ?: (fullWidth * 0.5625f).roundToInt()
+                else -> defaultImage?.measuredHeight?.takeIf { it != 0 }
+                    ?: (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
             }
             fullWidth to rowHeight
         }
@@ -146,11 +147,19 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
             setMuteIconState(muteIcon, context, currentVolume)
 
             // 48dp tap target; 9dp padding keeps the visual icon at 30dp
-            val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48f, displayMetrics).toInt()
-            val iconPadding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 9f, displayMetrics).toInt()
+            val iconSize = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_SIZE_DP, displayMetrics
+            ).toInt()
+            val iconPadding = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_PADDING_DP, displayMetrics
+            ).toInt()
             muteIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-            val iconTop = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4f, displayMetrics).toInt()
-            val iconRight = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, displayMetrics).toInt()
+            val iconTop = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_TOP_MARGIN_DP, displayMetrics
+            ).toInt()
+            val iconRight = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_END_MARGIN_DP, displayMetrics
+            ).toInt()
             muteIcon.layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply {
                 setMargins(0, iconTop, iconRight, 0)
                 gravity = Gravity.END
@@ -195,12 +204,13 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
     fun calculateDisplayTimestamp(time: Long): String {
         val now = System.currentTimeMillis() / 1000
         val diff = now - time
-        val hours = diff / (60 * 60)
+        val hours = diff / SECONDS_PER_HOUR
         return when {
-            diff < 60 -> "Just Now"
-            diff > 60 && diff < 59 * 60 -> "${diff / 60} mins ago"
-            diff > 59 * 60 && diff < 23 * 59 * 60 -> if (hours > 1) { "$hours hours ago" } else { "$hours hour ago" }
-            diff > 24 * 60 * 60 && diff < 48 * 60 * 60 -> "Yesterday"
+            diff < SECONDS_PER_MINUTE -> "Just Now"
+            diff > SECONDS_PER_MINUTE && diff < MINUTES_AGO_LIMIT_SECONDS -> "${diff / SECONDS_PER_MINUTE} mins ago"
+            diff > MINUTES_AGO_LIMIT_SECONDS && diff < HOURS_AGO_LIMIT_SECONDS ->
+                if (hours > 1) { "$hours hours ago" } else { "$hours hour ago" }
+            diff > YESTERDAY_START_SECONDS && diff < YESTERDAY_END_SECONDS -> "Yesterday"
             else -> {
                 @SuppressLint("SimpleDateFormat")
                 val sdf = SimpleDateFormat("dd MMM")
@@ -435,7 +445,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
         } else {
             val fullWidth = displayMetrics.widthPixels
             val isSquare = inboxMessage.requireOrientation().equals("p", ignoreCase = true)
-            fullWidth to if (isSquare) { fullWidth } else { (fullWidth * 0.5625f).roundToInt() }
+            fullWidth to if (isSquare) { fullWidth } else { (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt() }
         }
         progressBar.layoutParams = RelativeLayout.LayoutParams(width, height)
     }
@@ -498,8 +508,10 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
 
     fun hideOneButton(mainButton: Button, secondaryButton: Button, tertiaryButton: Button) {
         tertiaryButton.visibility = View.GONE
-        mainButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3f)
-        secondaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3f)
+        mainButton.layoutParams = 
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, TWO_BUTTONS_WEIGHT)
+        secondaryButton.layoutParams = 
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, TWO_BUTTONS_WEIGHT)
         tertiaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
     }
 
@@ -512,7 +524,8 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
     fun hideTwoButtons(mainButton: Button, secondaryButton: Button, tertiaryButton: Button) {
         secondaryButton.visibility = View.GONE
         tertiaryButton.visibility = View.GONE
-        mainButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 6f)
+        mainButton.layoutParams = 
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, ONE_BUTTON_WEIGHT)
         secondaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
         tertiaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
     }
@@ -563,7 +576,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            params.setMargins(8, 6, 4, 6)
+            params.setMargins(DOT_MARGIN_START_PX, DOT_MARGIN_VERTICAL_PX, DOT_MARGIN_END_PX, DOT_MARGIN_VERTICAL_PX)
             params.gravity = Gravity.CENTER
             if (sliderDots.childCount < dotsCount) {
                 sliderDots.addView(dot, params)
@@ -601,10 +614,39 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
                 readDot.visibility = View.GONE
                 inboxMessage.setRead(true)
             }
-        }, 2000)
+        }, MARK_READ_DELAY_MS)
     }
 
     protected companion object {
+
+        /** Width : height of a landscape (16:9-ish) inbox image row. */
+        private const val LANDSCAPE_WIDTH_TO_HEIGHT_RATIO = 1.76f
+
+        /** Height : width of a landscape (16:9) inbox media row. */
+        private const val LANDSCAPE_HEIGHT_TO_WIDTH_RATIO = 0.5625f
+
+        private const val MUTE_ICON_SIZE_DP = 48f
+        private const val MUTE_ICON_PADDING_DP = 9f
+        private const val MUTE_ICON_TOP_MARGIN_DP = 4f
+        private const val MUTE_ICON_END_MARGIN_DP = 2f
+
+        private const val SECONDS_PER_MINUTE = 60
+        private const val SECONDS_PER_HOUR = 60 * 60
+        private const val MINUTES_AGO_LIMIT_SECONDS = 59 * 60
+        private const val HOURS_AGO_LIMIT_SECONDS = 23 * 59 * 60
+        private const val YESTERDAY_START_SECONDS = 24 * 60 * 60
+        private const val YESTERDAY_END_SECONDS = 48 * 60 * 60
+
+        /** Layout weights of the CTA row: the visible buttons share a total weight of 6. */
+        private const val ONE_BUTTON_WEIGHT = 6f
+        private const val TWO_BUTTONS_WEIGHT = 3f
+
+        private const val DOT_MARGIN_START_PX = 8
+        private const val DOT_MARGIN_END_PX = 4
+        private const val DOT_MARGIN_VERTICAL_PX = 6
+
+        /** Delay before a shown row is marked read. */
+        private const val MARK_READ_DELAY_MS = 2000L
 
         /** 40% opacity turns the black ct_video_1 circle into the light grey iOS uses. */
         private const val VIDEO_PLACEHOLDER_ALPHA = 102

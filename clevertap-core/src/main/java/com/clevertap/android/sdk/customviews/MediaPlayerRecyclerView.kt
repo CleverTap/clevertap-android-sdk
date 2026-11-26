@@ -141,7 +141,7 @@ internal class MediaPlayerRecyclerView : RecyclerView {
                 } else {
                     0
                 }
-                val play = visibleHeight >= 400
+                val play = visibleHeight >= MIN_VISIBLE_HEIGHT_TO_PLAY
                 if (play && ph.shouldAutoPlay()) {
                     handle.setPlayWhenReady(true)
                 } else {
@@ -312,6 +312,9 @@ internal class MediaPlayerRecyclerView : RecyclerView {
     }
 
     private companion object {
+
+        /** Visible height (px) a video row needs before it auto-plays. */
+        const val MIN_VISIBLE_HEIGHT_TO_PLAY = 400
 
         /** A video that was never played starts muted. */
         const val MUTED_VOLUME = 0f
