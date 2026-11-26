@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
@@ -44,17 +45,21 @@ internal class UninstallTimestampDAOImpl(
         var timestamp: Long = 0
         
         try {
-            dbHelper.readableDatabase.query(
-                tName, null, null, null, null, null, 
+            timestamp = dbHelper.readableDatabase.query(
+                tName, null, null, null, null, null,
                 "${Column.CREATED_AT} DESC", "1"
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                }
-            }
+            ).use { cursor -> readFirstCreatedAt(cursor = cursor, default = timestamp) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
         return timestamp
+    }
+
+    private fun readFirstCreatedAt(cursor: Cursor, default: Long): Long {
+        return if (cursor.moveToFirst()) {
+            cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
+        } else {
+            default
+        }
     }
 }
