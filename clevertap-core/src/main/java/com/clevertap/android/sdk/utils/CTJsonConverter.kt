@@ -104,8 +104,8 @@ internal object CTJsonConverter {
             evtData.put("OS", deviceInfo.osName)
             evtData.put("wdt", deviceInfo.width)
             evtData.put("hgt", deviceInfo.height)
-            evtData.put("dpi", deviceInfo.getDPI())
-            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()))
+            evtData.put("dpi", deviceInfo.dpi)
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.context))
             evtData.put("locale", deviceInfo.locale)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -115,22 +115,22 @@ internal object CTJsonConverter {
                 evtData.put("lib", deviceInfo.library)
             }
 
-            val proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).proxyDomain
+            val proxyDomain = ManifestInfo.getInstance(deviceInfo.context).proxyDomain
             if (!TextUtils.isEmpty(proxyDomain)) {
                 evtData.put("proxyDomain", proxyDomain)
             }
 
-            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).spikeyProxyDomain
+            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.context).spikeyProxyDomain
             if (!TextUtils.isEmpty(spikyProxyDomain)) {
                 evtData.put("spikyProxyDomain", spikyProxyDomain)
             }
 
-            val sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled
+            val sslPinning = ManifestInfo.getInstance(deviceInfo.context).isSSLPinningEnabled
             if (sslPinning) {
                 evtData.put("sslpin", true)
             }
 
-            val fcmSenderId = ManifestInfo.getInstance(deviceInfo.getContext()).fcmSenderId
+            val fcmSenderId = ManifestInfo.getInstance(deviceInfo.context).fcmSenderId
             if (!TextUtils.isEmpty(fcmSenderId)) { //only for 4.3.0 for tracking custom sender ID users.
                 evtData.put("fcmsid", true)
             }

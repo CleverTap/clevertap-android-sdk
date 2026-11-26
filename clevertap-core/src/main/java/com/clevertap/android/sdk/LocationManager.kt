@@ -28,22 +28,18 @@ internal open class LocationManager(
             Logger.d("Location Manager is null.")
             null
         } else {
-            var bestLocation: Location? = null
-            // As in Java, a provider that throws keeps the previous provider's location as candidate.
-            var l: Location? = null
-            for (provider in lm.getProviders(true)) {
-                try {
-                    l = lm.getLastKnownLocation(provider)
-                } catch (e: SecurityException) {
-                    //no-op
-                    Logger.v("Location security exception", e)
+            // The first location with the best (lowest) accuracy value wins, as in the Java loop.
+            lm.getProviders(true)
+                .mapNotNull { provider ->
+                    try {
+                        lm.getLastKnownLocation(provider)
+                    } catch (e: SecurityException) {
+                        //no-op
+                        Logger.v("Location security exception", e)
+                        null
+                    }
                 }
-                val candidate = l ?: continue
-                if (bestLocation == null || candidate.accuracy < bestLocation.accuracy) {
-                    bestLocation = candidate
-                }
-            }
-            bestLocation
+                .minByOrNull { it.accuracy }
         }
     } catch (t: Throwable) {
         Logger.v("Couldn't get user's location", t)

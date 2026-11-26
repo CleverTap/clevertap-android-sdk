@@ -69,11 +69,11 @@ internal open class InAppFCManager(
         }
     }
 
-    fun changeUser(deviceId: String?) {
+    fun changeUser(newDeviceId: String?) {
         // reset counters
         impressionManager.clearSessionData()
-        this.deviceId = deviceId
-        init(deviceId)
+        deviceId = newDeviceId
+        init(newDeviceId)
     }
 
     fun didShow(context: Context, inapp: CTInAppNotification) {
