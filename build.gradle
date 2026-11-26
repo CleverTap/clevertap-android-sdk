@@ -33,6 +33,8 @@ apiValidation {
     ignoredProjects += ["sample", "instantapp", "test_shared"]
     nonPublicMarkers += ["androidx.annotation.RestrictTo"]
 }
+// Java/Flutter/React Native interop guard over the public API dumps: ./gradlew apiInteropCheck
+apply from: "gradle-scripts/api-interop.gradle"
 allprojects {
     repositories {
         google()
