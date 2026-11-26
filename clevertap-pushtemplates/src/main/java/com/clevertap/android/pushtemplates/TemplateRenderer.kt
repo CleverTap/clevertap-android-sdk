@@ -74,7 +74,7 @@ public class TemplateRenderer @JvmOverloads constructor(
     internal var smallIconColour : String? = null
 
     internal var actionButtons = emptyList<ActionButton>()
-    internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
+    internal val actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     public enum class LogLevel(private val value: Int) {

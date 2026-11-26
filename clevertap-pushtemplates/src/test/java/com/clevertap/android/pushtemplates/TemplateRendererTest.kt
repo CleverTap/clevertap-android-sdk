@@ -2259,7 +2259,7 @@ class TemplateRendererTest {
     fun test_setActionButtons_with_empty_action_buttons_list() {
         // Arrange - Use an empty actionButtons list
         templateRenderer.actionButtons = emptyList()
-        templateRenderer.actionButtonPendingIntents = mutableMapOf()
+        templateRenderer.actionButtonPendingIntents.clear()
 
         // Act
         val result = templateRenderer.setActionButtons(
@@ -2285,10 +2285,10 @@ class TemplateRendererTest {
         val actionButton2 = ActionButton("action2", "Action 2", 456)
 
         templateRenderer.actionButtons = listOf(actionButton1, actionButton2)
-        templateRenderer.actionButtonPendingIntents = mutableMapOf(
+        templateRenderer.actionButtonPendingIntents.putAll(mapOf(
             "action1" to mockPendingIntent1,
             "action2" to mockPendingIntent2
-        )
+        ))
 
         every {
             mockNotificationBuilder.addAction(
@@ -2321,7 +2321,7 @@ class TemplateRendererTest {
         val actionButton2 = ActionButton("action2", "Action 2", 456)
 
         templateRenderer.actionButtons = listOf(actionButton1, actionButton2)
-        templateRenderer.actionButtonPendingIntents = mutableMapOf() // Empty pending intents
+        templateRenderer.actionButtonPendingIntents.clear() // Empty pending intents
 
         // Act
         val result = templateRenderer.setActionButtons(
@@ -2347,10 +2347,10 @@ class TemplateRendererTest {
         val actionButton3 = ActionButton("action3", "Action 3", 789)
 
         templateRenderer.actionButtons = listOf(actionButton1, actionButton2, actionButton3)
-        templateRenderer.actionButtonPendingIntents = mutableMapOf(
+        templateRenderer.actionButtonPendingIntents.putAll(mapOf(
             "action1" to mockPendingIntent1,
             // Note: action2 and action3 don't have pending intents
-        )
+        ))
 
         every {
             mockNotificationBuilder.addAction(
@@ -2382,7 +2382,7 @@ class TemplateRendererTest {
         val actionButton1 = ActionButton("action1", "Action 1", 123)
 
         templateRenderer.actionButtons = listOf(actionButton1)
-        templateRenderer.actionButtonPendingIntents = mutableMapOf("action1" to mockPendingIntent1)
+        templateRenderer.actionButtonPendingIntents.putAll(mapOf("action1" to mockPendingIntent1))
 
         every {
             mockNotificationBuilder.addAction(
@@ -2413,7 +2413,7 @@ class TemplateRendererTest {
         val actionButton1 = ActionButton("action1", "Action 1", 123)
 
         templateRenderer.actionButtons = listOf(actionButton1)
-        templateRenderer.actionButtonPendingIntents = mutableMapOf("action1" to mockPendingIntent1)
+        templateRenderer.actionButtonPendingIntents.putAll(mapOf("action1" to mockPendingIntent1))
 
         every {
             mockNotificationBuilder.addAction(
