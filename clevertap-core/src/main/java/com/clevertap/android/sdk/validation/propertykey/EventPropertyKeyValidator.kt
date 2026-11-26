@@ -34,22 +34,30 @@ internal class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationRes
 
         // Report key modifications
         input.modifications.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = keyModificationError(
-                    modification = modification,
-                    reason = reason,
-                    maxKeyLength = config.maxKeyLength
-                )
-                if (error != null) {
-                    errors.add(error)
-                }
-            }
+            addKeyModificationErrors(modification = modification, maxKeyLength = config.maxKeyLength, errors = errors)
         }
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()
         } else {
             ValidationOutcome.Warning(errors)
+        }
+    }
+
+    private fun addKeyModificationErrors(
+        modification: KeyModification,
+        maxKeyLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = keyModificationError(
+                modification = modification,
+                reason = reason,
+                maxKeyLength = maxKeyLength
+            )
+            if (error != null) {
+                errors.add(error)
+            }
         }
     }
 

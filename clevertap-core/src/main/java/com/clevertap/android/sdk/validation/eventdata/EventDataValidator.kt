@@ -109,15 +109,23 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         errors: MutableList<ValidationResult>
     ) {
         metrics.keysModified.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = keyModificationError(
-                    modification = modification,
-                    reason = reason,
-                    maxKeyLength = maxKeyLength
-                )
-                if (error != null) {
-                    errors.add(error)
-                }
+            addKeyModificationErrors(modification = modification, maxKeyLength = maxKeyLength, errors = errors)
+        }
+    }
+
+    private fun addKeyModificationErrors(
+        modification: KeyModification,
+        maxKeyLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = keyModificationError(
+                modification = modification,
+                reason = reason,
+                maxKeyLength = maxKeyLength
+            )
+            if (error != null) {
+                errors.add(error)
             }
         }
     }
@@ -155,15 +163,23 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         errors: MutableList<ValidationResult>
     ) {
         metrics.valuesModified.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = valueModificationError(
-                    modification = modification,
-                    reason = reason,
-                    maxValueLength = maxValueLength
-                )
-                if (error != null) {
-                    errors.add(error)
-                }
+            addValueModificationErrors(modification = modification, maxValueLength = maxValueLength, errors = errors)
+        }
+    }
+
+    private fun addValueModificationErrors(
+        modification: ValueModification,
+        maxValueLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = valueModificationError(
+                modification = modification,
+                reason = reason,
+                maxValueLength = maxValueLength
+            )
+            if (error != null) {
+                errors.add(error)
             }
         }
     }

@@ -415,17 +415,7 @@ internal class EventQueueManager(
             }
 
             try {
-                val carrier = deviceInfo.carrier
-                if (carrier != null && carrier != "") {
-                    profileEvent.put("Carrier", carrier)
-                }
-
-                val cc = deviceInfo.countryCode
-                if (cc != null && cc != "") {
-                    profileEvent.put("cc", cc)
-                }
-
-                profileEvent.put("tz", TimeZone.getDefault().id)
+                putDeviceFields(profileEvent)
 
                 val event = JSONObject()
                 event.put("profile", profileEvent)
@@ -470,6 +460,20 @@ internal class EventQueueManager(
                 updateCachedGUID(guid = guid, key = next, value = value, removeFromSharedPrefs = removeFromSharedPrefs)
             }
         }
+    }
+
+    private fun putDeviceFields(profileEvent: JSONObject) {
+        val carrier = deviceInfo.carrier
+        if (carrier != null && carrier != "") {
+            profileEvent.put("Carrier", carrier)
+        }
+
+        val cc = deviceInfo.countryCode
+        if (cc != null && cc != "") {
+            profileEvent.put("cc", cc)
+        }
+
+        profileEvent.put("tz", TimeZone.getDefault().id)
     }
 
     private fun readProfileValue(baseProfile: JSONObject, key: String): Any? {

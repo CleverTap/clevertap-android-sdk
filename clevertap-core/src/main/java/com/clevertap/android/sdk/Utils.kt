@@ -412,14 +412,9 @@ public object Utils {
             val files = cacheDir.listFiles() ?: return
 
             val currentTimeMillis = clock.currentTimeMillis()
-            var deletedCount = 0
-            for (file in files) {
-                if (!file.isFile || !file.name.endsWith(".gif")) {
-                    continue
-                }
-                if (deleteGifIfOld(file = file, currentTimeMillis = currentTimeMillis, config = config)) {
-                    deletedCount++
-                }
+            val deletedCount = files.count { file ->
+                file.isFile && file.name.endsWith(".gif") &&
+                    deleteGifIfOld(file = file, currentTimeMillis = currentTimeMillis, config = config)
             }
             if (deletedCount > 0) {
                 config.logger.debug(

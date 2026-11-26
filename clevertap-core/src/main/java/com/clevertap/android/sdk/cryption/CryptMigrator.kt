@@ -254,9 +254,8 @@ internal data class CryptMigrator(
                     logPrefix,
                     "DB migrated with success = $migrationSuccessful = $profile"
                 )
-                if (dataMigrationRepository.saveUserProfile(deviceID, profile) <= -1L) {
-                    migrationSuccessful = false
-                }
+                val saved = dataMigrationRepository.saveUserProfile(deviceID, profile) > -1L
+                migrationSuccessful = migrationSuccessful && saved
             } catch (e: Exception) {
                 logger.verbose(logPrefix, "Error migrating profile $deviceID: $e")
                 migrationSuccessful = false

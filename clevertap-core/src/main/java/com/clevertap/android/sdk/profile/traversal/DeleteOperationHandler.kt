@@ -128,14 +128,15 @@ internal class DeleteOperationHandler(
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 
-            if (oldElement is JSONObject && newElement is JSONObject) {
-                deleteFieldsFromElement(oldElement = oldElement, newElement = newElement)
-                arrayModified = true
+            if (oldElement !is JSONObject || newElement !is JSONObject) {
+                continue
+            }
+            deleteFieldsFromElement(oldElement = oldElement, newElement = newElement)
+            arrayModified = true
 
-                // Mark for removal if empty
-                if (oldElement.length() == 0) {
-                    indicesToRemove.add(i)
-                }
+            // Mark for removal if empty
+            if (oldElement.length() == 0) {
+                indicesToRemove.add(i)
             }
         }
 

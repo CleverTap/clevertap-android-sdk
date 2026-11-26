@@ -123,12 +123,7 @@ internal class UrlConnectionHttpClient(
         val certificateFactory = CertificateFactory.getInstance("X.509")
         // Use this class's loader: javaClass inside a scope function can point to a JDK class (e.g. KeyStore)
         val classLoader = UrlConnectionHttpClient::class.java.classLoader
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
-            load(null, null) // Use null InputStream & password to create empty key store
-            PINNED_ROOT_CERTIFICATES.forEach { name ->
-                setCertificateEntry(name, loadPinnedCertificate(certificateFactory, classLoader, name))
-            }
-        }
+        val keyStore = buildPinnedKeyStore(certificateFactory, classLoader)
         val trustManagerFactory = TrustManagerFactory
             .getInstance(TrustManagerFactory.getDefaultAlgorithm())
             .apply { init(keyStore) }
@@ -142,6 +137,15 @@ internal class UrlConnectionHttpClient(
             Log.e(Constants.CLEVERTAP_LOG_TAG, "SSL pinning is enabled but could not be set up, using normal HTTPS", e)
         }
         null
+    }
+
+    private fun buildPinnedKeyStore(certificateFactory: CertificateFactory, classLoader: ClassLoader?): KeyStore {
+        return KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+            load(null, null) // Use null InputStream & password to create empty key store
+            PINNED_ROOT_CERTIFICATES.forEach { name ->
+                setCertificateEntry(name, loadPinnedCertificate(certificateFactory, classLoader, name))
+            }
+        }
     }
 
     private fun loadPinnedCertificate(
