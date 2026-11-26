@@ -496,12 +496,13 @@ internal inline fun <reified T> JSONArray.partition(
 
     for (i in 0 until this.length()) {
         val element = this.get(i)
-        if (element is T) {
-            if (predicate(element)) {
-                first.put(element)
-            } else {
-                second.put(element)
-            }
+        if (element !is T) {
+            continue
+        }
+        if (predicate(element)) {
+            first.put(element)
+        } else {
+            second.put(element)
         }
     }
     return first to second

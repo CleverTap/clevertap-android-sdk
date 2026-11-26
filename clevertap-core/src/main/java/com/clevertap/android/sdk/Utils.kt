@@ -128,16 +128,21 @@ public object Utils {
     public fun convertJSONObjectToHashMap(b: JSONObject): HashMap<String, Any> {
         val map = HashMap<String, Any>()
         for (s in b.keys()) {
-            try {
-                when (val o = b.get(s)) {
-                    is JSONObject -> map.putAll(convertJSONObjectToHashMap(o))
-                    else -> map[s] = o
-                }
-            } catch (ignored: Throwable) {
-                // Ignore
-            }
+            putFlattenedEntry(map = map, json = b, key = s)
         }
         return map
+    }
+
+    /** Puts [key] into [map], flattening a nested JSONObject value into the same map. */
+    private fun putFlattenedEntry(map: HashMap<String, Any>, json: JSONObject, key: String) {
+        try {
+            when (val o = json.get(key)) {
+                is JSONObject -> map.putAll(convertJSONObjectToHashMap(o))
+                else -> map[key] = o
+            }
+        } catch (ignored: Throwable) {
+            // Ignore
+        }
     }
 
     @JvmStatic
@@ -185,26 +190,10 @@ public object Utils {
         val teleMan = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
             ?: return "Unavailable"
 
-        var networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (hasPermission(context, Manifest.permission.READ_BASIC_PHONE_STATE) || hasPermission(
-                    context,
-                    Manifest.permission.READ_PHONE_STATE
-                )
-            ) {
-                try {
-                    networkType = teleMan.dataNetworkType
-                } catch (se: SecurityException) {
-                    Logger.d(TAG, "Security Exception caught while fetch network type", se)
-                }
-            } else {
-                Logger.d(
-                    TAG,
-                    "READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user"
-                )
-            }
+        val networkType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            readDataNetworkType(context, teleMan)
         } else {
-            networkType = teleMan.networkType
+            teleMan.networkType
         }
 
         return when (networkType) {
@@ -228,6 +217,30 @@ public object Utils {
             TelephonyManager.NETWORK_TYPE_NR -> "5G"
             else -> "Unknown"
         }
+    }
+
+    /** Reads the data network type on API 30+, where it needs a phone-state permission. */
+    @RequiresApi(Build.VERSION_CODES.R)
+    @SuppressLint("MissingPermission")
+    private fun readDataNetworkType(context: Context, teleMan: TelephonyManager): Int {
+        var networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN
+        if (hasPermission(context, Manifest.permission.READ_BASIC_PHONE_STATE) || hasPermission(
+                context,
+                Manifest.permission.READ_PHONE_STATE
+            )
+        ) {
+            try {
+                networkType = teleMan.dataNetworkType
+            } catch (se: SecurityException) {
+                Logger.d(TAG, "Security Exception caught while fetch network type", se)
+            }
+        } else {
+            Logger.d(
+                TAG,
+                "READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user"
+            )
+        }
+        return networkType
     }
 
     @JvmStatic
@@ -404,20 +417,8 @@ public object Utils {
                 if (!file.isFile || !file.name.endsWith(".gif")) {
                     continue
                 }
-                try {
-                    val fileName = file.name
-                    val fileTimestamp = fileName.substring(0, fileName.lastIndexOf(".gif")).toLong()
-
-                    // Check if file is one day or older
-                    if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
-                        if (file.delete()) {
-                            deletedCount++
-                        } else {
-                            config.logger.debug(config.accountId, "Failed to delete old GIF file: ${file.name}")
-                        }
-                    }
-                } catch (e: Exception) {
-                    config.logger.debug(config.accountId, "Skipping file with invalid file name format: ${file.name}")
+                if (deleteGifIfOld(file = file, currentTimeMillis = currentTimeMillis, config = config)) {
+                    deletedCount++
                 }
             }
             if (deletedCount > 0) {
@@ -432,6 +433,32 @@ public object Utils {
                 "Error during animated image cleanup: ", e
             )
         }
+    }
+
+    /**
+     * Deletes a "<timestamp>.gif" file that is one day or older.
+     *
+     * @return true if the file was deleted
+     */
+    private fun deleteGifIfOld(file: File, currentTimeMillis: Long, config: CleverTapInstanceConfig): Boolean {
+        return try {
+            val fileName = file.name
+            val fileTimestamp = fileName.substring(0, fileName.lastIndexOf(".gif")).toLong()
+
+            // Check if file is one day or older
+            currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS && deleteOrLog(file, config)
+        } catch (e: Exception) {
+            config.logger.debug(config.accountId, "Skipping file with invalid file name format: ${file.name}")
+            false
+        }
+    }
+
+    private fun deleteOrLog(file: File, config: CleverTapInstanceConfig): Boolean {
+        if (file.delete()) {
+            return true
+        }
+        config.logger.debug(config.accountId, "Failed to delete old GIF file: ${file.name}")
+        return false
     }
 
     @JvmStatic

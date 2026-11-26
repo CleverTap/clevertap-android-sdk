@@ -103,14 +103,18 @@ internal open class ActivityLifeCycleManager(
             }
 
             if (deepLink != null) {
-                try {
-                    analyticsManager.pushDeepLink(deepLink, false)
-                } catch (t: Throwable) {
-                    // no-op
-                }
+                pushDeepLinkSafely(deepLink)
             }
         } catch (t: Throwable) {
             Logger.v("Throwable - ${t.localizedMessage}")
+        }
+    }
+
+    private fun pushDeepLinkSafely(deepLink: Uri) {
+        try {
+            analyticsManager.pushDeepLink(deepLink, false)
+        } catch (t: Throwable) {
+            // no-op
         }
     }
 
