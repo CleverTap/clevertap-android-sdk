@@ -88,11 +88,11 @@ public class TemplateRenderer @JvmOverloads constructor(
 
     init {
         // Parse JSON early to ensure small_icon_colour, title and message can be accessed
-        val pt_json = extras.getString(PT_JSON)
+        val ptJson = extras.getString(PT_JSON)
         var newExtras: Bundle? = null
         try {
-            if (pt_json.isNotNullAndEmpty()) {
-                newExtras = Utils.fromJson(JSONObject(pt_json))
+            if (ptJson.isNotNullAndEmpty()) {
+                newExtras = Utils.fromJson(JSONObject(ptJson))
             }
         } catch (e: JSONException) {
             PTLog.verbose("Failed to parse push template JSON", e)

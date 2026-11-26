@@ -17,7 +17,7 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class TimerSmallContentView(
     context: Context,
-    timer_end: Long?,
+    timerEnd: Long?,
     renderer: TemplateRenderer,
     data: TimerTemplateData,
     layoutId: Int = R.layout.timer_collapsed
@@ -49,12 +49,12 @@ internal open class TimerSmallContentView(
         )
 
 
-        val timerEnd = timer_end ?: 0L
+        val timerEndMillis = timerEnd ?: 0L
 
         // Add a 3 second buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timerEnd + 3 * PTConstants.ONE_SECOND_LONG,
+            SystemClock.elapsedRealtime() + timerEndMillis + 3 * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
@@ -106,13 +106,13 @@ internal open class TimerSmallContentView(
     }
 
     private fun setCustomContentViewChronometerTitleColour(
-        pt_chrono_title_clr: String?,
-        pt_title_clr: String?
+        chronometerTitleColour: String?,
+        titleColour: String?
     ) {
-        if (pt_chrono_title_clr.isNotNullAndEmpty()) {
-            setCustomTextColour(pt_chrono_title_clr, R.id.chronometer)
-        } else if (pt_title_clr.isNotNullAndEmpty()) {
-            setCustomTextColour(pt_title_clr, R.id.chronometer)
+        if (chronometerTitleColour.isNotNullAndEmpty()) {
+            setCustomTextColour(chronometerTitleColour, R.id.chronometer)
+        } else if (titleColour.isNotNullAndEmpty()) {
+            setCustomTextColour(titleColour, R.id.chronometer)
         }
     }
 

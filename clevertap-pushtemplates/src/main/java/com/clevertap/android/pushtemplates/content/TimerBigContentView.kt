@@ -9,11 +9,11 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class TimerBigContentView(
     context: Context,
-    timer_end: Long?,
+    timerEnd: Long?,
     renderer: TemplateRenderer,
     data: TimerTemplateData
 ) :
-    TimerSmallContentView(context, timer_end, renderer, data, R.layout.timer) {
+    TimerSmallContentView(context, timerEnd, renderer, data, R.layout.timer) {
 
     init {
         val baseContent = data.baseContent
