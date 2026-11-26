@@ -219,6 +219,14 @@ internal class ValidationCheckersBuilder {
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ValidatorFactory {
     companion object {
+        /** Minimum images for the auto and manual carousel templates. */
+        private const val CAROUSEL_MIN_IMAGES = 3
+
+        /** Minimum deep links and images for the five-icons and icons templates. */
+        private const val ICONS_MIN_ITEMS = 3
+
+        /** Exact number of images, deep links, titles and descriptions for the product display template. */
+        private const val PRODUCT_ITEM_COUNT = 3
 
         /**
          * Creates a validator for the given template data.
@@ -251,7 +259,7 @@ internal class ValidatorFactory {
                     builder
                         .addBasicTextValidation(templateData.carouselData.baseContent.textData)
                         .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(templateData.carouselData.imageList, 3, key = PT_THREE_IMAGE_LIST)
+                        .addImageListValidation(templateData.carouselData.imageList, CAROUSEL_MIN_IMAGES, key = PT_THREE_IMAGE_LIST)
                         .build()
                 }
 
@@ -259,7 +267,7 @@ internal class ValidatorFactory {
                     builder
                         .addBasicTextValidation(templateData.carouselData.baseContent.textData)
                         .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(templateData.carouselData.imageList, 3, key = PT_THREE_IMAGE_LIST)
+                        .addImageListValidation(templateData.carouselData.imageList, CAROUSEL_MIN_IMAGES, key = PT_THREE_IMAGE_LIST)
                         .build()
                 }
 
@@ -277,15 +285,15 @@ internal class ValidatorFactory {
 
                 is FiveIconsTemplateData -> {
                     builder
-                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
-                        .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
+                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, ICONS_MIN_ITEMS, PT_FIVE_DEEPLINK_LIST)
+                        .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
                         .build()
                 }
 
                 is IconsTemplateData -> {
                     builder
-                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
-                        .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
+                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, ICONS_MIN_ITEMS, PT_FIVE_DEEPLINK_LIST)
+                        .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
                         .build()
                 }
 
@@ -294,13 +302,13 @@ internal class ValidatorFactory {
                         .addBasicTextValidation(templateData.baseContent.textData)
                         .addImageListValidation(
                             templateData.imageList,
-                            3,
+                            PRODUCT_ITEM_COUNT,
                             exact = true,
                             key = PT_PRODUCT_THREE_IMAGE_LIST
                         )
                         .addStringListValidation(
                             templateData.baseContent.deepLinkList,
-                            3,
+                            PRODUCT_ITEM_COUNT,
                             PT_THREE_DEEPLINK_LIST,
                             "Three required deeplinks not present",
                             exact = true
@@ -313,7 +321,7 @@ internal class ValidatorFactory {
 
                         productBuilder.addStringListValidation(
                             templateData.bigTextList,
-                            3,
+                            PRODUCT_ITEM_COUNT,
                             PT_BIG_TEXT_LIST,
                             "Three required product titles not present",
                             exact = true
@@ -321,7 +329,7 @@ internal class ValidatorFactory {
 
                         productBuilder.addStringListValidation(
                             templateData.smallTextList,
-                            3,
+                            PRODUCT_ITEM_COUNT,
                             PT_SMALL_TEXT_LIST,
                             "Three required product descriptions not present",
                             exact = true

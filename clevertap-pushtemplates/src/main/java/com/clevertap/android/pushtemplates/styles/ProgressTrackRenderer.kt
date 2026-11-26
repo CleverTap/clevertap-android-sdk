@@ -72,6 +72,12 @@ internal object ProgressTrackRenderer {
     private const val FADED_OPACITY = 0.5f // native NotificationProgressBar.FADED_OPACITY
     private const val MIN_CONTRAST = 3.0 // native ProgressStyle.sanitizeProgressColor
     private const val DARK_BG_LUMINANCE = 0.17912878474 // native Notification.Builder.isColorDark
+    private const val ROUND_HALF_UP = 0.5f // rounds the faded alpha to the nearest int
+    private const val OPAQUE_ALPHA = 255
+    private const val COLOR_COMPONENTS = 3 // HSL and LAB both have 3 components
+    private const val CONTRAST_SEARCH_STEPS = 15 // native ContrastColorUtil binary-search steps
+    private const val HSL_LIGHTNESS_EPSILON = 0.00001f
+    private const val LAB_LIGHTNESS_EPSILON = 0.00001
 
     private const val MAX_SEGMENTS = 10 // native MAX_PROGRESS_SEGMENT_LIMIT
     private const val MAX_POINTS = 4 // native MAX_PROGRESS_POINT_LIMIT
@@ -118,7 +124,7 @@ internal object ProgressTrackRenderer {
     /** Native fade: same color at half its alpha. */
     fun faded(color: Int): Int =
         Color.argb(
-            (Color.alpha(color) * FADED_OPACITY + 0.5f).toInt(),
+            (Color.alpha(color) * FADED_OPACITY + ROUND_HALF_UP).toInt(),
             Color.red(color),
             Color.green(color),
             Color.blue(color)
@@ -131,18 +137,18 @@ internal object ProgressTrackRenderer {
      * it in LAB. Each is a 15-step binary search, as in ContrastColorUtil.
      */
     fun ensureContrast(color: Int, bg: Int): Int {
-        val opaqueBg = ColorUtils.setAlphaComponent(bg, 255)
+        val opaqueBg = ColorUtils.setAlphaComponent(bg, OPAQUE_ALPHA)
         fun meets(c: Int) = ColorUtils.calculateContrast(c, opaqueBg) > MIN_CONTRAST
-        val opaque = ColorUtils.setAlphaComponent(color, 255)
+        val opaque = ColorUtils.setAlphaComponent(color, OPAQUE_ALPHA)
         if (ColorUtils.calculateContrast(opaque, opaqueBg) >= MIN_CONTRAST) { return color }
 
         val adjusted = if (ColorUtils.calculateLuminance(opaqueBg) <= DARK_BG_LUMINANCE) {
             // ContrastColorUtil.findContrastColorAgainstDark: raise the HSL lightness.
-            val hsl = FloatArray(3).also { ColorUtils.colorToHSL(opaque, it) }
+            val hsl = FloatArray(COLOR_COMPONENTS).also { ColorUtils.colorToHSL(opaque, it) }
             var low = hsl[2]
             var high = 1f
-            for (i in 0 until 15) {
-                if (high - low <= 0.00001f) { break }
+            for (i in 0 until CONTRAST_SEARCH_STEPS) {
+                if (high - low <= HSL_LIGHTNESS_EPSILON) { break }
                 hsl[2] = (low + high) / 2
                 if (meets(ColorUtils.HSLToColor(hsl))) { high = hsl[2] } else { low = hsl[2] }
             }
@@ -150,11 +156,11 @@ internal object ProgressTrackRenderer {
             ColorUtils.HSLToColor(hsl)
         } else {
             // ContrastColorUtil.findContrastColor: lower the LAB lightness.
-            val lab = DoubleArray(3).also { ColorUtils.colorToLAB(opaque, it) }
+            val lab = DoubleArray(COLOR_COMPONENTS).also { ColorUtils.colorToLAB(opaque, it) }
             var low = 0.0
             var high = lab[0]
-            for (i in 0 until 15) {
-                if (high - low <= 0.00001) { break }
+            for (i in 0 until CONTRAST_SEARCH_STEPS) {
+                if (high - low <= LAB_LIGHTNESS_EPSILON) { break }
                 val l = (low + high) / 2
                 if (meets(ColorUtils.LABToColor(l, lab[1], lab[2]))) { low = l } else { high = l }
             }

@@ -13,6 +13,9 @@ import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.Random
 import androidx.annotation.RestrictTo
 
+/** Number of rating stars; one request code is generated per star. */
+private const val STAR_COUNT = 5
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class RatingContentView(
     context: Context,
@@ -54,7 +57,7 @@ internal class RatingContentView(
         remoteView.setImageViewResource(R.id.star5, R.drawable.pt_star_outline)
 
         // Request Codes for all stars are passed as an extra to cancel all pending intents when any of the star is clicked
-        extras.putIntArray(PTConstants.KEY_REQUEST_CODES, IntArray(5) {
+        extras.putIntArray(PTConstants.KEY_REQUEST_CODES, IntArray(STAR_COUNT) {
             Random().nextInt()
         })
 

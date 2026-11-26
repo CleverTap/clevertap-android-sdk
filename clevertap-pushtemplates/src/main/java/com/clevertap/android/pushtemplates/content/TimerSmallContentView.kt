@@ -51,10 +51,10 @@ internal open class TimerSmallContentView(
 
         val timerEndMillis = timerEnd ?: 0L
 
-        // Add a 3 second buffer to prevent negative timer values
+        // Add a buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timerEndMillis + 3 * PTConstants.ONE_SECOND_LONG,
+            SystemClock.elapsedRealtime() + timerEndMillis + TIMER_BUFFER_SECONDS * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
@@ -117,6 +117,9 @@ internal open class TimerSmallContentView(
     }
 
     companion object {
+        /** Buffer added to the chronometer base to prevent negative timer values. */
+        private const val TIMER_BUFFER_SECONDS = 3
+
         private const val CHRONO_BITMAP_WIDTH = 100
         private const val CHRONO_BITMAP_HEIGHT = 50
     }

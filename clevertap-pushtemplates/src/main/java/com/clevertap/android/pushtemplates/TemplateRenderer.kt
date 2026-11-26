@@ -61,6 +61,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
+
+/** Length of a sound file extension (".mp3", ".ogg", ".wav") stripped to get the raw resource name. */
+private const val SOUND_FILE_EXTENSION_LENGTH = 4
+
 public class TemplateRenderer @JvmOverloads constructor(
     context: Context,
     private val extras: Bundle,
@@ -340,7 +344,7 @@ public class TemplateRenderer @JvmOverloads constructor(
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     } else if (s.isNotEmpty()) {
                         if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
-                            s = s.substring(0, s.length - 4)
+                            s = s.substring(0, s.length - SOUND_FILE_EXTENSION_LENGTH)
                         }
                         soundUri = Uri
                             .parse(

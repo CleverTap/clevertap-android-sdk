@@ -427,7 +427,7 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
             ptDlClicked: String?,
             config: CleverTapInstanceConfig?
         ) {
-            Thread.sleep(1000)
+            Thread.sleep(PTConstants.ONE_SECOND_LONG)
             requireNotificationManager().cancel(notificationId)
 
             if (!ratingToast.isNullOrEmpty()) {
