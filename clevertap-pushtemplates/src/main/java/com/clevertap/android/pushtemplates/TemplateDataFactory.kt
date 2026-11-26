@@ -110,72 +110,20 @@ internal object TemplateDataFactory {
         val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
 
         return when (templateType) {
-            TemplateType.BASIC -> createBasicTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.AUTO_CAROUSEL -> createAutoCarouselTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.MANUAL_CAROUSEL -> createManualCarouselTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.RATING -> createRatingTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.FIVE_ICONS -> createFiveIconsTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.ICONS -> createIconsTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.PRODUCT_DISPLAY -> createProductTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.ZERO_BEZEL -> createZeroBezelTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
-            TemplateType.TIMER -> createTimerTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
+            TemplateType.BASIC -> createBasicTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.AUTO_CAROUSEL -> createAutoCarouselTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.MANUAL_CAROUSEL ->
+                createManualCarouselTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.RATING -> createRatingTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.FIVE_ICONS -> createFiveIconsTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.ICONS -> createIconsTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.PRODUCT_DISPLAY -> createProductTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.ZERO_BEZEL -> createZeroBezelTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
+            TemplateType.TIMER -> createTimerTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
             TemplateType.INPUT_BOX -> createInputBoxTemplateData(extras, defaultAltText)
-            TemplateType.CANCEL -> createCancelTemplateData(
-                extras,
-                notificationIdsProvider
-            )
-
-            TemplateType.VERTICAL_IMAGE -> createVerticalImageTemplateData(
-                extras,
-                darkModeAdaptiveColors,
-                defaultAltText
-            )
-
+            TemplateType.CANCEL -> createCancelTemplateData(extras, notificationIdsProvider)
+            TemplateType.VERTICAL_IMAGE ->
+                createVerticalImageTemplateData(extras, darkModeAdaptiveColors, defaultAltText)
             TemplateType.PROGRESS -> createProgressTemplateData(extras)
 
             else -> null
