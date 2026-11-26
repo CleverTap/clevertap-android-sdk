@@ -11,7 +11,9 @@ no UI changes. Reading the diff is not enough, so compare the compiled output.
 ## Steps
 
 1. Build the base in a separate clean worktree, so your uncommitted edits cannot leak into it:
-   `git worktree add ../base-check <base>` (the base is usually `develop`), then in `../base-check` run
+   `git worktree add ../base-check <base>` (the base is usually `develop`). A new worktree has no ignored files,
+   so copy `local.properties` into it, or set `ANDROID_HOME` (never commit `local.properties`). Then, in
+   `../base-check`, run
    `./gradlew :<changed-module>:clean :<changed-module>:compileDebugKotlin :<changed-module>:compileDebugJavaWithJavac`
    (use the module you changed, for example `clevertap-core` or `clevertap-geofence`; repeat for each one).
    For `sample`, which has flavors (`local`, `remote`, `staging`), use the flavor task and path instead, for example
