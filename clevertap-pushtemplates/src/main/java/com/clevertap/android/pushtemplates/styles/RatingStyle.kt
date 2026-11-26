@@ -13,7 +13,11 @@ import com.clevertap.android.pushtemplates.content.SmallContentView
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class RatingStyle(private val data: RatingTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
+internal class RatingStyle(
+    private val data: RatingTemplateData,
+    renderer: TemplateRenderer,
+    private var extras: Bundle
+) : Style(data.baseContent, renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer, data.baseContent).remoteView

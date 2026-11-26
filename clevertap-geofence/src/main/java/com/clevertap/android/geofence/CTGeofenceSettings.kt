@@ -312,7 +312,9 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
 
     /** Kotlin property syntax, equivalent to [isBackgroundLocationUpdatesEnabled]. */
     public val isBackgroundLocationUpdatesEnabled: Boolean
-        @JvmSynthetic @JvmName("ktIsBackgroundLocationUpdatesEnabled") inline get() = isBackgroundLocationUpdatesEnabled()
+        @JvmSynthetic
+        @JvmName("ktIsBackgroundLocationUpdatesEnabled")
+        inline get() = isBackgroundLocationUpdatesEnabled()
 
     public open fun getGeofenceNotificationResponsiveness(): Int {
         return geofenceNotificationResponsivenessValue
@@ -320,7 +322,9 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
 
     /** Kotlin property syntax, equivalent to [getGeofenceNotificationResponsiveness]. */
     public val geofenceNotificationResponsiveness: Int
-        @JvmSynthetic @JvmName("ktGetGeofenceNotificationResponsiveness") inline get() = getGeofenceNotificationResponsiveness()
+        @JvmSynthetic
+        @JvmName("ktGetGeofenceNotificationResponsiveness")
+        inline get() = getGeofenceNotificationResponsiveness()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {

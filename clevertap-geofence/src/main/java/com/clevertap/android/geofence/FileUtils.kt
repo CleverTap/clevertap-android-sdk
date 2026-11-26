@@ -27,7 +27,11 @@ internal object FileUtils {
                 val children = file.list()
                 if (children != null) {
                     for (child in children) {
-                        val isDeleted = if (File(file, child).delete()) "successfully deleted" else "failed to delete"
+                        val isDeleted = if (File(file, child).delete()) {
+                            "successfully deleted"
+                        } else {
+                            "failed to delete"
+                        }
                         CTGeofenceAPI.getLogger().verbose(
                             CTGeofenceAPI.GEOFENCE_LOG_TAG,
                             "$child :$isDeleted"

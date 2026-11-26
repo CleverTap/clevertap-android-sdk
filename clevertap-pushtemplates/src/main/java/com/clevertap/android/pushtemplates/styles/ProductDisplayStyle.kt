@@ -15,7 +15,11 @@ import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallC
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ProductDisplayStyle(private val data: ProductTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
+internal class ProductDisplayStyle(
+    private val data: ProductTemplateData,
+    renderer: TemplateRenderer,
+    private var extras: Bundle
+) : Style(data.baseContent, renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return ProductDisplayNonLinearSmallContentView(context, renderer, data).remoteView

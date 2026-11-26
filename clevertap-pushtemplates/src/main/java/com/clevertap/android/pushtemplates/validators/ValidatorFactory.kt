@@ -1,7 +1,29 @@
 package com.clevertap.android.pushtemplates.validators
 
-import com.clevertap.android.pushtemplates.*
-import com.clevertap.android.pushtemplates.checkers.*
+import com.clevertap.android.pushtemplates.AutoCarouselTemplateData
+import com.clevertap.android.pushtemplates.BaseTextData
+import com.clevertap.android.pushtemplates.BasicTemplateData
+import com.clevertap.android.pushtemplates.CancelTemplateData
+import com.clevertap.android.pushtemplates.FiveIconsTemplateData
+import com.clevertap.android.pushtemplates.IconsTemplateData
+import com.clevertap.android.pushtemplates.ImageData
+import com.clevertap.android.pushtemplates.InputBoxTemplateData
+import com.clevertap.android.pushtemplates.ManualCarouselTemplateData
+import com.clevertap.android.pushtemplates.ProductTemplateData
+import com.clevertap.android.pushtemplates.ProgressTemplateData
+import com.clevertap.android.pushtemplates.RatingTemplateData
+import com.clevertap.android.pushtemplates.TemplateData
+import com.clevertap.android.pushtemplates.TemplateType
+import com.clevertap.android.pushtemplates.TimerTemplateData
+import com.clevertap.android.pushtemplates.VerticalImageTemplateData
+import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
+import com.clevertap.android.pushtemplates.checkers.Checker
+import com.clevertap.android.pushtemplates.checkers.IntSizeChecker
+import com.clevertap.android.pushtemplates.checkers.JsonArraySizeChecker
+import com.clevertap.android.pushtemplates.checkers.ListEqualSizeChecker
+import com.clevertap.android.pushtemplates.checkers.ListSizeChecker
+import com.clevertap.android.pushtemplates.checkers.LongSizeChecker
+import com.clevertap.android.pushtemplates.checkers.StringSizeChecker
 import org.json.JSONArray
 import androidx.annotation.RestrictTo
 
@@ -40,8 +62,9 @@ internal const val PT_ACTIONS = "PT_ACTIONS"
 internal fun Iterable<Checker<out Any>>.and(): Boolean {
     var and = true
     for (element in this) {
+        // checking first will allow us to execute all checks(for printing errors) instead of short circuiting
         and =
-            element.check() && and // checking first will allow us to execute all checks(for printing errors) instead of short circuiting
+            element.check() && and
     }
     return and
 }
@@ -100,7 +123,7 @@ internal class ValidationCheckersBuilder {
         checkers[key] = ListSizeChecker(
             deepLinkList,
             minSize,
-            if (minSize == 1) "Deeplink is missing or empty" else "$minSize required deeplinks not present"
+            if (minSize == 1) { "Deeplink is missing or empty" } else { "$minSize required deeplinks not present" }
         )
         return this
     }
@@ -366,7 +389,10 @@ internal class ValidatorFactory {
         /**
          * Creates the appropriate validator instance based on template type and validation checkers
          */
-        private fun createValidatorFromKeys(templateType: TemplateType, keys: Map<String, Checker<out Any>>): Validator? {
+        private fun createValidatorFromKeys(
+            templateType: TemplateType,
+            keys: Map<String, Checker<out Any>>
+        ): Validator? {
             return when (templateType) {
                 TemplateType.BASIC -> ContentValidator(keys)
                 TemplateType.AUTO_CAROUSEL, TemplateType.MANUAL_CAROUSEL -> CarouselTemplateValidator(

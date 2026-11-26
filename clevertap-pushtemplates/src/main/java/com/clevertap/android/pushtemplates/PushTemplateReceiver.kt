@@ -165,12 +165,12 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
                     contentViewManualCarousel.showNext(R.id.carousel_image)
                     contentViewManualCarousel.showNext(R.id.carousel_image_right)
                     contentViewManualCarousel.showNext(R.id.carousel_image_left)
-                    if (currPosition == imageList.size - 1) 0 else currPosition + 1
+                    if (currPosition == imageList.size - 1) { 0 } else { currPosition + 1 }
                 } else {
                     contentViewManualCarousel.showPrevious(R.id.carousel_image)
                     contentViewManualCarousel.showPrevious(R.id.carousel_image_right)
                     contentViewManualCarousel.showPrevious(R.id.carousel_image_left)
-                    if (currPosition == 0) imageList.size - 1 else currPosition - 1
+                    if (currPosition == 0) { imageList.size - 1 } else { currPosition - 1 }
                 }
                 val dl: String? = when {
                     deepLinkList.isNullOrEmpty() -> ""
@@ -512,7 +512,7 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
 
                 val dl = deepLinkList[currentPosition]
                 contentViewBig.setTextViewText(
-                    if (isLinear) R.id.product_name else R.id.title,
+                    if (isLinear) { R.id.product_name } else { R.id.title },
                     checkNotNull(bigTextList)[currentPosition]
                 )
                 contentViewBig.setTextViewText(R.id.msg, checkNotNull(smallTextList)[currentPosition])

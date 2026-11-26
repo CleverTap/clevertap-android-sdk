@@ -19,7 +19,7 @@ internal object ProgressPayloadParser {
     /** Each element: `{ "length": Int (default 1), "color": "#RRGGBB" (optional) }`. */
     fun parseSegments(json: String?): List<SegmentData> {
         val out = ArrayList<SegmentData>()
-        if (json.isNullOrEmpty()) return out
+        if (json.isNullOrEmpty()) { return out }
         try {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
@@ -35,7 +35,7 @@ internal object ProgressPayloadParser {
     /** Each element: `{ "position": Int (default 0), "color": "#RRGGBB" (optional) }`. */
     fun parsePoints(json: String?): List<PointData> {
         val out = ArrayList<PointData>()
-        if (json.isNullOrEmpty()) return out
+        if (json.isNullOrEmpty()) { return out }
         try {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {

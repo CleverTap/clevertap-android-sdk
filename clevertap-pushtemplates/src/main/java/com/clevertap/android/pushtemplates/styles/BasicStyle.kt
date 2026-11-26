@@ -14,7 +14,10 @@ import com.clevertap.android.pushtemplates.content.SmallContentView
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class BasicStyle(private val data: BasicTemplateData, renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
+internal class BasicStyle(
+    private val data: BasicTemplateData,
+    renderer: TemplateRenderer
+) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
