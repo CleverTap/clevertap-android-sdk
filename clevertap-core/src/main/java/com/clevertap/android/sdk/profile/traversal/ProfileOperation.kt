@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
  * Defines the type of operation to perform on profile data.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class ProfileOperation {
+internal enum class ProfileOperation {
     /**
      * Replace old values with new values. Creates keys if they don't exist.
      * For nested objects, recursively updates properties.
@@ -53,6 +53,6 @@ public enum class ProfileOperation {
      */
     GET;
 
-    public fun isNumericOperation(): Boolean =
+    fun isNumericOperation(): Boolean =
         this == INCREMENT || this == DECREMENT
 }
