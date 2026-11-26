@@ -5,15 +5,15 @@
     <ID>BracesOnIfStatements:CTHmsMessageHandler.kt$CTHmsMessageHandler$else</ID>
     <ID>BracesOnIfStatements:CTHmsMessageHandler.kt$CTHmsMessageHandler$if</ID>
     <ID>UndocumentedPublicClass:HmsConstants.kt$HmsConstants</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$@JvmField val HPS: PushType = PushType( HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS )</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val APP_ID_KEY: String = "client/app_id"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val CT_HUAWEI_PROVIDER_CLASS: String = "com.clevertap.android.hms.HmsPushProvider"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val HCM_SCOPE: String = "HCM"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val HMS_DELIVERY_TYPE: String = "hps"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val HMS_LOG_TAG: String = "HPS"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val HPS_PROPERTY_REG_ID: String = "hps_token"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val HUAWEI_SDK_CLASS: String = "com.huawei.hms.push.HmsMessageService"</ID>
-    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$const val MIN_CT_ANDROID_SDK_VERSION: Int = 30800</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$@JvmField public val HPS: PushType = PushType( HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS )</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val APP_ID_KEY: String = "client/app_id"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val CT_HUAWEI_PROVIDER_CLASS: String = "com.clevertap.android.hms.HmsPushProvider"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val HCM_SCOPE: String = "HCM"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val HMS_DELIVERY_TYPE: String = "hps"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val HMS_LOG_TAG: String = "HPS"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val HPS_PROPERTY_REG_ID: String = "hps_token"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val HUAWEI_SDK_CLASS: String = "com.huawei.hms.push.HmsMessageService"</ID>
+    <ID>UndocumentedPublicProperty:HmsConstants.kt$HmsConstants.Companion$public const val MIN_CT_ANDROID_SDK_VERSION: Int = 30800</ID>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$mConfig!!</ID>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$options!!</ID>
     <ID>UseLet:CTHmsMessageHandler.kt$CTHmsMessageHandler$if (remoteMessage != null) mParser.toBundle(remoteMessage) else null</ID>

@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 4048**  
-core: 3283 · geofence: 158 · hms: 16 · pushtemplates: 591
+**Total baselined findings: 3465**  
+core: 2797 · geofence: 158 · hms: 16 · pushtemplates: 494
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -16,10 +16,10 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
 | Library safety | 21 | DoubleMutabilityForCollection (21) |
 | Naming | 38 | FunctionParameterNaming (14), FunctionNaming (9), VariableNaming (8), PackageNaming (7) |
-| Style | 792 | BracesOnIfStatements (246), MaxLineLength (219), MagicNumber (190), ReturnCount (83), ForbiddenMethodCall (54) |
+| Style | 801 | BracesOnIfStatements (246), MaxLineLength (228), MagicNumber (190), ReturnCount (83), ForbiddenMethodCall (54) |
 | Complexity | 773 | LongMethod (232), NestedBlockDepth (189), LongParameterList (124), CyclomaticComplexMethod (124), TooManyFunctions (69), LargeClass (27), ComplexCondition (8) |
-| Public docs | 1661 | UndocumentedPublicProperty (978), UndocumentedPublicFunction (535), UndocumentedPublicClass (148) |
-| Other | 266 | NewLineAtEndOfFile (168), LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (15), EmptyFunctionBlock (8), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), WildcardImport (5), UnusedPrivateProperty (5), UnusedParameter (4), ThrowsCount (4), UnnecessaryApply (3), SafeCast (2), ObjectLiteralToLambda (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
+| Public docs | 1070 | UndocumentedPublicProperty (672), UndocumentedPublicFunction (342), UndocumentedPublicClass (56) |
+| Other | 265 | NewLineAtEndOfFile (168), LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (14), EmptyFunctionBlock (8), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), WildcardImport (5), UnusedPrivateProperty (5), UnusedParameter (4), ThrowsCount (4), UnnecessaryApply (3), SafeCast (2), ObjectLiteralToLambda (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
 
@@ -86,8 +86,8 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 - **BracesOnIfStatements: 246** (core 209, pushtemplates 33, geofence 2, hms 2). Braces on every if/else (repo convention).  
   Top files: `DeviceInfo.kt` (6), `PushPreviewKey.kt` (5), `CTInAppBaseFullFragment.kt` (4), `CTMessageDAO.kt` (4), `CleverTapDisplayUnit.kt` (4), `CleverTapDisplayUnitContent.kt` (4)
-- **MaxLineLength: 219** (core 176, pushtemplates 40, geofence 3). Wrap lines > 120.  
-  Top files: `CleverTapAPI.kt` (15), `Constants.kt` (10), `TemplateRenderer.kt` (9), `DisplayUnitResponse.kt` (7), `EventDataNormalizer.kt` (7), `ManifestValidator.kt` (7)
+- **MaxLineLength: 228** (core 185, pushtemplates 40, geofence 3). Wrap lines > 120.  
+  Top files: `CleverTapAPI.kt` (17), `Constants.kt` (11), `TemplateRenderer.kt` (9), `DisplayUnitResponse.kt` (7), `EventDataNormalizer.kt` (7), `ManifestValidator.kt` (7)
 - **MagicNumber: 190** (core 161, pushtemplates 25, geofence 4). Named constants.  
   Top files: `CTInboxBaseMessageViewHolder.kt` (18), `GifHeaderParser.kt` (18), `GifDecoder.kt` (11), `CTInAppBaseFullFragment.kt` (7), `PIPConfigFactory.kt` (6), `Utils.kt` (6)
 - **ReturnCount: 83** (core 76, pushtemplates 4, geofence 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
@@ -114,12 +114,12 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Public docs
 
-- **UndocumentedPublicProperty: 978** (core 758, pushtemplates 205, hms 9, geofence 6). KDoc on public properties.  
-  Top files: `Constants.kt` (385), `PTConstants.kt` (146), `ValidationModels.kt` (34), `DeviceInfo.kt` (29), `CtDatabase.kt` (26), `PendingIntentFactory.kt` (25)
-- **UndocumentedPublicFunction: 535** (core 491, geofence 28, pushtemplates 16). KDoc on public functions.  
+- **UndocumentedPublicProperty: 672** (core 511, pushtemplates 146, hms 9, geofence 6). KDoc on public properties.  
+  Top files: `Constants.kt` (385), `PTConstants.kt` (146), `CoreMetaData.kt` (24), `ManifestInfo.kt` (22), `CTInAppNotification.kt` (21), `HmsConstants.kt` (9)
+- **UndocumentedPublicFunction: 342** (core 313, geofence 28, pushtemplates 1). KDoc on public functions.  
   Top files: `CleverTapAPI.kt` (37), `CleverTapInstanceConfig.kt` (33), `Utils.kt` (24), `LeanplumCT.kt` (22), `Logger.kt` (20), `CoreMetaData.kt` (19)
-- **UndocumentedPublicClass: 148** (core 117, pushtemplates 27, geofence 3, hms 1). KDoc on public types (start with bucket-A API; @RestrictTo types can stay brief).  
-  Top files: `CTLocalInApp.kt` (8), `DelayedInAppResult.kt` (6), `BatchListeners.kt` (4), `FlattenedEventData.kt` (4), `CtDatabase.kt` (3), `Logger.kt` (3)
+- **UndocumentedPublicClass: 56** (core 48, pushtemplates 4, geofence 3, hms 1). KDoc on public types (start with bucket-A API; @RestrictTo types can stay brief).  
+  Top files: `CTLocalInApp.kt` (8), `Logger.kt` (3), `Constants.kt` (2), `HttpBitmapLoader.kt` (2), `TemplateRenderer.kt` (2), `ActionButtonClickHandler.kt` (1)
 
 ### Other
 
@@ -127,8 +127,8 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `ExoplayerHandle.kt` (2), `Extensions.kt` (2), `Media3Handle.kt` (2), `AESCrypt.kt` (1), `AESGCMCrypt.kt` (1), `AnalyticsManagerBundler.kt` (1)
 - **LoopWithTooManyJumpStatements: 22** (core 21, pushtemplates 1). See https://detekt.dev/docs/rules  
   Top files: `EventDataNormalizer.kt` (2), `CTInboxController.kt` (1), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `EventDAOImpl.kt` (1), `GifDecoder.kt` (1)
-- **UnnecessaryAbstractClass: 15** (core 13, pushtemplates 2). See https://detekt.dev/docs/rules  
-  Top files: `BaseAnalyticsManager.kt` (1), `BaseCallbackManager.kt` (1), `BaseEventQueueManager.kt` (1), `BaseLocationManager.kt` (1), `BaseSessionManager.kt` (1), `CTInAppBaseFullFragment.kt` (1)
+- **UnnecessaryAbstractClass: 14** (core 12, pushtemplates 2). See https://detekt.dev/docs/rules  
+  Top files: `BaseAnalyticsManager.kt` (1), `BaseEventQueueManager.kt` (1), `BaseLocationManager.kt` (1), `BaseSessionManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInAppBaseFullHtmlFragment.kt` (1)
 - **EmptyFunctionBlock: 8** (core 8). See https://detekt.dev/docs/rules  
   Top files: `ActivityLifecycleCallback.kt` (1), `CTInAppBasePartialNativeFragment.kt` (1), `CTInAppHtmlBannerOverlay.kt` (1), `ExoplayerPlayerListener.kt` (1), `Media3PlayerListener.kt` (1), `MediaPlayerRecyclerView.kt` (1)
 - **UtilityClassWithPublicConstructor: 7** (core 4, pushtemplates 2, hms 1). See https://detekt.dev/docs/rules  

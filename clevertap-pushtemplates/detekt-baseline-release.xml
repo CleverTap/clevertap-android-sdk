@@ -211,15 +211,15 @@
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")</ID>
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer already expired and renderTerminal is configured as false. Skipping notification")</ID>
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")</ID>
-    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$class</ID>
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$if</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$public</ID>
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$this.smallIconColour = Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR) ?: extras.getString(WZRK_COLOR)</ID>
     <ID>MaxLineLength:TimerStyle.kt$TimerStyle$TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView</ID>
     <ID>MaxLineLength:TimerStyle.kt$TimerStyle$internal</ID>
     <ID>MaxLineLength:ValidatorFactory.kt$ValidatorFactory.Companion$private</ID>
     <ID>MaxLineLength:ValidatorFactory.kt$element.check() &amp;&amp; and</ID>
     <ID>MaxLineLength:ZeroBezelStyle.kt$ZeroBezelStyle$internal</ID>
-    <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
+    <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
     <ID>NestedBlockDepth:CancelTemplateHandler.kt$CancelTemplateHandler$internal fun renderCancelNotification(context: Context, templateData: CancelTemplateData)</ID>
     <ID>NestedBlockDepth:InputBoxStyle.kt$InputBoxStyle$private fun setStandardViewBigImageStyle( context: Context, notificationBuilder: NotificationCompat.Builder ): NotificationCompat.Builder</ID>
     <ID>NestedBlockDepth:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
@@ -303,254 +303,157 @@
     <ID>TooManyFunctions:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
     <ID>TooManyFunctions:TemplateDataFactory.kt$TemplateDataFactory</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
-    <ID>UndocumentedPublicClass:CarouselTemplateValidator.kt$CarouselTemplateValidator : TemplateValidator</ID>
-    <ID>UndocumentedPublicClass:Checker.kt$Checker&lt;T&gt;</ID>
-    <ID>UndocumentedPublicClass:ContentValidator.kt$ContentValidator : Validator</ID>
-    <ID>UndocumentedPublicClass:FiveIconsTemplateValidator.kt$FiveIconsTemplateValidator : Validator</ID>
-    <ID>UndocumentedPublicClass:GifDrawableAdapter.kt$GifDrawableAdapter</ID>
-    <ID>UndocumentedPublicClass:GifDrawableAdapter.kt$GifDrawableAdapterImpl : GifDrawableAdapter</ID>
-    <ID>UndocumentedPublicClass:InputBoxTemplateValidator.kt$InputBoxTemplateValidator : TemplateValidator</ID>
-    <ID>UndocumentedPublicClass:IntSizeChecker.kt$IntSizeChecker : SizeChecker</ID>
-    <ID>UndocumentedPublicClass:JsonArraySizeChecker.kt$JsonArraySizeChecker : SizeChecker</ID>
-    <ID>UndocumentedPublicClass:ListEqualSizeChecker.kt$ListEqualSizeChecker : SizeChecker</ID>
-    <ID>UndocumentedPublicClass:ListSizeChecker.kt$ListSizeChecker : SizeChecker</ID>
-    <ID>UndocumentedPublicClass:LongSizeChecker.kt$LongSizeChecker : SizeChecker</ID>
     <ID>UndocumentedPublicClass:PTConstants.kt$PTConstants</ID>
-    <ID>UndocumentedPublicClass:PTHttpBitmapLoader.kt$PTHttpBitmapLoader</ID>
-    <ID>UndocumentedPublicClass:PTHttpBitmapLoader.kt$PTHttpBitmapLoader$PTHttpBitmapOperation</ID>
-    <ID>UndocumentedPublicClass:PTScaleType.kt$PTScaleType</ID>
-    <ID>UndocumentedPublicClass:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator : TemplateValidator</ID>
     <ID>UndocumentedPublicClass:PushTemplateNotificationHandler.kt$PushTemplateNotificationHandler : ActionButtonClickHandler</ID>
-    <ID>UndocumentedPublicClass:RatingTemplateValidator.kt$RatingTemplateValidator : TemplateValidator</ID>
-    <ID>UndocumentedPublicClass:SizeChecker.kt$SizeChecker&lt;T&gt; : Checker</ID>
-    <ID>UndocumentedPublicClass:StringSizeChecker.kt$StringSizeChecker : SizeChecker</ID>
     <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
     <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer$LogLevel</ID>
-    <ID>UndocumentedPublicClass:TemplateValidator.kt$TemplateValidator : Validator</ID>
-    <ID>UndocumentedPublicClass:Validator.kt$Validator</ID>
-    <ID>UndocumentedPublicClass:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator : TemplateValidator</ID>
-    <ID>UndocumentedPublicClass:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator : TemplateValidator</ID>
-    <ID>UndocumentedPublicFunction:Checker.kt$Checker$fun check(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:GifDrawableAdapter.kt$GifDrawableAdapter$fun create(bytes: ByteArray): GifDrawable</ID>
-    <ID>UndocumentedPublicFunction:GifDrawableAdapter.kt$GifDrawableAdapter$fun getDuration(drawable: GifDrawable): Int</ID>
-    <ID>UndocumentedPublicFunction:GifDrawableAdapter.kt$GifDrawableAdapter$fun getFrameAt(drawable: GifDrawable, index: Int): Bitmap</ID>
-    <ID>UndocumentedPublicFunction:GifDrawableAdapter.kt$GifDrawableAdapter$fun getFrameCount(drawable: GifDrawable): Int</ID>
-    <ID>UndocumentedPublicFunction:PTHttpBitmapLoader.kt$PTHttpBitmapLoader$@JvmStatic fun getHttpBitmap( bitmapOperation: PTHttpBitmapOperation, bitmapDownloadRequest: BitmapDownloadRequest ): DownloadedBitmap</ID>
-    <ID>UndocumentedPublicFunction:PTScaleType.kt$PTScaleType.Companion$fun fromString(value: String?): PTScaleType</ID>
-    <ID>UndocumentedPublicFunction:PTXtensions.kt$@OptIn(ExperimentalContracts::class) fun String?.isNotNullAndEmpty() : Boolean</ID>
-    <ID>UndocumentedPublicFunction:TemplateRenderer.kt$TemplateRenderer.LogLevel$fun intValue(): Int</ID>
-    <ID>UndocumentedPublicFunction:Validator.kt$Validator$abstract fun loadKeys(): List&lt;Checker&lt;out Any&gt;&gt;</ID>
-    <ID>UndocumentedPublicFunction:Validator.kt$Validator$fun validateKeys(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Validator.kt$Validator$fun validateORKeys(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Validator.kt$Validator$open fun validate(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Validator.kt$Validator$open fun validateOR(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:ValidatorFactory.kt$fun Iterable&lt;Checker&lt;out Any&gt;&gt;.and(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:ValidatorFactory.kt$fun Iterable&lt;Checker&lt;out Any&gt;&gt;.or(): Boolean</ID>
-    <ID>UndocumentedPublicProperty:IntSizeChecker.kt$IntSizeChecker$val entity: Int?</ID>
-    <ID>UndocumentedPublicProperty:IntSizeChecker.kt$IntSizeChecker$val errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:IntSizeChecker.kt$IntSizeChecker$val size: Int</ID>
-    <ID>UndocumentedPublicProperty:JsonArraySizeChecker.kt$JsonArraySizeChecker$val entity: JSONArray?</ID>
-    <ID>UndocumentedPublicProperty:JsonArraySizeChecker.kt$JsonArraySizeChecker$var errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:JsonArraySizeChecker.kt$JsonArraySizeChecker$var size: Int</ID>
-    <ID>UndocumentedPublicProperty:ListEqualSizeChecker.kt$ListEqualSizeChecker$val entity: List&lt;Any&gt;?</ID>
-    <ID>UndocumentedPublicProperty:ListEqualSizeChecker.kt$ListEqualSizeChecker$var errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:ListEqualSizeChecker.kt$ListEqualSizeChecker$var size: Int</ID>
-    <ID>UndocumentedPublicProperty:ListSizeChecker.kt$ListSizeChecker$val entity: List&lt;Any&gt;?</ID>
-    <ID>UndocumentedPublicProperty:ListSizeChecker.kt$ListSizeChecker$var errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:ListSizeChecker.kt$ListSizeChecker$var size: Int</ID>
-    <ID>UndocumentedPublicProperty:LongSizeChecker.kt$LongSizeChecker$val entity: Long?</ID>
-    <ID>UndocumentedPublicProperty:LongSizeChecker.kt$LongSizeChecker$val errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:LongSizeChecker.kt$LongSizeChecker$val size: Int</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle --- const val PT_PROGRESS: String = "pt_progress"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// GIF key for terminal notification of timer template const val PT_GIF_ALT: String = "pt_gif_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Image border configuration (applies to the main notification image across templates) const val PT_IMG_BORDER_CLR: String = "pt_img_border_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Keys for collapsed media in zero bezel const val PT_GIF_COLLAPSED: String = "pt_gif_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Same key core action buttons use, read by the app's dismiss handler on icon taps const val PT_AUTO_CANCEL: String = "autoCancel"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template - Button configuration const val PT_BTN_NAME: String = "pt_btn_name"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template - Collapsed button configuration const val PT_BTN_CLR_COLLAPSED: String = "pt_btn_clr_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template Keys const val PT_TEXT1: String = "pt_text1"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$@JvmField val COLOR_KEYS: Set&lt;String&gt; = java.util.Set.of( PT_TITLE_COLOR, PT_MSG_COLOR, PT_BG, PT_META_CLR, PT_CHRONO_TITLE_COLOUR, PT_CHRONO_BG_CLR, PT_CHRONO_BORDER_CLR, PT_PRODUCT_DISPLAY_ACTION_COLOUR, PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR, PT_CHRONO_GRAD_CLR1, PT_CHRONO_GRAD_CLR2, PT_TEXT1_COLOR, PT_TEXT2_COLOR, PT_BTN_CLR, PT_BTN_BORDER_CLR, PT_BTN_TEXT_CLR, PT_BTN_GRAD_CLR1, PT_BTN_GRAD_CLR2, PT_BTN_CLR_COLLAPSED, PT_BTN_BORDER_CLR_COLLAPSED, PT_BTN_TEXT_CLR_COLLAPSED, PT_BTN_GRAD_CLR1_COLLAPSED, PT_BTN_GRAD_CLR2_COLLAPSED, PT_IMG_BORDER_CLR )</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$@JvmField val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val ALT_TEXT_SUFFIX: String = "_alt_text"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val DEFAULT_DL: String = "default_dl"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val KEY_CLICKED_STAR: String = "clickedStar"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val KEY_REQUEST_CODES: String = "requestCodes"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val LOG_TAG: String = "PTLog"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val ONE_SECOND: Int = 1000</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val ONE_SECOND_LONG: Long = 1000L</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_5CTA_C2A_KEY: String = "5cta_"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_ACTION_ID: String = "actionId"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BG: String = "pt_bg"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIGTEXT_LIST: String = "pt_big_text_list"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG: String = "pt_big_img"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG_ALT: String = "pt_big_img_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG_ALT_ALT_TEXT: String = "pt_big_img_alt_alt_text"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG_ALT_TEXT: String = "pt_big_img_alt_text"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG_COLLAPSED: String = "pt_big_img_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BIG_IMG_COLLAPSED_ALT_TEXT: String = "pt_big_img_collapsed_alt_text"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_CLR: String = "pt_btn_border_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_CLR_COLLAPSED: String = "pt_btn_border_clr_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_RADIUS: String = "pt_btn_border_radius"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_RADIUS_DEFAULT: Float = 4f</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_WIDTH: String = "pt_btn_border_width"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_BORDER_WIDTH_DEFAULT: Float = 1f</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_CLR: String = "pt_btn_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_DL: String = "pt_btn_dl"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_CLR1: String = "pt_btn_grad_clr1"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_CLR1_COLLAPSED: String = "pt_btn_grad_clr1_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_CLR2: String = "pt_btn_grad_clr2"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_CLR2_COLLAPSED: String = "pt_btn_grad_clr2_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_DIR: String = "pt_btn_grad_dir"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_GRAD_DIR_DEFAULT: Double = 90.0</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_STYLE: String = "pt_btn_style"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_TEXT_CLR: String = "pt_btn_text_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BTN_TEXT_CLR_COLLAPSED: String = "pt_btn_text_clr_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BUY_NOW: String = "buynow"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_BUY_NOW_DL: String = "pt_buy_now_dl"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CANCEL_NOTIF_ID: String = "pt_cancel_notif_id"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHIP_TEXT: String = "pt_chip_text"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHIP_TYPE: String = "pt_chip_type" // text | timer | countdown | none</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_BG_CLR: String = "pt_chrono_bg_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_BORDER_CLR: String = "pt_chrono_border_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_BORDER_RADIUS: String = "pt_chrono_border_radius"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_BORDER_WIDTH: String = "pt_chrono_border_width"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_GRAD_CLR1: String = "pt_chrono_grad_clr1"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_GRAD_CLR2: String = "pt_chrono_grad_clr2"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_GRAD_DIR: String = "pt_chrono_grad_dir"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_STYLE: String = "pt_chrono_style"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CHRONO_TITLE_COLOUR: String = "pt_chrono_title_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_COLLAPSE_KEY: String = "pt_ck"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_COLOUR_GREY: String = "#A6A6A6"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_COUNTDOWN: String = "pt_countdown"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_CURRENT_POSITION: String = "pt_current_position"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DARK_MODE_SUFFIX: String = "_dark"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DEEPLINK_LIST: String = "pt_deeplink_list"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DEFAULT_DL: String = "pt_default_dl"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DIR: String = "pt_dir"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DISMISS: String = "pt_dismiss"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DISMISS_INTENT: String = "pt_dismiss_intent"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_DISMISS_ON_CLICK: String = "pt_dismiss_on_click"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_EVENT_NAME_KEY: String = "pt_event_name"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_EVENT_PROPERTY_KEY: String = "pt_event_property"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_EVENT_PROPERTY_SEPERATOR: String = "pt_event_property_"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_FLIP_INTERVAL: String = "pt_flip_interval"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_FLIP_INTERVAL_TIME: Int = 4 * ONE_SECOND</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_GIF: String = "pt_gif"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_GIF_FRAMES: String = "pt_gif_frames"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_GIF_FRAMES_ALT: String = "pt_gif_frames_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_GIF_FRAMES_COLLAPSED: String = "pt_gif_frames_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_ID: String = "pt_id"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_IMAGE_1: String = "img1"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_IMAGE_LIST: String = "pt_image_list"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_IMG_BORDER_WIDTH: String = "pt_img_border_width"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_IMG_CORNER_RADIUS: String = "pt_img_corner_radius"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_INPUT_AUTO_OPEN: String = "pt_input_auto_open"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_INPUT_FEEDBACK: String = "pt_input_feedback"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_INPUT_KEY: String = "pt_input_reply"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_INPUT_LABEL: String = "pt_input_label"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_INPUT_TIMEOUT: Int = 1300</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_JSON: String = "pt_json"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_LA_EVENT: String = "wzrk_la_event" // update | end (from LA wrapper)</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MANUAL_CAROUSEL_CURRENT: String = "pt_manual_carousel_current"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MANUAL_CAROUSEL_FILMSTRIP: String = "filmstrip"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MANUAL_CAROUSEL_FROM: String = "manual_carousel_from"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MANUAL_CAROUSEL_TYPE: String = "pt_manual_carousel_type"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_META_CLR: String = "pt_meta_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_META_CLR_DEFAULTS: String = PT_COLOUR_GREY</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MSG: String = "pt_msg"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MSG_ALT: String = "pt_msg_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MSG_COLOR: String = "pt_msg_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MSG_SUMMARY: String = "pt_msg_summary"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_MSG_SUMMARY_ALT: String = "pt_msg_summary_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_NOTIF_ICON: String = "pt_ico"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_NOTIF_ID: String = "notificationId"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PRICE_LIST: String = "pt_price_list"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PRODUCT_DISPLAY_ACTION: String = "pt_product_display_action"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PRODUCT_DISPLAY_ACTION_COLOUR: String = "pt_product_display_action_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR: String = "pt_product_display_action_text_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PRODUCT_DISPLAY_LINEAR: String = "pt_product_display_linear"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_END_ICON: String = "pt_progress_end_icon"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_INDETERMINATE: String = "pt_progress_indeterminate"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_MAX: String = "pt_progress_max"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_POINTS: String = "pt_progress_points" // JSON array</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_SEGMENTS: String = "pt_progress_segments" // JSON array</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_START_ICON: String = "pt_progress_start_icon"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROGRESS_TRACKER_ICON: String = "pt_progress_tracker_icon"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_PROMOTE: String = "pt_promote"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_RATING_C2A_KEY: String = "rating_"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_RATING_TOAST: String = "pt_rating_toast"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_RENDER_TERMINAL: String = "pt_render_terminal"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_RIGHT_SWIPE: String = "right_swipe"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SCALE_TYPE: String = "pt_scale_type"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SCALE_TYPE_ALT: String = "pt_scale_type_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SCALE_TYPE_COLLAPSED: String = "pt_scale_type_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SILENT_CHANNEL_DESC: String = "A channel to silently update notifications"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SILENT_CHANNEL_ID: String = "pt_silent_sound_channel"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SMALLTEXT_LIST: String = "pt_small_text_list"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SMALL_ICON_COLOUR: String = "pt_small_icon_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SMALL_VIEW: String = "pt_small_view"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SOUND_FILE_NAME: String = "pt_silent_sound"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_STICKY: String = "pt_sticky"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_STYLED_BY_PROGRESS: String = "pt_styled_by_progress"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_SUBTITLE: String = "pt_subtitle"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TEXT1_COLOR: String = "pt_text1_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TEXT2: String = "pt_text2"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TEXT2_COLOR: String = "pt_text2_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TIMER_END: String = "pt_timer_end"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TIMER_MIN_THRESHOLD: Int = 10</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TIMER_SPLIT: String = "\\\$D_"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TIMER_THRESHOLD: String = "pt_timer_threshold"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TITLE: String = "pt_title"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TITLE_ALT: String = "pt_title_alt"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_TITLE_COLOR: String = "pt_title_clr"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_VT_C2A_COLLAPSED_KEY: String = "vt_btn_collapsed"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_VT_C2A_KEY: String = "vt_btn"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val PT_WHEN: String = "pt_when"</ID>
-    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$const val TEXT_ONLY: String = "text_only"</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val BASIC_CONTENT_PENDING_INTENT = 1</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val FIVE_ICON_CONTENT_PENDING_INTENT = 13</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val INPUT_BOX_CONTENT_PENDING_INTENT = 31</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val INPUT_BOX_REPLY_PENDING_INTENT = 32</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val MANUAL_CAROUSEL_CONTENT_PENDING_INTENT = 3</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val MANUAL_CAROUSEL_DISMISS_PENDING_INTENT = 6</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT = 5</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT = 4</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PRODUCT_DISPLAY_CONTENT_PENDING_INTENT = 20</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PRODUCT_DISPLAY_DISMISS_PENDING_INTENT = 28</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 21</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 22</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PRODUCT_DISPLAY_DL3_PENDING_INTENT = 23</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val PROGRESS_CONTENT_PENDING_INTENT = 35</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CLICK1_PENDING_INTENT = 8</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CLICK2_PENDING_INTENT = 9</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CLICK3_PENDING_INTENT = 10</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CLICK4_PENDING_INTENT = 11</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CLICK5_PENDING_INTENT = 12</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val RATING_CONTENT_PENDING_INTENT = 7</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val TIMER_CONTENT_PENDING_INTENT = 30</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33</ID>
-    <ID>UndocumentedPublicProperty:PendingIntentFactory.kt$const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 29</ID>
-    <ID>UndocumentedPublicProperty:StringSizeChecker.kt$StringSizeChecker$var entity: String?</ID>
-    <ID>UndocumentedPublicProperty:StringSizeChecker.kt$StringSizeChecker$var errorMsg: String</ID>
-    <ID>UndocumentedPublicProperty:StringSizeChecker.kt$StringSizeChecker$var size: Int</ID>
-    <ID>UndocumentedPublicProperty:Validator.kt$Validator$val keys: Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_ACTIONS = "PT_ACTIONS"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_BIG_IMG = "PT_BIG_IMG"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_MSG = "PT_MSG"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"</ID>
-    <ID>UndocumentedPublicProperty:ValidatorFactory.kt$const val PT_TITLE = "PT_TITLE"</ID>
+    <ID>UndocumentedPublicFunction:TemplateRenderer.kt$TemplateRenderer.LogLevel$public fun intValue(): Int</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle --- public const val PT_PROGRESS: String = "pt_progress"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// GIF key for terminal notification of timer template public const val PT_GIF_ALT: String = "pt_gif_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Image border configuration (applies to the main notification image across templates) public const val PT_IMG_BORDER_CLR: String = "pt_img_border_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Keys for collapsed media in zero bezel public const val PT_GIF_COLLAPSED: String = "pt_gif_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Same key core action buttons use, read by the app's dismiss handler on icon taps public const val PT_AUTO_CANCEL: String = "autoCancel"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template - Button configuration public const val PT_BTN_NAME: String = "pt_btn_name"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template - Collapsed button configuration public const val PT_BTN_CLR_COLLAPSED: String = "pt_btn_clr_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$// Vertical Image Template Keys public const val PT_TEXT1: String = "pt_text1"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$@JvmField public val COLOR_KEYS: Set&lt;String&gt; = java.util.Set.of( PT_TITLE_COLOR, PT_MSG_COLOR, PT_BG, PT_META_CLR, PT_CHRONO_TITLE_COLOUR, PT_CHRONO_BG_CLR, PT_CHRONO_BORDER_CLR, PT_PRODUCT_DISPLAY_ACTION_COLOUR, PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR, PT_CHRONO_GRAD_CLR1, PT_CHRONO_GRAD_CLR2, PT_TEXT1_COLOR, PT_TEXT2_COLOR, PT_BTN_CLR, PT_BTN_BORDER_CLR, PT_BTN_TEXT_CLR, PT_BTN_GRAD_CLR1, PT_BTN_GRAD_CLR2, PT_BTN_CLR_COLLAPSED, PT_BTN_BORDER_CLR_COLLAPSED, PT_BTN_TEXT_CLR_COLLAPSED, PT_BTN_GRAD_CLR1_COLLAPSED, PT_BTN_GRAD_CLR2_COLLAPSED, PT_IMG_BORDER_CLR )</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val ALT_TEXT_SUFFIX: String = "_alt_text"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val DEFAULT_DL: String = "default_dl"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val KEY_CLICKED_STAR: String = "clickedStar"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val KEY_REQUEST_CODES: String = "requestCodes"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val LOG_TAG: String = "PTLog"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val ONE_SECOND: Int = 1000</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val ONE_SECOND_LONG: Long = 1000L</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_5CTA_C2A_KEY: String = "5cta_"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_ACTION_ID: String = "actionId"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BG: String = "pt_bg"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIGTEXT_LIST: String = "pt_big_text_list"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG: String = "pt_big_img"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG_ALT: String = "pt_big_img_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG_ALT_ALT_TEXT: String = "pt_big_img_alt_alt_text"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG_ALT_TEXT: String = "pt_big_img_alt_text"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG_COLLAPSED: String = "pt_big_img_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BIG_IMG_COLLAPSED_ALT_TEXT: String = "pt_big_img_collapsed_alt_text"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_CLR: String = "pt_btn_border_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_CLR_COLLAPSED: String = "pt_btn_border_clr_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_RADIUS: String = "pt_btn_border_radius"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_RADIUS_DEFAULT: Float = 4f</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_WIDTH: String = "pt_btn_border_width"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_BORDER_WIDTH_DEFAULT: Float = 1f</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_CLR: String = "pt_btn_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_DL: String = "pt_btn_dl"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_CLR1: String = "pt_btn_grad_clr1"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_CLR1_COLLAPSED: String = "pt_btn_grad_clr1_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_CLR2: String = "pt_btn_grad_clr2"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_CLR2_COLLAPSED: String = "pt_btn_grad_clr2_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_DIR: String = "pt_btn_grad_dir"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_GRAD_DIR_DEFAULT: Double = 90.0</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_STYLE: String = "pt_btn_style"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_TEXT_CLR: String = "pt_btn_text_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BTN_TEXT_CLR_COLLAPSED: String = "pt_btn_text_clr_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BUY_NOW: String = "buynow"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_BUY_NOW_DL: String = "pt_buy_now_dl"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CANCEL_NOTIF_ID: String = "pt_cancel_notif_id"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHIP_TEXT: String = "pt_chip_text"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHIP_TYPE: String = "pt_chip_type" // text | timer | countdown | none</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_BG_CLR: String = "pt_chrono_bg_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_BORDER_CLR: String = "pt_chrono_border_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_BORDER_RADIUS: String = "pt_chrono_border_radius"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_BORDER_WIDTH: String = "pt_chrono_border_width"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_GRAD_CLR1: String = "pt_chrono_grad_clr1"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_GRAD_CLR2: String = "pt_chrono_grad_clr2"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_GRAD_DIR: String = "pt_chrono_grad_dir"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_STYLE: String = "pt_chrono_style"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CHRONO_TITLE_COLOUR: String = "pt_chrono_title_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_COLLAPSE_KEY: String = "pt_ck"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_COLOUR_GREY: String = "#A6A6A6"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_COUNTDOWN: String = "pt_countdown"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_CURRENT_POSITION: String = "pt_current_position"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DARK_MODE_SUFFIX: String = "_dark"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DEEPLINK_LIST: String = "pt_deeplink_list"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DEFAULT_DL: String = "pt_default_dl"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DIR: String = "pt_dir"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DISMISS: String = "pt_dismiss"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DISMISS_INTENT: String = "pt_dismiss_intent"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_DISMISS_ON_CLICK: String = "pt_dismiss_on_click"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_EVENT_NAME_KEY: String = "pt_event_name"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_EVENT_PROPERTY_KEY: String = "pt_event_property"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_EVENT_PROPERTY_SEPERATOR: String = "pt_event_property_"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_FLIP_INTERVAL: String = "pt_flip_interval"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_FLIP_INTERVAL_TIME: Int = 4 * ONE_SECOND</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_GIF: String = "pt_gif"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_GIF_FRAMES: String = "pt_gif_frames"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_GIF_FRAMES_ALT: String = "pt_gif_frames_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_GIF_FRAMES_COLLAPSED: String = "pt_gif_frames_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_ID: String = "pt_id"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_IMAGE_1: String = "img1"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_IMAGE_LIST: String = "pt_image_list"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_IMG_BORDER_WIDTH: String = "pt_img_border_width"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_IMG_CORNER_RADIUS: String = "pt_img_corner_radius"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_INPUT_AUTO_OPEN: String = "pt_input_auto_open"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_INPUT_FEEDBACK: String = "pt_input_feedback"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_INPUT_KEY: String = "pt_input_reply"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_INPUT_LABEL: String = "pt_input_label"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_INPUT_TIMEOUT: Int = 1300</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_JSON: String = "pt_json"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_LA_EVENT: String = "wzrk_la_event" // update | end (from LA wrapper)</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MANUAL_CAROUSEL_CURRENT: String = "pt_manual_carousel_current"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MANUAL_CAROUSEL_FILMSTRIP: String = "filmstrip"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MANUAL_CAROUSEL_FROM: String = "manual_carousel_from"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MANUAL_CAROUSEL_TYPE: String = "pt_manual_carousel_type"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_META_CLR: String = "pt_meta_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_META_CLR_DEFAULTS: String = PT_COLOUR_GREY</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MSG: String = "pt_msg"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MSG_ALT: String = "pt_msg_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MSG_COLOR: String = "pt_msg_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MSG_SUMMARY: String = "pt_msg_summary"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_MSG_SUMMARY_ALT: String = "pt_msg_summary_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_NOTIF_ICON: String = "pt_ico"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_NOTIF_ID: String = "notificationId"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PRICE_LIST: String = "pt_price_list"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PRODUCT_DISPLAY_ACTION: String = "pt_product_display_action"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PRODUCT_DISPLAY_ACTION_COLOUR: String = "pt_product_display_action_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR: String = "pt_product_display_action_text_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PRODUCT_DISPLAY_LINEAR: String = "pt_product_display_linear"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_END_ICON: String = "pt_progress_end_icon"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_INDETERMINATE: String = "pt_progress_indeterminate"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_MAX: String = "pt_progress_max"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_POINTS: String = "pt_progress_points" // JSON array</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_SEGMENTS: String = "pt_progress_segments" // JSON array</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_START_ICON: String = "pt_progress_start_icon"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROGRESS_TRACKER_ICON: String = "pt_progress_tracker_icon"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_PROMOTE: String = "pt_promote"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_RATING_C2A_KEY: String = "rating_"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_RATING_TOAST: String = "pt_rating_toast"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_RENDER_TERMINAL: String = "pt_render_terminal"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_RIGHT_SWIPE: String = "right_swipe"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SCALE_TYPE: String = "pt_scale_type"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SCALE_TYPE_ALT: String = "pt_scale_type_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SCALE_TYPE_COLLAPSED: String = "pt_scale_type_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SILENT_CHANNEL_DESC: String = "A channel to silently update notifications"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SILENT_CHANNEL_ID: String = "pt_silent_sound_channel"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SMALLTEXT_LIST: String = "pt_small_text_list"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SMALL_ICON_COLOUR: String = "pt_small_icon_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SMALL_VIEW: String = "pt_small_view"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SOUND_FILE_NAME: String = "pt_silent_sound"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_STICKY: String = "pt_sticky"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_STYLED_BY_PROGRESS: String = "pt_styled_by_progress"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_SUBTITLE: String = "pt_subtitle"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TEXT1_COLOR: String = "pt_text1_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TEXT2: String = "pt_text2"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TEXT2_COLOR: String = "pt_text2_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TIMER_END: String = "pt_timer_end"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TIMER_MIN_THRESHOLD: Int = 10</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TIMER_SPLIT: String = "\\\$D_"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TIMER_THRESHOLD: String = "pt_timer_threshold"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TITLE: String = "pt_title"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TITLE_ALT: String = "pt_title_alt"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_TITLE_COLOR: String = "pt_title_clr"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_VT_C2A_COLLAPSED_KEY: String = "vt_btn_collapsed"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_VT_C2A_KEY: String = "vt_btn"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val PT_WHEN: String = "pt_when"</ID>
+    <ID>UndocumentedPublicProperty:PTConstants.kt$PTConstants.Companion$public const val TEXT_ONLY: String = "text_only"</ID>
     <ID>UnnecessaryAbstractClass:IconsContentView.kt$IconsContentView$IconsContentView</ID>
     <ID>UnnecessaryAbstractClass:VerticalImageContentView.kt$VerticalImageContentView$VerticalImageContentView</ID>
     <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
