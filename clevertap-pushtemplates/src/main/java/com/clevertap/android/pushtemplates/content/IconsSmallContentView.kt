@@ -7,10 +7,12 @@ import android.util.TypedValue
 import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
 /**
  * Collapsed view with icons only. Text shows when expanded.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class IconsSmallContentView(
     context: Context,
     renderer: TemplateRenderer,

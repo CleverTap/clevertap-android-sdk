@@ -1,21 +1,23 @@
 package com.clevertap.android.sdk.product_config
 
 import org.junit.*
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ProductConfigUtilTest {
     @Test
     fun isSupportedDataType(){
         val obj = "1212"
-        Assert.assertTrue(ProductConfigUtil.isSupportedDataType(obj))
+        assertTrue(ProductConfigUtil.isSupportedDataType(obj))
 
         val obj1 = 1212
-        Assert.assertTrue(ProductConfigUtil.isSupportedDataType(obj1))
+        assertTrue(ProductConfigUtil.isSupportedDataType(obj1))
 
         val obj2 = false
-        Assert.assertTrue(ProductConfigUtil.isSupportedDataType(obj2))
+        assertTrue(ProductConfigUtil.isSupportedDataType(obj2))
 
         val obj3 = Object()
-        Assert.assertFalse(ProductConfigUtil.isSupportedDataType(obj3))
+        assertFalse(ProductConfigUtil.isSupportedDataType(obj3))
 
     }
 }

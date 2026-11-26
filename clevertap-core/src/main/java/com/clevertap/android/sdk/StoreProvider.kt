@@ -12,17 +12,26 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.store.preference.CTPreference
+import androidx.annotation.RestrictTo
 
-const val STORE_TYPE_INAPP = 1
-const val STORE_TYPE_IMPRESSION = 2
-const val STORE_TYPE_LEGACY_INAPP = 3
-const val STORE_TYPE_INAPP_ASSETS = 4
-const val STORE_TYPE_FILES = 5
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_INAPP = 1
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_IMPRESSION = 2
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_LEGACY_INAPP = 3
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_INAPP_ASSETS = 4
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_FILES = 5
 
 // Native Display (ND) frequency caps (SDK-6055)
-const val STORE_TYPE_ND = 6
-const val STORE_TYPE_ND_IMPRESSION = 7
-const val STORE_TYPE_ND_COUNTS = 8
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_ND = 6
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_ND_IMPRESSION = 7
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val STORE_TYPE_ND_COUNTS = 8
 
 /**
  * The `StoreProvider` class is responsible for providing different types of stores
@@ -37,6 +46,7 @@ const val STORE_TYPE_ND_COUNTS = 8
  *
  * @property INSTANCE The singleton instance of the [StoreProvider].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class StoreProvider {
 
     companion object {

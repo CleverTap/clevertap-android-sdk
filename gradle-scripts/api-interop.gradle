@@ -1,0 +1,178 @@
+// Java / Flutter / React Native interop guard for the SDK's public API (SDK-6379).
+//
+// binary-compatibility-validator (`apiCheck`) guarantees the public ABI doesn't change by accident.
+// This check guards the *shape* of what is public: Kotlin-only constructs that compile fine but are
+// awkward or unusable for Java callers and the Java/Kotlin bridge code of hybrid wrappers.
+//
+//   ./gradlew apiInteropCheck      fails on findings that are not in config/api-interop/baseline.txt
+//   ./gradlew apiInteropBaseline   rewrites the baseline (only after reviewing the new findings!)
+//
+// Inputs: <module>/api/<module>.api (run `apiDump` first when the API changed) and src/main Kotlin.
+//
+// Finding kinds:
+//   DEFAULT_ARGS        public function with default arguments: Java sees only the full-arity method
+//                       (add @JvmOverloads or explicit overloads)
+//   COMPANION_NO_STATIC public companion function without a static bridge: Java must call
+//                       X.Companion.f() (add @JvmStatic)
+//   KOTLIN_TYPE         Kotlin-only type (Pair, Triple, Result, Unit, function types, Duration,
+//                       unsigned...) in a public signature
+//   OBJECT_INSTANCE     public `object` member without a static bridge: Java must call X.INSTANCE.f()
+//   MANGLED_NAME        name mangled by the Kotlin compiler (inline/value class parameter) - not
+//                       callable from Java
+//   INTERNAL_NO_RESTRICT  Kotlin `internal` top-level class/object/interface/function/property without
+//                       @RestrictTo (functions: @RestrictTo, const val: @RestrictTo, val/var: @get:/@set:): `internal` is
+//                       JVM-public, so Java clients can compile against it unless lint's RestrictedApi
+//                       flags it via @RestrictTo
+
+def sdkModules = ["clevertap-core", "clevertap-geofence", "clevertap-hms", "clevertap-pushtemplates"]
+def baselineFile = file("${rootDir}/config/api-interop/baseline.txt")
+// Kotlin types allowed in public signatures: additive or compiler-internal markers.
+def allowedKotlinTypes = ["kotlin/enums/EnumEntries", "kotlin/jvm/internal/DefaultConstructorMarker"]
+
+def collectFindings = {
+    def findings = []   // GStrings; converted to a sorted Set<String> below
+    sdkModules.each { module ->
+        def apiFile = file("${rootDir}/${module}/api/${module}.api")
+        if (!apiFile.exists()) {
+            throw new GradleException("Missing ${apiFile} - run ./gradlew apiDump first")
+        }
+        // ---- parse the dump: class -> [header, members...]
+        def classes = new LinkedHashMap<String, List<String>>()
+        String current = null
+        apiFile.eachLine { line ->
+            def header = (line =~ /^public .*?(?:class|interface) (com\/\S+)/)
+            if (header.find()) {
+                current = header.group(1)
+                classes[current] = [line]
+            } else if (line.startsWith("}")) {
+                current = null
+            } else if (current != null && line.trim()) {
+                classes[current] << line.trim()
+            }
+        }
+        classes.each { cls, lines ->
+            def shortName = cls.substring(cls.lastIndexOf('/') + 1)
+            def members = lines.drop(1)
+            def visible = members.findAll { !it.contains(" synthetic ") }
+            members.each { m ->
+                // single-quoted: a slashy string would interpolate `$default`
+                def d = (m =~ 'synthetic fun (\\S+)\\$default \\(')
+                if (d.find()) {
+                    // @JvmOverloads keeps the synthetic $default bridge but adds Java-visible
+                    // overloads; only flag when Java sees a single arity.
+                    def fn = d.group(1)
+                    def javaOverloads = visible.count { it =~ "fun ${java.util.regex.Pattern.quote(fn)} \\(" }
+                    if (javaOverloads <= 1) {
+                        findings << "DEFAULT_ARGS ${module} ${shortName}.${fn}"
+                    }
+                }
+            }
+            visible.each { m ->
+                def name = (m =~ /(?:fun|field) (\S+) /)
+                def memberName = name.find() ? name.group(1) : m
+                (m =~ /L(kotlin\/[A-Za-z\/$]+);/).each { match ->
+                    def t = match[1]
+                    if (!allowedKotlinTypes.any { t.startsWith(it) }) {
+                        findings << "KOTLIN_TYPE ${module} ${shortName}.${memberName} ${t}"
+                    }
+                }
+                if (memberName.contains("-")) {
+                    findings << "MANGLED_NAME ${module} ${shortName}.${memberName}"
+                }
+            }
+            if (cls.endsWith('$Companion')) {
+                def outer = classes[cls.substring(0, cls.length() - '$Companion'.length())] ?: []
+                def outerStatic = outer.findAll { it.contains(" static ") && it.contains(" fun ") }
+                        .collect { (it =~ /fun (\S+) /).with { it.find() ? it.group(1) : "" } } as Set
+                visible.each { m ->
+                    def f = (m =~ /public (?:final |abstract |open )*fun (\S+) \(/)
+                    if (f.find() && f.group(1) != "<init>" && !outerStatic.contains(f.group(1))) {
+                        findings << "COMPANION_NO_STATIC ${module} ${shortName}.${f.group(1)}"
+                    }
+                }
+            }
+            if (members.any { it.contains("static final field INSTANCE") }) {
+                visible.findAll { it.contains(" fun ") && !it.contains(" static ") && !it.contains("<init>") }.each { m ->
+                    def f = (m =~ /fun (\S+) \(/)
+                    if (f.find() && !(f.group(1) in ["equals", "hashCode", "toString"])) {
+                        findings << "OBJECT_INSTANCE ${module} ${shortName}.${f.group(1)}"
+                    }
+                }
+            }
+        }
+        // ---- Kotlin `internal` top-level declarations must carry @RestrictTo
+        def srcRoot = file("${rootDir}/${module}/src/main/java")
+        if (srcRoot.exists()) {
+            srcRoot.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+                if (!f.name.endsWith(".kt")) return
+                def lines = f.readLines("UTF-8")
+                lines.eachWithIndex { line, i ->
+                    def decl = (line =~ /^internal\s+(?:(?:abstract|open|sealed|data|enum|annotation|value|fun|inline)\s+)*(?:class|object|interface)\s+(\w+)/)
+                    // top-level internal functions/properties compile to public static members of the
+                    // file facade (FooKt) - Java can call them too. Key = declaration up to its params/type.
+                    def member = (line =~ /^internal\s+(?:(?:inline|suspend|operator|infix|tailrec|const|lateinit)\s+)*(?:fun|val|var)\b([^(:=]*)/)
+                    def memberMatched = !decl.find() && member.find()
+                    decl.reset()
+                    if (decl.find() || memberMatched) {
+                        def what = memberMatched ? member.group(1).trim().replaceAll(/\s+/, " ") : decl.group(1)
+                        // look back over the annotation/KDoc block directly above the declaration
+                        int j = i - 1
+                        boolean restricted = false
+                        while (j >= 0 && (lines[j].trim().startsWith("@") || lines[j].trim().startsWith("*") ||
+                                lines[j].trim().startsWith("/**") || lines[j].trim().startsWith("*/") ||
+                                lines[j].trim().startsWith("//") || lines[j].trim().endsWith(")"))) {
+                            if (lines[j] =~ /@(?:get:|set:|field:)?RestrictTo\(/) restricted = true
+                            j--
+                        }
+                        if (!restricted) {
+                            def rel = rootDir.toPath().relativize(f.toPath()).toString()
+                            findings << "INTERNAL_NO_RESTRICT ${module} ${rel}:${what}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return new TreeSet<String>(findings.collect { it.toString() })
+}
+
+tasks.register("apiInteropCheck") {
+    group = "verification"
+    description = "Fails on new Java/hybrid-wrapper interop hazards in the public API (see gradle-scripts/api-interop.gradle)."
+    inputs.files(sdkModules.collect { file("${rootDir}/${it}/api/${it}.api") })
+    inputs.file(baselineFile)
+    inputs.files(sdkModules.collect { fileTree("${rootDir}/${it}/src/main/java") { include "**/*.kt" } })
+    doLast {
+        def findings = collectFindings()
+        def baseline = baselineFile.exists() ?
+                baselineFile.readLines("UTF-8").findAll { it.trim() && !it.startsWith("#") } as Set : [] as Set
+        def added = findings.findAll { !baseline.contains(it) }
+        def fixed = baseline.findAll { !findings.contains(it) }
+        if (!fixed.isEmpty()) {
+            logger.lifecycle("apiInteropCheck: ${fixed.size()} baselined finding(s) no longer occur - " +
+                    "run ./gradlew apiInteropBaseline to shrink the baseline.")
+        }
+        if (!added.isEmpty()) {
+            throw new GradleException("apiInteropCheck: ${added.size()} new Java/hybrid interop finding(s):\n  " +
+                    added.join("\n  ") +
+                    "\nFix them (see the finding kinds in gradle-scripts/api-interop.gradle) or, if intended, " +
+                    "run ./gradlew apiInteropBaseline and justify it in review.")
+        }
+        logger.lifecycle("apiInteropCheck: OK (${findings.size()} baselined finding(s), none new)")
+    }
+}
+
+tasks.register("apiInteropBaseline") {
+    group = "verification"
+    description = "Rewrites config/api-interop/baseline.txt with the current interop findings."
+    doLast {
+        def findings = collectFindings()
+        baselineFile.parentFile.mkdirs()
+        baselineFile.withWriter("UTF-8") { w ->
+            w << "# Java/hybrid interop findings accepted at the time of writing (SDK-6379).\n"
+            w << "# Generated by ./gradlew apiInteropBaseline - see gradle-scripts/api-interop.gradle.\n"
+            findings.each { w << it << "\n" }
+        }
+        logger.lifecycle("apiInteropBaseline: wrote ${findings.size()} finding(s) to ${baselineFile}")
+    }
+}

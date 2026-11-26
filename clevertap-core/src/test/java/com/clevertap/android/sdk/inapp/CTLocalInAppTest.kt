@@ -5,8 +5,7 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.junit.Assert.assertEquals
-
+import kotlin.test.assertEquals
 class CTLocalInAppTest : BaseTestCase() {
 
     @Test

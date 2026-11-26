@@ -4,7 +4,9 @@ import android.content.Context
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.google.android.play.core.review.ReviewManagerFactory
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PlayStoreReviewHandler {
 
     private val reviewManagerFactoryClass: Class<*>? by lazy {

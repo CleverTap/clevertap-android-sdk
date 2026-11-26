@@ -9,11 +9,14 @@ import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import com.clevertap.android.sdk.network.NetworkMonitor
+import androidx.annotation.RestrictTo
 
-interface FileFetchApiContract {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface FileFetchApiContract {
     fun makeApiCallForFile(urlMeta: Pair<String,CtCacheType>): DownloadedBitmap
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileFetchApi(
     private val networkMonitor: NetworkMonitor? = null
 ) : FileFetchApiContract {

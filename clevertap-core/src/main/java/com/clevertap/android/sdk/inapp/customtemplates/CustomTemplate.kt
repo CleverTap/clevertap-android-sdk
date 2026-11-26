@@ -7,28 +7,29 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.BOOL
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.NUMBER
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.STRING
+import androidx.annotation.RestrictTo
 
 /**
  * A definition of a custom template. Can be a function or a code template.
  * Instances are uniquely identified by their name.
  */
-class CustomTemplate private constructor(
+public class CustomTemplate private constructor(
     /**
      * The name of the template. Must be unique and non-blank.
      */
-    val name: String,
+    public val name: String,
 
     /**
      * The presenter associated with this template.
      */
-    val presenter: CustomTemplatePresenter<*>,
+    public val presenter: CustomTemplatePresenter<*>,
 
     /**
      * Whether the template has UI or not. If set to `true` the template is registered as part of the in-apps queue
      * and must be explicitly dismissed before other in-apps can be shown. If set to `false` the template is executed
      * directly and does not require dismissal nor it impedes other in-apps.
      */
-    val isVisual: Boolean,
+    public val isVisual: Boolean,
 
     internal val args: List<TemplateArgument>,
     internal val type: CustomTemplateType,
@@ -61,7 +62,7 @@ class CustomTemplate private constructor(
      * @param isVisual Whether the function will present UI. See [CustomTemplate.isVisual]
      *
      */
-    class FunctionBuilder(isVisual: Boolean) : Builder<FunctionPresenter, FunctionBuilder>(FUNCTION, isVisual) {
+    public class FunctionBuilder(isVisual: Boolean) : Builder<FunctionPresenter, FunctionBuilder>(FUNCTION, isVisual) {
 
         override val thisRef: FunctionBuilder = this
     }
@@ -69,7 +70,7 @@ class CustomTemplate private constructor(
     /**
      * Builder for [CustomTemplate] code templates. See [Builder].
      */
-    class TemplateBuilder : Builder<TemplatePresenter, TemplateBuilder>(TEMPLATE, isVisual = true) {
+    public class TemplateBuilder : Builder<TemplatePresenter, TemplateBuilder>(TEMPLATE, isVisual = true) {
 
         override val thisRef: TemplateBuilder = this
 
@@ -83,7 +84,7 @@ class CustomTemplate private constructor(
          * @see [CustomTemplateContext.TemplateContext]
          * @see [FunctionBuilder]
          */
-        fun actionArgument(name: String): TemplateBuilder {
+        public fun actionArgument(name: String): TemplateBuilder {
             addArgument(name, ACTION, null)
             return this
         }
@@ -120,7 +121,7 @@ class CustomTemplate private constructor(
      * @see [CustomTemplateException]
      * @see [CustomTemplatePresenter]
      */
-    sealed class Builder<P : CustomTemplatePresenter<*>, T : Builder<P, T>>(
+    public sealed class Builder<P : CustomTemplatePresenter<*>, T : Builder<P, T>>(
         private val type: CustomTemplateType,
         private val isVisual: Boolean
     ) {
@@ -141,7 +142,7 @@ class CustomTemplate private constructor(
          *
          * @throws [CustomTemplateException] if the name is already set or the provided name is blank
          */
-        fun name(name: String): T {
+        public fun name(name: String): T {
             if (templateName != null) {
                 throw CustomTemplateException("CustomTemplate name is already set as \"$templateName\"")
             }
@@ -154,47 +155,47 @@ class CustomTemplate private constructor(
             return thisRef
         }
 
-        fun stringArgument(name: String, defaultValue: String): T {
+        public fun stringArgument(name: String, defaultValue: String): T {
             addArgument(name, STRING, defaultValue)
             return thisRef
         }
 
-        fun booleanArgument(name: String, defaultValue: Boolean): T {
+        public fun booleanArgument(name: String, defaultValue: Boolean): T {
             addArgument(name, BOOLEAN, defaultValue)
             return thisRef
         }
 
-        fun byteArgument(name: String, defaultValue: Byte): T {
+        public fun byteArgument(name: String, defaultValue: Byte): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun shortArgument(name: String, defaultValue: Short): T {
+        public fun shortArgument(name: String, defaultValue: Short): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun intArgument(name: String, defaultValue: Int): T {
+        public fun intArgument(name: String, defaultValue: Int): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun longArgument(name: String, defaultValue: Long): T {
+        public fun longArgument(name: String, defaultValue: Long): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun floatArgument(name: String, defaultValue: Float): T {
+        public fun floatArgument(name: String, defaultValue: Float): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun doubleArgument(name: String, defaultValue: Double): T {
+        public fun doubleArgument(name: String, defaultValue: Double): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
-        fun fileArgument(name: String): T {
+        public fun fileArgument(name: String): T {
             addArgument(name, FILE, null)
             return thisRef
         }
@@ -206,7 +207,7 @@ class CustomTemplate private constructor(
          * @param value The map must be non-empty. Values can be of type [Byte], [Short], [Int], [Long], [Float],
          * [Double], [Boolean], [String] or another [Map]<String, Any> which values can also be of the same types.
          */
-        fun mapArgument(name: String, value: Map<String, Any>): T {
+        public fun mapArgument(name: String, value: Map<String, Any>): T {
             if (value.isEmpty()) {
                 throw CustomTemplateException("Map argument must not be empty")
             }
@@ -236,7 +237,7 @@ class CustomTemplate private constructor(
          *
          * @see [CustomTemplatePresenter]
          */
-        fun presenter(presenter: P): T {
+        public fun presenter(presenter: P): T {
             this.presenter = presenter
             return thisRef
         }
@@ -247,7 +248,7 @@ class CustomTemplate private constructor(
          *
          * @throws CustomTemplateException if name or presenter were not set
          */
-        fun build(): CustomTemplate {
+        public fun build(): CustomTemplate {
             val presenter = this.presenter ?: throw CustomTemplateException("CustomTemplate must have a presenter")
             val name = templateName ?: throw CustomTemplateException("CustomTemplate must have a name")
 
@@ -313,6 +314,7 @@ class CustomTemplate private constructor(
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class CustomTemplateType(private val stringName: String) {
     TEMPLATE("template"),
     FUNCTION("function");

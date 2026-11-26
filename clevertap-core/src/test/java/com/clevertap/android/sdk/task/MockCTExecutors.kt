@@ -40,7 +40,7 @@ class MockCTExecutors @JvmOverloads constructor(config: CleverTapInstanceConfig?
         return Task(config, executor, executor, "postAsyncSafelyTask")
     }
 
-    override fun <TResult : Any?> postAsyncSafelyTask(featureTask: String): Task<TResult> {
+    override fun <TResult : Any?> postAsyncSafelyTask(featureTask: String?): Task<TResult> {
         val executor = MockExecutorService()
         return Task(config, executor, executor, "postAsyncSafelyTask")
     }

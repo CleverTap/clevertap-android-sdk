@@ -1,6 +1,7 @@
 package com.clevertap.android.geofence
 
 import android.Manifest
+import io.mockk.mockkObject
 import android.location.Location
 import android.os.Build
 import com.clevertap.android.geofence.fakes.CTGeofenceSettingsFake.getSettings
@@ -14,23 +15,27 @@ import com.clevertap.android.geofence.fakes.GeofenceJSON.geofenceArray
 import com.clevertap.android.geofence.fakes.GeofenceJSON.lastFromGeofenceArray
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
 import com.clevertap.android.sdk.CleverTapAPI
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs
 import org.junit.After
-import org.junit.Assert
 import org.junit.Test
-import org.junit.function.ThrowingRunnable
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.util.ReflectionHelpers
 import org.skyscreamer.jsonassert.JSONAssert
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class UtilsTest : BaseTestCase() {
     private lateinit var cleverTapAPI: CleverTapAPI
@@ -47,7 +52,7 @@ class UtilsTest : BaseTestCase() {
 
         shadowApplication = Shadows.shadowOf(application)
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
 
         every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
         every { CTGeofenceAPI.getLogger() } returns logger
@@ -56,18 +61,18 @@ class UtilsTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
     }
 
     @Test
     fun testEmptyIfNull() {
         //when string is null
         val actualWhenStringIsNull = Utils.emptyIfNull(null)
-        Assert.assertEquals("", actualWhenStringIsNull)
+        assertEquals("", actualWhenStringIsNull)
 
         //when string is non null
         val actualWhenStringIsNonNull = Utils.emptyIfNull("1")
-        Assert.assertEquals("1", actualWhenStringIsNonNull)
+        assertEquals("1", actualWhenStringIsNonNull)
     }
 
     @Test
@@ -81,10 +86,7 @@ class UtilsTest : BaseTestCase() {
 
         // when SDK Level is less than Q
         val actualWhenSdkIsP = Utils.hasBackgroundLocationPermission(application)
-        Assert.assertTrue(
-            "hasBackgroundLocationPermission must return true when sdk int is less than Q",
-            actualWhenSdkIsP
-        )
+        assertTrue(actualWhenSdkIsP, "hasBackgroundLocationPermission must return true when sdk int is less than Q")
 
         // when SDK Level is greater than P and permission denied
         ReflectionHelpers.setStaticField(
@@ -95,10 +97,8 @@ class UtilsTest : BaseTestCase() {
 
         shadowApplication.denyPermissions(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         val actualWhenPermissionDenied = Utils.hasBackgroundLocationPermission(application)
-        Assert.assertFalse(
-            "hasBackgroundLocationPermission must return false when permission " +
-                    "is denied and sdk int is greater than P", actualWhenPermissionDenied
-        )
+        assertFalse(actualWhenPermissionDenied, "hasBackgroundLocationPermission must return false when permission " +
+                    "is denied and sdk int is greater than P")
 
         ReflectionHelpers.setStaticField(
             Build.VERSION::class.java,
@@ -111,25 +111,19 @@ class UtilsTest : BaseTestCase() {
     fun testHasPermission() {
         // when permission is null
         val actual = Utils.hasPermission(application, null)
-        Assert.assertFalse("hasPermission must return false when permission is null", actual)
+        assertFalse(actual, "hasPermission must return false when permission is null")
 
         // when permission not null and checkSelfPermission returns permission granted
         shadowApplication.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         val actualWhenPermissionGranted = Utils
             .hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
-        Assert.assertTrue(
-            "hasPermission must return true when permission is granted",
-            actualWhenPermissionGranted
-        )
+        assertTrue(actualWhenPermissionGranted, "hasPermission must return true when permission is granted")
 
         // when permission not null and checkSelfPermission returns permission denied
         shadowApplication.denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         val actualWhenPermissionDenied = Utils
             .hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
-        Assert.assertFalse(
-            "hasPermission must return false when permission is denied",
-            actualWhenPermissionDenied
-        )
+        assertFalse(actualWhenPermissionDenied, "hasPermission must return false when permission is denied")
     }
 
     @Test
@@ -142,37 +136,25 @@ class UtilsTest : BaseTestCase() {
             every { ctGeofenceAPI.cleverTapApi } returns null
 
             val actualWhenSettingsAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application)
-            Assert.assertFalse(
-                "Must be false when cleverTapApi and settings is null",
-                actualWhenSettingsAndCTApiIsNull
-            )
+            assertFalse(actualWhenSettingsAndCTApiIsNull, "Must be false when cleverTapApi and settings is null")
 
             // when cleverTapApi is null and settings is not null
             every { FileUtils.readFromFile(any(), any()) } returns settingsJsonString
 
             val actualWhenSettingsNonNullAndCTApiIsNull =
                 Utils.initCTGeofenceApiIfRequired(application)
-            Assert.assertFalse(
-                "Must be false when cleverTapApi is null and settings is not null",
-                actualWhenSettingsNonNullAndCTApiIsNull
-            )
+            assertFalse(actualWhenSettingsNonNullAndCTApiIsNull, "Must be false when cleverTapApi is null and settings is not null")
 
-            mockkStatic(CleverTapAPI::class) {
+            mockkObject(CleverTapAPI.Companion) {
                 every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
 
                 val actualWhenSettingsNonNullAndCTApiNonNull =
                     Utils.initCTGeofenceApiIfRequired(application)
-                Assert.assertTrue(
-                    "Must be true when cleverTapApi is not null and settings is not null",
-                    actualWhenSettingsNonNullAndCTApiNonNull
-                )
+                assertTrue(actualWhenSettingsNonNullAndCTApiNonNull, "Must be true when cleverTapApi is not null and settings is not null")
 
                 // when cleverTapApi is not null
                 val actualWhenCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application)
-                Assert.assertTrue(
-                    "Must be true when cleverTapApi is not null",
-                    actualWhenCTApiNonNull
-                )
+                assertTrue(actualWhenCTApiNonNull, "Must be true when cleverTapApi is not null")
             }
         }
     }
@@ -182,26 +164,17 @@ class UtilsTest : BaseTestCase() {
         val actualList = Utils.jsonToGeoFenceList(geofence)
         val expectedList = mutableListOf<String?>("310001", "310002")
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
-            actualList,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedList)
-        )
+        assertEquals<List<String?>?>(expectedList, actualList)
 
         val actualListWhenJsonArrayIsEmpty = Utils.jsonToGeoFenceList(emptyGeofence)
         val expectedListWhenJsonArrayIsEmpty: MutableList<String?> = ArrayList<String?>()
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
-            actualListWhenJsonArrayIsEmpty,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedListWhenJsonArrayIsEmpty)
-        )
+        assertEquals<List<String?>?>(expectedListWhenJsonArrayIsEmpty, actualListWhenJsonArrayIsEmpty)
 
         val actualListWhenJsonIsEmpty = Utils.jsonToGeoFenceList(emptyJson)
         val expectedListWhenJsonIsEmpty: MutableList<String?> = ArrayList<String?>()
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
-            actualListWhenJsonIsEmpty,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedListWhenJsonIsEmpty)
-        )
+        assertEquals<List<String?>?>(expectedListWhenJsonIsEmpty, actualListWhenJsonIsEmpty)
     }
 
     @Test
@@ -243,7 +216,7 @@ class UtilsTest : BaseTestCase() {
             every { FileUtils.readFromFile(any(), any()) } returns ""
 
             val settingsActualWhenEmpty = Utils.readSettingsFromFile(application)
-            Assert.assertNull(settingsActualWhenEmpty)
+            assertNull(settingsActualWhenEmpty)
         }
     }
 
@@ -264,16 +237,15 @@ class UtilsTest : BaseTestCase() {
 
         JSONAssert.assertEquals(expectedSubArrayLast, actualSubArrayLast, true)
 
-        Assert.assertThrows<IllegalArgumentException?>(
-            "IllegalArgumentException must be thrown when fromIndex is greater than lastIndex",
-            IllegalArgumentException::class.java,
-            ThrowingRunnable {
-                Utils.subArray(
-                    geofenceArray,
-                    geofenceArray.length(),
-                    0
-                )
-            })
+        assertFailsWith<IllegalArgumentException>(
+            "IllegalArgumentException must be thrown when fromIndex is greater than lastIndex"
+        ) {
+            Utils.subArray(
+                geofenceArray,
+                geofenceArray.length(),
+                0
+            )
+        }
     }
 
     @Test

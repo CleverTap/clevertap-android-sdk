@@ -16,7 +16,9 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import com.clevertap.android.sdk.inapp.PartialHtmlInAppGestureListener
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragment(),
     OnTouchListener,
     OnLongClickListener {
@@ -76,7 +78,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
             webView?.cleanup(inAppNotification.isJsEnabled)
             webView = null
         } catch (e: Exception) {
-            config.getLogger().verbose("cleanupWebView -> there was a crash in cleanup", e)
+            config.logger.verbose("cleanupWebView -> there was a crash in cleanup", e)
             //no-op; we are anyway destroying everything. This is just for safety.
         }
     }
@@ -116,7 +118,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
             layout?.addView(webView)
             return inAppView
         } catch (t: Throwable) {
-            config.getLogger().verbose(config.accountId, "Fragment view not created", t)
+            config.logger.verbose(config.accountId, "Fragment view not created", t)
             return null
         }
     }

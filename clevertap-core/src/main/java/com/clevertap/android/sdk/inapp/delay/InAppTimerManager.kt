@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import androidx.annotation.RestrictTo
 
 /**
  * Core timer manager that handles scheduling, lifecycle, and callback management
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 // repeatOnLifecycle below uses the process lifecycle, not a Fragment, so lint's warning does not apply
 @SuppressLint("RepeatOnLifecycleWrongUsage")
 @OptIn(ExperimentalCoroutinesApi::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppTimerManager(
     private val accountId: String,
     private val logger: ILogger,

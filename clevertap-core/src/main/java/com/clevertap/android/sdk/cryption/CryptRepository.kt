@@ -1,7 +1,8 @@
 package com.clevertap.android.sdk.cryption
 
+import androidx.annotation.RestrictTo
 import android.content.Context
-import com.clevertap.android.sdk.CleverTapInstanceConfig.KEY_ENCRYPTION_LEVEL
+import com.clevertap.android.sdk.CleverTapInstanceConfig.Companion.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FAILURE_COUNT_KEY
@@ -9,9 +10,11 @@ import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FIRS
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.SS_IN_APP_MIGRATED
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.UNKNOWN_LEVEL
 
-const val ENCRYPTION_KEY = "EncryptionKey"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val ENCRYPTION_KEY = "EncryptionKey"
 
-interface ICryptRepository {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface ICryptRepository {
     fun storedEncryptionLevel(): Int
     fun isSSInAppDataMigrated(): Boolean
     fun updateIsSSInAppDataMigrated(migrated: Boolean)
@@ -20,7 +23,8 @@ interface ICryptRepository {
     fun updateMigrationFailureCount(migrationSuccessful: Boolean)
 }
 
-class CryptRepository(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CryptRepository(
     val context: Context,
     val accountId: String
 ) : ICryptRepository {

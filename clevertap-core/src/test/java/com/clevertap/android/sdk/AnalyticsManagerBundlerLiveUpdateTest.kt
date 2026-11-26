@@ -1,10 +1,10 @@
 package com.clevertap.android.sdk
 
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
 
 /** Covers the Live Activity lifecycle-event JSON shape (evtName + state inside evtData). */
 @RunWith(RobolectricTestRunner::class)

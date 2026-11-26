@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.percentOf
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import java.util.concurrent.ExecutorService
+import androidx.annotation.RestrictTo
 
 /**
  * Full-screen transparent overlay added to [android.R.id.content].
@@ -34,6 +35,7 @@ import java.util.concurrent.ExecutorService
  * returns false and this ViewGroup's [onTouchEvent] is not overridden (default returns
  * false for ACTION_DOWN when no child consumed it, letting siblings receive the event).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
     /** Called by internal close/dismiss actions — wired to PIPManager.dismissInternal. */

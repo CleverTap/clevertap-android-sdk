@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.Logger
 import java.security.KeyStore
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
 
     /**

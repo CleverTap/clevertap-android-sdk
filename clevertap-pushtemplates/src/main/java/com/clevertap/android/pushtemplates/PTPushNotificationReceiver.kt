@@ -1,0 +1,51 @@
+package com.clevertap.android.pushtemplates
+
+import android.content.Context
+import android.content.Intent
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class PTPushNotificationReceiver : CTPushNotificationReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        //Removes the deeplink key from bundle if deepLink is not present and launch activity.
+        if (intent.getStringExtra(Constants.DEEP_LINK_KEY) == null) {
+            intent.removeExtra(Constants.DEEP_LINK_KEY)
+        }
+
+        super.onReceive(context, intent)
+
+        val extras = intent.extras ?: return
+        val cleverTapAPI = CleverTapAPI.getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY))
+        if (cleverTapAPI == null) {
+            PTLog.verbose("clevertap instance is null, not running PTPushNotificationReceiver#cleanUpFiles")
+            return
+        }
+
+        try {
+            val config = cleverTapAPI.getInstanceConfig()
+            val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
+            task.execute("PTPushNotificationReceiver#cleanUpFiles") {
+                try {
+                    Utils.deleteImageFromStorage(context, intent)
+                    Utils.deleteSilentNotificationChannel(context)
+                } catch (t: Throwable) {
+                    PTLog.verbose("$CLEAN_UP_FAILED${t.localizedMessage}")
+                }
+                null
+            }
+        } catch (e: Exception) {
+            PTLog.verbose("$CLEAN_UP_FAILED${e.localizedMessage}")
+        }
+    }
+
+    private companion object {
+
+        private const val CLEAN_UP_FAILED =
+            "Couldn't clean up images and/or couldn't delete silent notification channel: "
+    }
+}

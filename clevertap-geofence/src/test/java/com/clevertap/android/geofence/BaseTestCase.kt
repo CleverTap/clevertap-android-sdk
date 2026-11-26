@@ -5,10 +5,10 @@ import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.clearAllMocks
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import kotlin.test.fail
 
 @Config(sdk = [28], application = TestApplication::class)
 @RunWith(AndroidJUnit4::class)
@@ -74,7 +74,7 @@ abstract class BaseTestCase {
 
         fun assertBundlesEquals(message: String?, expected: Bundle, actual: Bundle) {
             if (!areEqual(expected, actual)) {
-                Assert.fail("$message <$expected> is not equal to <$actual>")
+                fail("$message <$expected> is not equal to <$actual>")
             }
         }
 

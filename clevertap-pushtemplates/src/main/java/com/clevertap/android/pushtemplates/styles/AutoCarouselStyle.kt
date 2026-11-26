@@ -11,7 +11,9 @@ import com.clevertap.android.pushtemplates.content.AUTO_CAROUSEL_CONTENT_PENDING
 import com.clevertap.android.pushtemplates.content.AutoCarouselContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutoCarouselStyle(private val data: AutoCarouselTemplateData, renderer: TemplateRenderer) : Style(data.carouselData.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)

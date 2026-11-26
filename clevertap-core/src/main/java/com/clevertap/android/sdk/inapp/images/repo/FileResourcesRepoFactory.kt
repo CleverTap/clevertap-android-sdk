@@ -10,12 +10,14 @@ import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderCoroutine
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import androidx.annotation.RestrictTo
 /**
  * A factory class for creating [FileResourcesRepoImpl] instances.
  *
  * This factory provides a way to create [FileResourcesRepoImpl] objects with different strategies for file cleanup and preloading,
  * based on the `USE_COROUTINES` flag.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileResourcesRepoFactory {
     companion object {
         /**

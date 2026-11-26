@@ -5,7 +5,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppHtmlHeaderFragment : CTInAppBasePartialHtmlFragment() {
 
     override fun getLayout(view: View?): ViewGroup? {

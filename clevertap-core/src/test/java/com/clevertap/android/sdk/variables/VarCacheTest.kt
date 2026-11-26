@@ -65,8 +65,8 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", 1, ctVariables)
-        val var2 = Var.define("group.var2", 2, ctVariables)
+        val var1 = Var.define("var1", 1, ctVariables)!!
+        val var2 = Var.define("group.var2", 2, ctVariables)!!
 
 
         val diffs = mapOf<String, Any>(
@@ -79,7 +79,7 @@ class VarCacheTest : BaseTestCase() {
         assertEquals(20, var2.value())
         assertEquals(30, varCache.getMergedValue("group.var3"))
         verifyOrder {
-            variablesRepo.storeDataInCache(JsonUtil.toJson(diffs))
+            variablesRepo.storeDataInCache(JsonUtil.toJson(diffs)!!)
             variablesRepo.storeVariantsInCache(any())
         }
     }
@@ -133,7 +133,7 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", null, "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)!!
         every { fileResourceProvider.isFileCached(any()) } returns false
 
         // Call the method under test
@@ -153,8 +153,8 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", null, "file", ctVariables)
-        val var2 = Var.define("var2", null, "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)!!
+        val var2 = Var.define("var2", null, "file", ctVariables)!!
         every { fileResourceProvider.isFileCached(any()) } returns true
 
         // Call the method under test
@@ -177,8 +177,8 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", null, "file", ctVariables)
-        val var2 = Var.define("var2", null, "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)!!
+        val var2 = Var.define("var2", null, "file", ctVariables)!!
         every { fileResourceProvider.isFileCached("http://example.com/file2") } returns true
         every { fileResourceProvider.isFileCached("http://dummy.com/file2") } returns false
 
@@ -229,7 +229,7 @@ class VarCacheTest : BaseTestCase() {
     fun `testRegisterVariable with Factory Method and null default value`() {
         ctVariables.init()
 
-        Var.define<String>("var_string", null, ctVariables)
+        Var.define<String?>("var_string", null, ctVariables)
 
         assertNull(varCache.getVariable<Int>("var_string"))
     }
@@ -242,8 +242,8 @@ class VarCacheTest : BaseTestCase() {
         Var.define("var2", 2, ctVariables)
 
         assertEquals(2, varCache.variablesCount)
-        assertEquals(1, varCache.getVariable<Int>("var1").value())
-        assertEquals(2, varCache.getVariable<Int>("var2").value())
+        assertEquals(1, varCache.getVariable<Int>("var1")!!.value())
+        assertEquals(2, varCache.getVariable<Int>("var2")!!.value())
     }
 
     @Test
@@ -255,9 +255,9 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group", mutableMapOf("var3" to 3), ctVariables)
 
         assertEquals(3, varCache.variablesCount)
-        assertEquals(1, varCache.getVariable<Int>("group.var1").value())
-        assertEquals(2, varCache.getVariable<Int>("group.var2").value())
-        assertEquals(mapOf("var1" to 1, "var2" to 2, "var3" to 3), varCache.getVariable<Map<*, *>>("group").value())
+        assertEquals(1, varCache.getVariable<Int>("group.var1")!!.value())
+        assertEquals(2, varCache.getVariable<Int>("group.var2")!!.value())
+        assertEquals(mapOf("var1" to 1, "var2" to 2, "var3" to 3), varCache.getVariable<Map<*, *>>("group")!!.value())
     }
 
     @Test
@@ -270,16 +270,16 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group1.group2", mapOf("var4" to 4), ctVariables)
 
         assertEquals(4, varCache.variablesCount)
-        assertEquals(3, varCache.getVariable<Int>("group1.group2.var3").value())
-        assertEquals(1, varCache.getVariable<Int>("group1.var1").value())
+        assertEquals(3, varCache.getVariable<Int>("group1.group2.var3")!!.value())
+        assertEquals(1, varCache.getVariable<Int>("group1.var1")!!.value())
 
         var expected = mapOf(
             "var1" to 1, "var2" to 2, "group2" to mapOf("var3" to 3, "var4" to 4)
         )
-        assertEquals(expected, varCache.getVariable<Map<*, *>>("group1").value())
+        assertEquals(expected, varCache.getVariable<Map<*, *>>("group1")!!.value())
 
         expected = mapOf("var3" to 3, "var4" to 4)
-        assertEquals(expected, varCache.getVariable<Map<*, *>>("group1.group2").value())
+        assertEquals(expected, varCache.getVariable<Map<*, *>>("group1.group2")!!.value())
     }
 
     @Test
@@ -290,10 +290,10 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group", mapOf("var2" to 2), ctVariables)
 
         assertEquals(2, varCache.variablesCount)
-        assertEquals(1, varCache.getVariable<Int>("group.var1").value())
-        assertEquals(1, varCache.getVariable<Int>("group.var1").defaultValue())
-        assertEquals(mapOf("var1" to 1, "var2" to 2), varCache.getVariable<Map<*, *>>("group").value())
-        assertEquals(mapOf("var2" to 2), varCache.getVariable<Map<*, *>>("group").defaultValue())
+        assertEquals(1, varCache.getVariable<Int>("group.var1")!!.value())
+        assertEquals(1, varCache.getVariable<Int>("group.var1")!!.defaultValue())
+        assertEquals(mapOf("var1" to 1, "var2" to 2), varCache.getVariable<Map<*, *>>("group")!!.value())
+        assertEquals(mapOf("var2" to 2), varCache.getVariable<Map<*, *>>("group")!!.defaultValue())
     }
 
     @Test
@@ -305,18 +305,18 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group1", mapOf("var2" to 2, "group2" to mapOf("var4" to 4)), ctVariables)
 
         assertEquals(3, varCache.variablesCount)
-        assertEquals(1, varCache.getVariable<Int>("group1.var1").value())
-        assertEquals(3, varCache.getVariable<Int>("group1.group2.var3").value())
+        assertEquals(1, varCache.getVariable<Int>("group1.var1")!!.value())
+        assertEquals(3, varCache.getVariable<Int>("group1.group2.var3")!!.value())
 
         val expectedValue = mapOf(
             "var1" to 1, "var2" to 2, "group2" to mapOf("var3" to 3, "var4" to 4)
         )
-        assertEquals(expectedValue, varCache.getVariable<Map<*, *>>("group1").value())
+        assertEquals(expectedValue, varCache.getVariable<Map<*, *>>("group1")!!.value())
 
         val expectedDefaultValue = mapOf(
             "var2" to 2, "group2" to mapOf("var4" to 4)
         )
-        assertEquals(expectedDefaultValue, varCache.getVariable<Map<*, *>>("group1").defaultValue())
+        assertEquals(expectedDefaultValue, varCache.getVariable<Map<*, *>>("group1")!!.defaultValue())
     }
 
     @Test
@@ -407,7 +407,7 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test loadDiffs`() {
-        val var1 = Var.define("var1", 1, ctVariables)
+        val var1 = Var.define("var1", 1, ctVariables)!!
         every { variablesRepo.loadDataFromCache() } returns """{"var1":2}"""
 
         varCache.loadDiffs { }
@@ -422,7 +422,7 @@ class VarCacheTest : BaseTestCase() {
     @Test
     fun `test loadDiffs for kind file`() {
         ctVariables.init()
-        val var1 = Var.define("var1", null, "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)!!
         every { fileResourceProvider.isFileCached(any()) } returns false
         every { variablesRepo.loadDataFromCache() } returns """{"var1":"http://example.com/file"}"""
 
@@ -434,7 +434,7 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test loadDiffsAndTriggerHandlers`() {
-        val var1 = Var.define("var1", 1, ctVariables)
+        val var1 = Var.define("var1", 1, ctVariables)!!
         val globalCallbackRunnable = mockk<Runnable>(relaxed = true)
         every { variablesRepo.loadDataFromCache() } returns """{"var1":2}"""
         varCache.setGlobalCallbacksRunnable(globalCallbackRunnable)
@@ -492,7 +492,7 @@ class VarCacheTest : BaseTestCase() {
     fun `test fileVarUpdated when file is cached`() {
         // set initial value which will be considered as the "new" value when
         // fileVarUpdated is triggered
-        val var1 : Var<String> = Var.define("var1", "value", "file", ctVariables)
+        val var1 : Var<String> = Var.define("var1", "value", "file", ctVariables)!!
         val handler1: VariableCallback<String> = mockk(relaxed = true)
         var1.addFileReadyHandler(handler1)
 
@@ -508,7 +508,7 @@ class VarCacheTest : BaseTestCase() {
     fun `test fileVarUpdated when file is not cached`() {
         // set initial value which will be considered as the "new" value when
         // fileVarUpdated is triggered
-        val var1: Var<String> = Var.define("var1", "value", "file", ctVariables)
+        val var1: Var<String> = Var.define("var1", "value", "file", ctVariables)!!
         val handler1: VariableCallback<String> = mockk(relaxed = true)
         var1.addFileReadyHandler(handler1)
 
@@ -523,14 +523,14 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test fileVarUpdated when url becomes null`() {
-        val var1: Var<String> = Var.define("var1", null, "file", ctVariables)
+        val var1: Var<String> = Var.define<String?>("var1", null, "file", ctVariables)!! as Var<String>
         val handler: VariableCallback<String> = mockk(relaxed = true)
         every { fileResourceProvider.isFileCached(any()) } returns true
         var1.addFileReadyHandler(handler)
 
         // update var1 to a value
         val fileUrl = "http://example.com/file2"
-        ctVariables.setHasVarsRequestCompleted(true)
+        ctVariables.hasVarsRequestCompleted = true
         varCache.updateDiffsAndTriggerHandlers(
             mapOf(
                 "var1" to fileUrl,
@@ -545,7 +545,7 @@ class VarCacheTest : BaseTestCase() {
         verify(exactly = 1) { handler.run() }
 
         // update var1 to null
-        ctVariables.setHasVarsRequestCompleted(true)
+        ctVariables.hasVarsRequestCompleted = true
         varCache.updateDiffsAndTriggerHandlers(
             mapOf(
                 "var1" to null,

@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerCounting
+import androidx.annotation.RestrictTo
 
 /**
  * The `LimitsMatcher` class is responsible for evaluating limits defined by [LimitAdapter]s for a given campaign.
@@ -12,6 +13,7 @@ import com.clevertap.android.sdk.inapp.TriggerCounting
  * @property triggerManager The [TriggerCounting] source of per-campaign trigger counts (the live
  *   [com.clevertap.android.sdk.inapp.TriggerManager], or an offset view for dry-run evaluation).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class LimitsMatcher(
     private val manager: ImpressionManager,
     private val triggerManager: TriggerCounting

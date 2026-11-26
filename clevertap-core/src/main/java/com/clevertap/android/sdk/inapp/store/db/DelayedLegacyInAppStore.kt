@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.db.DelayedLegacyInAppData
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * The `DelayedLegacyInAppStore` class manages the storage and retrieval of delayed In-App messages
@@ -24,6 +25,7 @@ import org.json.JSONObject
  * @property logger The logger for verbose logging.
  * @property accountId The account ID for logging context.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DelayedLegacyInAppStore(
     private val delayedLegacyInAppDAO: DelayedLegacyInAppDAO,
     private val cryptHandler: CryptHandler,

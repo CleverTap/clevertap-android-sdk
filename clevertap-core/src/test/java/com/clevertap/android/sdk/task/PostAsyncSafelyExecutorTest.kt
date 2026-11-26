@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.task
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -11,6 +10,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class PostAsyncSafelyExecutorTest : BaseTestCase() {
@@ -21,14 +22,13 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         mExecutorService = mockk(relaxed = true)
-        executor = PostAsyncSafelyExecutor()
-        executor.setExecutor(mExecutorService)
+        executor = PostAsyncSafelyExecutor(mExecutorService)
     }
 
     @Test
     fun test_executorServiceConfigs() {
         val executor = PostAsyncSafelyExecutor()
-        Assert.assertTrue(executor.executor is ExecutorService)
+        assertTrue(executor.executor is ExecutorService)
     }
 
     @Test
@@ -69,9 +69,9 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
                 done.countDown()
             }
 
-            Assert.assertTrue("outer task did not finish", done.await(5, TimeUnit.SECONDS))
-            Assert.assertTrue("nested task was queued instead of running inline", nestedRanInline)
-            Assert.assertEquals(outerThreadId, nestedThreadId)
+            assertTrue(done.await(5, TimeUnit.SECONDS), "outer task did not finish")
+            assertTrue(nestedRanInline, "nested task was queued instead of running inline")
+            assertEquals(outerThreadId, nestedThreadId)
         } finally {
             // Always stop the real thread, even when an assertion fails
             realExecutor.shutdownNow()

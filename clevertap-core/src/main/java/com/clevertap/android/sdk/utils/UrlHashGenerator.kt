@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import java.util.UUID
 
 /**
  * Returns unique UUID for a url key, if there is failure in generating uuid then we simply call
  * hashcode for the url
  */
-object UrlHashGenerator {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object UrlHashGenerator {
 
     fun hash() : (key: String) -> String = { key ->
         var nameUUIDFromBytes: UUID? = null

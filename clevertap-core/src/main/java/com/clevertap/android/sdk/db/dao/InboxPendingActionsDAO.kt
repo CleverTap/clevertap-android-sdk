@@ -12,18 +12,22 @@ import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PendingDeleteState {
     const val PENDING_SEND = "PENDING_SEND"
     const val AWAITING_CONFIRM = "AWAITING_CONFIRM"
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class PendingDelete(
     val messageId: String,
     val wzrkParams: JSONObject?,
     val expiresAt: Long
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class PendingRead(
     val messageId: String,
     val expiresAt: Long
@@ -35,6 +39,7 @@ internal data class PendingRead(
  * message until the server confirms the action — or, when the server never
  * echoes back, until the message's TTL has elapsed.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InboxPendingActionsDAO {
 
     @WorkerThread fun getPendingDeleteIds(userId: String): Set<String>
@@ -61,6 +66,7 @@ internal interface InboxPendingActionsDAO {
     @WorkerThread fun removeExpiredPendingReads(userId: String, nowSeconds: Long): Int
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InboxPendingActionsDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,

@@ -1,10 +1,12 @@
 package com.clevertap.android.pushtemplates.media
 
 import android.graphics.Bitmap
+import androidx.annotation.RestrictTo
 
 /**
  * Represents the result of a GIF processing operation.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal sealed interface GifResult {
     
     /**

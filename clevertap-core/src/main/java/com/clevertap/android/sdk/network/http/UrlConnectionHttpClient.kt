@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network.http
 
+import androidx.annotation.RestrictTo
 import android.net.TrafficStats
 import android.util.Log
 import androidx.annotation.VisibleForTesting
@@ -15,7 +16,8 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
 
-class UrlConnectionHttpClient(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class UrlConnectionHttpClient(
     var isSslPinningEnabled: Boolean,
     private val logger: Logger,
     private val logTag: String

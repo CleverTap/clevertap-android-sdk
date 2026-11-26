@@ -1,11 +1,11 @@
 package com.clevertap.android.sdk.variables
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -25,7 +25,7 @@ class CTVariableUtilsTest : BaseTestCase() {
   fun `test mergeHelper with null diff`() {
     val vars = mapOf("a" to 1, "b" to 2)
     val result = CTVariableUtils.mergeHelper(vars, null)
-    Assert.assertEquals(vars, result)
+    assertEquals(vars, result)
   }
 
   @Test
@@ -33,7 +33,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val vars = "a"
     val diff = 1
     val result = CTVariableUtils.mergeHelper(vars, diff)
-    Assert.assertEquals(diff, result)
+    assertEquals(diff, result)
   }
 
   @Test
@@ -41,8 +41,8 @@ class CTVariableUtilsTest : BaseTestCase() {
     val boolean1 = true
     val boolean2 = false
     val result = CTVariableUtils.mergeHelper(boolean1, boolean2)
-    Assert.assertTrue(result is Boolean)
-    Assert.assertEquals(false, result)
+    assertTrue(result is Boolean)
+    assertEquals(false, result)
   }
 
   @Test
@@ -51,7 +51,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val diff = "diff"
     val expectedResult = "diff"
 
-    Assert.assertEquals(expectedResult, CTVariableUtils.mergeHelper(vars, diff))
+    assertEquals(expectedResult, CTVariableUtils.mergeHelper(vars, diff))
   }
 
   @Test
@@ -59,7 +59,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val vars = mapOf("a" to 1, "b" to 2)
     val diff = mapOf("b" to 42, "c" to 3)
     val result = CTVariableUtils.mergeHelper(vars, diff)
-    Assert.assertEquals(mapOf("a" to 1, "b" to 42, "c" to 3), result)
+    assertEquals(mapOf("a" to 1, "b" to 42, "c" to 3), result)
   }
 
   @Test
@@ -78,7 +78,7 @@ class CTVariableUtilsTest : BaseTestCase() {
       "B" to mapOf("x" to -24, "y" to 25)
     )
 
-    Assert.assertEquals(expected, CTVariableUtils.mergeHelper(vars, diff))
+    assertEquals(expected, CTVariableUtils.mergeHelper(vars, diff))
   }
 
   @Test
@@ -87,7 +87,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val diffs = hashMapOf("k1" to 21, "k3" to false, "k4" to 4.8)
     val expected = hashMapOf("k1" to 21, "k2" to "hi", "k3" to false, "k4" to 4.8)
     val result = CTVariableUtils.mergeHelper(vars, diffs)
-    Assert.assertEquals(expected, result)
+    assertEquals(expected, result)
   }
 
   @Test
@@ -114,14 +114,14 @@ class CTVariableUtilsTest : BaseTestCase() {
       "k5" to 4.3,
     )
     val result = CTVariableUtils.mergeHelper(vars, diffs)
-    Assert.assertEquals(expected, result)
+    assertEquals(expected, result)
   }
 
   @Test
   fun `test mergeHelper with array`() {
     val vars = arrayOf(1, 2, 3, 4)
     val diffs = arrayOf(1, 2, 3, 4)
-    Assert.assertThrows(java.lang.ClassCastException::class.java) {
+    assertFailsWith<java.lang.ClassCastException> {
       CTVariableUtils.mergeHelper(vars, diffs)
     }
   }
@@ -130,7 +130,7 @@ class CTVariableUtilsTest : BaseTestCase() {
   fun `test mergeHelper with map of array`() {
     val vars = mapOf("arr" to arrayOf(1, 2, 3, 4))
     val diffs = mapOf("arr" to arrayOf(1, 2, 3, 4))
-    Assert.assertThrows(java.lang.ClassCastException::class.java) {
+    assertFailsWith<java.lang.ClassCastException> {
       CTVariableUtils.mergeHelper(vars, diffs)
     }
   }
@@ -193,7 +193,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("a" to 1)
     val expected = mapOf("a" to 1)
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -201,7 +201,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("group.a" to 1)
     val expected = mapOf("group" to mapOf("a" to 1))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -209,7 +209,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("group1.group2.a" to 1)
     val expected = mapOf("group1" to mapOf("group2" to mapOf("a" to 1)))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -235,7 +235,7 @@ class CTVariableUtilsTest : BaseTestCase() {
       )
     )
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -248,7 +248,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
     val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -261,7 +261,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
     val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test

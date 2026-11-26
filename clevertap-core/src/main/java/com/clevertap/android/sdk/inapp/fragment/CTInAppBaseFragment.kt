@@ -28,7 +28,9 @@ import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
 
     companion object {

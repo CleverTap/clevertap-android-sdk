@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MAX_INA
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MIN_INACTION_SECONDS
 import org.json.JSONObject
 import kotlin.time.Duration.Companion.seconds
+import androidx.annotation.RestrictTo
 
 /**
  * Utility object for partitioning in-app notifications by their display duration.
@@ -37,6 +38,7 @@ import kotlin.time.Duration.Companion.seconds
  * - [partitionAppLaunchServerSideInApps]: immediate + delayed
  * - [partitionAppLaunchServerSideMetaInApps]: inAction only
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object InAppDurationPartitioner {
 
     /**

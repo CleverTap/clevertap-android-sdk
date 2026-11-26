@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.utils.Clock
 import java.security.SecureRandom
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NetworkRepo(
     val context: Context,
     val config: CleverTapInstanceConfig,

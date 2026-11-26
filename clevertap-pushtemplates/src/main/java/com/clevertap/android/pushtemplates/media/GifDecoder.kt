@@ -2,11 +2,14 @@ package com.clevertap.android.pushtemplates.media
 
 import com.clevertap.android.sdk.Logger
 import kotlin.math.roundToInt
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface GifDecoder {
     fun decode(bytes: ByteArray, maxFrames: Int): GifResult
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GifDecoderImpl(
     private val adapter: GifDrawableAdapter = GifDrawableAdapterImpl()
 ) : GifDecoder {

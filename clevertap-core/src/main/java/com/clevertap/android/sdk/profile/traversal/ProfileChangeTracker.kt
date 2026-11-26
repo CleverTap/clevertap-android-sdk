@@ -2,12 +2,14 @@ package com.clevertap.android.sdk.profile.traversal
 
 import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Tracks changes made during profile merging operations.
  * Records additions, updates, and deletions with dot-notation paths.
  * Automatically processes date prefixes for all recorded values.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ProfileChangeTracker {
 
     /**
@@ -152,7 +154,8 @@ internal class ProfileChangeTracker {
  * @property oldValue The previous value (null if newly added)
  * @property newValue The new value (null if deleted)
  */
-data class ProfileChange(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class ProfileChange(
     val oldValue: Any?,
     val newValue: Any?
 )

@@ -12,7 +12,6 @@ import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
-import org.junit.Assert.assertFalse
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -20,6 +19,7 @@ import org.robolectric.shadows.ShadowLooper
 import java.util.concurrent.CyclicBarrier
 import kotlin.random.Random
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
 class CallbackManagerTest : BaseTestCase() {
@@ -30,7 +30,7 @@ class CallbackManagerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
 
-        config = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
+        config = CleverTapInstanceConfig.createInstanceWithManifest(ManifestInfo.getInstance(application), "id", "token", "region", true)
         coreMetaData = CoreMetaData()
         deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData, null)
         callbackManager = CallbackManager(config, deviceInfo)
@@ -231,16 +231,10 @@ class CallbackManagerTest : BaseTestCase() {
         caughtException?.printStackTrace()
 
         // Assertions
-        assertFalse(
-            "ConcurrentModificationException should not occur with thread-safe implementation. " +
-                    "Exception: $caughtException",
-            concurrentModificationOccurred
-        )
+        assertFalse(concurrentModificationOccurred, "ConcurrentModificationException should not occur with thread-safe implementation. " +
+                    "Exception: $caughtException")
 
-        assertFalse(
-            "No other exceptions should occur. Exception: $caughtException",
-            otherExceptionOccurred
-        )
+        assertFalse(otherExceptionOccurred, "No other exceptions should occur. Exception: $caughtException")
 
         println("Thread safety test completed successfully - no ConcurrentModificationException occurred")
     }

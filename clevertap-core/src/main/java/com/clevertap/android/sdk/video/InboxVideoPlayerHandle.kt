@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.video
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.View
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InboxVideoPlayerHandle {
     fun initExoplayer(
         context: Context,

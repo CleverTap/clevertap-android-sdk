@@ -12,13 +12,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class InAppImageMemoryAccessObjectV1Test {
 
@@ -60,44 +60,31 @@ class InAppImageMemoryAccessObjectV1Test {
     fun `fetchInMemoryAndTransform transforms data from memory cache`() {
         every { mockMemoryCache.get(key) } returns mockData
 
-        assertEquals(
-            mockBitmap,
-            inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToBitmap)
-        )
+        assertEquals(mockBitmap, inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToBitmap))
 
         every { bitmapToBytes(mockBitmap) } returns mockByteArray
-        assertEquals(
-            mockByteArray,
-            inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToByteArray)
-        )
+        assertEquals(mockByteArray, inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToByteArray))
 
-        assertEquals(
-            mockFile,
-            inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToFile)
-        )
+        assertEquals(mockFile, inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToFile))
     }
 
     @Test
     fun `fetchInMemoryAndTransform returns null when data not in memory cache`() {
         every { mockMemoryCache.get(key) } returns null
-        assertNull(
-            inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(
+        assertNull(inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(
                 key,
                 ToBitmap
-            )
-        )
+            ))
     }
 
     @Test
     fun `fetchInMemoryAndTransform returns null when transformation fails`() {
         every { mockMemoryCache.get(key) } returns mockData
         every { bitmapToBytes(mockBitmap) } returns null
-        assertNull(
-            inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(
+        assertNull(inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform(
                 key,
                 ToByteArray
-            )
-        )
+            ))
     }
 
     @Test
@@ -106,45 +93,32 @@ class InAppImageMemoryAccessObjectV1Test {
         every { fileToBitmap(mockFile) } returns mockBitmap
         every { mockMemoryCache.add(key, mockData) } returns true
 
-        assertEquals(
-            mockBitmap,
-            inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToBitmap)
-        )
+        assertEquals(mockBitmap, inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToBitmap))
         verify { mockMemoryCache.add(key, mockData) }
 
         every { fileToBytes(mockFile) } returns mockByteArray
-        assertEquals(
-            mockByteArray,
-            inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToByteArray)
-        )
+        assertEquals(mockByteArray, inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToByteArray))
 
-        assertEquals(
-            mockFile,
-            inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToFile)
-        )
+        assertEquals(mockFile, inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToFile))
     }
 
     @Test
     fun `fetchDiskMemoryAndTransform returns null when data not in disk cache`() {
         every { mockDiskCache.get(key) } returns null
-        assertNull(
-            inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(
+        assertNull(inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(
                 key,
                 ToBitmap
-            )
-        )
+            ))
     }
 
     @Test
     fun `fetchDiskMemoryAndTransform returns null when transformation fails`() {
         every { mockDiskCache.get(key) } returns mockFile
         every { fileToBitmap(mockFile) } returns null
-        assertNull(
-            inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(
+        assertNull(inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform(
                 key,
                 ToBitmap
-            )
-        )
+            ))
     }
 
     @Test
@@ -190,10 +164,7 @@ class InAppImageMemoryAccessObjectV1Test {
     @Test
     fun `saveDiskMemory saves data to disk cache`() {
         every { mockDiskCache.addAndReturnFileInstance(key, mockByteArray) } returns mockFile
-        assertEquals(
-            mockFile,
-            inAppImageMemoryAccessObjectV1.saveDiskMemory(key, mockByteArray)
-        )
+        assertEquals(mockFile, inAppImageMemoryAccessObjectV1.saveDiskMemory(key, mockByteArray))
         verify { mockDiskCache.addAndReturnFileInstance(key, mockByteArray) }
     }
 

@@ -18,6 +18,7 @@ import com.clevertap.android.pushtemplates.content.PROGRESS_CONTENT_PENDING_INTE
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 // Parsed segment/point models live in the (unit-tested) ProgressPayloadParser.
 private typealias SegmentData = ProgressPayloadParser.SegmentData
@@ -45,6 +46,7 @@ private typealias PointData = ProgressPayloadParser.PointData
  * 4 points, none at the ends) apply on both. `pt_progress_max` applies only to the plain bar below
  * 16. `pt_progress_indeterminate` applies to both tiers, and only when there are no segments/points.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ProgressStyle(
     private val data: ProgressTemplateData,
     private val renderer: TemplateRenderer

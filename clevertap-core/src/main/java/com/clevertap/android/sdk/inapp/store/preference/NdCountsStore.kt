@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import androidx.annotation.RestrictTo
 
 /**
  * DAO for the Native Display (ND) frequency-cap **counter** state.
@@ -16,6 +17,7 @@ import com.clevertap.android.sdk.store.preference.ICTPreference
  * CSV (de)serialization. ND impression timestamps live in a *separate* namespace, so no key here needs
  * an `__impressions_` guard.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NdCountsStore(
     private val ctPreference: ICTPreference,
 ) {

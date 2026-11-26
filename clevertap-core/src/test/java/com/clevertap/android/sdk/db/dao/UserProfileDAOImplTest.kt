@@ -28,7 +28,7 @@ class UserProfileDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         dbEncryptionHandler = DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.NONE)
-        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
+        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)!!
         dbHelper = DatabaseHelper(
             context = appCtx,
             accountId = instanceConfig.accountId,

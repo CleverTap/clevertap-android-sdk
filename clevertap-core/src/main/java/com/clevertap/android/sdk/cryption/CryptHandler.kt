@@ -4,7 +4,9 @@ import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
 import com.clevertap.android.sdk.Constants.AES_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_PREFIX
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface ICryptHandler {
     fun encryptSafe(plainText: String): String?
 
@@ -21,6 +23,7 @@ internal interface ICryptHandler {
 /**
  * Handles encryption and decryption for various encryption algorithms
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CryptHandler constructor(
     private val repository: CryptRepository,
     private val cryptFactory: CryptFactory

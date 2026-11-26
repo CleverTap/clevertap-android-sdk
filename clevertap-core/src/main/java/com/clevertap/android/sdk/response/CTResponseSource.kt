@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.response
 
+import androidx.annotation.RestrictTo
+
 /**
  * Identifies which endpoint a response currently flowing through the decorator chain came from.
  *
@@ -12,6 +14,7 @@ package com.clevertap.android.sdk.response
  *
  * Carried per response in [ResponseContext], threaded through processResponse by [ClevertapResponseHandler].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class CTResponseSource {
     A1,
     CONTENT_FETCH

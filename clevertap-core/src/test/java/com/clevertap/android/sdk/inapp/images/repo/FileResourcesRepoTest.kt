@@ -9,9 +9,9 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.time.Duration.Companion.days
+import kotlin.test.assertEquals
 
 class FileResourcesRepoTest {
 

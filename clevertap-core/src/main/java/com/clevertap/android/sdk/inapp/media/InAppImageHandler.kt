@@ -6,11 +6,13 @@ import android.widget.RelativeLayout
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
 /**
  * Handler for static image media in InApp notifications.
  * Stateless — only [setup] is meaningful; all lifecycle methods are no-ops.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppImageHandler(
     private val media: CTInAppNotificationMedia,
     private val resourceProvider: FileResourceProvider

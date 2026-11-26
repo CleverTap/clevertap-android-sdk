@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import kotlin.math.max
 import kotlin.time.Duration.Companion.days
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
 /**
  * Implementation of [FileResourcesRepo] that manages the preloading, caching, and cleanup of file resources.
@@ -19,6 +21,7 @@ internal const val TAG_FILE_DOWNLOAD = "FileDownload"
  * @param fileStore The store for managing file URLs and their expiry times.
  * @param legacyInAppsStore The store for managing legacy in-app data.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
@@ -219,19 +222,22 @@ internal class FileResourcesRepoImpl constructor(
     }
 }
 
-enum class DownloadState {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class DownloadState {
     QUEUED, IN_PROGRESS, SUCCESSFUL, FAILED
 }
 
 /**
  * Invokes callback once the list of urls passed have finished downloading
  */
-data class DownloadTriggerForUrls(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class DownloadTriggerForUrls(
     val urls: List<String>,
     val callback: () -> Unit
 )
 
-data class DownloadTriggerResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class DownloadTriggerResult(
     val successfulUrls: List<String>,
     val failureUrls: List<String>,
     val allSuccessful: Boolean

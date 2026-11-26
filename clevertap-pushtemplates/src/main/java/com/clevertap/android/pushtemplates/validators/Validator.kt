@@ -1,8 +1,10 @@
 package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.checkers.Checker
+import androidx.annotation.RestrictTo
 
-abstract class Validator(val keys: Map<String, Checker<out Any>>) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal abstract class Validator(val keys: Map<String, Checker<out Any>>) {
 
     abstract fun loadKeys(): List<Checker<out Any>>
     open fun validate(): Boolean {//Does AND check inside Collections.

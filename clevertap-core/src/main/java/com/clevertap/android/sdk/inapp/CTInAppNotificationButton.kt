@@ -6,9 +6,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppAction.CREATOR.createFromJson
 import org.json.JSONObject
 
-class CTInAppNotificationButton : Parcelable {
+public class CTInAppNotificationButton : Parcelable {
 
-    val text: String
+    public val text: String
 
     internal val backgroundColor: String
 
@@ -39,7 +39,7 @@ class CTInAppNotificationButton : Parcelable {
         action = parcel.readParcelable<CTInAppAction?>(CTInAppAction::class.java.getClassLoader())
     }
 
-    fun getKeyValues(): Map<String, String>? {
+    public fun getKeyValues(): Map<String, String>? {
         return action?.keyValues
     }
 
@@ -83,10 +83,10 @@ class CTInAppNotificationButton : Parcelable {
     }
 
 
-    companion object {
+    public companion object {
 
         @JvmField
-        val CREATOR = object : Parcelable.Creator<CTInAppNotificationButton> {
+        public val CREATOR: Parcelable.Creator<CTInAppNotificationButton> = object : Parcelable.Creator<CTInAppNotificationButton> {
             override fun createFromParcel(parcel: Parcel): CTInAppNotificationButton {
                 return CTInAppNotificationButton(parcel)
             }

@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
+import androidx.annotation.RestrictTo
 
 /**
  * Wrapper class for accessing the [CtApi] instance.
@@ -17,6 +18,7 @@ import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
  * @param config The configuration for the CleverTap instance.
  * @param deviceInfo The device information required for CleverTap initialization.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CtApiWrapper(
     private val networkRepo: NetworkRepo,
     private val config: CleverTapInstanceConfig,
@@ -40,6 +42,7 @@ internal class CtApiWrapper(
         )
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CtApiProvider {
 
     @WorkerThread

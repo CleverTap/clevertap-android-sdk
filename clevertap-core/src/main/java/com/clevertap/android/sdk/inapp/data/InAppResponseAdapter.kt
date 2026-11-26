@@ -13,8 +13,10 @@ import com.clevertap.android.sdk.safeGetJSONObjectListOrEmpty
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
-object InAppDelayConstants{
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object InAppDelayConstants{
     const val INAPP_DELAY_AFTER_TRIGGER = "delayAfterTrigger"
     const val INAPP_DEFAULT_DELAY_SECONDS = 0
     const val INAPP_MIN_DELAY_SECONDS = 1
@@ -24,7 +26,8 @@ object InAppDelayConstants{
 /**
  * Constants for in-action in-apps feature
  */
-object InAppInActionConstants {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object InAppInActionConstants {
     const val INAPP_INACTION_DURATION = "inactionDuration"
     const val INAPP_DEFAULT_INACTION_SECONDS = 0
     const val INAPP_MIN_INACTION_SECONDS = 1
@@ -34,6 +37,7 @@ object InAppInActionConstants {
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppResponseAdapter(
     responseJson: JSONObject,
     templatesManager: TemplatesManager
@@ -197,7 +201,8 @@ internal class InAppResponseAdapter(
             ?.let { ContentFetchItem.listFrom(it) } ?: emptyList()
 }
 
-enum class CtCacheType {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class CtCacheType {
     IMAGE, GIF, FILES
 }
 

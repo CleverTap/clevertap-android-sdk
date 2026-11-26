@@ -4,6 +4,8 @@ import android.location.Location
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.sdk.CleverTapAPI
 import com.google.android.gms.location.LocationResult
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -32,7 +34,7 @@ class PushLocationEventTaskTest : BaseTestCase() {
 
         locationResult = LocationResult.create(listOf(Location("")))
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
         mockkStatic(Utils::class)
 
         every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
@@ -42,7 +44,7 @@ class PushLocationEventTaskTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
         unmockkStatic(Utils::class)
     }
 

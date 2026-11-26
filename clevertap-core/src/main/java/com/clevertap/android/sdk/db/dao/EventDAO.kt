@@ -4,7 +4,9 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.db.Table
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface EventDAO {
     @WorkerThread
     fun storeEvent(event: JSONObject, table: Table): Long

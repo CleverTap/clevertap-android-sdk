@@ -12,7 +12,9 @@ import com.clevertap.android.pushtemplates.content.MANUAL_CAROUSEL_DISMISS_PENDI
 import com.clevertap.android.pushtemplates.content.ManualCarouselContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ManualCarouselStyle(
     private val data: ManualCarouselTemplateData,
     renderer: TemplateRenderer,

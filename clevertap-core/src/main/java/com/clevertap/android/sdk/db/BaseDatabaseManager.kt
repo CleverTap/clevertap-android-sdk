@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.db
 import android.content.Context
 import com.clevertap.android.sdk.events.EventGroup
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface BaseDatabaseManager {
 
     fun loadDBAdapter(context: Context): DBAdapter

@@ -16,7 +16,9 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import androidx.core.graphics.toColorInt
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PIPConfigFactory {
 
     private const val LOG_TAG = "PIPConfigFactory"

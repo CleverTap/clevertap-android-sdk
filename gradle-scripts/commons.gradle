@@ -24,6 +24,9 @@ def (major,minor,patch) = libraryVersion.split("\\.")
 kotlin {
     // AGP 9 forces KGP 2.2.10; keep the published kotlin-stdlib dependency the same as before
     coreLibrariesVersion = "2.0.10"
+    // Explicit API mode (SDK-6380): every public declaration needs an explicit visibility and return
+    // type, so nothing becomes public API by accident (compile error otherwise). Test sources are exempt.
+    explicitApi()
 }
 
 android {
@@ -33,6 +36,9 @@ android {
         // keep the Kotlin metadata at 2.0 so apps on older Kotlin can still use the SDK
         languageVersion = "2.0"
         apiVersion = "2.0"
+        // Compile interface bodies to real JVM default methods (keeping DefaultImpls for binary
+        // compatibility), so Java implementors of converted interfaces don't inherit abstract methods.
+        freeCompilerArgs += ["-jvm-default=enable"]
     }
     buildFeatures {
         buildConfig = true

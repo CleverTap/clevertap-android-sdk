@@ -25,8 +25,10 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import androidx.annotation.RestrictTo
 
 @Suppress("DEPRECATION")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CoreState(
     val locationManager: BaseLocationManager,
     val config: CleverTapInstanceConfig,
@@ -85,7 +87,7 @@ internal open class CoreState(
     @Deprecated("")
     private fun initProductConfig(context: Context?) {
         if (this.config.isAnalyticsOnly) {
-            this.config.getLogger()
+            this.config.logger
                 .debug(
                     this.config.accountId,
                     "Product Config is not enabled for this instance"
@@ -93,9 +95,9 @@ internal open class CoreState(
             return
         }
         if (this.controllerManager.ctProductConfigController == null) {
-            this.config.getLogger().verbose(
+            this.config.logger.verbose(
                 config.accountId + ":async_deviceID",
-                "Initializing Product Config with device Id = " + this.deviceInfo.getDeviceID()
+                "Initializing Product Config with device Id = " + this.deviceInfo.deviceID
             )
             val ctProductConfigController = CTProductConfigFactory
                 .getInstance(

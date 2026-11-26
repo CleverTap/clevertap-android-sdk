@@ -5,8 +5,10 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Logger
+import androidx.annotation.RestrictTo
 
-class CTPushAmpWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CTPushAmpWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     override fun doWork(): Result {
         Logger.v("PushAmpWorker is awake")

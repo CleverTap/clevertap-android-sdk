@@ -8,8 +8,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
-import org.junit.Assert.*
-
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 class LimitsMatcherTest : BaseTestCase() {
     private lateinit var impressionManager: ImpressionManager
     private lateinit var triggerManager: TriggerManager

@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class CryptMigrator(
     private val logPrefix: String,
     private val configEncryptionLevel: Int,

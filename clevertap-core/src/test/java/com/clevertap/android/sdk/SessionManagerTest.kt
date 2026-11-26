@@ -27,7 +27,7 @@ class SessionManagerTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        configDef = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
+        configDef = CleverTapInstanceConfig.createInstanceWithManifest(ManifestInfo.getInstance(application), "id", "token", "region", true)
         coreMetaData = CoreMetaData()
         validationConfig = mockk<ValidationConfig>(relaxed = true)
         localDataStoreDef = mockk<LocalDataStore>(relaxed = true)
@@ -99,14 +99,14 @@ class SessionManagerTest : BaseTestCase() {
 
         // when local data store returns null for app launched event, it sets last visit time as -1
         every { localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT) } returns null
-        sessionManagerDef.setLastVisitTime()
+        sessionManagerDef.updateLastVisitTime()
         assertEquals(-1,sessionManagerDef.lastVisitTime)
 
         // when local data store returns eventDetails for app launched event, it sets last visit time as eventDetails.lastVisitTime
 
         every { localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT) } returns
                 EventDetail(1, 10, 20, "hi")
-        sessionManagerDef.setLastVisitTime()
+        sessionManagerDef.updateLastVisitTime()
         assertEquals(20,sessionManagerDef.lastVisitTime)
     }
 
@@ -171,14 +171,14 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef = SessionManager(configDef,coreMetaData, validationConfig,localDataStoreMockk)
         val appLaunchedEventLog = UserEventLog(
             Constants.APP_LAUNCHED_EVENT,
-            Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT),
+            Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT)!!,
             0,
             1000000L,
             1,
-            deviceInfo.deviceID
+            deviceInfo.deviceID!!
         )
         every { localDataStoreMockk.readUserEventLog(Constants.APP_LAUNCHED_EVENT) } returns appLaunchedEventLog
-        sessionManagerDef.setUserLastVisitTs()
+        sessionManagerDef.updateUserLastVisitTs()
         assertEquals(appLaunchedEventLog.lastTs, sessionManagerDef.userLastVisitTs)
     }
 

@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
+import androidx.annotation.RestrictTo
 
 /**
  * Full-screen expanded PIP overlay.
@@ -32,6 +33,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
  *
  * [bindMedia] must be called after the view has been measured (use post/onReady callback).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPExpandedView(
     context: Context,
     private val showCloseButton: Boolean,

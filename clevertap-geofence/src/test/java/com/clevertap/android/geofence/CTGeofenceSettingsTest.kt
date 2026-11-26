@@ -1,15 +1,15 @@
 package com.clevertap.android.geofence
 
-import com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_HIGH
-import com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_MEDIUM
-import com.clevertap.android.geofence.CTGeofenceSettings.DEFAULT_GEO_MONITOR_COUNT
-import com.clevertap.android.geofence.CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC
-import com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.ACCURACY_HIGH
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.ACCURACY_MEDIUM
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.DEFAULT_GEO_MONITOR_COUNT
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.FETCH_CURRENT_LOCATION_PERIODIC
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.FETCH_LAST_LOCATION_PERIODIC
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class CTGeofenceSettingsTest : BaseTestCase() {
 
@@ -23,15 +23,13 @@ class CTGeofenceSettingsTest : BaseTestCase() {
 
         assertFalse(customSettings.isBackgroundLocationUpdatesEnabled)
         assertEquals(ACCURACY_MEDIUM, customSettings.locationAccuracy.toByte())
-        assertEquals(
-            FETCH_CURRENT_LOCATION_PERIODIC, customSettings.locationFetchMode.toByte()
-        )
+        assertEquals(FETCH_CURRENT_LOCATION_PERIODIC, customSettings.locationFetchMode.toByte())
         assertEquals(Logger.INFO, customSettings.logLevel)
         assertEquals(98, customSettings.geofenceMonitoringCount)
         assertNull(customSettings.id)
         assertEquals(2000000, customSettings.interval)
         assertEquals(1900000, customSettings.fastestInterval)
-        assertEquals(780f, customSettings.smallestDisplacement, 0f)
+        assertEquals(780f, customSettings.smallestDisplacement, absoluteTolerance = 0f)
 
         // when interval, fastestInterval and displacement are invalid
 
@@ -41,7 +39,7 @@ class CTGeofenceSettingsTest : BaseTestCase() {
 
         assertEquals(1800000, inValidSettings.interval)
         assertEquals(1800000, inValidSettings.fastestInterval)
-        assertEquals(200f, inValidSettings.smallestDisplacement, 0f)
+        assertEquals(200f, inValidSettings.smallestDisplacement, absoluteTolerance = 0f)
     }
 
     @Test
@@ -56,13 +54,7 @@ class CTGeofenceSettingsTest : BaseTestCase() {
         assertEquals(DEFAULT_GEO_MONITOR_COUNT, defaultSettings.geofenceMonitoringCount)
         assertNull(defaultSettings.id)
         assertEquals(GoogleLocationAdapter.INTERVAL_IN_MILLIS, defaultSettings.interval)
-        assertEquals(
-            GoogleLocationAdapter.INTERVAL_FASTEST_IN_MILLIS, defaultSettings.fastestInterval
-        )
-        assertEquals(
-            GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS,
-            defaultSettings.smallestDisplacement,
-            0f
-        )
+        assertEquals(GoogleLocationAdapter.INTERVAL_FASTEST_IN_MILLIS, defaultSettings.fastestInterval)
+        assertEquals(GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS, defaultSettings.smallestDisplacement, absoluteTolerance = 0f)
     }
 }

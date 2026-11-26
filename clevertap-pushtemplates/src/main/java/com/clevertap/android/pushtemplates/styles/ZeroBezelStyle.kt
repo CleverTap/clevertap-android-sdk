@@ -11,7 +11,9 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.ZERO_BEZEL_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelSmallContentView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)

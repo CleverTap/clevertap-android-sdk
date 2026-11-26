@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.store.preference
 import android.content.Context
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StoreProvider
+import androidx.annotation.RestrictTo
 
 /**
  * Lazily creates and caches the Native Display stores ([NdStore] + ND [ImpressionStore] +
@@ -10,6 +11,7 @@ import com.clevertap.android.sdk.StoreProvider
  * rebuilt when it changes, so this is the single user-switch owner for every persistent ND store (none
  * is a `ChangeUserCallback`). Stores are null until the device id resolves — ND is simply inactive then.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NdStoreProvider(
     private val context: Context,
     private val deviceInfo: DeviceInfo,

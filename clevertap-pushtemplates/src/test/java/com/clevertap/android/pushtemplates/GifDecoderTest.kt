@@ -6,12 +6,13 @@ import com.clevertap.android.pushtemplates.media.GifDrawableAdapter
 import com.clevertap.android.pushtemplates.media.GifResult
 import io.mockk.*
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import pl.droidsonroids.gif.GifDrawable
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class GifDecoderTest {

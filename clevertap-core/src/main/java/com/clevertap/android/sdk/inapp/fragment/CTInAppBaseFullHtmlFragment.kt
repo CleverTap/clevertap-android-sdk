@@ -17,7 +17,9 @@ import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 
     protected var webView: CTInAppWebView? = null
@@ -110,7 +112,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 rl.addView(closeImageView, closeIvLp)
             }
         } catch (t: Throwable) {
-            config.getLogger().verbose(config.accountId, "Fragment view not created", t)
+            config.logger.verbose(config.accountId, "Fragment view not created", t)
             return null
         }
         return inAppView
@@ -156,7 +158,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             webView?.cleanup(inAppNotification.isJsEnabled)
             webView = null
         } catch (e: Exception) {
-            config.getLogger().verbose("cleanupWebView -> there was a crash in cleanup", e)
+            config.logger.verbose("cleanupWebView -> there was a crash in cleanup", e)
             //no-op; we are anyway destroying everything. This is just for safety.
         }
     }

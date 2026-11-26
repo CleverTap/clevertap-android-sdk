@@ -15,12 +15,14 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
+import androidx.annotation.RestrictTo
 
 /**
  * This class addresses an AbstractMethodError because of the Java 8 feature of default methods in interfaces.
  * Default methods are somewhat not supported if minSDKVersion < 24
  */
-open class Media3PlayerListener : Player.Listener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class Media3PlayerListener : Player.Listener {
     override fun onSurfaceSizeChanged(width: Int, height: Int) {}
     override fun onRenderedFirstFrame() {}
 

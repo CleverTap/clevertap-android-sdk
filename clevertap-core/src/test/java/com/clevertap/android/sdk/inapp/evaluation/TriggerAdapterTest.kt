@@ -13,8 +13,11 @@ import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_P
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.junit.Assert.*
-
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 class TriggerAdapterTest {
 
     @Test

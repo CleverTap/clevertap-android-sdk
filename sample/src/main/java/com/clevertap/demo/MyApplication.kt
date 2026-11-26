@@ -177,7 +177,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 "YOUR CLEVERTAP ACCOUNT ID",
                 "YOUR CLEVERTAP TOKEN",
                 "YOUR CLEVERTAP REGION",
-            ).apply {
+            )?.apply {
                 customHandshakeDomain = handshakeDomain
 
                 // enable push types other than FCM
@@ -200,15 +200,19 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     private fun buildCustomCtInstance(): CleverTapAPI {
-        val config = CleverTapInstanceConfig.createInstance(
-            applicationContext,
-            BuildConfig.MULTI_CLEVERTAP_ACCOUNT_ID,
-            BuildConfig.MULTI_CLEVERTAP_TOKEN,
-            BuildConfig.MULTI_CLEVERTAP_REGION,
-        ).apply {
+        val config = requireNotNull(
+            CleverTapInstanceConfig.createInstance(
+                applicationContext,
+                BuildConfig.MULTI_CLEVERTAP_ACCOUNT_ID,
+                BuildConfig.MULTI_CLEVERTAP_TOKEN,
+                BuildConfig.MULTI_CLEVERTAP_REGION,
+            )
+        ) { "CleverTap account ID and token are required" }.apply {
             setEncryptionLevel(EncryptionLevel.FULL_DATA)
         }
-        return CleverTapAPI.instanceWithConfig(this, config)
+        return requireNotNull(CleverTapAPI.instanceWithConfig(this, config)) {
+            "Unable to create the CleverTap instance"
+        }
     }
 
     private fun createNotificationChannels() {

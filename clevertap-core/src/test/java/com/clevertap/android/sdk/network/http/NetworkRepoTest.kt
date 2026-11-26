@@ -7,11 +7,14 @@ import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class NetworkRepoTest : BaseTestCase() {
@@ -25,7 +28,7 @@ class NetworkRepoTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         // Create a real config instance - this will use actual SharedPreferences via Robolectric
-        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)
+        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)!!
     }
     
     private fun createNetworkRepo(clock: Clock = Clock.SYSTEM): NetworkRepo {
@@ -162,8 +165,8 @@ class NetworkRepoTest : BaseTestCase() {
         
         // Then
         val expectedExpiry = testClock.currentTimeMillis() + 24 * 60 * 60 * 1000L
-        assertEquals("getMuteExpiry should return now + 24h", expectedExpiry, networkRepo.getMuteExpiry())
-        assertTrue("Should be muted when setMuted(true) is called", networkRepo.isMuted())
+        assertEquals(expectedExpiry, networkRepo.getMuteExpiry(), "getMuteExpiry should return now + 24h")
+        assertTrue(networkRepo.isMuted(), "Should be muted when setMuted(true) is called")
     }
 
     @Test
@@ -174,14 +177,14 @@ class NetworkRepoTest : BaseTestCase() {
         
         // First set muted to true
         networkRepo.setMuted(true)
-        assertTrue("Should be muted initially", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted initially")
 
         // When
         networkRepo.setMuted(false)
 
         // Then
-        assertEquals("getMuteExpiry should return 0 when setMuted(false)", 0L, networkRepo.getMuteExpiry())
-        assertFalse("Should not be muted when setMuted(false)", networkRepo.isMuted())
+        assertEquals(0L, networkRepo.getMuteExpiry(), "getMuteExpiry should return 0 when setMuted(false)")
+        assertFalse(networkRepo.isMuted(), "Should not be muted when setMuted(false)")
     }
 
     @Test
@@ -193,7 +196,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.getMuteExpiry()
 
         // Then
-        assertEquals("Default mute expiry value should be 0", 0L, result)
+        assertEquals(0L, result, "Default mute expiry value should be 0")
     }
 
     @Test
@@ -205,7 +208,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.isMuted()
 
         // Then
-        assertFalse("Should not be muted when no mute value stored", result)
+        assertFalse(result, "Should not be muted when no mute value stored")
     }
 
     @Test
@@ -220,7 +223,7 @@ class NetworkRepoTest : BaseTestCase() {
         testClock.advanceTime(12 * 60 * 60 * 1000)
         
         // Then
-        assertTrue("Should be muted when set within last 24 hours", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted when set within last 24 hours")
     }
 
     @Test
@@ -234,7 +237,7 @@ class NetworkRepoTest : BaseTestCase() {
         testClock.advanceTime(25 * 60 * 60 * 1000) // 25 hours
         
         // Then
-        assertFalse("Should not be muted when set more than 24 hours ago", networkRepo.isMuted())
+        assertFalse(networkRepo.isMuted(), "Should not be muted when set more than 24 hours ago")
     }
 
     @Test
@@ -248,7 +251,7 @@ class NetworkRepoTest : BaseTestCase() {
         testClock.advanceTime(23 * 60 * 60 * 1000 + 59 * 60 * 1000) // 23h 59m
         
         // Then
-        assertTrue("Should be muted when set just under 24 hours ago", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted when set just under 24 hours ago")
     }
 
     @Test
@@ -262,7 +265,7 @@ class NetworkRepoTest : BaseTestCase() {
         testClock.advanceTime(24 * 60 * 60 * 1000 + 60 * 1000) // 24h 1m
         
         // Then
-        assertFalse("Should not be muted when set just over 24 hours ago", networkRepo.isMuted())
+        assertFalse(networkRepo.isMuted(), "Should not be muted when set just over 24 hours ago")
     }
 
     @Test
@@ -276,12 +279,12 @@ class NetworkRepoTest : BaseTestCase() {
         networkRepo.setMuteExpiry(expiryMs)
 
         // Then
-        assertTrue("Should be muted when expiry is in the future", networkRepo.isMuted())
-        assertEquals("getMuteExpiry should return the stored expiry", expiryMs, networkRepo.getMuteExpiry())
+        assertTrue(networkRepo.isMuted(), "Should be muted when expiry is in the future")
+        assertEquals(expiryMs, networkRepo.getMuteExpiry(), "getMuteExpiry should return the stored expiry")
 
         // Advance past expiry
         testClock.advanceTime(4 * 60 * 60 * 1000) // 4 hours
-        assertFalse("Should not be muted after expiry has passed", networkRepo.isMuted())
+        assertFalse(networkRepo.isMuted(), "Should not be muted after expiry has passed")
     }
 
     @Test
@@ -290,14 +293,14 @@ class NetworkRepoTest : BaseTestCase() {
         val testClock = TestClock(1000000L * 1000)
         networkRepo = createNetworkRepo(testClock)
         networkRepo.setMuted(true)
-        assertTrue("Should be muted initially", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted initially")
 
         // When
         networkRepo.unmute()
 
         // Then
-        assertFalse("Should not be muted after unmute()", networkRepo.isMuted())
-        assertEquals("getMuteExpiry should return 0 after unmute()", 0L, networkRepo.getMuteExpiry())
+        assertFalse(networkRepo.isMuted(), "Should not be muted after unmute()")
+        assertEquals(0L, networkRepo.getMuteExpiry(), "getMuteExpiry should return 0 after unmute()")
     }
 
     // Migration tests: old SDK (comms_mtd) → new SDK (comms_mute_expiry_ts)
@@ -318,9 +321,9 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.isMuted()
 
         // Then - Should detect old mute and migrate it
-        assertTrue("Should be muted via migration from old key", result)
+        assertTrue(result, "Should be muted via migration from old key")
         val expectedExpiry = (legacyMuteTs + 24 * 60 * 60) * 1000L
-        assertEquals("Should have migrated to new key", expectedExpiry, networkRepo.getMuteExpiry())
+        assertEquals(expectedExpiry, networkRepo.getMuteExpiry(), "Should have migrated to new key")
     }
 
     @Test
@@ -340,8 +343,8 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.isMuted()
 
         // Then - Old mute was expired, should not be muted
-        assertFalse("Should not be muted when old mute has expired", result)
-        assertEquals("Should not have migrated expired mute", 0L, networkRepo.getMuteExpiry())
+        assertFalse(result, "Should not be muted when old mute has expired")
+        assertEquals(0L, networkRepo.getMuteExpiry(), "Should not have migrated expired mute")
     }
 
     @Test
@@ -363,7 +366,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.isMuted()
 
         // Then - New key takes precedence
-        assertTrue("New key should take precedence", result)
+        assertTrue(result, "New key should take precedence")
     }
 
     @Test
@@ -373,13 +376,13 @@ class NetworkRepoTest : BaseTestCase() {
         networkRepo = createNetworkRepo(testClock)
         // Set a far-future expiry (simulating backend-set infinite mute)
         networkRepo.setMuteExpiry(253402300799000L) // 9999-12-31
-        assertTrue("Should be muted with far-future expiry", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted with far-future expiry")
 
         // When
         networkRepo.unmute()
 
         // Then
-        assertFalse("Should not be muted after unmute()", networkRepo.isMuted())
+        assertFalse(networkRepo.isMuted(), "Should not be muted after unmute()")
     }
 
     @Test
@@ -396,19 +399,19 @@ class NetworkRepoTest : BaseTestCase() {
         networkRepo.setMuted(true)
         
         // Then - All should be stored independently
-        assertEquals("Domain should be stored independently", domain, networkRepo.getDomain())
-        assertEquals("First request timestamp should be stored independently", firstTs, networkRepo.getFirstRequestTs())
-        assertTrue("Should be muted", networkRepo.isMuted())
-        assertTrue("Mute expiry should be non-zero", networkRepo.getMuteExpiry() > 0)
+        assertEquals(domain, networkRepo.getDomain(), "Domain should be stored independently")
+        assertEquals(firstTs, networkRepo.getFirstRequestTs(), "First request timestamp should be stored independently")
+        assertTrue(networkRepo.isMuted(), "Should be muted")
+        assertTrue(networkRepo.getMuteExpiry() > 0, "Mute expiry should be non-zero")
         
         // When - Unmute
         networkRepo.unmute()
         
         // Then - Other values should remain, mute should be cleared
-        assertEquals("Domain should still be stored", domain, networkRepo.getDomain())
-        assertEquals("First request timestamp should still be stored", firstTs, networkRepo.getFirstRequestTs())
-        assertFalse("Should not be muted", networkRepo.isMuted())
-        assertEquals("Mute expiry should be zero", 0L, networkRepo.getMuteExpiry())
+        assertEquals(domain, networkRepo.getDomain(), "Domain should still be stored")
+        assertEquals(firstTs, networkRepo.getFirstRequestTs(), "First request timestamp should still be stored")
+        assertFalse(networkRepo.isMuted(), "Should not be muted")
+        assertEquals(0L, networkRepo.getMuteExpiry(), "Mute expiry should be zero")
     }
 
     // Test cases for setDomain()
@@ -549,7 +552,7 @@ class NetworkRepoTest : BaseTestCase() {
         val currentDelay = 5000
         val networkRetryCount = 10
         // Create config with null region
-        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", null)
+        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", null)!!
         networkRepo = createNetworkRepo()
 
         // When
@@ -659,12 +662,12 @@ class NetworkRepoTest : BaseTestCase() {
 
         // Then - All results should be different (due to randomness) and within expected range
         val uniqueResults = results.toSet()
-        assertTrue("Should have multiple different results due to randomness", uniqueResults.size > 1)
+        assertTrue(uniqueResults.size > 1, "Should have multiple different results due to randomness")
 
         // All results should be between 2000 (1000 + min random 1000) and 11000 (1000 + max random 10000)
         results.forEach { result ->
-            assertTrue("Result $result should be >= 2000", result >= 2000)
-            assertTrue("Result $result should be <= 11000", result <= 11000)
+            assertTrue(result >= 2000, "Result $result should be >= 2000")
+            assertTrue(result <= 11000, "Result $result should be <= 11000")
         }
     }
 
@@ -690,15 +693,15 @@ class NetworkRepoTest : BaseTestCase() {
         assertEquals(lastTs, networkRepo.getLastRequestTs())
         assertEquals(domain, networkRepo.getDomain())
         assertEquals(spikyDomain, networkRepo.getSpikyDomain())
-        assertTrue("Should be muted", networkRepo.isMuted())
+        assertTrue(networkRepo.isMuted(), "Should be muted")
     }
 
     // Test with different config instances
     @Test
     fun `different config instances should have separate storage`() {
         // Given
-        val config1 = CleverTapInstanceConfig.createInstance(appCtx, "account1", "token1", "us1")
-        val config2 = CleverTapInstanceConfig.createInstance(appCtx, "account2", "token2", "eu1")
+        val config1 = CleverTapInstanceConfig.createInstance(appCtx, "account1", "token1", "us1")!!
+        val config2 = CleverTapInstanceConfig.createInstance(appCtx, "account2", "token2", "eu1")!!
         val networkRepo1 = NetworkRepo(appCtx, config1)
         val networkRepo2 = NetworkRepo(appCtx, config2)
 

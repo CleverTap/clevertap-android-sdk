@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
 /**
  * A strategy for cleaning up file assets.
  *
  * Implementations of this interface define the logic for clearing files based on provided URLs.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface FileCleanupStrategy{
 
     val fileResourceProvider: () -> FileResourceProvider

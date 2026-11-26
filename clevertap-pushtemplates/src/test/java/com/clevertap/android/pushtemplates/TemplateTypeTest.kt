@@ -1,8 +1,8 @@
 package com.clevertap.android.pushtemplates
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /**
  * pt_five_icons and pt_icons are separate templates.

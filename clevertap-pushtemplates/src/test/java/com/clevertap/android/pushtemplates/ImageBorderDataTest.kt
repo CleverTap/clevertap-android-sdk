@@ -2,15 +2,15 @@ package com.clevertap.android.pushtemplates
 
 import android.graphics.Color
 import android.os.Build
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class ImageBorderDataTest {
@@ -35,7 +35,7 @@ class ImageBorderDataTest {
 
                 // Then
                 val expected = width > 0f && colour != null
-                assertEquals("$widthLabel + $colourLabel", expected, data.hasBorder)
+                assertEquals(expected, data.hasBorder, "$widthLabel + $colourLabel")
             }
         }
     }
@@ -53,10 +53,10 @@ class ImageBorderDataTest {
     @Test
     fun `styling is active when there is either a radius or a full border`() {
         // Given / Then
-        assertTrue("a radius alone", radiusOnly.isActive)
-        assertTrue("a border alone", borderOnly.isActive)
-        assertTrue("both together", both.isActive)
-        assertFalse("neither", inactive.isActive)
+        assertTrue(radiusOnly.isActive, "a radius alone")
+        assertTrue(borderOnly.isActive, "a border alone")
+        assertTrue(both.isActive, "both together")
+        assertFalse(inactive.isActive, "neither")
     }
 
     @Test
@@ -73,7 +73,7 @@ class ImageBorderDataTest {
         // Given / Then
         assertFalse(useNativeImageStyling)
         PTScaleType.values().forEach {
-            assertFalse("$it must not use the view path", it.usesNativeImageStyling())
+            assertFalse(it.usesNativeImageStyling(), "$it must not use the view path")
         }
     }
 
@@ -83,8 +83,8 @@ class ImageBorderDataTest {
         // Given
         listOf(radiusOnly, borderOnly, both).forEach { data ->
             // When / Then
-            assertNull("$data with CENTER_CROP", data.bakedInto(PTScaleType.CENTER_CROP))
-            assertSame("$data with FIT_CENTER", data, data.bakedInto(PTScaleType.FIT_CENTER))
+            assertNull(data.bakedInto(PTScaleType.CENTER_CROP), "$data with CENTER_CROP")
+            assertSame(data, data.bakedInto(PTScaleType.FIT_CENTER), "$data with FIT_CENTER")
         }
     }
 
@@ -94,7 +94,7 @@ class ImageBorderDataTest {
         // Given / Then
         listOf(radiusOnly, borderOnly, both).forEach { data ->
             PTScaleType.values().forEach { scaleType ->
-                assertNull("$data with $scaleType", data.bakedInto(scaleType))
+                assertNull(data.bakedInto(scaleType), "$data with $scaleType")
             }
         }
     }
@@ -104,10 +104,7 @@ class ImageBorderDataTest {
     fun `an inactive payload bakes nothing whichever scale type is used`() {
         PTScaleType.values().forEach { scaleType ->
             val baked = inactive.bakedInto(scaleType)
-            assertFalse(
-                "inactive data must never produce something to draw ($scaleType)",
-                baked?.isActive == true
-            )
+            assertFalse(baked?.isActive == true, "inactive data must never produce something to draw ($scaleType)")
         }
     }
 
@@ -116,7 +113,7 @@ class ImageBorderDataTest {
     fun `a null payload bakes nothing whichever scale type is used`() {
         val none: ImageBorderData? = null
         PTScaleType.values().forEach { scaleType ->
-            assertNull("$scaleType", none.bakedInto(scaleType))
+            assertNull(none.bakedInto(scaleType), "$scaleType")
         }
     }
 }

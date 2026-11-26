@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp
 
+import androidx.annotation.RestrictTo
+
 /**
  * A [TriggerCounting] that reports the live count plus a fixed [offset], without writing anything.
  *
@@ -9,6 +11,7 @@ package com.clevertap.android.sdk.inapp
  * real would double-count "show once per N triggers" rules). Wrapping the live counter with
  * `offset = 1` gives exactly the same value the real path would have matched against.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class OffsetTriggerCounter(
     private val delegate: TriggerCounting,
     private val offset: Int = 1

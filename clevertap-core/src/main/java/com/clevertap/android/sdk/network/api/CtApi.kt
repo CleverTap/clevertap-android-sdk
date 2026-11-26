@@ -7,7 +7,9 @@ import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
 import androidx.core.net.toUri
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CtApi(
     private val httpClient: CtHttpClient,
     val defaultDomain: String,

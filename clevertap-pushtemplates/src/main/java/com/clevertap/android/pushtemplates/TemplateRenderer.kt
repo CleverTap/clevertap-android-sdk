@@ -14,7 +14,15 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat.Builder
 import androidx.core.net.toUri
-import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_COLLAPSE_KEY
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_META_CLR_DEFAULTS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_NOTIF_ICON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SMALL_ICON_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TIMER_MIN_THRESHOLD
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
@@ -53,7 +61,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
-class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+public class TemplateRenderer @JvmOverloads constructor(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
@@ -65,11 +73,11 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
-    enum class LogLevel(private val value: Int) {
+    public enum class LogLevel(private val value: Int) {
         @Suppress("unused")
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
-        fun intValue(): Int {
+        public fun intValue(): Int {
             return value
         }
     }
@@ -366,7 +374,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 try {
                     val action = actions.getJSONObject(i)
                     val label = action.optString("l")
-                    val ico = action.optString(actionButtonIconKey)
+                    val ico = action.optString(getActionButtonIconKey())
                     val id = action.optString("id")
 
                     if (label.isEmpty() || id.isEmpty()) {
@@ -518,7 +526,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         }
     }
 
-    companion object {
+    public companion object {
         /**
          * Returns the log level set for PushTemplates
          *
@@ -532,6 +540,6 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
          * 2(shows debug output)
          */
         @JvmStatic
-        var debugLevel = LogLevel.INFO.intValue()
+        public var debugLevel: Int = LogLevel.INFO.intValue()
     }
 }

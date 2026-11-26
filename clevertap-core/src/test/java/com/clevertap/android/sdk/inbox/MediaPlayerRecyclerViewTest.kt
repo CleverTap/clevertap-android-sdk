@@ -20,16 +20,16 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * Lives in the inbox package because the holder's constructor and video container are
@@ -58,9 +58,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val showsVideo: Boolean
             get() = container.visibility == View.VISIBLE && container.childCount > 0
 
-        override fun getMessageId() = messageIdValue
+        override val messageId get() = messageIdValue
 
-        override fun getMediaUrl() = mediaUrlValue
+        override val mediaUrl get() = mediaUrlValue
 
         override fun needsMediaPlayer() = isVideoRow
 
@@ -69,7 +69,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         override fun addMediaPlayer(
             currentVolume: Float,
             muteClick: Function0<Float>,
-            playMedia: Function3<String, Boolean, Boolean, Void>,
+            playMedia: Function3<String, Boolean, Boolean, Void?>,
             videoSurfaceView: View
         ): Boolean {
             attempts++
@@ -78,9 +78,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
             }
             attachCount++
             this.muteClick = muteClick
-            frameLayout.removeAllViews()
-            frameLayout.addView(videoSurfaceView)
-            frameLayout.visibility = View.VISIBLE // what playerReady() does once the player is ready
+            container.removeAllViews()
+            container.addView(videoSurfaceView)
+            container.visibility = View.VISIBLE // what playerReady() does once the player is ready
             playMedia.invoke(mediaUrlValue.orEmpty(), false, true)
             return true
         }
@@ -174,7 +174,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         showList(rows = 1)
         val row = rowAt(0)
         list.playVideo()
-        assertEquals("row never became the playing row", 1, row.attachCount)
+        assertEquals(1, row.attachCount, "row never became the playing row")
         assertEquals(View.VISIBLE, row.container.visibility)
         assertEquals(1, row.container.childCount)
 
@@ -214,7 +214,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val playing = rowAt(0)
         val other = rowAt(1)
         list.playVideo()
-        assertEquals("top row never became the playing row", 1, playing.attachCount)
+        assertEquals(1, playing.attachCount, "top row never became the playing row")
         assertEquals(0, other.attachCount)
 
         list.layoutManager!!.removeView(other.itemView)
@@ -230,12 +230,12 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         showList(rows = 6)
         val first = rowAt(0)
         list.playVideo()
-        assertEquals("top row never became the playing row", 1, first.attachCount)
+        assertEquals(1, first.attachCount, "top row never became the playing row")
         assertEquals(1, rowsShowingVideo())
 
         // Scroll the playing row off screen; RecyclerView detaches it into its view cache.
         scrollPastTwoRows()
-        assertEquals("playing row should be detached", null, first.itemView.parent)
+        assertEquals(null, first.itemView.parent, "playing row should be detached")
         assertEquals(0, first.container.childCount)
         assertEquals(View.GONE, first.container.visibility)
         assertEquals(0, rowsShowingVideo())
@@ -247,8 +247,8 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         // Scroll back: the row returns from the cache without a rebind.
         scrollBackPastTwoRows()
         assertSame(first, rowAt(0))
-        assertEquals("row came back through a rebind; the test no longer covers the cache path", 1, first.bindCount)
-        assertEquals("a stale video container is visible next to the playing row", 1, rowsShowingVideo())
+        assertEquals(1, first.bindCount, "row came back through a rebind; the test no longer covers the cache path")
+        assertEquals(1, rowsShowingVideo(), "a stale video container is visible next to the playing row")
 
         list.playVideo() // scroll settled: the first row is the best row again
         assertEquals(2, first.attachCount)
@@ -262,16 +262,16 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         showList(rows = 6, videoPositions = setOf(0))
         val video = rowAt(0)
         list.playVideo()
-        assertEquals("video row never became the playing row", 1, video.attachCount)
+        assertEquals(1, video.attachCount, "video row never became the playing row")
 
         scrollPastTwoRows()
-        assertEquals("video row should be detached", null, video.itemView.parent)
+        assertEquals(null, video.itemView.parent, "video row should be detached")
         list.playVideo() // scroll settled with no video row on screen
         assertEquals(0, rowsShowingVideo())
 
         scrollBackPastTwoRows()
         assertSame(video, rowAt(0))
-        assertEquals("row came back through a rebind; the test no longer covers the cache path", 1, video.bindCount)
+        assertEquals(1, video.bindCount, "row came back through a rebind; the test no longer covers the cache path")
 
         // The list must have forgotten the row on detach; otherwise it treats the row as
         // still playing and never attaches a player to it again.
@@ -431,12 +431,12 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         val stopped = saved.getBundle("message0")
         val playing = saved.getBundle("message3")
-        assertNotNull("the stopped video was not saved", stopped)
-        assertNotNull("the playing video was not saved", playing)
+        assertNotNull(stopped, "the stopped video was not saved")
+        assertNotNull(playing, "the playing video was not saved")
         assertEquals(5_000L, stopped!!.getLong("positionMs"))
-        assertEquals(1f, stopped.getFloat("volume"), 0f)
+        assertEquals(1f, stopped.getFloat("volume"), absoluteTolerance = 0f)
         assertEquals(9_000L, playing!!.getLong("positionMs"))
-        assertEquals(0f, playing.getFloat("volume"), 0f)
+        assertEquals(0f, playing.getFloat("volume"), absoluteTolerance = 0f)
     }
 
     @Test
@@ -453,10 +453,10 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val saved = savedStates()
 
         val started = saved.getBundle("message0")
-        assertNotNull("the place was not saved for the message that was playing", started)
+        assertNotNull(started, "the place was not saved for the message that was playing")
         assertEquals("url0", started!!.getString("mediaUrl"))
         assertEquals(12_000L, started.getLong("positionMs"))
-        assertEquals("the place was saved for the row's new message", null, saved.getBundle("another-message"))
+        assertEquals(null, saved.getBundle("another-message"), "the place was saved for the row's new message")
     }
 
     @Test
@@ -522,7 +522,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
 
         verify(exactly = 1) { handle.setPlayWhenReady(true) }
-        assertEquals("the row must not be attached a second time", 1, rowAt(0).attachCount)
+        assertEquals(1, rowAt(0).attachCount, "the row must not be attached a second time")
     }
 
     @Test
@@ -631,7 +631,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         list.playVideo()
 
-        assertEquals("the second play must try again, not take the already-playing shortcut", 2, row.attempts)
+        assertEquals(2, row.attempts, "the second play must try again, not take the already-playing shortcut")
         assertEquals(0, row.attachCount)
         verify(exactly = 0) { handle.setPlayWhenReady(any()) }
     }
@@ -694,7 +694,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         row.mediaUrlValue = "another-url"
         list.playVideo()
 
-        assertEquals("the new message must get its own start", 2, row.attachCount)
+        assertEquals(2, row.attachCount, "the new message must get its own start")
         verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
         verify(exactly = 0) { handle.setPlayWhenReady(any()) }
     }
@@ -708,7 +708,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         list.playVideo()
 
-        assertEquals("the second play must take the already-playing shortcut", 1, row.attachCount)
+        assertEquals(1, row.attachCount, "the second play must take the already-playing shortcut")
         verify(exactly = 1) { handle.setPlayWhenReady(true) }
     }
 
@@ -809,7 +809,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.rememberPlayingVideo()
 
         assertEquals(6_000L, states.stateOf("message0", "url0")!!.positionMs)
-        assertEquals(1f, states.stateOf("message0", "url0")!!.volume, 0f)
+        assertEquals(1f, states.stateOf("message0", "url0")!!.volume, absoluteTolerance = 0f)
     }
 
     @Test
@@ -856,8 +856,8 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.layout(0, 0, LIST_WIDTH, LIST_HEIGHT)
         list.playVideo()
 
-        assertTrue("the list is attached to a window", list.isAttachedToWindow)
-        assertEquals("rows that got the player, all holders: " + adapter.holders.map { it.attachCount }, 2, adapter.holders.sumOf { it.attachCount })
+        assertTrue(list.isAttachedToWindow, "the list is attached to a window")
+        assertEquals(2, adapter.holders.sumOf { it.attachCount }, "rows that got the player, all holders: " + adapter.holders.map { it.attachCount })
         verify(exactly = 2) { handle.initExoplayer(any(), any(), any()) }
     }
 

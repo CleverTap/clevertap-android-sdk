@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.db.dao.DisplayedInAppDAO
 import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * The saved full-screen In-App, read back from the database.
@@ -14,6 +15,7 @@ import org.json.JSONObject
  * @property inApp The In-App JSON as it was received.
  * @property timeToLive The In-App's time to live, in seconds since the epoch.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class DisplayedInApp(
     val inApp: JSONObject,
     val timeToLive: Long
@@ -28,6 +30,7 @@ internal data class DisplayedInApp(
  * @property logger The logger for verbose logging.
  * @property accountId The account ID for logging context.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DisplayedInAppStore(
     private val dao: DisplayedInAppDAO,
     private val cryptHandler: CryptHandler,

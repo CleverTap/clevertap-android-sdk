@@ -73,7 +73,7 @@ class FetchVariablesResponseTest : BaseTestCase() {
         fetchVariablesResponse.processResponse(jsonBody, null, mockContext)
 
         verify(exactly = 1) { mockCtVariables.handleVariableResponse(varsJson, mockFetchVariablesCallback) }
-        verify(exactly = 1) { mockCallbackManager.setFetchVariablesCallback(null) }
+        verify(exactly = 1) { mockCallbackManager.fetchVariablesCallback = null }
     }
 
     @Test

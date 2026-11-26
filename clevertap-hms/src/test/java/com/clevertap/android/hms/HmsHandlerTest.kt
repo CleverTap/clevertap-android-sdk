@@ -1,7 +1,7 @@
 package com.clevertap.android.hms
 
-import com.clevertap.android.hms.HmsConstants.APP_ID_KEY
-import com.clevertap.android.hms.HmsConstants.HCM_SCOPE
+import com.clevertap.android.hms.HmsConstants.Companion.APP_ID_KEY
+import com.clevertap.android.hms.HmsConstants.Companion.HCM_SCOPE
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.huawei.agconnect.AGConnectInstance
@@ -15,7 +15,6 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
@@ -49,26 +49,26 @@ class HmsHandlerTest : BaseTestCase() {
     fun testAppId_Invalid() {
         every { agConnectOptionsSpy.getString(APP_ID_KEY) } throws RuntimeException("Something went wrong")
         val appId = sdkHandler.appId()
-        Assert.assertNull(appId)
+        assertNull(appId)
     }
 
     @Test
     fun testAppId_Valid() {
         every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
         val appId = sdkHandler.appId()
-        Assert.assertNotNull(appId)
+        assertNotNull(appId)
     }
 
     @Test
     fun testIsAvailable_Returns_False() {
         every { agConnectOptionsSpy.getString(APP_ID_KEY) } throws RuntimeException("Something Went Wrong")
-        Assert.assertFalse(sdkHandler.isAvailable)
+        assertFalse(sdkHandler.isAvailable)
     }
 
     @Test
     fun testIsAvailable_Returns_True() {
         every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
-        Assert.assertTrue(sdkHandler.isAvailable)
+        assertTrue(sdkHandler.isAvailable)
     }
 
     @Test
@@ -76,7 +76,7 @@ class HmsHandlerTest : BaseTestCase() {
         every { huaweiApi.isHuaweiMobileNoticeAvailable(application) } returns 1
         mockkStatic(HuaweiApiAvailability::class) {
             every { HuaweiApiAvailability.getInstance() } returns huaweiApi
-            Assert.assertFalse(sdkHandler.isSupported)
+            assertFalse(sdkHandler.isSupported)
         }
     }
 
@@ -86,7 +86,7 @@ class HmsHandlerTest : BaseTestCase() {
         every { huaweiApi.isHuaweiMobileNoticeAvailable(application) } throws RuntimeException("Something went wrong")
         mockkStatic(HuaweiApiAvailability::class) {
             every { HuaweiApiAvailability.getInstance() } returns huaweiApi
-            Assert.assertFalse(sdkHandler.isSupported)
+            assertFalse(sdkHandler.isSupported)
         }
     }
 
@@ -96,7 +96,7 @@ class HmsHandlerTest : BaseTestCase() {
         every { huaweiApi.isHuaweiMobileNoticeAvailable(application) } returns 0
         mockkStatic(HuaweiApiAvailability::class) {
             every { HuaweiApiAvailability.getInstance() } returns huaweiApi
-            Assert.assertTrue(sdkHandler.isSupported)
+            assertTrue(sdkHandler.isSupported)
         }
     }
 
@@ -108,7 +108,7 @@ class HmsHandlerTest : BaseTestCase() {
         mockkStatic(HmsInstanceId::class) {
             every { HmsInstanceId.getInstance(application) } returns instance
             val token = sdkHandler.onNewToken()
-                Assert.assertNull(token)
+                assertNull(token)
             }
     }
 
@@ -238,7 +238,7 @@ class HmsHandlerTest : BaseTestCase() {
         val handler = HmsSdkHandler(application, cleverTapInstanceConfig)
 
         // Act
-        val result = handler.isAvailable()
+        val result = handler.isAvailable
 
         // Assert
         assertTrue(result)
@@ -259,7 +259,7 @@ class HmsHandlerTest : BaseTestCase() {
         val handler = HmsSdkHandler(application, cleverTapInstanceConfig)
 
         // Act
-        val result = handler.isAvailable()
+        val result = handler.isAvailable
 
         // Assert
         assertFalse(result)
@@ -297,7 +297,7 @@ class HmsHandlerTest : BaseTestCase() {
     fun testNewToken_Invalid_AppId() {
         every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns null
         val token = sdkHandler.onNewToken()
-        Assert.assertNull(token)
+        assertNull(token)
     }
 
     @Test
@@ -312,7 +312,7 @@ class HmsHandlerTest : BaseTestCase() {
         mockkStatic(HmsInstanceId::class) {
             every { HmsInstanceId.getInstance(application) } returns instance
             val token = sdkHandler.onNewToken()
-                Assert.assertEquals(HmsTestConstants.HMS_TOKEN, token)
+                assertEquals(HmsTestConstants.HMS_TOKEN, token)
             }
         }
 }

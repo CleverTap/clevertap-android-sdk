@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPDragHandler
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
+import androidx.annotation.RestrictTo
 
 /**
  * Compact draggable PIP window.
@@ -34,6 +35,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
  * Contains the shared [mediaView] (moved out during expand), a [PIPControlsOverlay]
  * with controls, and a [PIPDragHandler] for drag-to-reposition + snap.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPCompactView(
     context: Context,
     val mediaView: PIPMediaView,

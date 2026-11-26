@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.inapp.data
 
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class DurationPartitionedInAppsTest {
 

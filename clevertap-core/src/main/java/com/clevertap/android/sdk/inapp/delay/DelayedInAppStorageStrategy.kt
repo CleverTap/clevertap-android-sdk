@@ -3,10 +3,12 @@ package com.clevertap.android.sdk.inapp.delay
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Storage strategy for delayed in-apps (requires database persistence)
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DelayedInAppStorageStrategy(
     private val accountId: String,
     private val logger: ILogger,

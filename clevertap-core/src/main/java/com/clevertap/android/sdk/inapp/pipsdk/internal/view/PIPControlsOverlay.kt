@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
 import android.widget.FrameLayout
+import androidx.annotation.RestrictTo
 
 /**
  * Transparent overlay that hosts control buttons and handles auto-hide after [AUTO_HIDE_DELAY_MS].
@@ -13,6 +14,7 @@ import android.widget.FrameLayout
  * (with optional auto-hide), [hideControls] to immediately hide, and [detach] on cleanup
  * to cancel pending callbacks.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
 
     private val mainHandler = Handler(Looper.getMainLooper())

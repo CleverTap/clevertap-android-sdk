@@ -7,7 +7,9 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimationConfig
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PIPAnimator {
 
     private const val DURATION_SNAP_MS = 250L

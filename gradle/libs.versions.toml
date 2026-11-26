@@ -6,6 +6,7 @@ android_minSdk = "23"
 kotlin_plugin = "2.2.10"
 rules = "1.7.0"
 sonarqube_plugin = "7.3.1.8318"
+binary_compatibility_validator = "0.18.1"
 detekt_gradle_plugin = "1.23.4"
 firebase_gradle_crashlytics = "3.0.2"
 vanniktech_maven_pulish_plugin = "0.36.0"
@@ -88,6 +89,7 @@ android-gif-drawable = { module = "pl.droidsonroids.gif:android-gif-drawable", v
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
 detekt_gradle_plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" , version.ref= "detekt_gradle_plugin"}
+detekt_rules_libraries = { module = "io.gitlab.arturbosch.detekt:detekt-rules-libraries", version.ref = "detekt_gradle_plugin" }
 firebase_gradle_crashlytics = { module = "com.google.firebase:firebase-crashlytics-gradle" , version.ref= "firebase_gradle_crashlytics"}
 
 # AndroidX
@@ -178,3 +180,4 @@ media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_plugin" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary_compatibility_validator" }

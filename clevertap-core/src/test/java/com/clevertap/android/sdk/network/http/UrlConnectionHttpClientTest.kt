@@ -5,11 +5,11 @@ import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient.Companion.
 import io.mockk.mockk
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class UrlConnectionHttpClientTest {
@@ -33,23 +33,20 @@ class UrlConnectionHttpClientTest {
         val subjects = PINNED_ROOT_CERTIFICATES.map { name ->
             val path = "$CERTIFICATES_DIR/$name.cer"
             val stream = UrlConnectionHttpClient::class.java.classLoader?.getResourceAsStream(path)
-            assertNotNull("Certificate missing at $path", stream)
+            assertNotNull(stream, "Certificate missing at $path")
             stream!!.use {
                 (CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate)
                     .subjectX500Principal.name
             }
         }
 
-        assertEquals(
-            listOf(
+        assertEquals(listOf(
                 "CN=Amazon Root CA 1,O=Amazon,C=US",
                 "CN=Amazon Root CA 2,O=Amazon,C=US",
                 "CN=Amazon Root CA 3,O=Amazon,C=US",
                 "CN=Amazon Root CA 4,O=Amazon,C=US",
                 "CN=Starfield Services Root Certificate Authority - G2,O=Starfield Technologies\\, Inc.," +
                     "L=Scottsdale,ST=Arizona,C=US"
-            ),
-            subjects
-        )
+            ), subjects)
     }
 }

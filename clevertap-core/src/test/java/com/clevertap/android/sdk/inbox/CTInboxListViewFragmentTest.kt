@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.inbox
 
 import android.os.Bundle
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -24,17 +26,17 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.robolectric.Robolectric
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTInboxListViewFragmentTest : BaseTestCase() {
@@ -224,7 +226,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didClick_with_out_of_range_position_is_a_silent_noop() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         // Positions that a stale click could deliver after a list refresh
@@ -237,7 +239,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didClick_with_empty_list_does_not_throw() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
 
         ctInboxListViewFragmentSpy.didClick(null, 0, 0, null, Constants.APP_INBOX_ITEM_INDEX)
 
@@ -247,7 +249,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didShow_forwards_the_exact_message_to_the_listener() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
         val message = CTInboxMessage(jsonObj)
 
         ctInboxListViewFragmentSpy.didShow(null, message)
@@ -320,10 +322,10 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
         assertSame(originalListInstance, fragment.inboxMessages)
         assertEquals(2, fragment.inboxMessages.size)
-        val recycler = fragment.linearLayout.findViewById<RecyclerView>(R.id.list_view_recycler_view)
+        val recycler = fragment.linearLayout!!.findViewById<RecyclerView>(R.id.list_view_recycler_view)
         assertEquals(View.VISIBLE, recycler.visibility)
         assertEquals(2, recycler.adapter?.itemCount)
-        assertEquals(View.GONE, fragment.noMessageView.visibility)
+        assertEquals(View.GONE, fragment.noMessageView!!.visibility)
     }
 
     @Test
@@ -366,10 +368,10 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         fragment.refreshList()
 
         assertTrue(fragment.inboxMessages.isEmpty())
-        val recycler = fragment.linearLayout.findViewById<RecyclerView>(R.id.list_view_recycler_view)
+        val recycler = fragment.linearLayout!!.findViewById<RecyclerView>(R.id.list_view_recycler_view)
         assertEquals(View.GONE, recycler.visibility)
         assertEquals(0, recycler.adapter?.itemCount)
-        assertEquals(View.VISIBLE, fragment.noMessageView.visibility)
+        assertEquals(View.VISIBLE, fragment.noMessageView!!.visibility)
     }
 
     @Test
@@ -387,7 +389,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
     @Test
     fun test_swipe_refresh_success_triggers_refreshList_and_stops_spinner() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
             every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
@@ -396,6 +398,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
+            // CTInboxListViewFragment only asks CleverTapAPI for an instance when it has a config
+            fragment.config = mockk(relaxed = true)
             every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
@@ -410,13 +414,13 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             assertFalse(swipeRefreshLayout.isRefreshing)
             verify(exactly = 1) { fragment.refreshList() }
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 
     @Test
     fun test_swipe_refresh_failure_stops_spinner_without_refreshing() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
             every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
@@ -425,6 +429,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
+            // CTInboxListViewFragment only asks CleverTapAPI for an instance when it has a config
+            fragment.config = mockk(relaxed = true)
             every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
@@ -440,7 +446,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             assertTrue(swipeRefreshLayout.isEnabled)
             verify(exactly = 0) { fragment.refreshList() }
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 
@@ -731,7 +737,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     fun test_onPageSettled_is_a_no_op_without_video_support() {
         // haveVideoPlayerSupport = false leaves mediaRecyclerView null.
         val fragment = viewReadyFragment()
-        assertNull("precondition: this tab has no media recycler", fragment.mediaRecyclerView)
+        assertNull(fragment.mediaRecyclerView, "precondition: this tab has no media recycler")
 
         fragment.onPageSettled()
 

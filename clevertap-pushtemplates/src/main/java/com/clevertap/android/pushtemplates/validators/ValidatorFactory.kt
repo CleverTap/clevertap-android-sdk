@@ -3,24 +3,41 @@ package com.clevertap.android.pushtemplates.validators
 import com.clevertap.android.pushtemplates.*
 import com.clevertap.android.pushtemplates.checkers.*
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
-const val PT_TITLE = "PT_TITLE"
-const val PT_MSG = "PT_MSG"
-const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
-const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
-const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
-const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
-const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
-const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
-const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
-const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
-const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
-const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
-const val PT_BIG_IMG = "PT_BIG_IMG"
-const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
-const val PT_ACTIONS = "PT_ACTIONS"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_TITLE = "PT_TITLE"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_MSG = "PT_MSG"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_BIG_IMG = "PT_BIG_IMG"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal const val PT_ACTIONS = "PT_ACTIONS"
 
-fun Iterable<Checker<out Any>>.and(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Iterable<Checker<out Any>>.and(): Boolean {
     var and = true
     for (element in this) {
         and =
@@ -29,7 +46,8 @@ fun Iterable<Checker<out Any>>.and(): Boolean {
     return and
 }
 
-fun Iterable<Checker<out Any>>.or(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Iterable<Checker<out Any>>.or(): Boolean {
     for (element in this) {
         if (element.check()) {
             return true
@@ -42,6 +60,7 @@ fun Iterable<Checker<out Any>>.or(): Boolean {
  * Builder class for creating validation checkers based on template data.
  * Uses a fluent interface to build only the necessary checkers for each template type.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ValidationCheckersBuilder {
     private val checkers = mutableMapOf<String, Checker<out Any>>()
 
@@ -174,6 +193,7 @@ internal class ValidationCheckersBuilder {
  * Factory for creating validators based on TemplateData objects.
  * Uses the builder pattern to create only the necessary validation checkers for each template type.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ValidatorFactory {
     companion object {
 

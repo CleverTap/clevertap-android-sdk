@@ -19,6 +19,10 @@ import io.mockk.verify
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTFeatureFlagsControllerTest : BaseTestCase() {
@@ -63,7 +67,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
                 cleverTapInstanceConfig
             )
             val controller = spyk(mCTFeatureFlagsController)
-            Assert.assertTrue(controller.isInitialized)
+            assertTrue(controller.isInitialized)
         }
     }
 
@@ -73,7 +77,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } returns
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } returns
                     MockFFResponse().getResponseJSON().toString()
 
             val controller = CTFeatureFlagsController(
@@ -82,7 +86,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
                 callbackManager,
                 analyticsManager, fileUtils
             )
-            Assert.assertTrue(controller.isInitialized)
+            assertTrue(controller.isInitialized)
         }
     }
 
@@ -92,7 +96,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } throws
                     RuntimeException("Something Went Wrong")
 
             val controller = CTFeatureFlagsController(
@@ -101,7 +105,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
                 callbackManager,
                 analyticsManager, fileUtils
             )
-            Assert.assertFalse(controller.isInitialized)
+            assertFalse(controller.isInitialized)
         }
     }
 
@@ -111,7 +115,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } throws
                     RuntimeException("Something Went Wrong")
 
             val jsonObject = MockFFResponse().getResponseJSON()
@@ -125,12 +129,12 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
                 )
             }
 
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_A", false))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_B", true))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_C", true))
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_D", false))
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_E", true))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_F", false))
+            assertTrue(mCTFeatureFlagsController.get("feature_A", false)!!)
+            assertFalse(mCTFeatureFlagsController.get("feature_B", true)!!)
+            assertFalse(mCTFeatureFlagsController.get("feature_C", true)!!)
+            assertTrue(mCTFeatureFlagsController.get("feature_D", false)!!)
+            assertTrue(mCTFeatureFlagsController.get("feature_E", true)!!)
+            assertFalse(mCTFeatureFlagsController.get("feature_F", false)!!)
         }
     }
 
@@ -142,8 +146,8 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             )
             val jsonObject = MockFFResponse().getResponseJSON()
             mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
-            mCTFeatureFlagsController.isInitialized = false
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_A", false))
+            mCTFeatureFlagsController.initialized = false
+            assertFalse(mCTFeatureFlagsController.get("feature_A", false)!!)
         }
     }
 
@@ -167,7 +171,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             val guid = "121u3203u129"
             val controller = spyk(mCTFeatureFlagsController)
             controller.resetWithGuid(guid)
-            Assert.assertEquals(guid, controller.guid)
+            assertEquals(guid, controller.guid)
             verify { controller.init() }
         }
     }
@@ -181,7 +185,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             val controller = spyk(mCTFeatureFlagsController)
             val newGuid = "131"
             controller.setGuidAndInit(newGuid)
-            Assert.assertNotEquals(controller.guid, newGuid)
+            assertNotEquals(controller.guid, newGuid)
             verify(exactly = 0) { controller.init() }
         }
     }
@@ -194,9 +198,9 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             )
             val controller = spyk(mCTFeatureFlagsController)
             val newGuid = "131"
-            controller.isInitialized = false
+            controller.initialized = false
             controller.setGuidAndInit(newGuid)
-            Assert.assertEquals(controller.guid, newGuid)
+            assertEquals(controller.guid, newGuid)
             verify { controller.init() }
         }
     }

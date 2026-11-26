@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class FilePreloadConfig(
     val parallelDownloads: Int,
 ) {

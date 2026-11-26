@@ -68,7 +68,9 @@ import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppController(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
@@ -391,9 +393,9 @@ internal class InAppController(
             InAppActionType.KEY_VALUES -> {
                 val keyValues = action.keyValues
                 if (keyValues?.isNotEmpty() == true) {
-                    if (callbackManager.getInAppNotificationButtonListener() != null) {
-                        callbackManager.getInAppNotificationButtonListener()
-                            .onInAppButtonClick(keyValues)
+                    if (callbackManager.inAppNotificationButtonListener != null) {
+                        callbackManager.inAppNotificationButtonListener
+                            ?.onInAppButtonClick(keyValues)
                     }
                 }
             }
@@ -516,10 +518,10 @@ internal class InAppController(
             )
         }
         try {
-            val listener = callbackManager.getInAppNotificationListener()
+            val listener = callbackManager.inAppNotificationListener
             if (listener != null) {
                 val notifKVS = if (inAppNotification.customExtras != null) {
-                    Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
+                    Utils.convertJSONObjectToHashMap(inAppNotification.customExtras!!)
                 } else {
                     HashMap<String, Any>()
                 }
@@ -565,7 +567,7 @@ internal class InAppController(
 
     private fun notifyOnShow(inAppNotification: CTInAppNotification) {
         try {
-            callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
+            callbackManager.inAppNotificationListener?.onShow(inAppNotification)
         } catch (t: Throwable) {
             logger.verbose(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
@@ -1325,11 +1327,11 @@ internal class InAppController(
     }
 
     private fun checkBeforeShowApprovalBeforeDisplay(inAppNotification: CTInAppNotification): Boolean {
-        val listener = callbackManager.getInAppNotificationListener()
+        val listener = callbackManager.inAppNotificationListener
 
         return if (listener != null) {
             val kvs = if (inAppNotification.customExtras != null) {
-                Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
+                Utils.convertJSONObjectToHashMap(inAppNotification.customExtras!!)
             } else {
                 HashMap<String, Any>()
             }

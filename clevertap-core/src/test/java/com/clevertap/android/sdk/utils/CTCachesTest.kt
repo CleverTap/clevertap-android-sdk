@@ -5,11 +5,11 @@ import com.clevertap.android.sdk.inapp.images.memory.Memory
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.After
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertSame
 import org.junit.Test
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 
 class CTCachesTest {
     @After

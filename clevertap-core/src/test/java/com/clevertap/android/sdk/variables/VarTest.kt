@@ -6,8 +6,8 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.*
-import org.junit.Assert.*
-
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 class VarTest : BaseTestCase() {
 
     private lateinit var ctVariables: CTVariables
@@ -18,8 +18,8 @@ class VarTest : BaseTestCase() {
         MockKAnnotations.init(this)
         ctVariables = mockk(relaxed = true)
         varCache = mockk(relaxed = true)
-        every { ctVariables.getVarCache() } returns varCache
-        mockkStatic(Logger::class)
+        every { ctVariables.varCache } returns varCache
+        mockkObject(Logger.Companion)
         mockkStatic(Utils::class)
     }
 
@@ -51,7 +51,7 @@ class VarTest : BaseTestCase() {
     fun `define() should return null for null defaultValue when kind is not FILE`() {
         val variableName = "testVar"
         val kind = "string"
-        val result = Var.define<String>(variableName, null, kind, ctVariables)
+        val result = Var.define<String?>(variableName, null, kind, ctVariables)
 
         assertNull(result)
         verify {
@@ -65,11 +65,11 @@ class VarTest : BaseTestCase() {
         val kind = "file"
 
         every { varCache.getVariable<String>("testVar") } returns null
-        val result = Var.define<String>(variableName, null, kind, ctVariables)
+        val result = Var.define<String?>(variableName, null, kind, ctVariables)
 
-        assertEquals(variableName, result.name())
-        assertNull(result.defaultValue())
-        assertEquals(kind, result.kind())
+        assertEquals(variableName, result!!.name())
+        assertNull(result!!.defaultValue())
+        assertEquals(kind, result!!.kind())
     }
 
     @Test
@@ -83,13 +83,13 @@ class VarTest : BaseTestCase() {
     @Test
     fun `define() should create a new variable if not already defined`() {
         every { varCache.getVariable<String>("newVar") } returns null
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val result = Var.define("newVar", "default", ctVariables)
         assertEquals("newVar", result?.name())
         assertEquals("default", result?.defaultValue())
 
         verify {
-            varCache.registerVariable(result)
+            varCache.registerVariable(result!!)
         }
     }
 
@@ -105,7 +105,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "newValue"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -125,7 +125,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "https://dummy.pdf"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -140,7 +140,7 @@ class VarTest : BaseTestCase() {
         // Define a variable
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         val callback: VariableCallback<String> = mockk(relaxed = true)
@@ -148,7 +148,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -161,7 +161,7 @@ class VarTest : BaseTestCase() {
     fun `value() should return correct value`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         assertEquals("default", varObj?.value())
@@ -174,7 +174,7 @@ class VarTest : BaseTestCase() {
         every { varCache.filePathFromDisk("https://dummy.pdf") } returns "dummy.a.b"
         val varObj = Var.define("testFileVar", null, "file", ctVariables)
 
-        assertEquals("dummy.a.b", varObj.value() as String)
+        assertEquals("dummy.a.b", varObj!!.value() as String)
     }
 
     @Test
@@ -193,7 +193,7 @@ class VarTest : BaseTestCase() {
     fun `stringValue() should return correct string representation`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         assertEquals("default", varObj?.stringValue())
@@ -213,7 +213,7 @@ class VarTest : BaseTestCase() {
     fun `rawFileValue() should return null for non file kind`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
         assertNull(varObj?.rawFileValue())
     }
@@ -224,7 +224,7 @@ class VarTest : BaseTestCase() {
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "https://dummy.pdf"
         val varObj = Var.define("testFileVar", "default", "file", ctVariables)
 
-        assertEquals("https://dummy.pdf", varObj.rawFileValue())
+        assertEquals("https://dummy.pdf", varObj!!.rawFileValue())
     }
 
 

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Channel-agnostic parsing of a campaign's `whenTriggers` / `whenLimits` blocks.
@@ -12,6 +13,7 @@ import org.json.JSONObject
  * The trigger/limit schema is identical across channels (in-app + Native Display), so both
  * evaluators share this instead of keeping verbatim copies (prototype A — SDK-6055 design review).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object EvalRules {
 
     fun whenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {

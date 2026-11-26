@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.store.preference
 
+import androidx.annotation.RestrictTo
+
 /**
  * The `ICTPreference` interface defines a set of methods for interacting with shared preferences
  * to read and write various data types. It provides flexibility in handling preferences
@@ -11,7 +13,8 @@ package com.clevertap.android.sdk.store.preference
  * in a specific manner.
  * </p>
  */
-interface ICTPreference {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface ICTPreference {
 
     /**
      * Reads a string from the shared preferences.

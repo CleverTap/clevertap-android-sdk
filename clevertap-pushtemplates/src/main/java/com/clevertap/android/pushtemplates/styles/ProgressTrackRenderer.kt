@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
+import androidx.annotation.RestrictTo
 
 /**
  * Draws the pre-16 milestone track (segments + points + point titles + progress) into a Bitmap.
@@ -28,6 +29,7 @@ import androidx.core.graphics.ColorUtils
  *
  * The geometry ([layout]) is a pure function so it can be unit-tested without real drawing.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object ProgressTrackRenderer {
 
     data class Spec(

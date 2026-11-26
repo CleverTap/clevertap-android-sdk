@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.utils.Clock
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Provides functionality for tracking and managing impressions for various campaigns.
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit
  * @property clock           An optional Clock implementation for handling time-related operations.
  * @property locale          An optional Locale specifying the locale to use for date and time calculations.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ImpressionManager @JvmOverloads constructor(
     private val impressionStoreProvider: () -> ImpressionStore?,
     private val clock: Clock = Clock.SYSTEM,

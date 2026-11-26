@@ -4,11 +4,11 @@ import android.graphics.Color
 import androidx.core.graphics.ColorUtils
 import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData
 import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Geometry of the pre-16 milestone track. Robolectric 4.9 does not rasterize, so this checks the
@@ -40,11 +40,11 @@ class ProgressTrackRendererTest {
         val l = layout(listOf(SegmentData(10, null), SegmentData(80, null), SegmentData(10, null)))
 
         val widths = l.segments.map { it.right - it.left }
-        assertEquals(20f, widths[0], 0.01f)   // 10% of 200
-        assertEquals(160f, widths[1], 0.01f)  // 80% of 200
-        assertEquals(20f, widths[2], 0.01f)
-        assertEquals(7f, l.segments.first().left, 0.01f)   // starts after the dot inset
-        assertEquals(207f, l.segments.last().right, 0.01f) // ends before the dot inset
+        assertEquals(20f, widths[0], absoluteTolerance = 0.01f)   // 10% of 200
+        assertEquals(160f, widths[1], absoluteTolerance = 0.01f)  // 80% of 200
+        assertEquals(20f, widths[2], absoluteTolerance = 0.01f)
+        assertEquals(7f, l.segments.first().left, absoluteTolerance = 0.01f)   // starts after the dot inset
+        assertEquals(207f, l.segments.last().right, absoluteTolerance = 0.01f) // ends before the dot inset
     }
 
     @Test
@@ -96,8 +96,7 @@ class ProgressTrackRendererTest {
     fun `points sharing a position keep the last one like native`() {
         val points = listOf(PointData(50, Color.RED, "A"), PointData(50, Color.GREEN, "B"))
 
-        assertEquals(listOf(PointData(50, Color.GREEN, "B")),
-            ProgressTrackRenderer.nativeTrack(listOf(SegmentData(100, null)), points).points)
+        assertEquals(listOf(PointData(50, Color.GREEN, "B")), ProgressTrackRenderer.nativeTrack(listOf(SegmentData(100, null)), points).points)
     }
 
     @Test
@@ -150,7 +149,7 @@ class ProgressTrackRendererTest {
         assertEquals(listOf(Color.GREEN, Color.CYAN), l.segments.map { it.color })
         assertTrue(l.segments.none { it.faded })
         assertEquals(Color.RED, l.dots.single().color)
-        assertEquals(57f, l.progressX, 0.01f) // still tracked, for the tracker
+        assertEquals(57f, l.progressX, absoluteTolerance = 0.01f) // still tracked, for the tracker
     }
 
     @Test
@@ -162,14 +161,11 @@ class ProgressTrackRendererTest {
         )
 
         // progress 40 -> x 87; no tracker, so a 4px gap before the split.
-        assertEquals(
-            listOf(
+        assertEquals(listOf(
                 ProgressTrackRenderer.SegmentRect(7f, 83f, Color.GREEN),
                 ProgressTrackRenderer.SegmentRect(87f, 107f, ProgressTrackRenderer.faded(Color.GREEN), faded = true),
                 ProgressTrackRenderer.SegmentRect(107f, 207f, ProgressTrackRenderer.faded(Color.CYAN), faded = true)
-            ),
-            l.segments
-        )
+            ), l.segments)
         assertEquals(listOf(Color.RED, ProgressTrackRenderer.faded(Color.RED)), l.dots.map { it.color })
     }
 
@@ -199,10 +195,10 @@ class ProgressTrackRendererTest {
             styledByProgress = true, hasTracker = true)
 
         val tracker = l.tracker!!
-        assertEquals(107f, tracker.centerX(), 0.01f)
-        assertEquals(20f, tracker.width(), 0.01f)
-        assertEquals(l.trackY, tracker.centerY(), 0.01f)
-        assertEquals(107f, l.segments[0].right, 0.01f) // no gap: the tracker covers the split
+        assertEquals(107f, tracker.centerX(), absoluteTolerance = 0.01f)
+        assertEquals(20f, tracker.width(), absoluteTolerance = 0.01f)
+        assertEquals(l.trackY, tracker.centerY(), absoluteTolerance = 0.01f)
+        assertEquals(107f, l.segments[0].right, absoluteTolerance = 0.01f) // no gap: the tracker covers the split
         assertEquals(20, l.height) // tracker (20) is taller than a dot (14)
     }
 
@@ -211,8 +207,8 @@ class ProgressTrackRendererTest {
         val atStart = layout(listOf(SegmentData(100, null)), progress = 0, hasTracker = true).tracker!!
         val atEnd = layout(listOf(SegmentData(100, null)), progress = 100, hasTracker = true).tracker!!
 
-        assertEquals(0f, atStart.left, 0.01f)
-        assertEquals(214f, atEnd.right, 0.01f)
+        assertEquals(0f, atStart.left, absoluteTolerance = 0.01f)
+        assertEquals(214f, atEnd.right, absoluteTolerance = 0.01f)
     }
 
     @Test
@@ -256,8 +252,8 @@ class ProgressTrackRendererTest {
     }
 
     private fun assertNoOverlap(slots: List<ProgressTrackRenderer.TitleSlot>, width: Float, gap: Float) {
-        slots.forEach { assertTrue("$it off-canvas", it.left >= -0.01f && it.right <= width + 0.01f) }
-        slots.zipWithNext().forEach { (a, b) -> assertTrue("$a and $b too close", a.right + gap <= b.left + 0.01f) }
+        slots.forEach { assertTrue(it.left >= -0.01f && it.right <= width + 0.01f, "$it off-canvas") }
+        slots.zipWithNext().forEach { (a, b) -> assertTrue(a.right + gap <= b.left + 0.01f, "$a and $b too close") }
     }
 
     @Test
@@ -275,9 +271,9 @@ class ProgressTrackRendererTest {
         val slots = ProgressTrackRenderer.titleSlots(centers, listOf(30f, 33f, 32f, 44f), 300f, 6f)
 
         assertNoOverlap(slots, 300f, 6f)
-        assertEquals(30f, slots[0].right - slots[0].left, 0.01f) // "Placed" untouched
-        assertEquals(33f, slots[1].right - slots[1].left, 0.01f) // "Cooking" only shifted right
-        slots.zip(centers).forEach { (s, cx) -> assertTrue("$s misses $cx", s.left <= cx + 0.01f && cx <= s.right + 0.01f) }
+        assertEquals(30f, slots[0].right - slots[0].left, absoluteTolerance = 0.01f) // "Placed" untouched
+        assertEquals(33f, slots[1].right - slots[1].left, absoluteTolerance = 0.01f) // "Cooking" only shifted right
+        slots.zip(centers).forEach { (s, cx) -> assertTrue(s.left <= cx + 0.01f && cx <= s.right + 0.01f, "$s misses $cx") }
     }
 
     @Test

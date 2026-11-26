@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import java.util.concurrent.ExecutorService
+import androidx.annotation.RestrictTo
 
 /**
  * Renderer for [com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType.GIF].
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutorService
  * 3. On fetch success, post result to main thread
  * 4. On failure, try fallbackUrl as static image via [FileResourceProvider]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GifRenderer(
     private val resourceProvider: FileResourceProvider,
     private val mediaExecutor: ExecutorService,

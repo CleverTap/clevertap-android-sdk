@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
+import io.mockk.mockkObject
 import io.mockk.MockKAnnotations
 import io.mockk.called
 import io.mockk.clearAllMocks
@@ -41,16 +42,16 @@ import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Future
 import kotlin.apply
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsManagerTest {
@@ -1014,9 +1015,9 @@ class AnalyticsManagerTest {
         // MockCoreStateKotlin), so reading wzrkParams back reflects the latest set.
         val wzrkParams = coreState.coreMetaData.wzrkParams
         assertNotNull(wzrkParams)
-        assertFalse(wzrkParams.has("action_url"))
-        assertEquals("1234", wzrkParams.optString("wzrk_id"))
-        assertEquals("btn", wzrkParams.optString("wzrk_element_id"))
+        assertFalse(wzrkParams!!.has("action_url"))
+        assertEquals("1234", wzrkParams!!.optString("wzrk_id"))
+        assertEquals("btn", wzrkParams!!.optString("wzrk_element_id"))
     }
 
     @Test
@@ -1036,7 +1037,7 @@ class AnalyticsManagerTest {
         )
         // setWzrkParams is first-write-wins per session, so a view that set it would
         // lock wzrk_ref to the viewed slide and drop the real click.
-        assertEquals("slide2_clicked", coreState.coreMetaData.wzrkParams.optString("wzrk_element_id"))
+        assertEquals("slide2_clicked", coreState.coreMetaData.wzrkParams!!.optString("wzrk_element_id"))
     }
 
     @Test
@@ -1077,7 +1078,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushError should queue error event with activity name is non-null`() {
-        mockkStatic(CoreMetaData::class) {
+        mockkObject(CoreMetaData.Companion) {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
             val locationKey = "Location"
@@ -1113,7 +1114,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushError should queue error event with activity name is null`() {
-        mockkStatic(CoreMetaData::class) {
+        mockkObject(CoreMetaData.Companion) {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
             val locationKey = "Location"
@@ -1440,7 +1441,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInAppNotificationStateEvent(isClicked: Boolean) {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inAppNotification = mockk<CTInAppNotification>(relaxed = true)
             val wzrkFields = JSONObject().apply { put("test", "test") }
             every { CTJsonConverter.getWzrkFields(inAppNotification) } returns wzrkFields
@@ -1509,7 +1510,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `wzrk_mid absent when inbox controller is null`() {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-xyz"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1534,7 +1535,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyV1MessageOmitsId(isClicked: Boolean) {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-v1"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1578,7 +1579,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed is skipped for V2 message when isRead=true`() {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-v2-read"
             every { inboxMessage.isRead } returns true
@@ -1597,7 +1598,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed on V1 message fires even when isRead=true`() {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-v1-read"
             every { inboxMessage.isRead } returns true
@@ -1621,7 +1622,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Clicked on isRead=true message still queues`() {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-read"
             every { inboxMessage.isRead } returns true
@@ -1642,7 +1643,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed on isRead=false message fires normally`() {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-unread"
             every { inboxMessage.isRead } returns false
@@ -1662,7 +1663,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyRapidRepeatSuppressed(isClicked: Boolean) {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-rapid"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1686,7 +1687,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInboxMessageStateEventIncludesId(isClicked: Boolean) {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-xyz"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1719,7 +1720,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInboxMessageStateEvent(isClicked: Boolean) {
-        mockkStatic(CTJsonConverter::class) {
+        mockkObject(CTJsonConverter) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             val wzrkFields = JSONObject().apply { put("test", "test") }
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns wzrkFields
@@ -1789,8 +1790,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location.latitude, 0.0)
-        assertEquals(lng, location.longitude, 0.0)
+        assertEquals(lat, location!!.latitude, absoluteTolerance = 0.0)
+        assertEquals(lng, location!!.longitude, absoluteTolerance = 0.0)
     }
 
     @Test
@@ -1837,7 +1838,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDeepLink should queue page event with referrer data with install true`() {
-        mockkStatic(UriHelper::class) {
+        mockkObject(UriHelper) {
             val uri = mockk<Uri>()
             val referrer = JSONObject().apply {
                 put("us", "source")
@@ -1871,7 +1872,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDeepLink should queue page event with referrer data with install false`() {
-        mockkStatic(UriHelper::class) {
+        mockkObject(UriHelper) {
             val uri = mockk<Uri>()
             val referrer = JSONObject().apply {
                 put("us", "source")
@@ -1918,28 +1919,32 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushInstallReferrer with url should not queue event if called twice within 10 seconds`() {
-        mockkStatic(UriHelper::class, Uri::class) {
-            every { Uri.parse(any()) } returns mockk()
-            every { UriHelper.getUrchinFromUri(any()) } returns JSONObject()
+        mockkStatic(Uri::class) {
+            mockkObject(UriHelper) {
+                every { Uri.parse(any()) } returns mockk()
+                every { UriHelper.getUrchinFromUri(any()) } returns JSONObject()
 
-            analyticsManagerSUT.pushInstallReferrer("http://test.com")
-            analyticsManagerSUT.pushInstallReferrer("http://test.com")
+                analyticsManagerSUT.pushInstallReferrer("http://test.com")
+                analyticsManagerSUT.pushInstallReferrer("http://test.com")
 
-            verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+                verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+            }
         }
     }
 
     @Test
     fun `pushInstallReferrer with url should queue event`() {
-        mockkStatic(UriHelper::class, Uri::class) {
-            val uri = mockk<Uri>()
-            every { Uri.parse("wzrk://track?install=true&http://test.com") } returns uri
-            every { UriHelper.getUrchinFromUri(uri) } returns JSONObject()
-            every { uri.toString() } returns "wzrk://track?install=true&http://test.com"
+        mockkStatic(Uri::class) {
+            mockkObject(UriHelper) {
+                val uri = mockk<Uri>()
+                every { Uri.parse("wzrk://track?install=true&http://test.com") } returns uri
+                every { UriHelper.getUrchinFromUri(uri) } returns JSONObject()
+                every { uri.toString() } returns "wzrk://track?install=true&http://test.com"
 
-            analyticsManagerSUT.pushInstallReferrer("http://test.com")
+                analyticsManagerSUT.pushInstallReferrer("http://test.com")
 
-            verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+                verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+            }
         }
     }
 
@@ -1962,18 +1967,20 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushInstallReferrer with params should queue event`() {
-        mockkStatic(StorageHelper::class, UriHelper::class, Uri::class) {
-            every { StorageHelper.getInt(context, "app_install_status", 0) } returns 0
-            every { StorageHelper.putInt(context, "app_install_status", 1) } returns Unit
+        mockkStatic(StorageHelper::class, Uri::class) {
+            mockkObject(UriHelper) {
+                every { StorageHelper.getInt(context, "app_install_status", 0) } returns 0
+                every { StorageHelper.putInt(context, "app_install_status", 1) } returns Unit
 
-            val uri = mockk<Uri>()
-            every { Uri.parse("wzrk://track?install=true&utm_source=source&utm_medium=medium&utm_campaign=campaign") } returns uri
-            every { UriHelper.getUrchinFromUri(uri) } returns JSONObject()
-            every { uri.toString() } returns "wzrk://track?install=true&utm_source=source&utm_medium=medium&utm_campaign=campaign"
+                val uri = mockk<Uri>()
+                every { Uri.parse("wzrk://track?install=true&utm_source=source&utm_medium=medium&utm_campaign=campaign") } returns uri
+                every { UriHelper.getUrchinFromUri(uri) } returns JSONObject()
+                every { uri.toString() } returns "wzrk://track?install=true&utm_source=source&utm_medium=medium&utm_campaign=campaign"
 
-            analyticsManagerSUT.pushInstallReferrer("source", "medium", "campaign")
+                analyticsManagerSUT.pushInstallReferrer("source", "medium", "campaign")
 
-            verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+                verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any()) }
+            }
         }
     }
 

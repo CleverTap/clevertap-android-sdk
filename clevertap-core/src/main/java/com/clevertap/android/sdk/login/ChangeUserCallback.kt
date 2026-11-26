@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.login
 
-interface ChangeUserCallback {
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface ChangeUserCallback {
 
     fun onChangeUser(deviceId: String, accountId: String)
 }

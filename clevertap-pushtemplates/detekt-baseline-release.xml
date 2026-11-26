@@ -1,0 +1,353 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>BracesOnIfStatements:ContentView.kt$ContentView$else</ID>
+    <ID>BracesOnIfStatements:ContentView.kt$ContentView$if</ID>
+    <ID>BracesOnIfStatements:FiveIconBigContentView.kt$FiveIconBigContentView$else</ID>
+    <ID>BracesOnIfStatements:FiveIconBigContentView.kt$FiveIconBigContentView$if</ID>
+    <ID>BracesOnIfStatements:FiveIconSmallContentView.kt$FiveIconSmallContentView$else</ID>
+    <ID>BracesOnIfStatements:FiveIconSmallContentView.kt$FiveIconSmallContentView$if</ID>
+    <ID>BracesOnIfStatements:GifDecoder.kt$GifDecoderImpl$if</ID>
+    <ID>BracesOnIfStatements:IconsContentView.kt$IconsContentView$else</ID>
+    <ID>BracesOnIfStatements:IconsContentView.kt$IconsContentView$if</ID>
+    <ID>BracesOnIfStatements:NotificationBitmapUtils.kt$NotificationBitmapUtils$else</ID>
+    <ID>BracesOnIfStatements:NotificationBitmapUtils.kt$NotificationBitmapUtils$if</ID>
+    <ID>BracesOnIfStatements:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$if</ID>
+    <ID>BracesOnIfStatements:ProgressPayloadParser.kt$ProgressPayloadParser$if</ID>
+    <ID>BracesOnIfStatements:ProgressStyle.kt$ProgressStyle$else</ID>
+    <ID>BracesOnIfStatements:ProgressStyle.kt$ProgressStyle$if</ID>
+    <ID>BracesOnIfStatements:ProgressStyle.kt$ProgressStyle.Companion$else</ID>
+    <ID>BracesOnIfStatements:ProgressStyle.kt$ProgressStyle.Companion$if</ID>
+    <ID>BracesOnIfStatements:ProgressTrackRenderer.kt$ProgressTrackRenderer$else</ID>
+    <ID>BracesOnIfStatements:ProgressTrackRenderer.kt$ProgressTrackRenderer$if</ID>
+    <ID>BracesOnIfStatements:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$else</ID>
+    <ID>BracesOnIfStatements:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$if</ID>
+    <ID>BracesOnIfStatements:TemplateDataFactory.kt$TemplateDataFactory$else</ID>
+    <ID>BracesOnIfStatements:TemplateDataFactory.kt$TemplateDataFactory$if</ID>
+    <ID>BracesOnIfStatements:TemplateMediaManager.kt$TemplateMediaManager$else</ID>
+    <ID>BracesOnIfStatements:TemplateMediaManager.kt$TemplateMediaManager$if</ID>
+    <ID>BracesOnIfStatements:TemplateRenderer.kt$TemplateRenderer$if</ID>
+    <ID>BracesOnIfStatements:TimerStyle.kt$TimerStyle$if</ID>
+    <ID>BracesOnIfStatements:Utils.kt$Utils$else</ID>
+    <ID>BracesOnIfStatements:Utils.kt$Utils$if</ID>
+    <ID>BracesOnIfStatements:ValidatorFactory.kt$ValidationCheckersBuilder$else</ID>
+    <ID>BracesOnIfStatements:ValidatorFactory.kt$ValidationCheckersBuilder$if</ID>
+    <ID>BracesOnIfStatements:VerticalImageContentView.kt$VerticalImageContentView$else</ID>
+    <ID>BracesOnIfStatements:VerticalImageContentView.kt$VerticalImageContentView$if</ID>
+    <ID>CanBeNonNullable:ContentView.kt$ContentView$pt_bg: String?</ID>
+    <ID>CanBeNonNullable:ContentView.kt$ContentView$pt_text_clr: String?</ID>
+    <ID>CanBeNonNullable:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$pt_product_display_action: String?</ID>
+    <ID>CanBeNonNullable:TimerTemplateHandler.kt$TimerTemplateHandler$delay: Long?</ID>
+    <ID>CanBeNonNullable:Utils.kt$Utils$config: CleverTapInstanceConfig?</ID>
+    <ID>CanBeNonNullable:Utils.kt$Utils$ctx: Context?</ID>
+    <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
+    <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; id.contains("remind") &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
+    <ID>ComplexCondition:Utils.kt$Utils$key.startsWith("pt_img") &amp;&amp; key.length &gt; 6 &amp;&amp; key[6].isDigit() &amp;&amp; !key.endsWith(ALT_TEXT_SUFFIX)</ID>
+    <ID>ConstructorParameterNaming:TimerBigContentView.kt$TimerBigContentView$timer_end: Long?</ID>
+    <ID>ConstructorParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$timer_end: Long?</ID>
+    <ID>CyclomaticComplexMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
+    <ID>CyclomaticComplexMethod:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
+    <ID>CyclomaticComplexMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
+    <ID>CyclomaticComplexMethod:ProgressStyle.kt$ProgressStyle$fun builderFromStyle( context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder ): NotificationCompat.Builder</ID>
+    <ID>CyclomaticComplexMethod:ProgressStyle.kt$ProgressStyle$private fun buildNative( api: NativeProgressApi.Methods, context: Context, extras: Bundle, nb: NotificationCompat.Builder, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean ): NotificationCompat.Builder</ID>
+    <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun ensureContrast(color: Int, bg: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun layout( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint ): Layout</ID>
+    <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun titleSlots(centers: List&lt;Float&gt;, widths: List&lt;Float&gt;, canvasWidth: Float, gap: Float): List&lt;TitleSlot&gt;</ID>
+    <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
+    <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
+    <ID>CyclomaticComplexMethod:TemplateDataFactory.kt$TemplateDataFactory$fun createTemplateData( templateType: TemplateType?, extras: Bundle, isDarkMode: Boolean, defaultAltText: String, notificationIdsProvider: () -&gt; ArrayList&lt;Int&gt; ): TemplateData?</ID>
+    <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$internal fun getActionButtons( context: Context, extras: Bundle, notificationId: Int, actions: JSONArray? ): List&lt;ActionButton&gt;</ID>
+    <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$override fun renderNotification( extras: Bundle, context: Context, nb: Builder, config: CleverTapInstanceConfig, notificationId: Int ): Builder?</ID>
+    <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
+    <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
+    <ID>CyclomaticComplexMethod:TemplateType.kt$TemplateType.Companion$@JvmStatic fun fromString(type: String?): TemplateType?</ID>
+    <ID>CyclomaticComplexMethod:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
+    <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun createValidatorFromKeys(templateType: TemplateType, keys: Map&lt;String, Checker&lt;out Any&gt;&gt;): Validator?</ID>
+    <ID>CyclomaticComplexMethod:VerticalImageContentView.kt$VerticalImageContentView$protected fun setupButton( buttonData: VerticalImageButtonData?, notificationId: Int, isCollapsed: Boolean = false, )</ID>
+    <ID>DoubleMutabilityForCollection:TemplateRenderer.kt$TemplateRenderer$internal var actionButtonPendingIntents = mutableMapOf&lt;String, PendingIntent&gt;()</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$d(PTConstants.LOG_TAG, message)</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$d(PTConstants.LOG_TAG, message, t)</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$i(PTConstants.LOG_TAG, message)</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$i(PTConstants.LOG_TAG, message, t)</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$v(PTConstants.LOG_TAG, message)</ID>
+    <ID>ForbiddenMethodCall:PTLog.kt$PTLog$v(PTConstants.LOG_TAG, message, t)</ID>
+    <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(1000)</ID>
+    <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(PTConstants.PT_INPUT_TIMEOUT.toLong())</ID>
+    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_bg: String?</ID>
+    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg: String?</ID>
+    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg_summary: String?</ID>
+    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_text_clr: String?</ID>
+    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_title: String?</ID>
+    <ID>FunctionParameterNaming:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$pt_product_display_action: String?</ID>
+    <ID>FunctionParameterNaming:Style.kt$Style$pt_title: String?</ID>
+    <ID>FunctionParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$pt_chrono_title_clr: String?</ID>
+    <ID>FunctionParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$pt_title_clr: String?</ID>
+    <ID>LargeClass:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
+    <ID>LargeClass:TemplateDataFactory.kt$TemplateDataFactory</ID>
+    <ID>LargeClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
+    <ID>LargeClass:Utils.kt$Utils</ID>
+    <ID>LongMethod:AutoCarouselContentView.kt$AutoCarouselContentView$private fun setViewFlipper()</ID>
+    <ID>LongMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
+    <ID>LongMethod:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
+    <ID>LongMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
+    <ID>LongMethod:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$internal fun setImageList(data: ProductTemplateData, scaleType: PTScaleType, extras: Bundle)</ID>
+    <ID>LongMethod:ProgressStyle.kt$ProgressStyle$private fun buildNative( api: NativeProgressApi.Methods, context: Context, extras: Bundle, nb: NotificationCompat.Builder, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean ): NotificationCompat.Builder</ID>
+    <ID>LongMethod:ProgressStyle.kt$ProgressStyle$private fun fallbackView( context: Context, segmented: Boolean, indeterminate: Boolean, title: String, message: String, chipText: String?, trackerIcon: Bitmap?, startIcon: Bitmap?, endIcon: Bitmap?, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, progress: Int, progressMax: Int, styledByProgress: Boolean ): RemoteViews</ID>
+    <ID>LongMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun layout( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint ): Layout</ID>
+    <ID>LongMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun titleSlots(centers: List&lt;Float&gt;, widths: List&lt;Float&gt;, canvasWidth: Float, gap: Float): List&lt;TitleSlot&gt;</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleProductDisplayNotification()</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun openRatingDefaultDeepLink(notificationId: Int)</ID>
+    <ID>LongMethod:Style.kt$Style$protected open fun setNotificationBuilderBasics( notificationBuilder: NotificationCompat.Builder, contentViewSmall: RemoteViews?, contentViewBig: RemoteViews?, pt_title: String?, pIntent: PendingIntent?, dIntent: PendingIntent? = null ): NotificationCompat.Builder</ID>
+    <ID>LongMethod:TemplateDataFactory.kt$TemplateDataFactory$fun createTemplateData( templateType: TemplateType?, extras: Bundle, isDarkMode: Boolean, defaultAltText: String, notificationIdsProvider: () -&gt; ArrayList&lt;Int&gt; ): TemplateData?</ID>
+    <ID>LongMethod:TemplateMediaManager.kt$TemplateMediaManager$fun getImageBitmap(imageUrl: String?): Bitmap?</ID>
+    <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$internal fun getActionButtons( context: Context, extras: Bundle, notificationId: Int, actions: JSONArray? ): List&lt;ActionButton&gt;</ID>
+    <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$override fun renderNotification( extras: Bundle, context: Context, nb: Builder, config: CleverTapInstanceConfig, notificationId: Int ): Builder?</ID>
+    <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
+    <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
+    <ID>LongMethod:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
+    <ID>LongMethod:TimerTemplateHandler.kt$TimerTemplateHandler$@RequiresApi(Build.VERSION_CODES.M) internal fun scheduleTimer( context: Context, extras: Bundle, notificationId: Int, delay: Long?, data: TimerTemplateData, config: CleverTapInstanceConfig, handler: Handler = Handler(Looper.getMainLooper()) )</ID>
+    <ID>LongMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
+    <ID>LongMethod:VerticalImageContentView.kt$VerticalImageContentView$protected fun setupButton( buttonData: VerticalImageButtonData?, notificationId: Int, isCollapsed: Boolean = false, )</ID>
+    <ID>LongParameterList:ContentView.kt$ContentView$( gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int )</ID>
+    <ID>LongParameterList:ContentView.kt$ContentView$( layoutId: Int, gifUrl: String?, bigImageUrl: String?, scaleType: PTScaleType, altText: String, gifFrames: Int, imageBorderData: ImageBorderData? = null )</ID>
+    <ID>LongParameterList:ManualCarouselContentView.kt$ManualCarouselContentView$( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
+    <ID>LongParameterList:NativeProgressApi.kt$NativeProgressApi.Methods$( val styleCtor: Constructor&lt;*&gt;, val setStyledByProgress: Method, val setProgress: Method, val setProgressIndeterminate: Method, val setProgressSegments: Method, val setProgressPoints: Method, val setProgressTrackerIcon: Method, val setProgressStartIcon: Method, val setProgressEndIcon: Method, val segmentCtor: Constructor&lt;*&gt;, val segmentSetColor: Method, val pointCtor: Constructor&lt;*&gt;, val pointSetColor: Method, val setRequestPromotedOngoing: Method, val setShortCriticalText: Method )</ID>
+    <ID>LongParameterList:NotificationBitmapUtils.kt$NotificationBitmapUtils$( bgColor: Int, borderColor: Int?, width: Int, height: Int, cornerRadius: Float, borderWidth: Float? = null )</ID>
+    <ID>LongParameterList:NotificationBitmapUtils.kt$NotificationBitmapUtils$( canvas: Canvas, paint: Paint, width: Int, height: Int, cornerRadius: Float, borderColor: Int?, borderWidth: Float? )</ID>
+    <ID>LongParameterList:NotificationBitmapUtils.kt$NotificationBitmapUtils$( color1: Int, color2: Int, direction: Double, width: Int, height: Int, cornerRadius: Float, borderColor: Int? = null, borderWidth: Float? = null )</ID>
+    <ID>LongParameterList:NotificationBitmapUtils.kt$NotificationBitmapUtils$( color1: Int, color2: Int, width: Int, height: Int, cornerRadius: Float, borderColor: Int? = null, borderWidth: Float? = null )</ID>
+    <ID>LongParameterList:NotificationBitmapUtils.kt$NotificationBitmapUtils$(source: Bitmap, maxHeightPx: Int, scale: Float, width: Int, height: Int)</ID>
+    <ID>LongParameterList:PendingIntentFactory.kt$PendingIntentFactory$( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null )</ID>
+    <ID>LongParameterList:PendingIntentFactory.kt$PendingIntentFactory$( context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent?, requestCode : Int )</ID>
+    <ID>LongParameterList:ProgressStyle.kt$ProgressStyle$( api: NativeProgressApi.Methods, context: Context, extras: Bundle, nb: NotificationCompat.Builder, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean )</ID>
+    <ID>LongParameterList:ProgressStyle.kt$ProgressStyle$( context: Context, extras: Bundle, nb: NotificationCompat.Builder, title: String, message: String, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean )</ID>
+    <ID>LongParameterList:ProgressStyle.kt$ProgressStyle$( context: Context, segmented: Boolean, indeterminate: Boolean, title: String, message: String, chipText: String?, trackerIcon: Bitmap?, startIcon: Bitmap?, endIcon: Bitmap?, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, progress: Int, progressMax: Int, styledByProgress: Boolean )</ID>
+    <ID>LongParameterList:ProgressTrackRenderer.kt$ProgressTrackRenderer$( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint )</ID>
+    <ID>LongParameterList:ProgressTrackRenderer.kt$ProgressTrackRenderer$( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, tracker: Bitmap? )</ID>
+    <ID>LongParameterList:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$( notificationBuilder: NotificationCompat.Builder, smallIcon: Int, contentViewSmall: RemoteViews?, contentViewBig: RemoteViews?, pIntent: PendingIntent?, dIntent: PendingIntent? )</ID>
+    <ID>LongParameterList:Style.kt$Style$( notificationBuilder: NotificationCompat.Builder, contentViewSmall: RemoteViews?, contentViewBig: RemoteViews?, pt_title: String?, pIntent: PendingIntent?, dIntent: PendingIntent? = null )</ID>
+    <ID>LongParameterList:TemplateDataFactory.kt$TemplateDataFactory$( templateType: TemplateType?, extras: Bundle, isDarkMode: Boolean, defaultAltText: String, notificationIdsProvider: () -&gt; ArrayList&lt;Int&gt; )</ID>
+    <ID>LongParameterList:TemplateRenderer.kt$TemplateRenderer$( basicTemplateData: BasicTemplateData, context: Context, extras: Bundle, notificationId: Int, nb: Builder )</ID>
+    <ID>LongParameterList:TimerSmallContentView.kt$TimerSmallContentView$( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
+    <ID>LongParameterList:TimerTemplateHandler.kt$TimerTemplateHandler$( context: Context, extras: Bundle, notificationId: Int, delay: Long?, data: TimerTemplateData, config: CleverTapInstanceConfig, handler: Handler = Handler(Looper.getMainLooper()) )</ID>
+    <ID>LoopWithTooManyJumpStatements:ProgressTrackRenderer.kt$ProgressTrackRenderer$for</ID>
+    <ID>MagicNumber:FiveIconBigContentView.kt$FiveIconBigContentView$3</ID>
+    <ID>MagicNumber:FiveIconBigContentView.kt$FiveIconBigContentView$4</ID>
+    <ID>MagicNumber:FiveIconBigContentView.kt$FiveIconBigContentView$5</ID>
+    <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$3</ID>
+    <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$4</ID>
+    <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$5</ID>
+    <ID>MagicNumber:NotificationBitmapUtils.kt$NotificationBitmapUtils$0.5f</ID>
+    <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$3</ID>
+    <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$4</ID>
+    <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$5</ID>
+    <ID>MagicNumber:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$3</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.00001</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.00001f</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.5f</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$15</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$255</ID>
+    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$3</ID>
+    <ID>MagicNumber:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$1000</ID>
+    <ID>MagicNumber:RatingContentView.kt$RatingContentView$5</ID>
+    <ID>MagicNumber:TemplateRenderer.kt$TemplateRenderer$4</ID>
+    <ID>MagicNumber:TimerSmallContentView.kt$TimerSmallContentView$3</ID>
+    <ID>MagicNumber:Utils.kt$Utils$1000</ID>
+    <ID>MagicNumber:Utils.kt$Utils$5</ID>
+    <ID>MagicNumber:Utils.kt$Utils$6</ID>
+    <ID>MagicNumber:ValidatorFactory.kt$ValidatorFactory.Companion$3</ID>
+    <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_THREE_IMAGE_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ContentValidator.kt$ContentValidator$keys[PT_MSG]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ContentValidator.kt$ContentValidator$keys[PT_TITLE]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:FiveIconsTemplateValidator.kt$FiveIconsTemplateValidator$keys[PT_FIVE_DEEPLINK_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:FiveIconsTemplateValidator.kt$FiveIconsTemplateValidator$keys[PT_FIVE_IMAGE_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:InputBoxTemplateValidator.kt$InputBoxTemplateValidator$keys[PT_ACTIONS]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:InputBoxTemplateValidator.kt$InputBoxTemplateValidator$keys[PT_INPUT_FEEDBACK]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_BIG_TEXT_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_PRODUCT_DISPLAY_ACTION]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_PRODUCT_THREE_IMAGE_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_SMALL_TEXT_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_THREE_DEEPLINK_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_RATING_DEFAULT_DL]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator$keys[PT_BIG_IMG]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
+    <ID>MaxLineLength:AutoCarouselStyle.kt$AutoCarouselStyle$internal</ID>
+    <ID>MaxLineLength:BasicStyle.kt$BasicStyle$internal</ID>
+    <ID>MaxLineLength:FiveIconStyle.kt$FiveIconStyle$internal</ID>
+    <ID>MaxLineLength:IconsStyle.kt$IconsStyle$internal</ID>
+    <ID>MaxLineLength:InputBoxStyle.kt$InputBoxStyle$INPUT_BOX_REPLY_PENDING_INTENT</ID>
+    <ID>MaxLineLength:InputBoxStyle.kt$InputBoxStyle$internal</ID>
+    <ID>MaxLineLength:NativeProgressApi.kt$NativeProgressApi$.</ID>
+    <ID>MaxLineLength:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$renderer.notificationId</ID>
+    <ID>MaxLineLength:ProductDisplayStyle.kt$ProductDisplayStyle$internal</ID>
+    <ID>MaxLineLength:ProgressStyle.kt$ProgressStyle$api.segmentCtor.newInstance(seg.length).also { s -&gt; seg.color?.let { api.segmentSetColor.invoke(s, it) } }</ID>
+    <ID>MaxLineLength:ProgressStyle.kt$ProgressStyle$else</ID>
+    <ID>MaxLineLength:ProgressStyle.kt$ProgressStyle$if</ID>
+    <ID>MaxLineLength:ProgressStyle.kt$ProgressStyle$private</ID>
+    <ID>MaxLineLength:ProgressTrackRenderer.kt$ProgressTrackRenderer$Color.argb((Color.alpha(color) * FADED_OPACITY + 0.5f).toInt(), Color.red(color), Color.green(color), Color.blue(color))</ID>
+    <ID>MaxLineLength:ProgressTrackRenderer.kt$ProgressTrackRenderer$listOf(ProgressPayloadParser.SegmentData(sum.toInt(), first.takeIf { valid.all { s -&gt; s.color == first } })) to sum.toInt()</ID>
+    <ID>MaxLineLength:ProgressTrackRenderer.kt$ProgressTrackRenderer$val slideLeft = minOf(overflow, (left[i] - maxOf(floor, centers[i] - (right[i] - left[i]))).coerceAtLeast(0f))</ID>
+    <ID>MaxLineLength:ProgressTrackRenderer.kt$ProgressTrackRenderer$val slideRight = minOf(overflow, (minOf(centers[j], canvasWidth - (right[j] - left[j])) - left[j]).coerceAtLeast(0f))</ID>
+    <ID>MaxLineLength:ProgressTrackRenderer.kt$ProgressTrackRenderer$val text = TextUtils.ellipsize(dot.title, paint, slot.right - slot.left, TextUtils.TruncateAt.END).toString()</ID>
+    <ID>MaxLineLength:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$STAR_IDS.take(star).forEach { contentViewRating.setImageViewResource(it, R.drawable.pt_star_filled) }</ID>
+    <ID>MaxLineLength:RatingStyle.kt$RatingStyle$internal</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$borderRadius = extras.getString(PT_BTN_BORDER_RADIUS + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_RADIUS_DEFAULT</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$borderWidth = extras.getString(PT_BTN_BORDER_WIDTH + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_WIDTH_DEFAULT</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$chronometerGradientDirection = extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$numberOfFrames = extras.getString(PT_GIF_FRAMES_ALT)?.toIntOrNull() ?: defaultMediaData.gif.numberOfFrames</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$showCollapsedBackgroundImage = extras.getString(PT_SMALL_VIEW)?.equals(TEXT_ONLY, ignoreCase = true) != true</ID>
+    <ID>MaxLineLength:TemplateDataFactory.kt$TemplateDataFactory$val resolvedBaseContent = baseContent.copy(notificationBehavior = baseContent.notificationBehavior.copy(dismissAfter = dismissAfter))</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$(fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() &gt; 2</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.")</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer already expired and renderTerminal is configured as false. Skipping notification")</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$if</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$public</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$this.smallIconColour = Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR) ?: extras.getString(WZRK_COLOR)</ID>
+    <ID>MaxLineLength:TimerStyle.kt$TimerStyle$TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView</ID>
+    <ID>MaxLineLength:TimerStyle.kt$TimerStyle$internal</ID>
+    <ID>MaxLineLength:ValidatorFactory.kt$ValidatorFactory.Companion$private</ID>
+    <ID>MaxLineLength:ValidatorFactory.kt$element.check() &amp;&amp; and</ID>
+    <ID>MaxLineLength:ZeroBezelStyle.kt$ZeroBezelStyle$internal</ID>
+    <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
+    <ID>NestedBlockDepth:CancelTemplateHandler.kt$CancelTemplateHandler$internal fun renderCancelNotification(context: Context, templateData: CancelTemplateData)</ID>
+    <ID>NestedBlockDepth:InputBoxStyle.kt$InputBoxStyle$private fun setStandardViewBigImageStyle( context: Context, notificationBuilder: NotificationCompat.Builder ): NotificationCompat.Builder</ID>
+    <ID>NestedBlockDepth:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
+    <ID>NestedBlockDepth:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
+    <ID>NestedBlockDepth:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun ensureContrast(color: Int, bg: Int): Int</ID>
+    <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun applyBigImageStyle( imgUrl: String?, notificationBuilder: NotificationCompat.Builder, altText: String?, config: CleverTapInstanceConfig? )</ID>
+    <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
+    <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
+    <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$internal fun getActionButtons( context: Context, extras: Bundle, notificationId: Int, actions: JSONArray? ): List&lt;ActionButton&gt;</ID>
+    <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$override fun renderNotification( extras: Bundle, context: Context, nb: Builder, config: CleverTapInstanceConfig, notificationId: Int ): Builder?</ID>
+    <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
+    <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
+    <ID>NestedBlockDepth:Utils.kt$Utils$fun convertRatingBundleObjectToHashMap(b: Bundle): HashMap&lt;String, Any?&gt;</ID>
+    <ID>NestedBlockDepth:Utils.kt$Utils$fun getEventPropertiesFromExtras(extras: Bundle): HashMap&lt;String, Any?&gt;</ID>
+    <ID>NestedBlockDepth:Utils.kt$Utils$fun getEventPropertiesFromExtras(extras: Bundle, pkey: String?, value: String?): HashMap&lt;String, Any?&gt;</ID>
+    <ID>NewLineAtEndOfFile:ActionButtonsContentView.kt$com.clevertap.android.pushtemplates.content.ActionButtonsContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:AutoCarouselContentView.kt$com.clevertap.android.pushtemplates.content.AutoCarouselContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:AutoCarouselStyle.kt$com.clevertap.android.pushtemplates.styles.AutoCarouselStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:BasicStyle.kt$com.clevertap.android.pushtemplates.styles.BasicStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:BigImageContentView.kt$com.clevertap.android.pushtemplates.content.BigImageContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:CancelTemplateHandler.kt$com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler.kt</ID>
+    <ID>NewLineAtEndOfFile:CarouselTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.CarouselTemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:Checker.kt$com.clevertap.android.pushtemplates.checkers.Checker.kt</ID>
+    <ID>NewLineAtEndOfFile:ContentValidator.kt$com.clevertap.android.pushtemplates.validators.ContentValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:ContentView.kt$com.clevertap.android.pushtemplates.content.ContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:FiveIconsTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.FiveIconsTemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:GifDrawableAdapter.kt$com.clevertap.android.pushtemplates.media.GifDrawableAdapter.kt</ID>
+    <ID>NewLineAtEndOfFile:GifResult.kt$com.clevertap.android.pushtemplates.media.GifResult.kt</ID>
+    <ID>NewLineAtEndOfFile:InputBoxStyle.kt$com.clevertap.android.pushtemplates.styles.InputBoxStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:InputBoxTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.InputBoxTemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:IntSizeChecker.kt$com.clevertap.android.pushtemplates.checkers.IntSizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:JsonArraySizeChecker.kt$com.clevertap.android.pushtemplates.checkers.JsonArraySizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:ListEqualSizeChecker.kt$com.clevertap.android.pushtemplates.checkers.ListEqualSizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:ListSizeChecker.kt$com.clevertap.android.pushtemplates.checkers.ListSizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:LongSizeChecker.kt$com.clevertap.android.pushtemplates.checkers.LongSizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:ManualCarouselContentView.kt$com.clevertap.android.pushtemplates.content.ManualCarouselContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ManualCarouselStyle.kt$com.clevertap.android.pushtemplates.styles.ManualCarouselStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:PTScaleType.kt$com.clevertap.android.pushtemplates.PTScaleType.kt</ID>
+    <ID>NewLineAtEndOfFile:PTXtensions.kt$com.clevertap.android.pushtemplates.PTXtensions.kt</ID>
+    <ID>NewLineAtEndOfFile:PendingIntentFactory.kt$com.clevertap.android.pushtemplates.content.PendingIntentFactory.kt</ID>
+    <ID>NewLineAtEndOfFile:ProductDisplayLinearBigContentView.kt$com.clevertap.android.pushtemplates.content.ProductDisplayLinearBigContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ProductDisplayNonLinearBigContentView.kt$com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearBigContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ProductDisplayNonLinearSmallContentView.kt$com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ProductDisplayStyle.kt$com.clevertap.android.pushtemplates.styles.ProductDisplayStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:ProductDisplayTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.ProductDisplayTemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:RatingContentView.kt$com.clevertap.android.pushtemplates.content.RatingContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:RatingStyle.kt$com.clevertap.android.pushtemplates.styles.RatingStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:RatingTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.RatingTemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:SizeChecker.kt$com.clevertap.android.pushtemplates.checkers.SizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:SmallContentView.kt$com.clevertap.android.pushtemplates.content.SmallContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:StringSizeChecker.kt$com.clevertap.android.pushtemplates.checkers.StringSizeChecker.kt</ID>
+    <ID>NewLineAtEndOfFile:Style.kt$com.clevertap.android.pushtemplates.styles.Style.kt</ID>
+    <ID>NewLineAtEndOfFile:TemplateMediaManager.kt$com.clevertap.android.pushtemplates.media.TemplateMediaManager.kt</ID>
+    <ID>NewLineAtEndOfFile:TemplateRepository.kt$com.clevertap.android.pushtemplates.media.TemplateRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:TemplateType.kt$com.clevertap.android.pushtemplates.TemplateType.kt</ID>
+    <ID>NewLineAtEndOfFile:TemplateValidator.kt$com.clevertap.android.pushtemplates.validators.TemplateValidator.kt</ID>
+    <ID>NewLineAtEndOfFile:TimerBigContentView.kt$com.clevertap.android.pushtemplates.content.TimerBigContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:TimerStyle.kt$com.clevertap.android.pushtemplates.styles.TimerStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:TimerTemplateHandler.kt$com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler.kt</ID>
+    <ID>NewLineAtEndOfFile:Validator.kt$com.clevertap.android.pushtemplates.validators.Validator.kt</ID>
+    <ID>NewLineAtEndOfFile:ZeroBezelBigContentView.kt$com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ZeroBezelSmallContentView.kt$com.clevertap.android.pushtemplates.content.ZeroBezelSmallContentView.kt</ID>
+    <ID>NewLineAtEndOfFile:ZeroBezelStyle.kt$com.clevertap.android.pushtemplates.styles.ZeroBezelStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:ZeroBezelTemplateValidator.kt$com.clevertap.android.pushtemplates.validators.ZeroBezelTemplateValidator.kt</ID>
+    <ID>NullableToStringCall:ContentView.kt$ContentView$$imageUrl</ID>
+    <ID>NullableToStringCall:GifDecoder.kt$GifDecoderImpl$${it.message}</ID>
+    <ID>NullableToStringCall:TemplateMediaManager.kt$TemplateMediaManager$$gifUrl</ID>
+    <ID>NullableToStringCall:TemplateMediaManager.kt$TemplateMediaManager$$imageUrl</ID>
+    <ID>NullableToStringCall:Utils.kt$Utils$$clr</ID>
+    <ID>NullableToStringCall:Utils.kt$Utils$$defaultAltText</ID>
+    <ID>NullableToStringCall:Utils.kt$Utils$$defaultClr</ID>
+    <ID>ReturnCount:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
+    <ID>ReturnCount:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>ReturnCount:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
+    <ID>ReturnCount:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$IllegalArgumentException()</ID>
+    <ID>TooGenericExceptionThrown:InputBoxStyle.kt$InputBoxStyle$throw Exception("Failed to fetch big picture!")</ID>
+    <ID>TooGenericExceptionThrown:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$throw Exception("Failed to fetch big picture!")</ID>
+    <ID>TooGenericExceptionThrown:Utils.kt$Utils$throw Exception("Logo is null")</ID>
+    <ID>TooManyFunctions:ContentView.kt$ContentView</ID>
+    <ID>TooManyFunctions:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
+    <ID>TooManyFunctions:TemplateDataFactory.kt$TemplateDataFactory</ID>
+    <ID>TooManyFunctions:Utils.kt$Utils</ID>
+    <ID>UndocumentedPublicClass:PushTemplateNotificationHandler.kt$PushTemplateNotificationHandler : ActionButtonClickHandler</ID>
+    <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
+    <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer$LogLevel</ID>
+    <ID>UndocumentedPublicFunction:TemplateRenderer.kt$TemplateRenderer.LogLevel$public fun intValue(): Int</ID>
+    <ID>UnnecessaryAbstractClass:IconsContentView.kt$IconsContentView$IconsContentView</ID>
+    <ID>UnnecessaryAbstractClass:VerticalImageContentView.kt$VerticalImageContentView$VerticalImageContentView</ID>
+    <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_THREE_IMAGE_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:ContentValidator.kt$ContentValidator$keys[PT_MSG]!!</ID>
+    <ID>UnsafeCallOnNullableType:ContentValidator.kt$ContentValidator$keys[PT_TITLE]!!</ID>
+    <ID>UnsafeCallOnNullableType:FiveIconsTemplateValidator.kt$FiveIconsTemplateValidator$keys[PT_FIVE_DEEPLINK_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:FiveIconsTemplateValidator.kt$FiveIconsTemplateValidator$keys[PT_FIVE_IMAGE_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:InputBoxStyle.kt$InputBoxStyle$PendingIntentFactory.getPendingIntent( context, notificationId, extras, false, INPUT_BOX_REPLY_PENDING_INTENT, data.deepLinkList.getOrNull(0), data.inputFeedback, data.inputAutoOpen, renderer.config )!!</ID>
+    <ID>UnsafeCallOnNullableType:InputBoxTemplateValidator.kt$InputBoxTemplateValidator$keys[PT_ACTIONS]!!</ID>
+    <ID>UnsafeCallOnNullableType:InputBoxTemplateValidator.kt$InputBoxTemplateValidator$keys[PT_INPUT_FEEDBACK]!!</ID>
+    <ID>UnsafeCallOnNullableType:ManualCarouselContentView.kt$ManualCarouselContentView$imageUrl!!</ID>
+    <ID>UnsafeCallOnNullableType:PendingIntentFactory.kt$PendingIntentFactory$LaunchPendingIntentFactory.getActivityIntent(extras, context)!!</ID>
+    <ID>UnsafeCallOnNullableType:PendingIntentFactory.kt$PendingIntentFactory$extras.getIntArray(PTConstants.KEY_REQUEST_CODES)?.get(clickedStar - 1)!!</ID>
+    <ID>UnsafeCallOnNullableType:PendingIntentFactory.kt$PendingIntentFactory$launchIntent!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$imageUrl!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_BIG_TEXT_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_PRODUCT_DISPLAY_ACTION]!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_PRODUCT_THREE_IMAGE_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_SMALL_TEXT_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:ProductDisplayTemplateValidator.kt$ProductDisplayTemplateValidator$keys[PT_THREE_DEEPLINK_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
+    <ID>UnsafeCallOnNullableType:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_RATING_DEFAULT_DL]!!</ID>
+    <ID>UnsafeCallOnNullableType:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator$keys[PT_BIG_IMG]!!</ID>
+    <ID>UnsafeCallOnNullableType:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
+    <ID>UnusedPrivateProperty:SizeChecker.kt$SizeChecker$private var entity: T?</ID>
+    <ID>UnusedPrivateProperty:SizeChecker.kt$SizeChecker$private var errorMsg: String</ID>
+    <ID>UnusedPrivateProperty:SizeChecker.kt$SizeChecker$private var size: Int</ID>
+    <ID>UseLet:TemplateRenderer.kt$TemplateRenderer$if (validator == null) { null } else if (validator.validate()) { val fiveIconStyle = FiveIconStyle(templateData, this, extras) val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle( context, extras, notificationId, nb ) /** * If most icon bitmaps fail to load, gracefully fall back to a basic * title/message notification instead of suppressing the notification. */ if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() &gt; 2 || (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() &gt; 2) { PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.") buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb) } else { fiveIconNotificationBuilder } } else { PTLog.debug("Five Icons template validation failed, reverting to basic template.") buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb) }</ID>
+    <ID>UseLet:TemplateRenderer.kt$TemplateRenderer$if (validator == null) { null } else if (validator.validate()) { val iconsStyle = IconsStyle(templateData, this, extras) val iconsNotificationBuilder = iconsStyle.builderFromStyle( context, extras, notificationId, nb ) /** * If most icon bitmaps fail to load, gracefully fall back to a basic * title/message notification instead of suppressing the notification. */ if (iconsStyle.iconsSmallContentView.unloadedIconsCount &gt; 2 || iconsStyle.iconsBigContentView.unloadedIconsCount &gt; 2) { PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.") buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb) } else { iconsNotificationBuilder } } else { PTLog.debug("Icons template validation failed, reverting to basic template.") buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb) }</ID>
+    <ID>UseLet:TimerStyle.kt$TimerStyle$if (data.baseContent.notificationBehavior.dismissAfter == null) null else { TimerBigContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView }</ID>
+    <ID>UseLet:TimerStyle.kt$TimerStyle$if (data.baseContent.notificationBehavior.dismissAfter == null) null else { TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView }</ID>
+    <ID>UseLet:VerticalImageContentView.kt$VerticalImageContentView$if (bgColor != null) { NotificationBitmapUtils.createSolidBitmap( bgColor, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius, borderWidth ) } else null</ID>
+    <ID>UseOrEmpty:ProgressStyle.kt$ProgressStyle$renderer.getMessage(extras) ?: ""</ID>
+    <ID>UseOrEmpty:ProgressStyle.kt$ProgressStyle$renderer.getTitle(extras, context) ?: ""</ID>
+    <ID>UtilityClassWithPublicConstructor:PTConstants.kt$PTConstants</ID>
+    <ID>UtilityClassWithPublicConstructor:ValidatorFactory.kt$ValidatorFactory</ID>
+    <ID>VarCouldBeVal:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$private var productDL: String = data.baseContent.deepLinkList[0]</ID>
+    <ID>VarCouldBeVal:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$private var productPrice: String = data.priceList[0]</ID>
+    <ID>VariableNaming:TemplateRenderer.kt$TemplateRenderer$val pt_json = extras.getString(PT_JSON)</ID>
+    <ID>WildcardImport:ValidatorFactory.kt$import com.clevertap.android.pushtemplates.*</ID>
+    <ID>WildcardImport:ValidatorFactory.kt$import com.clevertap.android.pushtemplates.checkers.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

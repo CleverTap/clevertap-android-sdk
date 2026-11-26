@@ -8,7 +8,9 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import kotlin.system.measureTimeMillis
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class TemplateMediaManager(
     private val templateRepository: TemplateRepository,
     private val gifDecoder: GifDecoderImpl = GifDecoderImpl()

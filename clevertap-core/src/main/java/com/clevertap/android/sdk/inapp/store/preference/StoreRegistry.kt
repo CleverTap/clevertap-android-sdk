@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
+import androidx.annotation.RestrictTo
+
 /**
  * The `StoreRegistry` data class acts as a registry for various stores related to In-App messaging.
  * It holds instances of different store types, allowing easy access to these stores throughout the application.
@@ -12,6 +14,7 @@ package com.clevertap.android.sdk.inapp.store.preference
  *
  * @constructor Creates a StoreRegistry with optional instances of different stores.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class StoreRegistry(
     var inAppStore: InAppStore? = null,
     var impressionStore: ImpressionStore? = null,

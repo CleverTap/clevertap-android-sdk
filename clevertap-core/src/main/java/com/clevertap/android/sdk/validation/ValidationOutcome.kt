@@ -1,10 +1,13 @@
 package com.clevertap.android.sdk.validation
 
+import androidx.annotation.RestrictTo
+
 /**
  * Sealed interface representing the result of validation.
  * Provides a clear indication of whether the event should be dropped and why.
  */
-sealed interface ValidationOutcome {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed interface ValidationOutcome {
     /**
      * List of all validation errors found.
      */
@@ -39,7 +42,8 @@ sealed interface ValidationOutcome {
 /**
  * Reasons why an event should be dropped.
  */
-enum class DropReason {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class DropReason {
     NULL_EVENT_NAME,
     RESTRICTED_EVENT_NAME,
     DISCARDED_EVENT_NAME,

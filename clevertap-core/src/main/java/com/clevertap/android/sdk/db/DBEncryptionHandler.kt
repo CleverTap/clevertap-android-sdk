@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler.Companion.isTextEncrypted
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import kotlin.system.measureTimeMillis
+import androidx.annotation.RestrictTo
 
 /**
  * Handles the encryption and decryption of data before it is stored in or retrieved from the database.
@@ -21,6 +22,7 @@ import kotlin.system.measureTimeMillis
  * @property encryptionLevel The level of encryption to be applied. If set to [EncryptionLevel.NONE],
  *                           no encryption or decryption will be performed.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DBEncryptionHandler(
     private val crypt: ICryptHandler,
     private val logger: ILogger,

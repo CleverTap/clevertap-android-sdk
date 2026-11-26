@@ -15,12 +15,12 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class FileResourceProviderTest {
     private val mockLogger = TestLogger()

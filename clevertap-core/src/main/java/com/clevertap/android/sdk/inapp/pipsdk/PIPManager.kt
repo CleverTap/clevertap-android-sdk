@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPRootContainer
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import androidx.annotation.RestrictTo
 
 /**
  * Entry point for the PIP SDK.
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors
  * pipManager.show(activity, PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE))
  * ```
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPManager(
     fileResourceProvider: () -> FileResourceProvider,
 ) {

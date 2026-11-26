@@ -13,9 +13,9 @@ import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.MediaData
 import com.clevertap.android.pushtemplates.NotificationBehavior
-import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
-import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_MIN_THRESHOLD
+import com.clevertap.android.pushtemplates.PTConstants.Companion.ONE_SECOND_LONG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TIMER_MIN_THRESHOLD
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
@@ -27,12 +27,15 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])
@@ -68,10 +71,10 @@ class TimerTemplateHandlerTest {
         timerTemplateData = createSampleTimerTemplateData()
 
         // Mock static methods
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
         mockkObject(ValidatorFactory)
         mockkStatic(PushNotificationUtil::class)
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         mockkConstructor(TemplateRenderer::class)
 
         // Default mock behaviors

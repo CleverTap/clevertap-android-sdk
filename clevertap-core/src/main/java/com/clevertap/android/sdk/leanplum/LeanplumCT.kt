@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.Logger
 /**
  * For Java compatibility we must have all of the function parameters as nullable.
  */
-object LeanplumCT {
+public object LeanplumCT {
 
   private var wrapper: CTWrapper? = null
     get() {
@@ -18,13 +18,13 @@ object LeanplumCT {
     }
 
   @JvmStatic
-  fun getPurchaseEventName() = "Purchase"
+  public fun getPurchaseEventName(): String = "Purchase"
 
   /**
    * Initialization with Context would cause the CleverTap SDK to be initialized too.
    */
   @JvmStatic
-  fun initWithContext(context: Context?) {
+  public fun initWithContext(context: Context?) {
     if (context != null) {
       val ctProvider = CleverTapProvider(context)
       wrapper = CTWrapper(ctProvider)
@@ -32,7 +32,7 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun initWithInstance(cleverTapInstance: CleverTapAPI?) {
+  public fun initWithInstance(cleverTapInstance: CleverTapAPI?) {
     if (cleverTapInstance != null) {
       val ctProvider = CleverTapProvider(cleverTapInstance)
       wrapper = CTWrapper(ctProvider)
@@ -40,44 +40,44 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun advanceTo(state: String?) {
+  public fun advanceTo(state: String?) {
     advanceTo(state, null, null)
   }
 
   @JvmStatic
-  fun advanceTo(state: String?, info: String?) {
+  public fun advanceTo(state: String?, info: String?) {
     advanceTo(state, info, null)
   }
 
   @JvmStatic
-  fun advanceTo(state: String?, params: Map<String, Any?>?) {
+  public fun advanceTo(state: String?, params: Map<String, Any?>?) {
     advanceTo(state, null, params)
   }
 
   @JvmStatic
-  fun advanceTo(state: String?, info: String?, params: Map<String, Any?>?) {
+  public fun advanceTo(state: String?, info: String?, params: Map<String, Any?>?) {
     wrapper?.advanceTo(state, info, params)
   }
 
   @JvmStatic
-  fun setLogLevel(logLevel: CleverTapAPI.LogLevel) {
+  public fun setLogLevel(logLevel: CleverTapAPI.LogLevel) {
     CleverTapAPI.setDebugLevel(logLevel)
   }
 
   @JvmStatic
-  fun setTrafficSourceInfo(info: Map<String, String>?) {
+  public fun setTrafficSourceInfo(info: Map<String, String>?) {
     if (info != null) {
       wrapper?.setTrafficSourceInfo(info)
     }
   }
 
   @JvmStatic
-  fun setUserAttributes(attributes: Map<String, Any?>?) {
+  public fun setUserAttributes(attributes: Map<String, Any?>?) {
     wrapper?.setUserAttributes(attributes)
   }
 
   @JvmStatic
-  fun setUserAttributes(userId: String?, attributes: Map<String, Any?>?) {
+  public fun setUserAttributes(userId: String?, attributes: Map<String, Any?>?) {
     if (userId != null) {
       setUserId(userId)
     }
@@ -85,47 +85,47 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun setUserId(userId: String?) {
+  public fun setUserId(userId: String?) {
     wrapper?.setUserId(userId)
   }
 
   @JvmStatic
-  fun track(event: String?) {
+  public fun track(event: String?) {
     track(event, .0, null, null)
   }
 
   @JvmStatic
-  fun track(event: String?, value: Double) {
+  public fun track(event: String?, value: Double) {
     track(event, value, null, null)
   }
 
   @JvmStatic
-  fun track(event: String?, info: String?) {
+  public fun track(event: String?, info: String?) {
     track(event, .0, info, null)
   }
 
   @JvmStatic
-  fun track(event: String?, params: Map<String, Any?>?) {
+  public fun track(event: String?, params: Map<String, Any?>?) {
     track(event, .0, null, params)
   }
 
   @JvmStatic
-  fun track(event: String?, value: Double, params: Map<String, Any?>?) {
+  public fun track(event: String?, value: Double, params: Map<String, Any?>?) {
     track(event, value, null, params)
   }
 
   @JvmStatic
-  fun track(event: String?, value: Double, info: String?) {
+  public fun track(event: String?, value: Double, info: String?) {
     track(event, value, info, null)
   }
 
   @JvmStatic
-  fun track(event: String?, value: Double, info: String?, params: Map<String, Any?>?) {
+  public fun track(event: String?, value: Double, info: String?, params: Map<String, Any?>?) {
     wrapper?.track(event, value, info, params)
   }
 
   @JvmStatic
-  fun trackGooglePlayPurchase(
+  public fun trackGooglePlayPurchase(
     item: String?,
     priceMicros: Long,
     currencyCode: String?,
@@ -144,7 +144,7 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun trackGooglePlayPurchase(
+  public fun trackGooglePlayPurchase(
     item: String,
     priceMicros: Long,
     currencyCode: String,
@@ -164,7 +164,7 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun trackGooglePlayPurchase(
+  public fun trackGooglePlayPurchase(
     eventName: String?,
     item: String?,
     priceMicros: Long,
@@ -190,7 +190,7 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun trackPurchase(
+  public fun trackPurchase(
     event: String,
     value: Double,
     currencyCode: String?,

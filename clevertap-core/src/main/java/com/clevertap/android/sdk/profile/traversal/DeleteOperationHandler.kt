@@ -4,11 +4,13 @@ import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Handles DELETE operation during profile merging.
  * Supports deleting keys, nested objects, array elements, and fields within array elements.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DeleteOperationHandler(
     private val changeTracker: ProfileChangeTracker
 ) {

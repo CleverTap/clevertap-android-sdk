@@ -53,14 +53,14 @@ class CTVariablesTest : BaseTestCase() {
     var var2_notified = false
     var callback_notified = false
 
-    val var1 = Var.define("var1", 1, ctVariables)
+    val var1 = Var.define("var1", 1, ctVariables)!!
     var1.addValueChangedCallback(object : VariableCallback<Int>() {
       override fun onValueChanged(variable: Var<Int>) {
         var1_notified = true
       }
     })
 
-    val var2 = Var.define("group.var2", 2, ctVariables)
+    val var2 = Var.define("group.var2", 2, ctVariables)!!
     var2.addValueChangedCallback(object : VariableCallback<Int>() {
       override fun onValueChanged(variable: Var<Int>) {
         var2_notified = true
@@ -89,14 +89,14 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.init()
     var success = false
     var callback = false
-    ctVariables.setHasVarsRequestCompleted(false)
+    ctVariables.hasVarsRequestCompleted = false
 
     ctVariables.handleVariableResponse(null) { isSuccessful ->
       success = isSuccessful
       callback = true
     }
 
-    assertTrue(ctVariables.hasVarsRequestCompleted())
+    assertTrue(ctVariables.hasVarsRequestCompleted)
     verify { varCache.loadDiffsAndTriggerHandlers(any()) }
     assertTrue(callback)
     assertFalse(success)
@@ -107,7 +107,7 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.init()
     var counter = 0
 
-    val var1 = Var.define("var1", 1, ctVariables)
+    val var1 = Var.define("var1", 1, ctVariables)!!
     var1.addValueChangedCallback(object : VariableCallback<Int>() {
       override fun onValueChanged(variable: Var<Int>) {
         counter++
@@ -138,7 +138,7 @@ class CTVariablesTest : BaseTestCase() {
     var callback = false
     var counter = 0
 
-    val var1 = Var.define("var1", 1, ctVariables)
+    val var1 = Var.define("var1", 1, ctVariables)!!
     var1.addValueChangedCallback(object : VariableCallback<Int>() {
       override fun onValueChanged(variable: Var<Int>) {
         counter++
@@ -216,12 +216,12 @@ class CTVariablesTest : BaseTestCase() {
   @Test
   fun `test clearUserContent resets var to default value`() {
     ctVariables.init()
-    val var1 = Var.define("var1", 1, ctVariables)
+    val var1 = Var.define("var1", 1, ctVariables)!!
     ctVariables.handleVariableResponse(JSONObject().put("var1", 2), null)
     assertEquals(2, var1.value())
 
     ctVariables.clearUserContent()
-    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertFalse(ctVariables.hasVarsRequestCompleted)
     assertEquals(1, var1.value())
 
     ctVariables.handleVariableResponse(JSONObject().put("var1", 3), null)
@@ -231,7 +231,7 @@ class CTVariablesTest : BaseTestCase() {
   @Test
   fun `test clearUserContent resets group to default value`() {
     ctVariables.init()
-    val group = Var.define("group", mapOf("var1" to 1, "var2" to 2), ctVariables)
+    val group = Var.define("group", mapOf("var1" to 1, "var2" to 2), ctVariables)!!
     ctVariables.handleVariableResponse(JSONObject().put("group.var1", 111), null)
 
     assertEquals(111, varCache.getMergedValue("group.var1"))
@@ -239,7 +239,7 @@ class CTVariablesTest : BaseTestCase() {
     assertEquals(mapOf("var1" to 111, "var2" to 2), group.value())
 
     ctVariables.clearUserContent()
-    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertFalse(ctVariables.hasVarsRequestCompleted)
     assertEquals(mapOf("var1" to 1, "var2" to 2), group.value())
 
     ctVariables.handleVariableResponse(JSONObject().put("group.var2", 222), null)

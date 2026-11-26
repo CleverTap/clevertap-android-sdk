@@ -3,9 +3,12 @@ package com.clevertap.android.sdk.profile.traversal
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DeleteOperationHandlerTest {
 

@@ -12,7 +12,9 @@ import com.clevertap.android.sdk.task.Task
 import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONObject
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppNotificationInflater(
     private val storeRegistry: StoreRegistry,
     private val templatesManager: TemplatesManager,

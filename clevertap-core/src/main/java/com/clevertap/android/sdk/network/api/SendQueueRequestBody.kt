@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.network.api
 
+import androidx.annotation.RestrictTo
 import org.json.JSONArray
 import org.json.JSONObject
 
-class SendQueueRequestBody(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class SendQueueRequestBody(
     val queueHeader: JSONObject?,
     val queue: JSONArray
 ) {

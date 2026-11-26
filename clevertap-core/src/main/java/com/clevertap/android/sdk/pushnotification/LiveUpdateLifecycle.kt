@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.Constants
  * in-place render is, by default, an update).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveUpdateLifecycle {
+internal object LiveUpdateLifecycle {
 
     @JvmStatic
     fun state(event: String?): String = when {

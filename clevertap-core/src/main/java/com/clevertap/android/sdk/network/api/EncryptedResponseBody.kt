@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.network.api
 
+import androidx.annotation.RestrictTo
 import org.json.JSONObject
 
-data class EncryptedResponseBody(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EncryptedResponseBody(
     val encryptedPayload: String,
     val iv: String
 ) {

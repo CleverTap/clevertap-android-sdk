@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.usereventlogs
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 
-interface UserEventLogDAO {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface UserEventLogDAO {
 
     // Insert a new event by deviceID
     @WorkerThread

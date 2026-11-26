@@ -19,12 +19,14 @@ import com.clevertap.android.sdk.video.VideoLibChecker
 import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import com.clevertap.android.sdk.video.inapps.ExoplayerHandle
 import com.clevertap.android.sdk.video.inapps.Media3Handle
+import androidx.annotation.RestrictTo
 
 /**
  * Handler for video/audio stream media in InApp notifications.
  * Manages ExoPlayer/Media3 player lifecycle, view binding, and fullscreen dialog.
  */
 @OptIn(UnstableApi::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppStreamMediaHandler
     (
     private val fragment: Fragment,

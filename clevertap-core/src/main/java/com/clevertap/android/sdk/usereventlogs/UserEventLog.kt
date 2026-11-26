@@ -16,7 +16,7 @@ package com.clevertap.android.sdk.usereventlogs
  *
  * @see com.clevertap.android.sdk.Utils.getNormalizedName
  */
-data class UserEventLog(
+public data class UserEventLog(
     val eventName: String,   // The name of the event
     val normalizedEventName: String, // normalized version of the name of the event
     val firstTs: Long,       // The timestamp of the first occurrence of the event

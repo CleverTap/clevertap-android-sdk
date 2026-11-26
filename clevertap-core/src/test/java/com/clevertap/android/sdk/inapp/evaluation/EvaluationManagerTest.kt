@@ -16,9 +16,8 @@ import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert.*
-import org.hamcrest.beans.SamePropertyValuesAs.*
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -730,9 +729,9 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val triggerCondition = result[0].propertyAtIndex(0)
 
-        Assert.assertEquals("Property1", triggerCondition?.propertyName)
-        Assert.assertEquals(Equals, triggerCondition?.op)
-        Assert.assertEquals("Value1", triggerCondition?.value?.stringValue())
+        assertEquals("Property1", triggerCondition?.propertyName)
+        assertEquals(Equals, triggerCondition?.op)
+        assertEquals("Value1", triggerCondition?.value?.stringValue())
     }
 
     @Test
@@ -1219,7 +1218,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val sortedList = evaluationManager.sortByPriority(inApps)
 
         val expectedOrder = listOf(jsonObject1, jsonObject3, jsonObject2)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1235,7 +1234,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val sortedList = evaluationManager.sortByPriority(inApps)
 
         val expectedOrder = listOf(jsonObject2, jsonObject1)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1243,7 +1242,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = emptyList<JSONObject>()
         val sortedList = evaluationManager.sortByPriority(inApps)
 
-        assertThat(sortedList, `is`(emptyList()))
+        assertEquals(emptyList(), sortedList)
     }
 
     @Test
@@ -1261,7 +1260,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val expectedOrder =
             listOf(jsonObject1, jsonObject2)  // Sorted by priority (timestamp doesn't affect order)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1279,7 +1278,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val expectedOrder =
             listOf(jsonObject2, jsonObject1)  // Sorted by priority (2nd has higher priority)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1302,7 +1301,7 @@ class EvaluationManagerTest : BaseTestCase() {
             jsonObject2,
             jsonObject1
         )  // Sorted by priority (equal priority, timestamp missing)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1325,7 +1324,7 @@ class EvaluationManagerTest : BaseTestCase() {
             jsonObject1,
             jsonObject2
         )  // Sorted by priority (equal priority, timestamp missing)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1343,7 +1342,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val expectedOrder =
             listOf(jsonObject2, jsonObject1)  // Sorted by priority (higher priority first)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1361,7 +1360,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val expectedOrder =
             listOf(jsonObject1, jsonObject2)  // Sorted by priority (missing priority comes after)
-        assertThat(sortedList, `is`(expectedOrder))
+        assertEquals(expectedOrder, sortedList)
     }
 
     @Test
@@ -1373,7 +1372,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = listOf(jsonObject)
         val sortedList = evaluationManager.sortByPriority(inApps)
 
-        assertThat(sortedList, `is`(inApps))
+        assertEquals(inApps, sortedList)
     }
 
     @Test

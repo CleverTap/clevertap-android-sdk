@@ -9,7 +9,9 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
 import com.clevertap.android.sdk.utils.Clock
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class UninstallTimestampDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,

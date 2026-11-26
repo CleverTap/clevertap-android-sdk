@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.CleverTapAPI
  * The SDK still owns display, channel creation, the notification id (derived from `wzrk_activityId`
  * for in-place updates), and lifecycle/viewed analytics.
  */
-fun interface ICleverTapLiveUpdateNotificationFactory {
+public fun interface ICleverTapLiveUpdateNotificationFactory {
 
     /**
      * Called when a CleverTap Live Update push needs to be rendered.
@@ -24,5 +24,5 @@ fun interface ICleverTapLiveUpdateNotificationFactory {
      * @param extras  the push payload bundle with all CleverTap keys
      * @return the [Notification] to display, or `null` to skip rendering
      */
-    fun onCreateNotification(context: Context, extras: Bundle): Notification?
+    public fun onCreateNotification(context: Context, extras: Bundle): Notification?
 }

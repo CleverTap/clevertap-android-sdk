@@ -10,8 +10,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
+import androidx.annotation.RestrictTo
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object InAppSchedulerFactory {
 
     private const val PARALLEL_SCHEDULERS = 20

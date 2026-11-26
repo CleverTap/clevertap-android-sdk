@@ -1,9 +1,12 @@
 package com.clevertap.android.sdk.profile.traversal
 
+import androidx.annotation.RestrictTo
+
 /**
  * Utilities for performing arithmetic operations on numbers during profile merging.
  * Preserves number types when possible (Int, Long, Float, Double).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object NumberOperationUtils {
 
     /**

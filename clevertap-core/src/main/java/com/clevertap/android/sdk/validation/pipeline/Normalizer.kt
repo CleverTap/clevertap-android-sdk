@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationConfig
 
 /**
@@ -9,7 +10,8 @@ import com.clevertap.android.sdk.validation.ValidationConfig
  * @param I Input type to normalize
  * @param O Output type after normalization
  */
-interface Normalizer<I, O> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface Normalizer<I, O> {
     /**
      * Normalizes the input data.
      *

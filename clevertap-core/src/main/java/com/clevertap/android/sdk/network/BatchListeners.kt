@@ -1,15 +1,18 @@
 package com.clevertap.android.sdk.network
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
 
-interface BatchListener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface BatchListener {
     fun onBatchSent(batch: JSONArray, success: Boolean)
 }
 
-class CompositeBatchListener : BatchListener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CompositeBatchListener : BatchListener {
     private val listeners = mutableListOf<BatchListener>()
 
     fun addListener(listener: BatchListener) {
@@ -25,7 +28,8 @@ class CompositeBatchListener : BatchListener {
     }
 }
 
-class AppLaunchListener : BatchListener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class AppLaunchListener : BatchListener {
 
     private val listeners = mutableListOf<() -> Unit>()
 
@@ -52,7 +56,8 @@ class AppLaunchListener : BatchListener {
     }
 }
 
-open class FetchInAppListener(private val callbackManager: BaseCallbackManager) : BatchListener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class FetchInAppListener(private val callbackManager: BaseCallbackManager) : BatchListener {
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
 

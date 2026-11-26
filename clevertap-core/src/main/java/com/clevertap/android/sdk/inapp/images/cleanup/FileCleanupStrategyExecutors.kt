@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.images.cleanup
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.CTExecutors
+import androidx.annotation.RestrictTo
 /**
  * A file cleanup strategy that utilizes thread pools for asynchronous file deletion.
  *
@@ -11,6 +12,7 @@ import com.clevertap.android.sdk.task.CTExecutors
  * @param { fileResourceProvider } The provider for accessing and managing file resources.
  * @param executor The executor providing a thread pool for asynchronous file deletion (defaults to a resource downloader executor with 8 threads).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileCleanupStrategyExecutors @JvmOverloads constructor(
     override val fileResourceProvider: () -> FileResourceProvider,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader()

@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk.leanplum
 
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object Constants {
   const val IDENTITY = "Identity"
   const val STATE_PREFIX = "state_"

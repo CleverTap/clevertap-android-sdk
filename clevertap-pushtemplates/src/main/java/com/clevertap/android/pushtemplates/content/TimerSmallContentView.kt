@@ -11,8 +11,10 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+import androidx.annotation.RestrictTo
 
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class TimerSmallContentView(
     context: Context,
     timer_end: Long?,

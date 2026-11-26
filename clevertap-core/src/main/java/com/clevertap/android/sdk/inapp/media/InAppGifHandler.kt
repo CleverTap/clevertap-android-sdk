@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.gif.GifImageView
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppGifHandler(
     private val media: CTInAppNotificationMedia,
     private val resourceProvider: FileResourceProvider

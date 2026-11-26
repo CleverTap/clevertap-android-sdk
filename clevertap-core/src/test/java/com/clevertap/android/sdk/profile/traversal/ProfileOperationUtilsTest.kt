@@ -4,8 +4,10 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ProfileOperationUtilsTest {
 

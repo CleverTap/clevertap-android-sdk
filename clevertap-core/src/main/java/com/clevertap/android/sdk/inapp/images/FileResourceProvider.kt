@@ -21,7 +21,9 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileResourceProvider(
     images: File,
     gifs: File,

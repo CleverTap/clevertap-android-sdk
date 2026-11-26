@@ -7,6 +7,10 @@ import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CleverTapDisplayUnitContentTest : BaseTestCase() {
@@ -14,45 +18,45 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     @Test
     fun test_toContent_nullObject_ReturnInvalidObject() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(null)
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.message))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.messageColor))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.media))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.actionUrl))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.contentType))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.icon))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.posterUrl))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.title))
-        Assert.assertTrue(TextUtils.isEmpty(displayUnitContent.titleColor))
-        Assert.assertTrue(!TextUtils.isEmpty(displayUnitContent.error))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.message))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.messageColor))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.media))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.actionUrl))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.contentType))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.icon))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.posterUrl))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.title))
+        assertTrue(TextUtils.isEmpty(displayUnitContent.titleColor))
+        assertTrue(!TextUtils.isEmpty(displayUnitContent.error))
     }
 
     @Test
     fun test_toDisplayUnit_validArray_ReturnValidObject() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.message))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.messageColor))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.media))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.actionUrl))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.contentType))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.icon))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.posterUrl))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.title))
-        Assert.assertFalse(TextUtils.isEmpty(displayUnitContent.titleColor))
-        Assert.assertFalse(!TextUtils.isEmpty(displayUnitContent.error))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.message))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.messageColor))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.media))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.actionUrl))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.contentType))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.icon))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.posterUrl))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.title))
+        assertFalse(TextUtils.isEmpty(displayUnitContent.titleColor))
+        assertFalse(!TextUtils.isEmpty(displayUnitContent.error))
     }
 
     @Test
     fun test_toString() {
         val displayUnitContentString =
             CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent()).toString()
-        Assert.assertTrue(displayUnitContentString.contains("title:"))
-        Assert.assertTrue(displayUnitContentString.contains("titleColor:"))
-        Assert.assertTrue(displayUnitContentString.contains("message:"))
-        Assert.assertTrue(displayUnitContentString.contains("messageColor:"))
-        Assert.assertTrue(displayUnitContentString.contains("media:"))
-        Assert.assertTrue(displayUnitContentString.contains("posterUrl:"))
-        Assert.assertTrue(displayUnitContentString.contains("actionUrl:"))
-        Assert.assertTrue(displayUnitContentString.contains("error:"))
+        assertTrue(displayUnitContentString.contains("title:"))
+        assertTrue(displayUnitContentString.contains("titleColor:"))
+        assertTrue(displayUnitContentString.contains("message:"))
+        assertTrue(displayUnitContentString.contains("messageColor:"))
+        assertTrue(displayUnitContentString.contains("media:"))
+        assertTrue(displayUnitContentString.contains("posterUrl:"))
+        assertTrue(displayUnitContentString.contains("actionUrl:"))
+        assertTrue(displayUnitContentString.contains("error:"))
     }
 
     @Test
@@ -63,68 +67,68 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         parcel.setDataPosition(0)
 
         val createdFromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
-        Assert.assertEquals(displayUnitContent.message, createdFromParcel.message)
-        Assert.assertEquals(displayUnitContent.messageColor, createdFromParcel.messageColor)
-        Assert.assertEquals(displayUnitContent.media, createdFromParcel.media)
-        Assert.assertEquals(displayUnitContent.actionUrl, createdFromParcel.actionUrl)
-        Assert.assertEquals(displayUnitContent.contentType, createdFromParcel.contentType)
-        Assert.assertEquals(displayUnitContent.icon, createdFromParcel.icon)
-        Assert.assertEquals(displayUnitContent.posterUrl, createdFromParcel.posterUrl)
-        Assert.assertEquals(displayUnitContent.title, createdFromParcel.title)
-        Assert.assertEquals(displayUnitContent.titleColor, createdFromParcel.titleColor)
-        Assert.assertEquals(displayUnitContent.error, createdFromParcel.error)
+        assertEquals(displayUnitContent.message, createdFromParcel.message)
+        assertEquals(displayUnitContent.messageColor, createdFromParcel.messageColor)
+        assertEquals(displayUnitContent.media, createdFromParcel.media)
+        assertEquals(displayUnitContent.actionUrl, createdFromParcel.actionUrl)
+        assertEquals(displayUnitContent.contentType, createdFromParcel.contentType)
+        assertEquals(displayUnitContent.icon, createdFromParcel.icon)
+        assertEquals(displayUnitContent.posterUrl, createdFromParcel.posterUrl)
+        assertEquals(displayUnitContent.title, createdFromParcel.title)
+        assertEquals(displayUnitContent.titleColor, createdFromParcel.titleColor)
+        assertEquals(displayUnitContent.error, createdFromParcel.error)
     }
 
     @Test
     fun test_mediaIsVideo() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
         displayUnitContent.contentType = null
-        Assert.assertFalse(displayUnitContent.mediaIsVideo())
+        assertFalse(displayUnitContent.mediaIsVideo())
 
         displayUnitContent.contentType = "audio"
-        Assert.assertFalse(displayUnitContent.mediaIsVideo())
+        assertFalse(displayUnitContent.mediaIsVideo())
 
         displayUnitContent.contentType = "videoabc"
-        Assert.assertTrue(displayUnitContent.mediaIsVideo())
+        assertTrue(displayUnitContent.mediaIsVideo())
     }
 
     @Test
     fun test_mediaIsAudio() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
         displayUnitContent.contentType = null
-        Assert.assertFalse(displayUnitContent.mediaIsAudio())
+        assertFalse(displayUnitContent.mediaIsAudio())
 
         displayUnitContent.contentType = "video"
-        Assert.assertFalse(displayUnitContent.mediaIsAudio())
+        assertFalse(displayUnitContent.mediaIsAudio())
 
         displayUnitContent.contentType = "audioabc"
-        Assert.assertTrue(displayUnitContent.mediaIsAudio())
+        assertTrue(displayUnitContent.mediaIsAudio())
     }
 
     @Test
     fun test_mediaIsGIF() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
         displayUnitContent.contentType = null
-        Assert.assertFalse(displayUnitContent.mediaIsGIF())
+        assertFalse(displayUnitContent.mediaIsGIF())
 
         displayUnitContent.contentType = "image"
-        Assert.assertFalse(displayUnitContent.mediaIsGIF())
+        assertFalse(displayUnitContent.mediaIsGIF())
 
         displayUnitContent.contentType = "image/gif"
-        Assert.assertTrue(displayUnitContent.mediaIsGIF())
+        assertTrue(displayUnitContent.mediaIsGIF())
     }
 
     @Test
     fun test_mediaIsImage() {
         val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
         displayUnitContent.contentType = null
-        Assert.assertFalse(displayUnitContent.mediaIsImage())
+        assertFalse(displayUnitContent.mediaIsImage())
 
         displayUnitContent.contentType = "image/gif"
-        Assert.assertFalse(displayUnitContent.mediaIsImage())
+        assertFalse(displayUnitContent.mediaIsImage())
 
         displayUnitContent.contentType = "image"
-        Assert.assertTrue(displayUnitContent.mediaIsImage())
+        assertTrue(displayUnitContent.mediaIsImage())
     }
 
     // ── metaData (per-item wzrk_* attribution) ──────────────────────────────
@@ -152,9 +156,9 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     @Test
     fun test_toContent_copiesServerMetadataVerbatim() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(serverMetadata(), null))
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
-        Assert.assertEquals("0", content.metaData!!["wzrk_index"])
-        Assert.assertEquals("Title1", content.metaData!!["wzrk_c2a"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertEquals("0", content.metaData!!["wzrk_index"])
+        assertEquals("Title1", content.metaData!!["wzrk_c2a"])
     }
 
     @Test
@@ -162,23 +166,23 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(serverMetadata(), "https://www.android.com")
         )
-        Assert.assertEquals("url", content.metaData!!["wzrk_action"])
-        Assert.assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
+        assertEquals("url", content.metaData!!["wzrk_action"])
+        assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
     }
 
     @Test
     fun test_toContent_withoutAndroidUrl_omitsActionAndData() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(serverMetadata(), null))
-        Assert.assertNull(content.metaData!!["wzrk_action"])
-        Assert.assertNull(content.metaData!!["wzrk_data"])
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertNull(content.metaData!!["wzrk_action"])
+        assertNull(content.metaData!!["wzrk_data"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
     }
 
     @Test
     fun test_toContent_whitespaceOnlyAndroidUrl_omitsActionAndData() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(serverMetadata(), "   "))
-        Assert.assertNull(content.metaData!!["wzrk_action"])
-        Assert.assertNull(content.metaData!!["wzrk_data"])
+        assertNull(content.metaData!!["wzrk_action"])
+        assertNull(content.metaData!!["wzrk_data"])
     }
 
     @Test
@@ -186,7 +190,7 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(serverMetadata(), "  https://www.android.com  ")
         )
-        Assert.assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
+        assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
     }
 
     /**
@@ -203,10 +207,10 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(metadata, "https://www.android.com")
         )
-        Assert.assertEquals("url", content.metaData!!["wzrk_action"])
-        Assert.assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
+        assertEquals("url", content.metaData!!["wzrk_action"])
+        assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
         // Identity keys still come from the server untouched.
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
     }
 
     /** With no Android url there is nothing to derive, so whatever the BE sent stays. */
@@ -214,8 +218,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     fun test_toContent_noAndroidUrl_keepsServerSentActionPair() {
         val metadata = serverMetadata().put("wzrk_action", "none").put("wzrk_data", "")
         val content = CleverTapDisplayUnitContent.toContent(contentJson(metadata, null))
-        Assert.assertEquals("none", content.metaData!!["wzrk_action"])
-        Assert.assertEquals("", content.metaData!!["wzrk_data"])
+        assertEquals("none", content.metaData!!["wzrk_action"])
+        assertEquals("", content.metaData!!["wzrk_data"])
     }
 
     /**
@@ -232,10 +236,10 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
             )
             .put("metadata", serverMetadata())
         val content = CleverTapDisplayUnitContent.toContent(json)
-        Assert.assertNull(content.metaData!!["wzrk_action"])
-        Assert.assertNull(content.metaData!!["wzrk_data"])
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
-        Assert.assertEquals("", content.actionUrl)
+        assertNull(content.metaData!!["wzrk_action"])
+        assertNull(content.metaData!!["wzrk_data"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertEquals("", content.actionUrl)
     }
 
     /**
@@ -255,9 +259,9 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
             )
             .put("metadata", serverMetadata())
         val content = CleverTapDisplayUnitContent.toContent(json)
-        Assert.assertNull(content.metaData!!["wzrk_action"])
-        Assert.assertNull(content.metaData!!["wzrk_data"])
-        Assert.assertEquals("", content.actionUrl)
+        assertNull(content.metaData!!["wzrk_action"])
+        assertNull(content.metaData!!["wzrk_data"])
+        assertEquals("", content.actionUrl)
     }
 
     /**
@@ -269,8 +273,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(null, "https://www.android.com")
         )
-        Assert.assertEquals(
-            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+        assertEquals(
+            hashMapOf<String, Any?>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
             content.metaData
         )
     }
@@ -280,8 +284,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(JSONObject(), "https://www.android.com")
         )
-        Assert.assertEquals(
-            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+        assertEquals(
+            hashMapOf<String, Any?>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
             content.metaData
         )
     }
@@ -290,8 +294,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     fun test_toContent_metadataWrongTypeWithAndroidUrl_metaDataHasOnlyDerivedPair() {
         val json = contentJson(null, "https://www.android.com").put("metadata", "not-an-object")
         val content = CleverTapDisplayUnitContent.toContent(json)
-        Assert.assertEquals(
-            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+        assertEquals(
+            hashMapOf<String, Any?>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
             content.metaData
         )
     }
@@ -300,19 +304,19 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     @Test
     fun test_toContent_noMetadataNoAndroidUrl_metaDataIsNull() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(null, null))
-        Assert.assertNull(content.metaData)
+        assertNull(content.metaData)
     }
 
     @Test
     fun test_toContent_emptyMetadataNoAndroidUrl_metaDataIsNull() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(JSONObject(), null))
-        Assert.assertNull(content.metaData)
+        assertNull(content.metaData)
     }
 
     @Test
     fun test_toContent_noMetadataWhitespaceOnlyAndroidUrl_metaDataIsNull() {
         val content = CleverTapDisplayUnitContent.toContent(contentJson(null, "   "))
-        Assert.assertNull(content.metaData)
+        assertNull(content.metaData)
     }
 
     /** The derived pair alone must still survive parcelling. */
@@ -326,15 +330,15 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         parcel.setDataPosition(0)
         val fromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
         parcel.recycle()
-        Assert.assertEquals("url", fromParcel.metaData!!["wzrk_action"])
-        Assert.assertEquals("https://www.android.com", fromParcel.metaData!!["wzrk_data"])
+        assertEquals("url", fromParcel.metaData!!["wzrk_action"])
+        assertEquals("https://www.android.com", fromParcel.metaData!!["wzrk_data"])
     }
 
     @Test
     fun test_toContent_metadataWrongType_metaDataIsNull() {
         val json = contentJson(null, null).put("metadata", "not-an-object")
         val content = CleverTapDisplayUnitContent.toContent(json)
-        Assert.assertNull(content.metaData)
+        assertNull(content.metaData)
     }
 
     /**
@@ -345,8 +349,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     fun test_toContent_nestedMetadataValue_isSkipped() {
         val metadata = serverMetadata().put("wzrk_nested", JSONObject().put("a", "b"))
         val content = CleverTapDisplayUnitContent.toContent(contentJson(metadata, null))
-        Assert.assertNull(content.metaData!!["wzrk_nested"])
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertNull(content.metaData!!["wzrk_nested"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
     }
 
     /**
@@ -357,14 +361,14 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     fun test_toContent_jsonNullMetadataValue_isSkippedAndParcels() {
         val metadata = serverMetadata().put("wzrk_null", JSONObject.NULL)
         val content = CleverTapDisplayUnitContent.toContent(contentJson(metadata, null))
-        Assert.assertFalse(content.metaData!!.containsKey("wzrk_null"))
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertFalse(content.metaData!!.containsKey("wzrk_null"))
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
 
         val parcel = Parcel.obtain()
         content.writeToParcel(parcel, 0)
         parcel.setDataPosition(0)
         val fromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
-        Assert.assertEquals("1907971814", fromParcel.metaData!!["wzrk_element_id"])
+        assertEquals("1907971814", fromParcel.metaData!!["wzrk_element_id"])
     }
 
     /** The getter must hand back a copy, or a caller edits the item's stored attribution. */
@@ -374,8 +378,8 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         content.metaData!!["wzrk_element_id"] = "tampered"
         content.metaData!!["injected"] = "x"
 
-        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
-        Assert.assertNull(content.metaData!!["injected"])
+        assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        assertNull(content.metaData!!["injected"])
     }
 
     @Test
@@ -388,9 +392,9 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         parcel.setDataPosition(0)
 
         val fromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
-        Assert.assertEquals("1907971814", fromParcel.metaData!!["wzrk_element_id"])
-        Assert.assertEquals("0", fromParcel.metaData!!["wzrk_index"])
-        Assert.assertEquals("url", fromParcel.metaData!!["wzrk_action"])
-        Assert.assertEquals("https://www.android.com", fromParcel.metaData!!["wzrk_data"])
+        assertEquals("1907971814", fromParcel.metaData!!["wzrk_element_id"])
+        assertEquals("0", fromParcel.metaData!!["wzrk_index"])
+        assertEquals("url", fromParcel.metaData!!["wzrk_action"])
+        assertEquals("https://www.android.com", fromParcel.metaData!!["wzrk_data"])
     }
 }

@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.variables.JsonUtil
+import androidx.annotation.RestrictTo
 
 /**
  * Owns Native Display (Display Units) evaluation on the event stream — the ND analog of the
@@ -13,6 +14,7 @@ import com.clevertap.android.sdk.variables.JsonUtil
  * properties and delegates to [NdEvaluationManager], guarded so an ND fault can't break in-app
  * evaluation or queue-flush scheduling.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NativeDisplayController(
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo,

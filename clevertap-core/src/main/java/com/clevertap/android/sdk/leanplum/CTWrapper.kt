@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.leanplum
 
 import com.clevertap.android.sdk.Logger
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTWrapper(private val ctProvider: CleverTapProvider) {
 
   fun setUserId(userId: String?) {

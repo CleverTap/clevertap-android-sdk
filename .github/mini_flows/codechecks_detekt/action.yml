@@ -5,18 +5,32 @@ runs:
   using: "composite"
   steps:
 
+    # detektRelease = type-resolved analysis of main sources. The plain `detekt` task skips every
+    # type-resolution rule (UnsafeCallOnNullableType, CanBeNonNullable, the libraries rule set).
+    # Fails on any finding not in <module>/detekt-baseline-release.xml.
     - name: Run Detekt on All Modules (Parallel)
       if: always()
       shell: bash
       run: |
         ./gradlew \
-          :clevertap-core:detekt \
-          :clevertap-geofence:detekt \
-          :clevertap-hms:detekt \
-          :clevertap-pushtemplates:detekt \
+          :clevertap-core:detektRelease \
+          :clevertap-geofence:detektRelease \
+          :clevertap-hms:detektRelease \
+          :clevertap-pushtemplates:detektRelease \
+          --continue \
           --parallel \
           --max-workers=4 \
           --build-cache
+
+    # Public API guards:
+    #  - apiCheck (binary-compatibility-validator): public ABI must match <module>/api/*.api
+    #  - apiInteropCheck: no NEW Java/Flutter/React Native interop hazards in the public API and no
+    #    Kotlin `internal` declaration without @RestrictTo (baseline: config/api-interop/baseline.txt)
+    - name: Public API checks (ABI + Java/hybrid interop)
+      if: always()
+      shell: bash
+      run: |
+        ./gradlew apiCheck apiInteropCheck --continue --build-cache
 
     - name: Upload All Detekt Reports
       if: always()

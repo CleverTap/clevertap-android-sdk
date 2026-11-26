@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class UserProfileDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,

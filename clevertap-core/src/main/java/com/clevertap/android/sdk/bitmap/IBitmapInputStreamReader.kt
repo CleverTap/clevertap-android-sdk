@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import java.io.InputStream
 import java.net.HttpURLConnection
 
-interface IBitmapInputStreamReader {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface IBitmapInputStreamReader {
 
-    fun readInputStream(
+    public fun readInputStream(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long

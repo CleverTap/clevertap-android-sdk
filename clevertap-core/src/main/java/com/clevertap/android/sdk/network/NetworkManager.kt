@@ -38,7 +38,9 @@ import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NetworkManager constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
@@ -351,7 +353,7 @@ internal class NetworkManager constructor(
                 config.accountId,
                 "An exception occurred while sending the queue, will retry: ", e)
             if (callbackManager.failureFlushListener != null) {
-                callbackManager.failureFlushListener.failureFlush(context)
+                callbackManager.failureFlushListener?.failureFlush(context)
             }
             return false
         }
@@ -753,9 +755,9 @@ internal class NetworkManager constructor(
 
         if (callbackManager.scDomainListener != null) {
             if (domainName != null) {
-                callbackManager.scDomainListener.onSCDomainAvailable(Utils.getSCDomain(domainName))
+                callbackManager.scDomainListener?.onSCDomainAvailable(Utils.getSCDomain(domainName))
             } else {
-                callbackManager.scDomainListener.onSCDomainUnavailable()
+                callbackManager.scDomainListener?.onSCDomainUnavailable()
             }
         }
     }

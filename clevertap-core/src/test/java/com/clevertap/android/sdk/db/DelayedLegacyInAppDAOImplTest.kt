@@ -12,16 +12,16 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class DelayedLegacyInAppDAOImplTest {
@@ -57,7 +57,7 @@ class DelayedLegacyInAppDAOImplTest {
             accID,
             accToken,
             accRegion
-        )
+        )!!
 
         databaseHelper = DatabaseHelper(context, config.accountId, "test_ct_delayed_inapps", logger)
         testClock = spyk(TestClock(MOCK_TIME))

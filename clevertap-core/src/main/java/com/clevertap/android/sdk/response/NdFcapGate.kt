@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Native Display frequency-cap gate. Filters display units through [NdFCManager.canShow]
@@ -18,6 +19,7 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
  * double-cap. Advanced `frequencyLimits`/`occurrenceLimits` were already applied during evaluation (the
  * server only ships content for `adUnit_eval`-voted campaigns), so they are not re-checked here either.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object NdFcapGate {
 
     private const val UNCAPPED = -1

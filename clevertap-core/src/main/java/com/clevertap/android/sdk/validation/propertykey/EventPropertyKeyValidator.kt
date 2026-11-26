@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.propertykey
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.DropReason
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationError
@@ -14,7 +15,8 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event property keys after normalization.
  * Checks for empty keys, modifications, and multi-value restrictions.
  */
-class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationResult> {
 
     override fun validate(input: PropertyKeyNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()

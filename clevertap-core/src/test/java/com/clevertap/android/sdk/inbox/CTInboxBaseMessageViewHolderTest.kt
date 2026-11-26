@@ -14,17 +14,17 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
@@ -174,7 +174,7 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
         assertTrue(added)
         assertEquals(2, container.childCount) // the player view and the mute control
         assertSame(surface, container.getChildAt(0))
-        assertEquals("the container is shown only once the player is ready", View.GONE, container.visibility)
+        assertEquals(View.GONE, container.visibility, "the container is shown only once the player is ready")
         assertEquals(1, started.size)
         assertEquals(CLIP_URL, started[0].url)
         assertFalse(started[0].audio)
@@ -221,12 +221,12 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
         val muteControl = container.getChildAt(1) as ImageView
         val unmuteLabel = appCtx.getString(R.string.ct_unmute_button_content_description)
         val muteLabel = appCtx.getString(R.string.ct_mute_button_content_description)
-        assertEquals("starts muted, so the control offers to unmute", unmuteLabel, muteControl.contentDescription)
+        assertEquals(unmuteLabel, muteControl.contentDescription, "starts muted, so the control offers to unmute")
 
         muteControl.performClick()
 
         assertEquals(1, taps)
-        assertEquals("now audible, so the control offers to mute", muteLabel, muteControl.contentDescription)
+        assertEquals(muteLabel, muteControl.contentDescription, "now audible, so the control offers to mute")
 
         volumeAfterTap = 0f
         muteControl.performClick()
@@ -238,7 +238,7 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
     @Test
     fun `the spinner shows while buffering and hides when the player is ready`() {
         bind(videoMessage("msg_V"))
-        val spinner = holder.progressBarFrameLayout
+        val spinner = holder.progressBarFrameLayout!!
 
         holder.playerBuffering()
         assertEquals(View.VISIBLE, spinner.visibility)

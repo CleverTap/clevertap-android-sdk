@@ -2,11 +2,13 @@ package com.clevertap.android.sdk.inapp
 
 import androidx.annotation.WorkerThread
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * The `InAppQueue` class manages the queue of ss In-App messages.
  * It provides methods to enqueue, dequeue, and retrieve the length of the queue.
  **/
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppQueue {
 
     /**

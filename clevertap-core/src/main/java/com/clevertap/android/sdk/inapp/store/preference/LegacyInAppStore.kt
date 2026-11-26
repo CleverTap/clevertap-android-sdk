@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.concatIfNotNull
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import org.json.JSONArray
 import org.json.JSONException
+import androidx.annotation.RestrictTo
 
 /**
  * The `LegacyInAppStore` class manages the storage and retrieval of legacy In-App messages.
@@ -14,7 +15,8 @@ import org.json.JSONException
  * @property ctPreference The instance of the preference manager interface (`ICTPreference`) for handling preferences.
  * @property accountId The unique account identifier used for creating a specific preference key.
  */
-class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: String) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: String) {
 
     companion object {
 

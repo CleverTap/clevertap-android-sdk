@@ -11,7 +11,9 @@ import com.clevertap.android.sdk.Utils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NetworkMonitor constructor(
     context: Context,
     private val accountId: String,

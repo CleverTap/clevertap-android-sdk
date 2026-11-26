@@ -8,10 +8,12 @@ import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Generates JsonObject of the header to be sent with the request for clevertap apis
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class QueueHeaderBuilder(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
@@ -115,7 +117,7 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addDoNotDisturb(header: JSONObject) {
-        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders == null || controllerManager.pushProviders.isNotificationSupported)))
+        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders?.isNotificationSupported ?: true)))
     }
 
     private fun addBackgroundPing(header: JSONObject) {

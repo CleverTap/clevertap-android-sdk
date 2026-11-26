@@ -9,13 +9,13 @@ import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Coverage for the pure DND-window check used by push amplification. The window is expressed as

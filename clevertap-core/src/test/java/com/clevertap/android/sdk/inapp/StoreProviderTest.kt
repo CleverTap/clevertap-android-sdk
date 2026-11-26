@@ -12,9 +12,9 @@ import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import io.mockk.*
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class StoreProviderTest {
 
@@ -36,10 +36,10 @@ class StoreProviderTest {
         // Arrange
         val accountId = "testAccountId"
         val prefName = "${Constants.INAPP_KEY}:${mockDeviceInfo.deviceID}:$accountId"
-        every { storeProvider.constructStorePreferenceName(STORE_TYPE_INAPP, mockDeviceInfo.deviceID, accountId) } returns prefName
+        every { storeProvider.constructStorePreferenceName(STORE_TYPE_INAPP, mockDeviceInfo.deviceID!!, accountId) } returns prefName
 
         // Act
-        val inAppStore = storeProvider.provideInAppStore(mockContext, mockCryptHandler, mockDeviceInfo.deviceID, accountId)
+        val inAppStore = storeProvider.provideInAppStore(mockContext, mockCryptHandler, mockDeviceInfo.deviceID!!, accountId)
 
         // Assert
         verify { storeProvider.getCTPreference(mockContext, prefName) }
@@ -51,10 +51,10 @@ class StoreProviderTest {
         // Arrange
         val accountId = "testAccountId"
         val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:${mockDeviceInfo.deviceID}:$accountId"
-        every { storeProvider.constructStorePreferenceName(STORE_TYPE_IMPRESSION, mockDeviceInfo.deviceID, accountId) } returns prefName
+        every { storeProvider.constructStorePreferenceName(STORE_TYPE_IMPRESSION, mockDeviceInfo.deviceID!!, accountId) } returns prefName
 
         // Act
-        val impressionStore = storeProvider.provideImpressionStore(mockContext, mockDeviceInfo.deviceID, accountId)
+        val impressionStore = storeProvider.provideImpressionStore(mockContext, mockDeviceInfo.deviceID!!, accountId)
 
         // Assert
         verify { storeProvider.getCTPreference(mockContext, prefName) }

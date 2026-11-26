@@ -7,7 +7,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushPermissionHandler @JvmOverloads constructor(
     private val config: CleverTapInstanceConfig,
     private val ctListeners: List<PushPermissionResponseListener?>?,

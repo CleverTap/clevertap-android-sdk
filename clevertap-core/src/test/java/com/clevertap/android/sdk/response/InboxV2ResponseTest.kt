@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.response
 
+import android.content.Context
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -165,7 +166,7 @@ class InboxV2ResponseTest {
         val sourceSlot = slot<InboxV2DeliverySource>()
         every { controller.processV2Response(any(), capture(sourceSlot)) } returns true
 
-        response.processResponse(validResponseJson(), "stringBody", null)
+        response.processResponse(validResponseJson(), "stringBody", mockk<Context>())
 
         assertEquals(InboxV2DeliverySource.A1, sourceSlot.captured)
     }
@@ -175,7 +176,7 @@ class InboxV2ResponseTest {
         val captured = slot<List<CTMessageDAO>>()
         every { controller.processV2Response(capture(captured), any()) } returns true
 
-        response.processResponse(validResponseJson(), "stringBody", null)
+        response.processResponse(validResponseJson(), "stringBody", mockk<Context>())
 
         assertEquals(1, captured.captured.size)
         assertEquals("m1", captured.captured.single().id)
@@ -184,7 +185,7 @@ class InboxV2ResponseTest {
 
     @Test
     fun `decorator override on a body without inbox_notifs_v2 is a no-op`() {
-        response.processResponse(JSONObject().put("unrelated", 1), "stringBody", null)
+        response.processResponse(JSONObject().put("unrelated", 1), "stringBody", mockk<Context>())
 
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
@@ -192,7 +193,7 @@ class InboxV2ResponseTest {
 
     @Test
     fun `decorator override tolerates a null jsonBody`() {
-        response.processResponse(null, "stringBody", null)
+        response.processResponse(null, "stringBody", mockk<Context>())
 
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }

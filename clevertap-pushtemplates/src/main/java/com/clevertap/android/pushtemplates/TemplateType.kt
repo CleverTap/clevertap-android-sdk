@@ -1,5 +1,8 @@
 package com.clevertap.android.pushtemplates
 
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class TemplateType(private val templateType: String) {
     BASIC("pt_basic"), AUTO_CAROUSEL("pt_carousel"),
     MANUAL_CAROUSEL("pt_manual_carousel"), RATING("pt_rating"),

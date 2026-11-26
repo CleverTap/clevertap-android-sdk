@@ -4,10 +4,12 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
+import androidx.annotation.RestrictTo
 
 /**
  * Storage strategy for in-action in-apps (no database needed, metadata only)
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InActionStorageStrategy(
     private val logger: ILogger,
     private val accountId: String

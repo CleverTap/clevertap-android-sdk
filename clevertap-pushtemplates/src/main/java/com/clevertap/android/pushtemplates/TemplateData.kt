@@ -2,28 +2,34 @@ package com.clevertap.android.pushtemplates
 
 import org.json.JSONArray
 import java.util.ArrayList
+import androidx.annotation.RestrictTo
 
 // Base sealed class for all template data types
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal sealed class TemplateData {
     abstract val templateType: TemplateType
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ImageData(
     val url: String? = null,
     val altText: String
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class GifData(
     val url: String? = null,
     val numberOfFrames: Int = 10,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ActionButton(
     val id: String,
     val label: String,
     val icon: Int
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class BaseTextData(
     val title: String? = null,
     val message: String? = null,
@@ -31,6 +37,7 @@ internal data class BaseTextData(
     val subtitle: String? = null,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ImageBorderData(
     val cornerRadiusPercent: Float = 0f,
     val borderWidthValue: Float = 0f,
@@ -45,18 +52,21 @@ internal data class ImageBorderData(
 /**
  * Image styling needs the RemoteViews outline and margin setters added in API 31.
  */
+@get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal val useNativeImageStyling: Boolean
     get() = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 
 /**
  * CENTER_CROP images are styled by the views, FIT_CENTER images by baking into the bitmap.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun PTScaleType.usesNativeImageStyling(): Boolean =
     useNativeImageStyling && this == PTScaleType.CENTER_CROP
 
 /**
  * Styling to bake into the bitmap, or null when the views draw it or the OS is below API 31.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? {
     return if (this != null && useNativeImageStyling && !scaleType.usesNativeImageStyling()) {
         this
@@ -65,6 +75,7 @@ internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class MediaData(
     val bigImage: ImageData,
     val gif: GifData,
@@ -72,10 +83,12 @@ internal data class MediaData(
     val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class IconData(
     val largeIcon: String? = null,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class BaseColorData(
     val titleColor: String? = null,
     val messageColor: String? = null,
@@ -83,6 +96,7 @@ internal data class BaseColorData(
     val metaColor: String? = null,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class BaseContent(
     val textData: BaseTextData,
     val colorData: BaseColorData,
@@ -91,11 +105,13 @@ internal data class BaseContent(
     val notificationBehavior: NotificationBehavior
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class NotificationBehavior(
     val isSticky: Boolean = false,
     val dismissAfter: Long? = null,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class CarouselData(
     val baseContent: BaseContent,
     val actions: JSONArray? = null,
@@ -104,6 +120,7 @@ internal data class CarouselData(
     val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class BasicTemplateData(
     override val templateType: TemplateType = TemplateType.BASIC,
     val baseContent: BaseContent,
@@ -111,12 +128,14 @@ internal data class BasicTemplateData(
     val actions: JSONArray? = null,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class FiveIconsTemplateData(
     override val templateType: TemplateType = TemplateType.FIVE_ICONS,
     val baseContent: BaseContent,
     val imageList: ArrayList<ImageData>,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class IconsTemplateData(
     override val templateType: TemplateType = TemplateType.ICONS,
     val baseContent: BaseContent,
@@ -127,18 +146,21 @@ internal data class IconsTemplateData(
     val iconTextData: BaseTextData,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ManualCarouselTemplateData(
     override val templateType: TemplateType = TemplateType.MANUAL_CAROUSEL,
     val carouselData: CarouselData,
     val carouselType: String? = null,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class AutoCarouselTemplateData(
     override val templateType: TemplateType = TemplateType.AUTO_CAROUSEL,
     val carouselData: CarouselData,
     val flipInterval: Int = PTConstants.PT_FLIP_INTERVAL_TIME,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class RatingTemplateData(
     override val templateType: TemplateType = TemplateType.RATING,
     val baseContent: BaseContent,
@@ -146,6 +168,7 @@ internal data class RatingTemplateData(
     val defaultDeepLink: String? = null,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
     val baseContent: BaseContent,
@@ -165,6 +188,7 @@ internal data class TimerTemplateData(
     val chronometerBorderWidth: Float? = null,
     ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ZeroBezelTemplateData(
     override val templateType: TemplateType = TemplateType.ZERO_BEZEL,
     val baseContent: BaseContent,
@@ -174,6 +198,7 @@ internal data class ZeroBezelTemplateData(
     val collapsedMediaData: MediaData
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ProductTemplateData(
     override val templateType: TemplateType = TemplateType.PRODUCT_DISPLAY,
     val baseContent: BaseContent,
@@ -188,6 +213,7 @@ internal data class ProductTemplateData(
     val isLinear: Boolean = false,
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class InputBoxTemplateData(
     override val templateType: TemplateType = TemplateType.INPUT_BOX,
     val textData: BaseTextData,
@@ -201,12 +227,14 @@ internal data class InputBoxTemplateData(
     val notificationBehavior: NotificationBehavior
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class CancelTemplateData(
     override val templateType: TemplateType = TemplateType.CANCEL,
     val cancelNotificationId: String? = null,
     val cancelNotificationIds: ArrayList<Int>
 ) : TemplateData()
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class ButtonStyle(val key: String) {
     SOLID("solid"),
     GRADIENT_LINEAR("gradient_linear"),
@@ -218,6 +246,7 @@ internal enum class ButtonStyle(val key: String) {
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class VerticalImageButtonData(
     val name: String,
     val deepLink: String? = null,
@@ -232,6 +261,7 @@ internal data class VerticalImageButtonData(
     val borderWidth: Float = PTConstants.PT_BTN_BORDER_WIDTH_DEFAULT,
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class VerticalImageTemplateData(
     override val templateType: TemplateType = TemplateType.VERTICAL_IMAGE,
     val baseContent: BaseContent,
@@ -252,6 +282,7 @@ internal data class VerticalImageTemplateData(
  * [com.clevertap.android.pushtemplates.styles.ProgressStyle]. It still flows through the normal
  * [TemplateDataFactory] pipeline: the segments/points (incl. point titles) are parsed here once.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ProgressTemplateData(
     override val templateType: TemplateType = TemplateType.PROGRESS,
     val title: String?,

@@ -14,7 +14,9 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ManualCarouselContentView(
     context: Context,
     private val renderer: TemplateRenderer,

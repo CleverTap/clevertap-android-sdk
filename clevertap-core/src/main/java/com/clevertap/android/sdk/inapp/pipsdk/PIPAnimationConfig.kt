@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.pipsdk
 
 import android.animation.TimeInterpolator
 import android.view.animation.DecelerateInterpolator
+import androidx.annotation.RestrictTo
 
 /**
  * Immutable animation configuration for a PIP session.
@@ -9,7 +10,8 @@ import android.view.animation.DecelerateInterpolator
  * Holds the animation type, duration, easing interpolator, and optional move-in direction.
  * Parsed from the server's `animation` JSON object by `PIPConfigFactory`.
  */
-data class PIPAnimationConfig(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class PIPAnimationConfig(
     val type: PIPAnimation = PIPAnimation.DISSOLVE,
     val durationMs: Long = DEFAULT_DURATION_MS,
     val interpolator: TimeInterpolator = DEFAULT_INTERPOLATOR,

@@ -1,0 +1,35 @@
+public final class com/clevertap/android/hms/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field SDK_VERSION_STRING Ljava/lang/String;
+	public static final field VERSION_CODE I
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public class com/clevertap/android/hms/CTHmsMessageHandler : com/clevertap/android/hms/IHmsMessageHandler, com/clevertap/android/sdk/interfaces/IPushAmpHandler {
+	public fun <init> ()V
+	public fun createNotification (Landroid/content/Context;Lcom/huawei/hms/push/RemoteMessage;)Z
+	public fun onNewToken (Landroid/content/Context;Ljava/lang/String;)Z
+	public fun processPushAmp (Landroid/content/Context;Lcom/huawei/hms/push/RemoteMessage;)V
+	public synthetic fun processPushAmp (Landroid/content/Context;Ljava/lang/Object;)V
+}
+
+public class com/clevertap/android/hms/HmsConstants {
+	public static final field APP_ID_KEY Ljava/lang/String;
+	public static final field CT_HUAWEI_PROVIDER_CLASS Ljava/lang/String;
+	public static final field Companion Lcom/clevertap/android/hms/HmsConstants$Companion;
+	public static final field HCM_SCOPE Ljava/lang/String;
+	public static final field HMS_DELIVERY_TYPE Ljava/lang/String;
+	public static final field HMS_LOG_TAG Ljava/lang/String;
+	public static final field HPS Lcom/clevertap/android/sdk/pushnotification/PushType;
+	public static final field HPS_PROPERTY_REG_ID Ljava/lang/String;
+	public static final field HUAWEI_SDK_CLASS Ljava/lang/String;
+	public static final field MIN_CT_ANDROID_SDK_VERSION I
+	public fun <init> ()V
+}
+
+public final class com/clevertap/android/hms/HmsConstants$Companion {
+}
+

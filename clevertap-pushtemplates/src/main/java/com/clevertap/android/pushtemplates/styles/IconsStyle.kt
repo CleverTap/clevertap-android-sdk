@@ -14,7 +14,9 @@ import com.clevertap.android.pushtemplates.content.IconsContentView
 import com.clevertap.android.pushtemplates.content.IconsSmallContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class IconsStyle(private val data: IconsTemplateData, renderer: TemplateRenderer, private val extras: Bundle) : Style(data.baseContent, renderer) {
 
     lateinit var iconsSmallContentView: IconsContentView

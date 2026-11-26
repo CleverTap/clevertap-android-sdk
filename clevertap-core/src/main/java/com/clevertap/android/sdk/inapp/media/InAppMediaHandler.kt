@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
 /**
  * Unified interface for all media types in InApp notification fragments.
@@ -14,6 +15,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
  * Extends [DefaultLifecycleObserver] so it can be registered on a fragment's lifecycle
  * to receive start/resume/pause/stop events automatically.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppMediaHandler : DefaultLifecycleObserver {
     fun setup(
         relativeLayout: RelativeLayout?,
@@ -63,6 +65,7 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun View.setContentDescriptionOrDefault(contentDescription: String, defaultDescription: String) {
     this.contentDescription = contentDescription.ifBlank { defaultDescription }
     this.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -71,6 +74,7 @@ internal fun View.setContentDescriptionOrDefault(contentDescription: String, def
 /**
  * No-op handler for InApp notifications without media.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object NoOpMediaHandler : InAppMediaHandler {
     override fun setup(
         relativeLayout: RelativeLayout?,

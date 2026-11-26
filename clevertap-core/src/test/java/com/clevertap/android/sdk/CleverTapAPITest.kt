@@ -17,14 +17,14 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class CleverTapAPITest : BaseTestCase() {
 
@@ -54,8 +54,8 @@ class CleverTapAPITest : BaseTestCase() {
 
     private fun verifyCommonConstructorBehavior() {
         verifyOrder {
-            coreState.sessionManager.setLastVisitTime()
-            coreState.sessionManager.setUserLastVisitTs()
+            coreState.sessionManager.updateLastVisitTime()
+            coreState.sessionManager.updateUserLastVisitTs()
             coreState.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
             coreState.deviceInfo.setCurrentUserOptOutStateFromStorage()
             coreState.deviceInfo.setSystemEventsAllowedStateFromStorage()
@@ -78,10 +78,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertTrue(
-            "isCreatedPostAppLaunch must be true",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertTrue(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be true")
         verifyCommonConstructorBehavior()
     }
 
@@ -95,10 +92,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertTrue(
-            "isCreatedPostAppLaunch must be true",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertTrue(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be true")
         verifyCommonConstructorBehavior()
     }
 
@@ -111,10 +105,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertFalse(
-            "isCreatedPostAppLaunch must be false",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertFalse(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be false")
         verifyCommonConstructorBehavior()
     }
 
@@ -130,7 +121,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         assertTrue(coreState.coreMetaData.isLocationForGeofence)
         assertEquals(coreState.coreMetaData.geofenceSDKVersion, 45)
-        verify { coreState.locationManager._setLocation(location) }
+        verify { coreState.locationManager.updateLocation(location) }
     }
 
     @Test
@@ -164,8 +155,8 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         val actualValidationResult = coreState.validationResultStack.popValidationResult()
-        assertEquals(expectedErrorCode, actualValidationResult.errorCode)
-        assertEquals(expectedErrorMessage, actualValidationResult.errorDesc)
+        assertEquals(expectedErrorCode, actualValidationResult!!.errorCode)
+        assertEquals(expectedErrorMessage, actualValidationResult!!.errorDesc)
     }
 
     @Test
@@ -385,7 +376,6 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.deleteInboxMessagesForIDs(messageIDs) }
     }
 
@@ -417,7 +407,6 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
     }
 
@@ -936,7 +925,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_addMultiValuesForKey() {
         // Arrange
         val key = "Skills"
-        val values = arrayListOf("Java", "Kotlin", "Android", "Mobile Development")
+        val values = arrayListOf<String?>("Java", "Kotlin", "Android", "Mobile Development")
 
         // Act
         initializeCleverTapAPI()
@@ -1000,7 +989,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_removeMultiValuesForKey() {
         // Arrange
         val key = "OldInterests"
-        val values = arrayListOf("Sports", "Movies", "Music")
+        val values = arrayListOf<String?>("Sports", "Movies", "Music")
 
         // Act
         initializeCleverTapAPI()
@@ -1016,7 +1005,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_setMultiValuesForKey() {
         // Arrange
         val key = "Languages"
-        val values = arrayListOf("English", "Spanish", "French")
+        val values = arrayListOf<String?>("English", "Spanish", "French")
 
         // Act
         initializeCleverTapAPI()

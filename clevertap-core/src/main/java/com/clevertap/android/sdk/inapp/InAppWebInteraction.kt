@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp
 
 import android.os.Bundle
+import androidx.annotation.RestrictTo
 
 /**
  * Thin contract for a surface that hosts an in-app [CTInAppWebView] and reacts to its interactions
@@ -13,6 +14,7 @@ import android.os.Bundle
  * It lets [com.clevertap.android.sdk.CTWebInterface] and [InAppWebViewClient] drive either host
  * without knowing which one is backing the WebView.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppWebInteraction {
 
     /** Triggered when the WebView attempts to load an action url (see [InAppWebViewClient]). */

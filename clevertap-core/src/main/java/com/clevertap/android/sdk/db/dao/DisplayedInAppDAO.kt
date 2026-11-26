@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import androidx.annotation.WorkerThread
+import androidx.annotation.RestrictTo
 
 /**
  * A row of the displayed in-app table: the full-screen in-app that is on screen, kept so it can be
@@ -10,12 +11,14 @@ import androidx.annotation.WorkerThread
  * @property inAppData the encrypted JSON of the in-app notification
  * @property timeToLive the in-app's time to live, in seconds since the epoch
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class DisplayedInAppData(
     val inAppId: String,
     val inAppData: String,
     val timeToLive: Long
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface DisplayedInAppDAO {
     /**
      * Save the displayed in-app. Only one is kept: any other row is removed in the same transaction.

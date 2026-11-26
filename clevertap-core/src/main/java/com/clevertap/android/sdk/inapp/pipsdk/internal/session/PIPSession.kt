@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.PIPVideoPlayerWrapper
 import com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPRootContainer
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
 /**
  * Holds ALL mutable runtime state for one PIP session.
@@ -17,6 +18,7 @@ import java.lang.ref.WeakReference
  * Not a data class: mutable fields make copy()/equals()/hashCode() unsafe
  * (shared videoPlayerWrapper reference, identity-based equality needed).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPSession(
     val config: PIPConfig,
     initialPosition: PIPPosition,

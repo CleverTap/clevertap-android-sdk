@@ -57,7 +57,7 @@ class WorkManagerAccessorInstrumentationTest {
 
     @Test
     fun impressionFlushWorkIsScheduledWithNetworkAndCharging() {
-        val config = CleverTapInstanceConfig.createInstance(context, "TEST-6153", "TEST")
+        val config = CleverTapInstanceConfig.createInstance(context, "TEST-6153", "TEST")!!
 
         CTWorkManager(contextTargeting(35), config).init()
 
@@ -72,7 +72,7 @@ class WorkManagerAccessorInstrumentationTest {
     @Test
     fun pushAmpWorkIsScheduledThenRescheduledThenCancelled() {
         val accountId = "TEST-6153-" + UUID.randomUUID().toString().take(8)
-        val config = CleverTapInstanceConfig.createInstance(context, accountId, "TEST").apply {
+        val config = CleverTapInstanceConfig.createInstance(context, accountId, "TEST")!!.apply {
             isBackgroundSync = true
         }
         // Creating the instance runs Push Amp set-up on the SDK's background thread with the

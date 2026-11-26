@@ -32,7 +32,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.TimeZone
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EventQueueManager(
     private val baseDatabaseManager: BaseDatabaseManager,
     private val context: Context,
@@ -62,7 +64,7 @@ internal class EventQueueManager(
 
     init {
 
-        callbackManager.setFailureFlushListener(this)
+        callbackManager.failureFlushListener = this
     }
 
 
@@ -320,7 +322,7 @@ internal class EventQueueManager(
         if (eventMediator.isChargedEvent(event)) {
             val chargeDetails = eventMediator.getChargedEventDetails(event)
             val chargedItems = eventMediator.getChargedEventItemDetails(event)
-            inAppController.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
+            inAppController!!.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
             nativeDisplayController?.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
             return
         }
@@ -329,7 +331,7 @@ internal class EventQueueManager(
         if (flattenedEventData is ProfileChanges) {
             val flattenedProfileChanges = flattenedEventData.changes
             val userAttributeChangedProperties = flattenedProfileChanges.toNestedMap()
-            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
+            inAppController!!.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
             nativeDisplayController?.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
             return
         }
@@ -341,8 +343,8 @@ internal class EventQueueManager(
 
         // Queue event if: (offline AND is regular event) OR (online AND NOT app launched event)
         if ((isOffline && isRegularEvent) || (!isOffline && !isAppLaunchedEvent)) {
-            inAppController.onQueueEvent(eventName, flattenedEventProps, userLocation)
-            nativeDisplayController?.onQueueEvent(eventName, flattenedEventProps, userLocation)
+            inAppController!!.onQueueEvent(eventName!!, flattenedEventProps, userLocation)
+            nativeDisplayController?.onQueueEvent(eventName!!, flattenedEventProps, userLocation)
         }
     }
 
@@ -417,7 +419,7 @@ internal class EventQueueManager(
 
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
-                        if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
+                        if (isProfileKey && !deviceInfo.isErrorDeviceId) {
                             try {
                                 if (removeFromSharedPrefs) {
                                     // Remove the value associated with the GUID

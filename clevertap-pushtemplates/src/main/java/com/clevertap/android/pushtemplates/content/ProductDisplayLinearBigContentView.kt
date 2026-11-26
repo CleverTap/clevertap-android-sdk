@@ -13,7 +13,9 @@ import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import java.util.ArrayList
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ProductDisplayLinearBigContentView(
     context: Context,
     renderer: TemplateRenderer,

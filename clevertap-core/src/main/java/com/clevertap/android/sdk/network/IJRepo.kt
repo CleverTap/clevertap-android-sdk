@@ -5,11 +5,13 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.StorageHelper
 import androidx.core.content.edit
+import androidx.annotation.RestrictTo
 
 private const val NAMESPACE_IJ = "IJ"
 private const val KEY_I = "comms_i"
 private const val KEY_J = "comms_j"
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class IJRepo(private val config: CleverTapInstanceConfig) {
 
     @SuppressLint("CommitPrefEdits")

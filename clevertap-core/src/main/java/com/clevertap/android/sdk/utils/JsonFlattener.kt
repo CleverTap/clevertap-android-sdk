@@ -2,7 +2,9 @@ package com.clevertap.android.sdk.utils
 
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object JsonFlattener {
 
     @JvmStatic

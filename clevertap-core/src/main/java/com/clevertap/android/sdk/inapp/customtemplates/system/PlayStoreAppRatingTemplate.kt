@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.inapp.customtemplates.system
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.function
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PlayStoreAppRatingTemplate {
 
     private const val NAME = "ctsystem_apprating"

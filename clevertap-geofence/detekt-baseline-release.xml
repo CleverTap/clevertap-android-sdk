@@ -1,0 +1,164 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>BracesOnIfStatements:FileUtils.kt$FileUtils$else</ID>
+    <ID>BracesOnIfStatements:FileUtils.kt$FileUtils$if</ID>
+    <ID>CanBeNonNullable:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI: CleverTapAPI?</ID>
+    <ID>CanBeNonNullable:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$result: PendingResult?</ID>
+    <ID>CanBeNonNullable:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$result: PendingResult?</ID>
+    <ID>CanBeNonNullable:FileUtils.kt$FileUtils$context: Context?</ID>
+    <ID>CanBeNonNullable:FileUtils.kt$FileUtils$dirName: String?</ID>
+    <ID>CanBeNonNullable:FileUtils.kt$FileUtils$fileName: String?</ID>
+    <ID>CanBeNonNullable:Logger.kt$Logger$message: String?</ID>
+    <ID>CanBeNonNullable:Utils.kt$Utils$context: Context?</ID>
+    <ID>CanBeNonNullable:Utils.kt$Utils$permission: String?</ID>
+    <ID>CyclomaticComplexMethod:CTGeofenceSettings.kt$CTGeofenceSettings$override fun equals(other: Any?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:LocationUpdateTask.kt$LocationUpdateTask$private fun isRequestLocation(locationPendingIntent: PendingIntent?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message!!)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)</ID>
+    <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)</ID>
+    <ID>ForbiddenVoid:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$Void?</ID>
+    <ID>LargeClass:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
+    <ID>LongMethod:BackgroundLocationWork.kt$BackgroundLocationWork$override fun startWork(): ListenableFuture&lt;Result&gt;</ID>
+    <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) override fun handleGeoFences(fenceList: JSONObject?)</ID>
+    <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$@Suppress("unused") override fun triggerLocation()</ID>
+    <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$internal fun processTriggeredLocation(location: Location): Future&lt;*&gt;?</ID>
+    <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun initBackgroundLocationUpdates()</ID>
+    <ID>LongMethod:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>LongMethod:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver.&lt;no name provided&gt;$override fun run()</ID>
+    <ID>LongMethod:CTGeofenceReceiver.kt$CTGeofenceReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>LongMethod:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>LongMethod:GeofenceUpdateTask.kt$GeofenceUpdateTask$@WorkerThread override fun execute()</ID>
+    <ID>LongMethod:GeofenceUpdateTask.kt$GeofenceUpdateTask$@WorkerThread private fun addGeofences(geofenceObject: JSONObject?)</ID>
+    <ID>LongMethod:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$private fun getGoogleGeofences(fenceList: List&lt;CTGeofence&gt;): ArrayList&lt;Geofence&gt;</ID>
+    <ID>LongMethod:GoogleLocationAdapter.kt$GoogleLocationAdapter$@WorkerThread override fun requestLocationUpdates()</ID>
+    <ID>LongMethod:GoogleLocationAdapter.kt$GoogleLocationAdapter$private fun clearLocationWorkRequest()</ID>
+    <ID>LongMethod:GoogleLocationAdapter.kt$GoogleLocationAdapter$private fun scheduleManualLocationUpdates()</ID>
+    <ID>LongMethod:LocationUpdateTask.kt$LocationUpdateTask$@WorkerThread override fun execute()</ID>
+    <ID>LongMethod:LocationUpdateTask.kt$LocationUpdateTask$private fun isRequestLocation(locationPendingIntent: PendingIntent?): Boolean</ID>
+    <ID>LongMethod:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread override fun execute()</ID>
+    <ID>LongMethod:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
+    <ID>LongMethod:PushLocationEventTask.kt$PushLocationEventTask$@WorkerThread override fun execute()</ID>
+    <ID>LongMethod:Utils.kt$Utils$@JvmStatic @WorkerThread fun readSettingsFromFile(context: Context): CTGeofenceSettings?</ID>
+    <ID>LongMethod:Utils.kt$Utils$@JvmStatic @WorkerThread fun writeSettingsToFile(context: Context, ctGeofenceSettings: CTGeofenceSettings)</ID>
+    <ID>MagicNumber:GoogleLocationAdapter.kt$GoogleLocationAdapter$3</ID>
+    <ID>MagicNumber:Logger.kt$Logger$4000</ID>
+    <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$1001001</ID>
+    <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$10100111</ID>
+    <ID>MaxLineLength:CTGeofenceSettings.kt$CTGeofenceSettings$@JvmSynthetic @JvmName("ktGetGeofenceNotificationResponsiveness") inline get() = getGeofenceNotificationResponsiveness()</ID>
+    <ID>MaxLineLength:CTGeofenceSettings.kt$CTGeofenceSettings$@JvmSynthetic @JvmName("ktIsBackgroundLocationUpdatesEnabled") inline get() = isBackgroundLocationUpdatesEnabled()</ID>
+    <ID>MaxLineLength:Utils.kt$Utils$"Critical issue :: After calling CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"</ID>
+    <ID>MemberNameEqualsClassName:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$private var ctGeofenceAPI: CTGeofenceAPI? = null</ID>
+    <ID>NestedBlockDepth:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>NestedBlockDepth:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>NestedBlockDepth:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun deleteDirectory(context: Context?, dirName: String?)</ID>
+    <ID>NestedBlockDepth:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun writeJsonToFile( context: Context?, dirName: String?, fileName: String?, jsonObject: JSONObject? ): Boolean</ID>
+    <ID>NestedBlockDepth:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
+    <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic fun isFusedLocationApiDependencyAvailable(): Boolean</ID>
+    <ID>NoNameShadowing:PendingIntentFactory.kt$PendingIntentFactory$flags</ID>
+    <ID>NullableToStringCall:FileUtils.kt$FileUtils$$dirName</ID>
+    <ID>NullableToStringCall:FileUtils.kt$FileUtils$$fileName</ID>
+    <ID>NullableToStringCall:FileUtils.kt$FileUtils$$fileNameWithPath</ID>
+    <ID>ReturnCount:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
+    <ID>ReturnCount:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun writeJsonToFile( context: Context?, dirName: String?, fileName: String?, jsonObject: JSONObject? ): Boolean</ID>
+    <ID>ReturnCount:Utils.kt$Utils$@JvmStatic @WorkerThread fun initCTGeofenceApiIfRequired(context: Context): Boolean</ID>
+    <ID>TooManyFunctions:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
+    <ID>TooManyFunctions:Utils.kt$Utils</ID>
+    <ID>UndocumentedPublicClass:CTGeofenceAPI.kt$CTGeofenceAPI$OnGeofenceApiInitializedListener</ID>
+    <ID>UndocumentedPublicClass:Logger.kt$Logger</ID>
+    <ID>UndocumentedPublicClass:Logger.kt$Logger$LogLevel</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener?</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener?</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun getGeofenceSettings(): CTGeofenceSettings?</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?)</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI$public open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?)</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$@JvmStatic public fun getLogger(): Logger</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceAPI.kt$CTGeofenceAPI.OnGeofenceApiInitializedListener$@Suppress("FunctionName") public fun OnGeofenceApiInitialized()</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$@LogLevel public open fun getLogLevel(): Int</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getFastestInterval(): Long</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getGeofenceMonitoringCount(): Int</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getGeofenceNotificationResponsiveness(): Int</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getId(): String?</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getInterval(): Long</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getLocationAccuracy(): Int</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getLocationFetchMode(): Int</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun getSmallestDisplacement(): Float</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings$public open fun isBackgroundLocationUpdatesEnabled(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:CTGeofenceSettings.kt$CTGeofenceSettings.Builder$public fun build(): CTGeofenceSettings</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun setDebugLevel(@LogLevel level: Int)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun verbose(suffix: String?, message: String?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$@Suppress("MemberVisibilityCanBePrivate") public fun verbose(suffix: String?, message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(suffix: String?, message: String?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun debug(suffix: String?, message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(suffix: String?, message: String?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun info(suffix: String?, message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicFunction:Logger.kt$Logger$public fun verbose(message: String?, t: Throwable?)</ID>
+    <ID>UndocumentedPublicProperty:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$public const val GEOFENCE_LOG_TAG: String = "CTGeofence"</ID>
+    <ID>UndocumentedPublicProperty:CTGeofenceSettings.kt$CTGeofenceSettings.Companion$public const val DEFAULT_GEO_MONITOR_COUNT: Int = 50</ID>
+    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val DEBUG: Int = 2</ID>
+    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val INFO: Int = 0</ID>
+    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val OFF: Int = -1</ID>
+    <ID>UndocumentedPublicProperty:Logger.kt$Logger.Companion$public const val VERBOSE: Int = 3</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapApi!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$ctGeofenceAdapter!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$ctGeofenceSettings!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$ctLocationAdapter!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$onGeofenceApiInitializedListener!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$this.cleverTapApi!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$ctGeofenceAPI!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceSettings.kt$CTGeofenceSettings$idValue!!</ID>
+    <ID>UnsafeCallOnNullableType:CTGeofenceTaskManager.kt$CTGeofenceTaskManager.Companion$taskManager!!</ID>
+    <ID>UnsafeCallOnNullableType:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$intent!!</ID>
+    <ID>UnsafeCallOnNullableType:FileUtils.kt$FileUtils$context!!</ID>
+    <ID>UnsafeCallOnNullableType:FileUtils.kt$FileUtils$dirName!!</ID>
+    <ID>UnsafeCallOnNullableType:FileUtils.kt$FileUtils$fileName!!</ID>
+    <ID>UnsafeCallOnNullableType:GeofenceUpdateTask.kt$GeofenceUpdateTask$CTGeofenceAPI.getInstance(context) .cleverTapApi!!</ID>
+    <ID>UnsafeCallOnNullableType:GeofenceUpdateTask.kt$GeofenceUpdateTask$onCompleteListener!!</ID>
+    <ID>UnsafeCallOnNullableType:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$geofencePendingIntent!!</ID>
+    <ID>UnsafeCallOnNullableType:GoogleLocationAdapter.kt$GoogleLocationAdapter$CTGeofenceAPI.getInstance(context) .cleverTapApi!!</ID>
+    <ID>UnsafeCallOnNullableType:GoogleLocationAdapter.kt$GoogleLocationAdapter$pendingIntent!!</ID>
+    <ID>UnsafeCallOnNullableType:LocationUpdateTask.kt$LocationUpdateTask$ctGeofenceSettings!!</ID>
+    <ID>UnsafeCallOnNullableType:LocationUpdateTask.kt$LocationUpdateTask$onCompleteListener!!</ID>
+    <ID>UnsafeCallOnNullableType:LocationUpdateTask.kt$LocationUpdateTask$this.ctGeofenceSettings!!</ID>
+    <ID>UnsafeCallOnNullableType:Logger.kt$Logger$message!!</ID>
+    <ID>UnsafeCallOnNullableType:PushGeofenceEventTask.kt$PushGeofenceEventTask$CTGeofenceAPI.getInstance(context) .cleverTapApi!!</ID>
+    <ID>UnsafeCallOnNullableType:PushGeofenceEventTask.kt$PushGeofenceEventTask$future!!</ID>
+    <ID>UnsafeCallOnNullableType:PushGeofenceEventTask.kt$PushGeofenceEventTask$geofencingEvent!!</ID>
+    <ID>UnsafeCallOnNullableType:PushGeofenceEventTask.kt$PushGeofenceEventTask$onCompleteListener!!</ID>
+    <ID>UnsafeCallOnNullableType:PushLocationEventTask.kt$PushLocationEventTask$locationResult.lastLocation!!</ID>
+    <ID>UnsafeCallOnNullableType:PushLocationEventTask.kt$PushLocationEventTask$onCompleteListener!!</ID>
+    <ID>UnsafeCallOnNullableType:Utils.kt$Utils$context!!</ID>
+    <ID>UnsafeCallOnNullableType:Utils.kt$Utils$isConcurrentFuturesDependencyAvailable!!</ID>
+    <ID>UnsafeCallOnNullableType:Utils.kt$Utils$isFusedLocationDependencyAvailable!!</ID>
+    <ID>UnsafeCallOnNullableType:Utils.kt$Utils$isPlayServicesDependencyAvailable!!</ID>
+    <ID>UnsafeCallOnNullableType:Utils.kt$Utils$permission!!</ID>
+    <ID>UseCheckOrError:CTGeofenceAPI.kt$CTGeofenceAPI$throw IllegalStateException( "Geofence SDK must be initialized before initBackgroundLocationUpdates()" )</ID>
+    <ID>UseCheckOrError:CTGeofenceAPI.kt$CTGeofenceAPI$throw IllegalStateException("Geofence SDK must be initialized before triggerLocation()")</ID>
+    <ID>UseCheckOrError:CTGeofenceFactory.kt$CTGeofenceFactory$throw IllegalStateException("Play service APK error :: $errorString")</ID>
+    <ID>UseCheckOrError:CTGeofenceFactory.kt$CTGeofenceFactory$throw IllegalStateException("play-services-location dependency is missing")</ID>
+    <ID>UseCheckOrError:CTLocationFactory.kt$CTLocationFactory$throw IllegalStateException("Play service APK error :: $errorString")</ID>
+    <ID>UseCheckOrError:CTLocationFactory.kt$CTLocationFactory$throw IllegalStateException("play-services-location dependency is missing")</ID>
+    <ID>UseIsNullOrEmpty:CTGeofenceAPI.kt$CTGeofenceAPI$accountId == null || accountId.isEmpty()</ID>
+    <ID>UseIsNullOrEmpty:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$fenceIdList == null || fenceIdList.isEmpty()</ID>
+    <ID>UseIsNullOrEmpty:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$fenceList == null || fenceList.isEmpty()</ID>
+    <ID>UseOrEmpty:Utils.kt$Utils$str ?: ""</ID>
+    <ID>UseRequire:Utils.kt$Utils$throw IllegalArgumentException("fromIndex($fromIndex) &gt; toIndex($toIndex)")</ID>
+    <ID>VariableNaming:CTGeofenceTaskManager.kt$CTGeofenceTaskManager$private var EXECUTOR_THREAD_ID: Long = 0</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.utils
 
-class TestCacheProvider<T> {
+internal class TestCacheProvider<T> {
 
     val cache = hashMapOf<String, T>()
     fun provide() = object : CacheMethods<T> {

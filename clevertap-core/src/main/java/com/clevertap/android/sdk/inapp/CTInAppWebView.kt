@@ -12,8 +12,10 @@ import androidx.annotation.Px
 import androidx.annotation.RequiresApi
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.Logger
+import androidx.annotation.RestrictTo
 
 @SuppressLint("ViewConstructor")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     private val context: Context,
     private val widthDp: Int,

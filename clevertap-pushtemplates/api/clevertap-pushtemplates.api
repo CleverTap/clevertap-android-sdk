@@ -1,0 +1,204 @@
+public final class com/clevertap/android/pushtemplates/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field SDK_VERSION_STRING Ljava/lang/String;
+	public static final field VERSION_CODE I
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public class com/clevertap/android/pushtemplates/PTConstants {
+	public static final field ALT_TEXT_SUFFIX Ljava/lang/String;
+	public static final field COLOR_KEYS Ljava/util/Set;
+	public static final field Companion Lcom/clevertap/android/pushtemplates/PTConstants$Companion;
+	public static final field DEFAULT_DL Ljava/lang/String;
+	public static final field KEY_CLICKED_STAR Ljava/lang/String;
+	public static final field KEY_REQUEST_CODES Ljava/lang/String;
+	public static final field LOG_TAG Ljava/lang/String;
+	public static final field ONE_SECOND I
+	public static final field ONE_SECOND_LONG J
+	public static final field PT_5CTA_C2A_KEY Ljava/lang/String;
+	public static final field PT_ACTION_ID Ljava/lang/String;
+	public static final field PT_AUTO_CANCEL Ljava/lang/String;
+	public static final field PT_BG Ljava/lang/String;
+	public static final field PT_BIGTEXT_LIST Ljava/lang/String;
+	public static final field PT_BIG_IMG Ljava/lang/String;
+	public static final field PT_BIG_IMG_ALT Ljava/lang/String;
+	public static final field PT_BIG_IMG_ALT_ALT_TEXT Ljava/lang/String;
+	public static final field PT_BIG_IMG_ALT_TEXT Ljava/lang/String;
+	public static final field PT_BIG_IMG_COLLAPSED Ljava/lang/String;
+	public static final field PT_BIG_IMG_COLLAPSED_ALT_TEXT Ljava/lang/String;
+	public static final field PT_BTN_BORDER_CLR Ljava/lang/String;
+	public static final field PT_BTN_BORDER_CLR_COLLAPSED Ljava/lang/String;
+	public static final field PT_BTN_BORDER_RADIUS Ljava/lang/String;
+	public static final field PT_BTN_BORDER_RADIUS_DEFAULT F
+	public static final field PT_BTN_BORDER_WIDTH Ljava/lang/String;
+	public static final field PT_BTN_BORDER_WIDTH_DEFAULT F
+	public static final field PT_BTN_CLR Ljava/lang/String;
+	public static final field PT_BTN_CLR_COLLAPSED Ljava/lang/String;
+	public static final field PT_BTN_DL Ljava/lang/String;
+	public static final field PT_BTN_GRAD_CLR1 Ljava/lang/String;
+	public static final field PT_BTN_GRAD_CLR1_COLLAPSED Ljava/lang/String;
+	public static final field PT_BTN_GRAD_CLR2 Ljava/lang/String;
+	public static final field PT_BTN_GRAD_CLR2_COLLAPSED Ljava/lang/String;
+	public static final field PT_BTN_GRAD_DIR Ljava/lang/String;
+	public static final field PT_BTN_GRAD_DIR_DEFAULT D
+	public static final field PT_BTN_NAME Ljava/lang/String;
+	public static final field PT_BTN_STYLE Ljava/lang/String;
+	public static final field PT_BTN_TEXT_CLR Ljava/lang/String;
+	public static final field PT_BTN_TEXT_CLR_COLLAPSED Ljava/lang/String;
+	public static final field PT_BUY_NOW Ljava/lang/String;
+	public static final field PT_BUY_NOW_DL Ljava/lang/String;
+	public static final field PT_CANCEL_NOTIF_ID Ljava/lang/String;
+	public static final field PT_CHIP_TEXT Ljava/lang/String;
+	public static final field PT_CHIP_TYPE Ljava/lang/String;
+	public static final field PT_CHRONO_BG_CLR Ljava/lang/String;
+	public static final field PT_CHRONO_BORDER_CLR Ljava/lang/String;
+	public static final field PT_CHRONO_BORDER_RADIUS Ljava/lang/String;
+	public static final field PT_CHRONO_BORDER_WIDTH Ljava/lang/String;
+	public static final field PT_CHRONO_GRAD_CLR1 Ljava/lang/String;
+	public static final field PT_CHRONO_GRAD_CLR2 Ljava/lang/String;
+	public static final field PT_CHRONO_GRAD_DIR Ljava/lang/String;
+	public static final field PT_CHRONO_STYLE Ljava/lang/String;
+	public static final field PT_CHRONO_TITLE_COLOUR Ljava/lang/String;
+	public static final field PT_COLLAPSE_KEY Ljava/lang/String;
+	public static final field PT_COLOUR_GREY Ljava/lang/String;
+	public static final field PT_COUNTDOWN Ljava/lang/String;
+	public static final field PT_CURRENT_POSITION Ljava/lang/String;
+	public static final field PT_DARK_MODE_SUFFIX Ljava/lang/String;
+	public static final field PT_DEEPLINK_LIST Ljava/lang/String;
+	public static final field PT_DEFAULT_DL Ljava/lang/String;
+	public static final field PT_DIR Ljava/lang/String;
+	public static final field PT_DISMISS Ljava/lang/String;
+	public static final field PT_DISMISS_INTENT Ljava/lang/String;
+	public static final field PT_DISMISS_ON_CLICK Ljava/lang/String;
+	public static final field PT_EVENT_NAME_KEY Ljava/lang/String;
+	public static final field PT_EVENT_PROPERTY_KEY Ljava/lang/String;
+	public static final field PT_EVENT_PROPERTY_SEPERATOR Ljava/lang/String;
+	public static final field PT_FLIP_INTERVAL Ljava/lang/String;
+	public static final field PT_FLIP_INTERVAL_TIME I
+	public static final field PT_GIF Ljava/lang/String;
+	public static final field PT_GIF_ALT Ljava/lang/String;
+	public static final field PT_GIF_COLLAPSED Ljava/lang/String;
+	public static final field PT_GIF_FRAMES Ljava/lang/String;
+	public static final field PT_GIF_FRAMES_ALT Ljava/lang/String;
+	public static final field PT_GIF_FRAMES_COLLAPSED Ljava/lang/String;
+	public static final field PT_ID Ljava/lang/String;
+	public static final field PT_IMAGE_1 Ljava/lang/String;
+	public static final field PT_IMAGE_LIST Ljava/lang/String;
+	public static final field PT_IMG_BORDER_CLR Ljava/lang/String;
+	public static final field PT_IMG_BORDER_WIDTH Ljava/lang/String;
+	public static final field PT_IMG_CORNER_RADIUS Ljava/lang/String;
+	public static final field PT_INPUT_AUTO_OPEN Ljava/lang/String;
+	public static final field PT_INPUT_FEEDBACK Ljava/lang/String;
+	public static final field PT_INPUT_KEY Ljava/lang/String;
+	public static final field PT_INPUT_LABEL Ljava/lang/String;
+	public static final field PT_INPUT_TIMEOUT I
+	public static final field PT_JSON Ljava/lang/String;
+	public static final field PT_LA_EVENT Ljava/lang/String;
+	public static final field PT_MANUAL_CAROUSEL_CURRENT Ljava/lang/String;
+	public static final field PT_MANUAL_CAROUSEL_FILMSTRIP Ljava/lang/String;
+	public static final field PT_MANUAL_CAROUSEL_FROM Ljava/lang/String;
+	public static final field PT_MANUAL_CAROUSEL_TYPE Ljava/lang/String;
+	public static final field PT_META_CLR Ljava/lang/String;
+	public static final field PT_META_CLR_DEFAULTS Ljava/lang/String;
+	public static final field PT_MSG Ljava/lang/String;
+	public static final field PT_MSG_ALT Ljava/lang/String;
+	public static final field PT_MSG_COLOR Ljava/lang/String;
+	public static final field PT_MSG_SUMMARY Ljava/lang/String;
+	public static final field PT_MSG_SUMMARY_ALT Ljava/lang/String;
+	public static final field PT_NOTIF_ICON Ljava/lang/String;
+	public static final field PT_NOTIF_ID Ljava/lang/String;
+	public static final field PT_PRICE_LIST Ljava/lang/String;
+	public static final field PT_PRODUCT_DISPLAY_ACTION Ljava/lang/String;
+	public static final field PT_PRODUCT_DISPLAY_ACTION_COLOUR Ljava/lang/String;
+	public static final field PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR Ljava/lang/String;
+	public static final field PT_PRODUCT_DISPLAY_LINEAR Ljava/lang/String;
+	public static final field PT_PROGRESS Ljava/lang/String;
+	public static final field PT_PROGRESS_END_ICON Ljava/lang/String;
+	public static final field PT_PROGRESS_INDETERMINATE Ljava/lang/String;
+	public static final field PT_PROGRESS_MAX Ljava/lang/String;
+	public static final field PT_PROGRESS_POINTS Ljava/lang/String;
+	public static final field PT_PROGRESS_SEGMENTS Ljava/lang/String;
+	public static final field PT_PROGRESS_START_ICON Ljava/lang/String;
+	public static final field PT_PROGRESS_TRACKER_ICON Ljava/lang/String;
+	public static final field PT_PROMOTE Ljava/lang/String;
+	public static final field PT_RATING_C2A_KEY Ljava/lang/String;
+	public static final field PT_RATING_TOAST Ljava/lang/String;
+	public static final field PT_RENDER_TERMINAL Ljava/lang/String;
+	public static final field PT_RIGHT_SWIPE Ljava/lang/String;
+	public static final field PT_SCALE_TYPE Ljava/lang/String;
+	public static final field PT_SCALE_TYPE_ALT Ljava/lang/String;
+	public static final field PT_SCALE_TYPE_COLLAPSED Ljava/lang/String;
+	public static final field PT_SILENT_CHANNEL_DESC Ljava/lang/String;
+	public static final field PT_SILENT_CHANNEL_ID Ljava/lang/String;
+	public static final field PT_SILENT_CHANNEL_NAME Ljava/lang/CharSequence;
+	public static final field PT_SMALLTEXT_LIST Ljava/lang/String;
+	public static final field PT_SMALL_ICON_COLOUR Ljava/lang/String;
+	public static final field PT_SMALL_VIEW Ljava/lang/String;
+	public static final field PT_SOUND_FILE_NAME Ljava/lang/String;
+	public static final field PT_STICKY Ljava/lang/String;
+	public static final field PT_STYLED_BY_PROGRESS Ljava/lang/String;
+	public static final field PT_SUBTITLE Ljava/lang/String;
+	public static final field PT_TEXT1 Ljava/lang/String;
+	public static final field PT_TEXT1_COLOR Ljava/lang/String;
+	public static final field PT_TEXT2 Ljava/lang/String;
+	public static final field PT_TEXT2_COLOR Ljava/lang/String;
+	public static final field PT_TIMER_END Ljava/lang/String;
+	public static final field PT_TIMER_MIN_THRESHOLD I
+	public static final field PT_TIMER_SPLIT Ljava/lang/String;
+	public static final field PT_TIMER_THRESHOLD Ljava/lang/String;
+	public static final field PT_TITLE Ljava/lang/String;
+	public static final field PT_TITLE_ALT Ljava/lang/String;
+	public static final field PT_TITLE_COLOR Ljava/lang/String;
+	public static final field PT_VT_C2A_COLLAPSED_KEY Ljava/lang/String;
+	public static final field PT_VT_C2A_KEY Ljava/lang/String;
+	public static final field PT_WHEN Ljava/lang/String;
+	public static final field TEXT_ONLY Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/clevertap/android/pushtemplates/PTConstants$Companion {
+}
+
+public class com/clevertap/android/pushtemplates/PushTemplateNotificationHandler : com/clevertap/android/sdk/interfaces/ActionButtonClickHandler {
+	public fun <init> ()V
+	public fun onActionButtonClick (Landroid/content/Context;Landroid/os/Bundle;I)Z
+	public fun onMessageReceived (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;)Z
+	public fun onNewToken (Landroid/content/Context;Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)Z
+}
+
+public final class com/clevertap/android/pushtemplates/TemplateRenderer : com/clevertap/android/sdk/interfaces/AudibleNotification, com/clevertap/android/sdk/pushnotification/INotificationRenderer {
+	public static final field Companion Lcom/clevertap/android/pushtemplates/TemplateRenderer$Companion;
+	public fun <init> (Landroid/content/Context;Landroid/os/Bundle;)V
+	public fun <init> (Landroid/content/Context;Landroid/os/Bundle;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/os/Bundle;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getActionButtonIconKey ()Ljava/lang/String;
+	public fun getCollapseKey (Landroid/os/Bundle;)Ljava/lang/Object;
+	public static final fun getDebugLevel ()I
+	public fun getMessage (Landroid/os/Bundle;)Ljava/lang/String;
+	public fun getTitle (Landroid/os/Bundle;Landroid/content/Context;)Ljava/lang/String;
+	public fun renderNotification (Landroid/os/Bundle;Landroid/content/Context;Landroidx/core/app/NotificationCompat$Builder;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;I)Landroidx/core/app/NotificationCompat$Builder;
+	public fun setActionButtons (Landroid/content/Context;Landroid/os/Bundle;ILandroidx/core/app/NotificationCompat$Builder;Lorg/json/JSONArray;)Landroidx/core/app/NotificationCompat$Builder;
+	public static final fun setDebugLevel (I)V
+	public fun setSmallIcon (ILandroid/content/Context;)V
+	public fun setSound (Landroid/content/Context;Landroid/os/Bundle;Landroidx/core/app/NotificationCompat$Builder;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)Landroidx/core/app/NotificationCompat$Builder;
+}
+
+public final class com/clevertap/android/pushtemplates/TemplateRenderer$Companion {
+	public final fun getDebugLevel ()I
+	public final fun setDebugLevel (I)V
+}
+
+public final class com/clevertap/android/pushtemplates/TemplateRenderer$LogLevel : java/lang/Enum {
+	public static final field DEBUG Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+	public static final field INFO Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+	public static final field OFF Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+	public static final field VERBOSE Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun intValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+	public static fun values ()[Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
+}
+

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import android.content.Context
+import io.mockk.mockkObject
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -65,7 +66,7 @@ class QueueHeaderBuilderTest {
 
     @Test
     fun `header contains debug true when debug level is 3`() {
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDebugLevel() } returns 3
             val header = builder.buildHeader(null)
             assertNotNull(header)
@@ -75,8 +76,9 @@ class QueueHeaderBuilderTest {
 
     @Test
     fun `header object is null when accountId and accountToken are null`() {
-        every { config.accountId } returns null
-        every { config.accountToken } returns null
+        // accountId/accountToken are non-null in Kotlin; simulate a corrupt config returning null.
+        every { config.accountId } answers { nullOf<String>() }
+        every { config.accountToken } answers { nullOf<String>() }
 
         val header = builder.buildHeader("caller")
         assertNull(header)
@@ -210,3 +212,7 @@ class QueueHeaderBuilderTest {
         assertEquals(ndCountsJson.toString(), header.optJSONArray("ndtlc")?.toString())
     }
 }
+
+// Erased generic cast: returns null typed as T without a runtime null check.
+@Suppress("UNCHECKED_CAST")
+private fun <T> nullOf(): T = null as T

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Typed view over a single `content_fetch` directive item on an `/a1` response: the event it is for
@@ -12,6 +13,7 @@ import org.json.JSONObject
  * it hydrates ([targetId]) — what arbitration gating keys off. All optional, so gating stays
  * conservative when a field is absent.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ContentFetchItem(
     val eventName: String?,
     val responseKey: String?,

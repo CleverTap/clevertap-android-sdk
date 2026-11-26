@@ -4,8 +4,10 @@ import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationOutcome
 import com.clevertap.android.sdk.validation.pipeline.ChargedEventItemsNormalizationResult
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ChargedEventItemsValidatorTest {
 

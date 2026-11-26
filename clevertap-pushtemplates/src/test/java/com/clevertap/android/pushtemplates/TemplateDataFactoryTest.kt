@@ -2,19 +2,90 @@ package com.clevertap.android.pushtemplates
 
 import android.os.Build
 import android.os.Bundle
-import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_COLLAPSED_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_RADIUS_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_WIDTH_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_DL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_NAME
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_STYLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CANCEL_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_STYLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_TITLE_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DEFAULT_DL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DISMISS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DISMISS_ON_CLICK
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_CORNER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_AUTO_OPEN
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_FEEDBACK
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_LABEL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MANUAL_CAROUSEL_TYPE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_META_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_COLOR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_SUMMARY
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_SUMMARY_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_NOTIF_ICON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_LINEAR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_RENDER_TERMINAL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SCALE_TYPE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SCALE_TYPE_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SMALL_ICON_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SMALL_VIEW
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_STICKY
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SUBTITLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TEXT1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TEXT2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
 import org.json.JSONArray
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])
@@ -40,7 +111,7 @@ class TemplateDataFactoryTest {
         mockBundle = mockk<Bundle>(relaxed = true)
         
         // Mock static methods
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
         
         // Default mock behaviors
         every { Utils.fromJson(any()) } returns mockBundle
@@ -2076,7 +2147,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(90.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
     @Test
@@ -2095,7 +2166,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(45.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(45.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
     @Test
@@ -2255,7 +2326,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(90.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
 
@@ -2616,7 +2687,7 @@ class TemplateDataFactoryTest {
             val d = TemplateDataFactory.createTemplateData(
                 TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
             ) as ProgressTemplateData
-            assertNull("pt_dismiss=$value", d.dismissAfter)
+            assertNull(d.dismissAfter, "pt_dismiss=$value")
         }
     }
 
@@ -2648,17 +2719,19 @@ class TemplateDataFactoryTest {
             val d = TemplateDataFactory.createTemplateData(
                 TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
             ) as ProgressTemplateData
-            assertNull("pt_subtitle=$value", d.subtitle)
+            assertNull(d.subtitle, "pt_subtitle=$value")
         }
     }
 
     private fun stubBorderColor(color: String?) {
+        // createColorMap hands out Bundle.getString() values, which may be null at runtime
+        @Suppress("UNCHECKED_CAST")
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
             PT_MSG_COLOR to SAMPLE_COLOR,
             PT_BG to SAMPLE_COLOR,
             PT_IMG_BORDER_CLR to color
-        )
+        ) as Map<String, String>
     }
 
     @Test
@@ -2850,7 +2923,7 @@ class TemplateDataFactoryTest {
                 defaultAltText = defaultAltText,
                 notificationIdsProvider = notificationIdsProvider
             ) as ProductTemplateData
-            assertEquals("linear=$linear", linear == "true", product.isLinear)
+            assertEquals(linear == "true", product.isLinear, "linear=$linear")
         }
     }
 
@@ -2859,11 +2932,11 @@ class TemplateDataFactoryTest {
     fun `border needs both a width and a colour`() {
         // Given / Then
         val widthOnly = ImageBorderData(borderWidthValue = 6f, borderColor = null)
-        assertFalse("a width with no colour must not draw", widthOnly.hasBorder)
+        assertFalse(widthOnly.hasBorder, "a width with no colour must not draw")
         assertFalse(widthOnly.isActive)
 
         val colourOnly = ImageBorderData(borderWidthValue = 0f, borderColor = android.graphics.Color.RED)
-        assertFalse("a colour with no width must not draw", colourOnly.hasBorder)
+        assertFalse(colourOnly.hasBorder, "a colour with no width must not draw")
         assertFalse(colourOnly.isActive)
 
         val pair = ImageBorderData(borderWidthValue = 6f, borderColor = android.graphics.Color.RED)
@@ -2925,9 +2998,9 @@ class TemplateDataFactoryTest {
 
             // Then
             val border = result.mediaData.imageBorderData
-            assertEquals("radius for '$raw'", 0f, border.cornerRadiusPercent)
-            assertEquals("width for '$raw'", 0f, border.borderWidthValue)
-            assertFalse("'$raw' must not activate styling", border.isActive)
+            assertEquals(0f, border.cornerRadiusPercent, "radius for '$raw'")
+            assertEquals(0f, border.borderWidthValue, "width for '$raw'")
+            assertFalse(border.isActive, "'$raw' must not activate styling")
         }
     }
 
@@ -2950,10 +3023,7 @@ class TemplateDataFactoryTest {
         ) as FiveIconsTemplateData
 
         // Then
-        assertTrue(
-            "FiveIconsTemplateData must not expose image styling",
-            fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }
-        )
+        assertTrue(fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }, "FiveIconsTemplateData must not expose image styling")
     }
 
     @Test
@@ -3030,17 +3100,9 @@ class TemplateDataFactoryTest {
         val landscapeHeight = 200
 
         // Then
-        assertEquals(
-            30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f)
-        )
-        assertEquals(
-            20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f)
-        )
-        assertEquals(
-            portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f)
-        )
-        assertEquals(
-            portraitHeight * 0.1f, NotificationBitmapUtils.resolveBorderWidthPx(portraitHeight, 400f)
-        )
+        assertEquals(30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f))
+        assertEquals(20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f))
+        assertEquals(portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f))
+        assertEquals(portraitHeight * 0.1f, NotificationBitmapUtils.resolveBorderWidthPx(portraitHeight, 400f))
     }
 }

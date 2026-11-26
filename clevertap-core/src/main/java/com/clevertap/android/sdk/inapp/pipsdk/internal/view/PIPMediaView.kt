@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.RendererStateLis
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.VideoRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import java.util.concurrent.ExecutorService
+import androidx.annotation.RestrictTo
 
 /**
  * FrameLayout that delegates all media rendering to a [MediaRenderer].
@@ -26,6 +27,7 @@ import java.util.concurrent.ExecutorService
  * (removeView + addView) during expand/collapse transitions, keeping the same renderer
  * and player state intact.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPMediaView(context: Context) : FrameLayout(context) {
 
     private var renderer: MediaRenderer? = null

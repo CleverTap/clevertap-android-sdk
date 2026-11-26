@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class UserEventLogDAOImpl(
     private val db: DatabaseHelper,
     private val logger: ILogger,

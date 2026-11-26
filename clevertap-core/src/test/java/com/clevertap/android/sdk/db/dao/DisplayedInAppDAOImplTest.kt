@@ -15,15 +15,15 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class DisplayedInAppDAOImplTest {
@@ -43,7 +43,7 @@ class DisplayedInAppDAOImplTest {
     fun setUp() {
         context = RuntimeEnvironment.getApplication().applicationContext
         logger = mockk(relaxed = true)
-        val config = CleverTapInstanceConfig.createInstance(context, "accountID", "token", "sk1")
+        val config = CleverTapInstanceConfig.createInstance(context, "accountID", "token", "sk1")!!
         databaseHelper = DatabaseHelper(context, config.accountId, dbName, logger)
         dao = DisplayedInAppDAOImpl(databaseHelper, logger, TestClock(mockTime))
     }

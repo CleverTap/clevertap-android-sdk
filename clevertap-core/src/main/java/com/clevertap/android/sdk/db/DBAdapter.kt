@@ -11,11 +11,13 @@ import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Refactored DBAdapter following Single Responsibility Principle
  * Each table now has its own dedicated DAO for better maintainability
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DBAdapter constructor(
     context: Context,
     databaseName: String,

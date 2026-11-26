@@ -13,6 +13,7 @@ import android.os.Build.VERSION_CODES
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.RequiresApi
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.Insets
@@ -27,13 +28,16 @@ import org.json.JSONObject
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
-fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
 
-val Context.targetSdkVersion
+@get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal val Context.targetSdkVersion
     get() = applicationContext.applicationInfo.targetSdkVersion
 
-fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
     if (VERSION.SDK_INT >= VERSION_CODES.O) {
         areAppNotificationsEnabled() && try {
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -49,7 +53,8 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
         areAppNotificationsEnabled()
     }
 
-fun Context.areAppNotificationsEnabled() = try {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
     Logger.d(
@@ -83,7 +88,8 @@ fun Context.areAppNotificationsEnabled() = try {
  */
 @RequiresApi(VERSION_CODES.O)
 @WorkerThread
-fun NotificationManager.getOrCreateChannel(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun NotificationManager.getOrCreateChannel(
     msgChannel: String?,
     context: Context,
     hideHeadsUp: Boolean = false
@@ -224,7 +230,8 @@ private fun NotificationManager.createDefaultFallbackChannel(context: Context): 
  * @param context The application context.
  */
 @WorkerThread
-fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
     logTag: String,
     caller: String,
     context: Context
@@ -260,7 +267,8 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
  * @param index The index to be checked.
  * @return `true` if the JSONArray is null or the index is out of bounds, `false` otherwise.
  */
-fun JSONArray?.isInvalidIndex(index: Int): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONArray?.isInvalidIndex(index: Int): Boolean {
     return this == null || index < 0 || index >= this.length()
 }
 
@@ -268,7 +276,8 @@ fun JSONArray?.isInvalidIndex(index: Int): Boolean {
  * Extension function to check if a SharedPreferences file has data.
  * @return `true` if the SharedPreferences file has data, `false` otherwise.
  */
-fun SharedPreferences.hasData(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun SharedPreferences.hasData(): Boolean {
     return all.isNotEmpty()
 }
 
@@ -277,7 +286,8 @@ fun SharedPreferences.hasData(): Boolean {
  *
  * @return The original JSONArray or an empty JSONArray.
  */
-fun JSONArray?.orEmptyArray(): JSONArray {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONArray?.orEmptyArray(): JSONArray {
     return this ?: JSONArray()
 }
 
@@ -287,7 +297,8 @@ fun JSONArray?.orEmptyArray(): JSONArray {
  * @return A List of elements of type [T] extracted from the JSONArray.
  * @reified T The expected type of elements in the list.
  */
-inline fun <reified T> JSONArray.toList(): MutableList<T> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal inline fun <reified T> JSONArray.toList(): MutableList<T> {
     val list = mutableListOf<T>()
     for (index in 0 until length()) {
         val element = get(index)
@@ -304,7 +315,8 @@ inline fun <reified T> JSONArray.toList(): MutableList<T> {
  * @param foreach Lambda function to be executed for each element of type [T].
  * @reified T The expected type of elements in the JSONArray.
  */
-inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
     for (index in 0 until length()) {
         val element = get(index)
         if (element is T) {
@@ -321,12 +333,14 @@ inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
  *         The first value of the Pair is `true` if the JSONArray is not null and not empty, `false` otherwise.
  *         The second value of the Pair is the non-empty JSONArray if it exists, or `null` otherwise.
  */
-fun JSONObject.safeGetJSONArrayOrNullIfEmpty(key: String): Pair<Boolean, JSONArray?> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.safeGetJSONArrayOrNullIfEmpty(key: String): Pair<Boolean, JSONArray?> {
     val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
     return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
 }
 
-fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean, List<JSONObject>> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean, List<JSONObject>> {
     val array = optJSONArray(key)
     return if (array != null) {
         Pair(true, array.toList<JSONObject>())
@@ -343,7 +357,8 @@ fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean, List<JSO
  *         The first value of the Pair is `true` if the JSONArray is not null, `false` otherwise.
  *         The second value of the Pair is the non-null JSONArray if it exists, or `null` otherwise.
  */
-fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
     val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
     return Pair(list.length() >= 0, list.takeIf { it.length() >= 0 })
 }
@@ -353,7 +368,8 @@ fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
  *
  * @param other The JSONObject to copy key-value pairs from.
  */
-fun JSONObject.copyFrom(other: JSONObject) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.copyFrom(other: JSONObject) {
     for (key in other.keys()) {
         this.put(key, other.opt(key))
     }
@@ -362,7 +378,8 @@ fun JSONObject.copyFrom(other: JSONObject) {
 /**
  * Copies all key-value pairs from this JSONObject to a new JSONObject.
  */
-fun JSONObject.copy(): JSONObject {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.copy(): JSONObject {
     val json = JSONObject()
     json.copyFrom(this)
     return json
@@ -373,7 +390,8 @@ fun JSONObject.copy(): JSONObject {
  *
  * @return `true` if the JSONObject is not null and not empty, `false` otherwise.
  */
-fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
 
 /**
  * Concatenates this String with another String if it is not null.
@@ -395,7 +413,8 @@ fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
  * // Result: World
  * ```
  */
-fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
     return if (this != null && other != null) {
         this + separator + other
     } else {
@@ -409,11 +428,13 @@ fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
  *
  * @return `true` if the Location is valid, `false` otherwise.
  */
-fun Location.isValid(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Location.isValid(): Boolean {
     return this.latitude in -90.0..90.0 && this.longitude in -180.0..180.0
 }
 
-fun String?.toJsonOrNull(): JSONObject? {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun String?.toJsonOrNull(): JSONObject? {
     return this?.let {
         try {
             JSONObject(it)
@@ -424,7 +445,8 @@ fun String?.toJsonOrNull(): JSONObject? {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun String?.isNotNullAndBlank(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun String?.isNotNullAndBlank(): Boolean {
     contract { returns(true) implies (this@isNotNullAndBlank != null) }
     return isNullOrBlank().not()
 }
@@ -452,7 +474,8 @@ fun String?.isNotNullAndBlank(): Boolean {
  * }
  * ```
  */
-fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: MarginLayoutParams) -> Unit) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val bars: Insets = insets.getInsets(
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
@@ -464,7 +487,8 @@ fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: M
     }
 }
 
-inline fun <reified T> JSONArray.partition(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal inline fun <reified T> JSONArray.partition(
     predicate: (T) -> Boolean
 ): Pair<JSONArray, JSONArray> {
     val first = JSONArray()

@@ -3,10 +3,12 @@ package com.clevertap.android.sdk.utils
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.inapp.images.memory.Memory
 import java.io.File
+import androidx.annotation.RestrictTo
 
 /**
  * We have 3 caches in CT, image cache, gif cache, general file cache with different size configs
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTCaches private constructor(
     private val inAppImageMemoryV1: Memory<Bitmap>,
     private val inAppGifMemoryV1: Memory<ByteArray>,

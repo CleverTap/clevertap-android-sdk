@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp
 import android.os.Bundle
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import androidx.annotation.RestrictTo
 
 /**
  * Adapts [CTInAppHtmlBannerOverlay]'s UI callbacks and its [CTInAppWebView] interactions to the
@@ -13,6 +14,7 @@ import com.clevertap.android.sdk.Constants
  * reported via [InAppListener.inAppNotificationDidDismiss] only once the overlay is actually
  * removed, matching the fragment flow where dismissal follows the action.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTHtmlBannerCallbacksBridge(
     private val notification: CTInAppNotification,
     private val config: CleverTapInstanceConfig,

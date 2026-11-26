@@ -22,7 +22,9 @@ import com.clevertap.android.pushtemplates.usesNativeImageStyling
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 import com.clevertap.android.pushtemplates.media.GifResult
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ContentView(
     internal var context: Context,
     layoutId: Int,

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import androidx.annotation.RestrictTo
 
 /**
  * This is a pref based store backed by a shared-pref file. This file contains only KV pairs for
@@ -8,7 +9,8 @@ import com.clevertap.android.sdk.store.preference.ICTPreference
  *
  * Note : do not save anything else in this preference
  */
-class InAppAssetsStore(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class InAppAssetsStore(
     private val ctPreference: ICTPreference,
 ) {
 

@@ -4,7 +4,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface MediaRenderer {
     /** Called when at least one media URL loaded successfully (primary or fallback). */
     var onMediaReady: (() -> Unit)?

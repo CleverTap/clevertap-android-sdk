@@ -19,11 +19,11 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.junit.After
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertTrue
 
 /**
  * Covers the empty-message gate in [PushProviders._createNotification]: a Live Update (`wzrk_la`)

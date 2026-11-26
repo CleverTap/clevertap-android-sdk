@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.profile
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation
+import androidx.annotation.RestrictTo
 
 /**
  * Maps profile command strings to their corresponding merge operations.
@@ -10,6 +11,7 @@ import com.clevertap.android.sdk.profile.traversal.ProfileOperation
  * @property commandString The command string used in the API (e.g., "$add", "$incr")
  * @property operation The corresponding ProfileOperation
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class ProfileCommand(
     val commandString: String,
     val operation: ProfileOperation

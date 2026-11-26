@@ -86,12 +86,12 @@ class InAppControllerTest {
 
     @Before
     fun setUp() {
-        mockkStatic(CoreMetaData::class)
+        mockkObject(CoreMetaData.Companion)
         every { CoreMetaData.isAppForeground() } returns true
         // Default to a FragmentActivity — the normal host for header/footer in-apps.
         every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
 
-        mockkStatic(InAppNotificationActivity::class)
+        mockkObject(InAppNotificationActivity.Companion)
         every {
             InAppNotificationActivity.launchForInAppNotification(
                 any(),
@@ -311,7 +311,7 @@ class InAppControllerTest {
     @Test
     fun `triggerInAppAction should trigger inAppButtonListener for KV actions`() {
         val mockInAppButtonListener = mockk<InAppNotificationButtonListener>(relaxed = true)
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns mockInAppButtonListener
+        every { mockCallbackManager.inAppNotificationButtonListener } returns mockInAppButtonListener
 
         val keyValues = hashMapOf(
             "key1" to "value1",
@@ -379,7 +379,7 @@ class InAppControllerTest {
 
     @Test
     fun `inAppActionTriggered adds kv action descriptors as a nested payload`() {
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns null
+        every { mockCallbackManager.inAppNotificationButtonListener } returns null
         val keyValues = hashMapOf("key1" to "value1", "key2" to "value2")
         val actionJsonString = """
         {
@@ -1669,7 +1669,7 @@ class InAppControllerTest {
 
     @Test
     fun `inAppActionTriggered should NOT include wzrk_dl for KEY_VALUES action`() {
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns mockk(relaxed = true)
+        every { mockCallbackManager.inAppNotificationButtonListener } returns mockk(relaxed = true)
         val inAppController = createInAppController()
         val callToAction = "Submit"
 

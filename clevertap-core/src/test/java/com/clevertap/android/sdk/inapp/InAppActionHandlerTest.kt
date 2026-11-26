@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.PushPermissionHandler
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -120,7 +121,7 @@ class InAppActionHandlerTest : BaseTestCase() {
 
     @Test
     fun `launchPushPermissionPrompt should trigger pushPermissionHandler`() {
-        mockkStatic(CoreMetaData::class) {
+        mockkObject(CoreMetaData.Companion) {
             every { CoreMetaData.getCurrentActivity() } returns mockk(relaxed = true)
             inAppActionHandler.launchPushPermissionPrompt(false)
             verify { mockPushPermissionHandler.requestPermission(any(), false, any()) }
