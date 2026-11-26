@@ -21,16 +21,19 @@ internal open class EventMediator(
         if (eventType == Constants.DEFINE_VARS_EVENT || config.isCreatedPostAppLaunch) {
             return false
         }
-        if (event.has("evtName")) {
-            try {
-                if (event.getString("evtName") in Constants.SYSTEM_EVENTS) {
-                    return false
-                }
-            } catch (e: JSONException) {
-                //no-op
-            }
+        if (event.has("evtName") && isSystemEvent(event)) {
+            return false
         }
         return eventType == Constants.RAISED_EVENT && !cleverTapMetaData.isAppLaunchPushed
+    }
+
+    private fun isSystemEvent(event: JSONObject): Boolean {
+        return try {
+            event.getString("evtName") in Constants.SYSTEM_EVENTS
+        } catch (e: JSONException) {
+            //no-op
+            false
+        }
     }
 
     open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean {
@@ -65,6 +68,11 @@ internal open class EventMediator(
 
         // opted-out and system events enabled
         // check for Constants.RAISED_EVENT and Constants.NV_EVENT event special cases
+        return shouldDropOptedOutEvent(event)
+    }
+
+    /** For an opted-out user with system events enabled: drops everything except system events. */
+    private fun shouldDropOptedOutEvent(event: JSONObject?): Boolean {
         val eName = event?.let { getEventName(it) }
         val dropEvent = eName !in ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES
         if (dropEvent) {
