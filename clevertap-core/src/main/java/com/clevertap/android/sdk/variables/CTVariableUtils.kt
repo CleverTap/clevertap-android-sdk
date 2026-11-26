@@ -13,7 +13,9 @@ import java.math.BigInteger
  * Static JVM shape is unchanged (companion + @JvmStatic / const val).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-public class CTVariableUtils private constructor() {
+// Keeps the public no-arg constructor the Java class always had: the wrapper SDKs are compiled against it.
+@Suppress("UtilityClassWithPublicConstructor")
+public class CTVariableUtils {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
     public companion object {
