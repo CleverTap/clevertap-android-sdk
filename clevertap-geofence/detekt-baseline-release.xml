@@ -17,9 +17,7 @@
     <ID>LongMethod:BackgroundLocationWork.kt$BackgroundLocationWork$override fun startWork(): ListenableFuture&lt;Result&gt;</ID>
     <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$internal fun processTriggeredLocation(location: Location): Future&lt;*&gt;?</ID>
     <ID>MagicNumber:Logger.kt$Logger$4000</ID>
-    <ID>MaxLineLength:Utils.kt$Utils$"Critical issue :: After calling CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"</ID>
     <ID>MemberNameEqualsClassName:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$private var ctGeofenceAPI: CTGeofenceAPI? = null</ID>
-    <ID>NoNameShadowing:PendingIntentFactory.kt$PendingIntentFactory$flags</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI!!</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapApi!!</ID>

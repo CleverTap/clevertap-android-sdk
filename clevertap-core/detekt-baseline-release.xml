@@ -4,18 +4,6 @@
   <CurrentIssues>
     <ID>ArrayPrimitive:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$arrayOf(0, 1)</ID>
     <ID>ArrayPrimitive:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$arrayOf(threshold,numberOfRowsToKeep)</ID>
-    <ID>BracesOnIfStatements:CTInboxMessage.kt$CTInboxMessage$else</ID>
-    <ID>BracesOnIfStatements:CTInboxMessage.kt$CTInboxMessage$if</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$else</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$if</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.DeviceCachedInfo$else</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.DeviceCachedInfo$if</ID>
-    <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$else</ID>
-    <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$if</ID>
-    <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$else</ID>
-    <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$if</ID>
-    <ID>BracesOnIfStatements:VarCache.kt$VarCache$else</ID>
-    <ID>BracesOnIfStatements:VarCache.kt$VarCache$if</ID>
     <ID>CanBeNonNullable:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$deepLink: Uri?</ID>
     <ID>CanBeNonNullable:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$notification: Bundle?</ID>
     <ID>CanBeNonNullable:AnalyticsManager.kt$AnalyticsManager$extras: JSONObject?</ID>
@@ -136,7 +124,6 @@
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
     <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun evaluate( op: TriggerOperator, expected: TriggerValue, actual: TriggerValue ): Boolean</ID>
     <ID>CyclomaticComplexMethod:Var.kt$Var$@Suppress("UNCHECKED_CAST") private fun modifyValue(src: Number?)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:BitmapDownloadRequestHandlerWithTimeLimit.kt$BitmapDownloadRequestHandlerWithTimeLimit$val (_, fallbackToAppIcon, context, instanceConfig, downloadTimeLimitInMillis) = bitmapDownloadRequest</ID>
     <ID>DoubleMutabilityForCollection:CTInAppAction.kt$CTInAppAction$var keyValues: HashMap&lt;String, String&gt;? private set</ID>
     <ID>DoubleMutabilityForCollection:CTInboxController.kt$CTInboxController$private var messagesList: MutableList&lt;CTMessageDAO&gt; = dbAdapter.getMessages(userId)</ID>
     <ID>DoubleMutabilityForCollection:CTInboxStyleConfig.kt$CTInboxStyleConfig$/** Kotlin property syntax, equivalent to [getTabs] / [setTabs]. */ public var tabs: ArrayList&lt;String&gt;? @JvmSynthetic @JvmName("ktGetTabs") inline get() = getTabs() @JvmSynthetic @JvmName("ktSetTabs") inline set(value) = setTabs(value)</ID>
@@ -146,7 +133,6 @@
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$// App-Launched CG-suppression acks (bare {wzrk_id, wzrk_pivot, wzrk_cgId}), via recordCgSuppressed. @VisibleForTesting internal var suppressedNdCampaigns: MutableList&lt;Map&lt;String, Any?&gt;&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$@VisibleForTesting internal var evaluatedNdCampaignIds: MutableList&lt;Long&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:ValidationResultStack.kt$ValidationResultStack$/** * The pending results, oldest first. Returned as the live list outside the lock (as before). */ var pendingValidationResults = ArrayList&lt;ValidationResult&gt;() private set</ID>
-    <ID>EmptyDefaultConstructor:CTMessageDAO.kt$CTMessageDAO$()</ID>
     <ID>ForbiddenComment:CleverTapAPI.kt$CleverTapAPI$//TODO: start synchronizing entire flow from here</ID>
     <ID>ForbiddenMethodCall:CTDisplayUnitType.kt$CTDisplayUnitType.Companion$d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")</ID>
     <ID>ForbiddenMethodCall:CleverTapResponse.kt$CleverTapResponse$i("CleverTapResponse", "Done processing response!")</ID>
@@ -154,18 +140,10 @@
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$e("ProductConfig", "Encountered an error while parsing the defaults XML file.", e)</ID>
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$w( LOG_TAG_PRODUCT_CONFIG, "An entry in the defaults XML has an invalid key and/or value tag." )</ID>
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$w( LOG_TAG_PRODUCT_CONFIG, "Encountered an unexpected tag while parsing the defaults XML." )</ID>
-    <ID>ForbiddenMethodCall:GifImageView.kt$GifImageView$sleep(if (framesDisplayDuration &gt; 0) { framesDisplayDuration } else { delay.toLong() })</ID>
     <ID>ForbiddenMethodCall:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$e(Constants.CLEVERTAP_LOG_TAG, "SSL pinning is enabled but could not be set up, using normal HTTPS", e)</ID>
-    <ID>FunctionNaming:CTInboxController.kt$CTInboxController$@AnyThread fun _markReadForMessagesWithIds(messageIDs: List&lt;String&gt;): Boolean</ID>
     <ID>FunctionNaming:InAppController.kt$InAppController$private fun _showNotificationIfAvailable()</ID>
     <ID>FunctionNaming:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>FunctionOnlyReturningConstant:LeanplumCT.kt$LeanplumCT$@JvmStatic public fun getPurchaseEventName(): String</ID>
-    <ID>FunctionParameterNaming:CTProductConfigController.kt$CTProductConfigController$Key: String?</ID>
-    <ID>FunctionParameterNaming:CleverTapAPI.kt$CleverTapAPI.Companion$_accountId: String?</ID>
-    <ID>FunctionParameterNaming:SyncListener.kt$SyncListener$CleverTapID: String?</ID>
-    <ID>HasPlatformType:NetworkEncryptionManager.kt$NetworkEncryptionManager$fun sessionEncryptionKey()</ID>
-    <ID>InjectDispatcher:CtDefaultDispatchers.kt$CtDefaultDispatchers$IO</ID>
-    <ID>InjectDispatcher:CtDefaultDispatchers.kt$CtDefaultDispatchers$Unconfined</ID>
     <ID>LargeClass:AnalyticsManager.kt$AnalyticsManager : BaseAnalyticsManager</ID>
     <ID>LargeClass:CTInAppNotification.kt$CTInAppNotification : Parcelable</ID>
     <ID>LargeClass:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder : ViewHolder</ID>
@@ -285,99 +263,19 @@
     <ID>LoopWithTooManyJumpStatements:NetworkManager.kt$NetworkManager$while</ID>
     <ID>LoopWithTooManyJumpStatements:ProductConfigSettings.kt$ProductConfigSettings$for</ID>
     <ID>LoopWithTooManyJumpStatements:PushProviders.kt$PushProviders$for</ID>
-    <ID>MagicNumber:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$1000</ID>
-    <ID>MagicNumber:AnalyticsManager.kt$AnalyticsManager$1000</ID>
-    <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification.Companion$1000</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$1000</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$1000L</ID>
-    <ID>MagicNumber:CTInboxMessage.kt$CTInboxMessage$1000</ID>
-    <ID>MagicNumber:CTMessageDAO.kt$CTMessageDAO.Companion$1000</ID>
-    <ID>MagicNumber:CTProductConfigController.kt$CTProductConfigController$1000L</ID>
     <ID>MagicNumber:CTXtensions.kt$180.0</ID>
     <ID>MagicNumber:CTXtensions.kt$90.0</ID>
-    <ID>MagicNumber:Cache.kt$1024</ID>
     <ID>MagicNumber:CleverTapInstanceConfig.kt$CleverTapInstanceConfig$3</ID>
-    <ID>MagicNumber:Clock.kt$Clock$1000</ID>
-    <ID>MagicNumber:CoreNotificationRenderer.kt$CoreNotificationRenderer$1000L</ID>
-    <ID>MagicNumber:CtApi.kt$CtApi$1000</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$3</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$5</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$6</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$7</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$8</ID>
-    <ID>MagicNumber:EvaluationManager.kt$EvaluationManager$1000</ID>
-    <ID>MagicNumber:EventDataNormalizer.kt$EventDataNormalizer$1000</ID>
-    <ID>MagicNumber:GifImageView.kt$GifImageView$1000000</ID>
-    <ID>MagicNumber:InAppController.kt$InAppController$1000</ID>
-    <ID>MagicNumber:LeanplumCT.kt$LeanplumCT$1000000.0</ID>
-    <ID>MagicNumber:LocalDataStore.kt$LocalDataStore$1000</ID>
-    <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$1000</ID>
-    <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$1000L</ID>
     <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$3</ID>
     <ID>MagicNumber:UriHelper.kt$UriHelper$4</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$3</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$5</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$50</ID>
-    <ID>MaxLineLength:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$" \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle"</ID>
-    <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"${Constants.LOG_TAG_GEOFENCES}JSON Exception when raising GeoFence event $eventName - ${e.localizedMessage}"</ID>
-    <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - ${e.localizedMessage}"</ID>
-    <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"Push notification: ${extras ?: "NULL"} not from CleverTap - will not process Notification Viewed event."</ID>
-    <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"Recorded Live Activity event ($state) for activityId: ${extras.getString(Constants.WZRK_LIVE_UPDATE_ID)}"</ID>
-    <ID>MaxLineLength:CTFlushPushImpressionsWork.kt$CTFlushPushImpressionsWork$"hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push impressions:-)"</ID>
-    <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
-    <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
-    <ID>MaxLineLength:CTXtensions.kt$"Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$"Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again"</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with first occurrence timestamp.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with last occurrence timestamp.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLogCount(String) instead. getUserEventLogCount() provides user-specific event counts.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific event logs.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last visit timestamp.")</ID>
-    <ID>MaxLineLength:CleverTapInstanceConfig.kt$CleverTapInstanceConfig.Companion$Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig")</ID>
-    <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation"</ID>
-    <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Set current user allowed system events and communications flag state from storage to: $storedAllowedSystemEvents for key: $key"</ID>
-    <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Unable to set current user allowed system events and communications flag from storage: storage key is null"</ID>
-    <ID>MaxLineLength:EventDAOImpl.kt$EventDAOImpl$logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")</ID>
-    <ID>MaxLineLength:ExoplayerHandle.kt$ExoplayerHandle$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead."</ID>
-    <ID>MaxLineLength:ExoplayerPlayerListener.kt$ExoplayerPlayerListener$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3PlayerListener instead."</ID>
-    <ID>MaxLineLength:FileMemoryV2.kt$FileMemoryV2$logger?.verbose(" File cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$" Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n"</ID>
-    <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$"1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n"</ID>
-    <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$"2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate()."</ID>
-    <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$"CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n"</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$"In-app ${currentlyDisplayingInApp?.campaignId} is on screen, queuing restored in-app ${inApp.campaignId}"</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$"Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$"Please verify the integration of your app. It is not setup to support in-app notifications yet."</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$"[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling fetch API"</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$"[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"</ID>
-    <ID>MaxLineLength:InAppGifMemoryV1.kt$InAppGifMemoryV1$logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:InAppImageMemoryV1.kt$InAppImageMemoryV1$logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:InAppTimerManager.kt$InAppTimerManager$logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")</ID>
-    <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID"</ID>
-    <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, "</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"be sure you have properly added the CleverTap Account ID and Token to your AndroidManifest.xml, \n"</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"if you have a custom Application class, call ActivityLifecycleCallback.register(this); before super.onCreate() in your class"</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"or set them programmatically in the onCreate method of your custom application class prior to calling super.onCreate()"</ID>
-    <ID>MaxLineLength:NetworkManager.kt$NetworkManager$"Processing batch of $batchSize events (${queueData.eventIds.size} from events, ${queueData.profileEventIds.size} from profile)"</ID>
-    <ID>MaxLineLength:PushAmpResponse.kt$PushAmpResponse$"Push Notification already shown, ignoring local notification :${pushObject.getString("wzrk_pid")}"</ID>
-    <ID>MaxLineLength:PushProviders.kt$PushProviders$"Have user provided notificationId: $notifId won't use collapse_key (if any) as basis for notificationId"</ID>
-    <ID>MaxLineLength:QueueData.kt$QueueData$return "QueueData: numItems=${data.length()}, eventIds=${eventIds.size}, profileEventIds=${profileEventIds.size}"</ID>
-    <ID>MaxLineLength:SyncListener.kt$SyncListener$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
-    <ID>MaxLineLength:TriggersMatcher.kt$TriggersMatcher$Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")</ID>
-    <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."</ID>
-    <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_NOT_REGISTERED : ValidationError</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$USE_CUSTOM_ID_MISSING_IN_MANIFEST : ValidationError</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.USE_CUSTOM_ID_FALLBACK$USE_CUSTOM_ID_FALLBACK</ID>
-    <ID>MaxLineLength:Var.kt$Var$"CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "</ID>
-    <ID>MaxLineLength:Var.kt$Var.Companion$Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '$name'.")</ID>
-    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.d("Please add ExoPlayer/Media3 dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")</ID>
-    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.i("ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Please migrate to Media3 (androidx.media3).")</ID>
-    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibraryIntegrated.EXOPLAYER$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3)."</ID>
-    <ID>MemberNameEqualsClassName:CTCaches.kt$CTCaches.Companion$private var ctCaches: CTCaches? = null</ID>
     <ID>NestedBlockDepth:AESGCMCrypt.kt$AESGCMCrypt$fun performCryptOperation( mode: Int, data: ByteArray, iv: ByteArray? = null, secretKey: SecretKey? = ctKeyGenerator.generateOrGetKey() ): AESGCMCryptResult?</ID>
     <ID>NestedBlockDepth:ARPResponse.kt$ARPResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$@WorkerThread private fun pushChargedEventInternal(chargeDetails: Map&lt;String, Any&gt;?, items: List&lt;Map&lt;String, Any&gt;&gt;?)</ID>
@@ -440,10 +338,6 @@
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun createOrResetWorker(isPingFrequencyUpdated: Boolean)</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
     <ID>NestedBlockDepth:UriHelper.kt$UriHelper$fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle</ID>
-    <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$message</ID>
-    <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$messageIDs</ID>
-    <ID>NoNameShadowing:MemoryAccessObject.kt${ val stream = ByteArrayOutputStream() it.compress(Bitmap.CompressFormat.PNG, 100, stream) stream.toByteArray() }</ID>
-    <ID>NoNameShadowing:PlayStoreReviewHandler.kt$PlayStoreReviewHandler$task</ID>
     <ID>ObjectLiteralToLambda:CleverTapAPI.kt$CleverTapAPI$object : OnCompleteListener&lt;String&gt; { override fun onComplete(task: com.google.android.gms.tasks.Task&lt;String&gt;) { if (!task.isSuccessful) { Logger.v( LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json failed", task.exception ) requestTokenListener.onDevicePushToken(null, FCM) return } val token = task.result Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token") requestTokenListener.onDevicePushToken(token, FCM) } }</ID>
     <ID>ReturnCount:AnalyticsManager.kt$AnalyticsManager$override fun pushNotificationClickedEvent(extras: Bundle?)</ID>
     <ID>ReturnCount:BitmapDownloader.kt$BitmapDownloader$public fun downloadBitmap(srcUrl: String): DownloadedBitmap</ID>
@@ -503,21 +397,9 @@
     <ID>TooManyFunctions:ValidationConfig.kt$ValidationConfig$Builder</ID>
     <ID>TooManyFunctions:Var.kt$Var&lt;T&gt;</ID>
     <ID>TooManyFunctions:VarCache.kt$VarCache</ID>
-    <ID>UnnecessaryAbstractClass:BaseAnalyticsManager.kt$BaseAnalyticsManager$BaseAnalyticsManager</ID>
-    <ID>UnnecessaryAbstractClass:BaseEventQueueManager.kt$BaseEventQueueManager$BaseEventQueueManager</ID>
-    <ID>UnnecessaryAbstractClass:BaseLocationManager.kt$BaseLocationManager$BaseLocationManager</ID>
-    <ID>UnnecessaryAbstractClass:BaseSessionManager.kt$BaseSessionManager$BaseSessionManager</ID>
-    <ID>UnnecessaryAbstractClass:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$CTInAppBaseFullFragment</ID>
-    <ID>UnnecessaryAbstractClass:CTInAppBaseFullHtmlFragment.kt$CTInAppBaseFullHtmlFragment$CTInAppBaseFullHtmlFragment</ID>
-    <ID>UnnecessaryAbstractClass:CTInAppBaseFullNativeFragment.kt$CTInAppBaseFullNativeFragment$CTInAppBaseFullNativeFragment</ID>
-    <ID>UnnecessaryAbstractClass:CTInAppBasePartialFragment.kt$CTInAppBasePartialFragment$CTInAppBasePartialFragment</ID>
-    <ID>UnnecessaryAbstractClass:CTInAppBasePartialNativeFragment.kt$CTInAppBasePartialNativeFragment$CTInAppBasePartialNativeFragment</ID>
-    <ID>UnnecessaryAbstractClass:CleverTapMetaData.kt$CleverTapMetaData$CleverTapMetaData</ID>
-    <ID>UnnecessaryAbstractClass:CleverTapResponse.kt$CleverTapResponse$CleverTapResponse</ID>
-    <ID>UnnecessaryAbstractClass:Crypt.kt$Crypt$Crypt</ID>
     <ID>UnsafeCallOnNullableType:ArpRepo.kt$ArpRepo$kv.value!!</ID>
     <ID>UnsafeCallOnNullableType:ArpRepo.kt$ArpRepo$value!!</ID>
-    <ID>UnsafeCallOnNullableType:CTCaches.kt$CTCaches.Companion$ctCaches!!</ID>
+    <ID>UnsafeCallOnNullableType:CTCaches.kt$CTCaches.Companion$cachedInstance!!</ID>
     <ID>UnsafeCallOnNullableType:CTInAppBaseFragment.kt$CTInAppBaseFragment$bundle.getParcelable&lt;CleverTapInstanceConfig&gt;(Constants.KEY_CONFIG)!!</ID>
     <ID>UnsafeCallOnNullableType:CTInAppBasePartialFragment.kt$CTInAppBasePartialFragment$CleverTapAPI.instanceWithConfig(it.applicationContext, config)!!</ID>
     <ID>UnsafeCallOnNullableType:CTInAppBasePartialFragment.kt$CTInAppBasePartialFragment$CleverTapAPI.instanceWithConfig(requireContext().applicationContext, config)!!</ID>
@@ -580,18 +462,8 @@
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$it[0]!!</ID>
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$it[1]!!</ID>
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$triggerRadius!!</ID>
-    <ID>UnusedParameter:EventQueueManager.kt$EventQueueManager$context: Context?</ID>
-    <ID>UnusedParameter:Utils.kt$Utils$context: Context?</ID>
     <ID>UseOrEmpty:CTInboxStyleConfig.kt$CTInboxStyleConfig$config.tabsValue?.copyOf() ?: emptyArray()</ID>
     <ID>UseRequire:PushProviders.kt$PushProviders$throw IllegalArgumentException()</ID>
     <ID>UselessCallOnNotNull:CTProductConfigController.kt$CTProductConfigController.&lt;no name provided&gt;$key.isNullOrEmpty()</ID>
-    <ID>UtilityClassWithPublicConstructor:ActivityLifecycleCallback.kt$ActivityLifecycleCallback</ID>
-    <ID>UtilityClassWithPublicConstructor:CTVariableUtils.kt$CTVariableUtils</ID>
-    <ID>UtilityClassWithPublicConstructor:FileResourcesRepoFactory.kt$FileResourcesRepoFactory</ID>
-    <ID>UtilityClassWithPublicConstructor:MemoryCreator.kt$MemoryCreator</ID>
-    <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val CURRENT_THREAD_EXECUTOR: Executor = Executor { it.run() }</ID>
-    <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR</ID>
-    <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val IO_EXECUTOR: IOExecutor</ID>
-    <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()</ID>
   </CurrentIssues>
 </SmellBaseline>

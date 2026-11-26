@@ -4,6 +4,5 @@
   <CurrentIssues>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$mConfig!!</ID>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$options!!</ID>
-    <ID>UtilityClassWithPublicConstructor:HmsConstants.kt$HmsConstants</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -2,15 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>BracesOnIfStatements:FiveIconBigContentView.kt$FiveIconBigContentView$else</ID>
-    <ID>BracesOnIfStatements:FiveIconBigContentView.kt$FiveIconBigContentView$if</ID>
-    <ID>BracesOnIfStatements:FiveIconSmallContentView.kt$FiveIconSmallContentView$else</ID>
-    <ID>BracesOnIfStatements:FiveIconSmallContentView.kt$FiveIconSmallContentView$if</ID>
-    <ID>BracesOnIfStatements:IconsContentView.kt$IconsContentView$else</ID>
-    <ID>BracesOnIfStatements:IconsContentView.kt$IconsContentView$if</ID>
-    <ID>CanBeNonNullable:ContentView.kt$ContentView$pt_bg: String?</ID>
-    <ID>CanBeNonNullable:ContentView.kt$ContentView$pt_text_clr: String?</ID>
-    <ID>CanBeNonNullable:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$pt_product_display_action: String?</ID>
+    <ID>CanBeNonNullable:ContentView.kt$ContentView$bgColor: String?</ID>
+    <ID>CanBeNonNullable:ContentView.kt$ContentView$textColor: String?</ID>
+    <ID>CanBeNonNullable:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$productDisplayAction: String?</ID>
     <ID>CanBeNonNullable:TimerTemplateHandler.kt$TimerTemplateHandler$delay: Long?</ID>
     <ID>CanBeNonNullable:Utils.kt$Utils$config: CleverTapInstanceConfig?</ID>
     <ID>CanBeNonNullable:Utils.kt$Utils$ctx: Context?</ID>
@@ -21,7 +15,7 @@
     <ID>CyclomaticComplexMethod:ProgressStyle.kt$ProgressStyle$private fun buildNative( api: NativeProgressApi.Methods, context: Context, extras: Bundle, nb: NotificationCompat.Builder, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean ): NotificationCompat.Builder</ID>
     <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun layout( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint ): Layout</ID>
     <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun titleSlots(centers: List&lt;Float&gt;, widths: List&lt;Float&gt;, canvasWidth: Float, gap: Float): List&lt;TitleSlot&gt;</ID>
-    <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$@Suppress("ForbiddenMethodCall") // intentional: keeps the reply feedback visible before auto-opening the app private fun handleInputBoxNotification()</ID>
     <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
     <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
     <ID>CyclomaticComplexMethod:TemplateDataFactory.kt$TemplateDataFactory$fun createTemplateData( templateType: TemplateType?, extras: Bundle, isDarkMode: Boolean, defaultAltText: String, notificationIdsProvider: () -&gt; ArrayList&lt;Int&gt; ): TemplateData?</ID>
@@ -32,19 +26,13 @@
     <ID>CyclomaticComplexMethod:TemplateType.kt$TemplateType.Companion$@JvmStatic fun fromString(type: String?): TemplateType?</ID>
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun createValidatorFromKeys( templateType: TemplateType, keys: Map&lt;String, Checker&lt;out Any&gt;&gt; ): Validator?</ID>
-    <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(1000)</ID>
-    <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(PTConstants.PT_INPUT_TIMEOUT.toLong())</ID>
-    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_bg: String?</ID>
-    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_text_clr: String?</ID>
-    <ID>FunctionParameterNaming:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$pt_product_display_action: String?</ID>
-    <ID>FunctionParameterNaming:Style.kt$Style$pt_title: String?</ID>
     <ID>LargeClass:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
     <ID>LargeClass:TemplateDataFactory.kt$TemplateDataFactory</ID>
     <ID>LargeClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
     <ID>LargeClass:Utils.kt$Utils</ID>
     <ID>LongMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
     <ID>LongMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
-    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$@Suppress("ForbiddenMethodCall") // intentional: keeps the reply feedback visible before auto-opening the app private fun handleInputBoxNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleProductDisplayNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
@@ -74,7 +62,6 @@
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$4</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$5</ID>
     <ID>MagicNumber:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$3</ID>
-    <ID>MagicNumber:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$1000</ID>
     <ID>MagicNumber:Utils.kt$Utils$6</ID>
     <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_THREE_IMAGE_LIST]!!</ID>
@@ -93,11 +80,6 @@
     <ID>MapGetWithNotNullAssertionOperator:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_RATING_DEFAULT_DL]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator$keys[PT_BIG_IMG]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
-    <ID>MaxLineLength:NativeProgressApi.kt$NativeProgressApi$.</ID>
-    <ID>MaxLineLength:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$STAR_IDS.take(star).forEach { contentViewRating.setImageViewResource(it, R.drawable.pt_star_filled) }</ID>
-    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")</ID>
-    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")</ID>
-    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")</ID>
     <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
     <ID>NestedBlockDepth:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
     <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun applyBigImageStyle( imgUrl: String?, notificationBuilder: NotificationCompat.Builder, altText: String?, config: CleverTapInstanceConfig? )</ID>
@@ -108,15 +90,13 @@
     <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
     <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
     <ID>ReturnCount:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
-    <ID>ReturnCount:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
+    <ID>ReturnCount:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$@Suppress("ForbiddenMethodCall") // intentional: keeps the reply feedback visible before auto-opening the app private fun handleInputBoxNotification()</ID>
     <ID>ReturnCount:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$IllegalArgumentException()</ID>
     <ID>TooGenericExceptionThrown:InputBoxStyle.kt$InputBoxStyle$throw Exception("Failed to fetch big picture!")</ID>
     <ID>TooGenericExceptionThrown:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$throw Exception("Failed to fetch big picture!")</ID>
     <ID>TooGenericExceptionThrown:Utils.kt$Utils$throw Exception("Logo is null")</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
-    <ID>UnnecessaryAbstractClass:IconsContentView.kt$IconsContentView$IconsContentView</ID>
-    <ID>UnnecessaryAbstractClass:VerticalImageContentView.kt$VerticalImageContentView$VerticalImageContentView</ID>
     <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
     <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_THREE_IMAGE_LIST]!!</ID>
     <ID>UnsafeCallOnNullableType:ContentValidator.kt$ContentValidator$keys[PT_MSG]!!</ID>
@@ -140,7 +120,5 @@
     <ID>UnsafeCallOnNullableType:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_RATING_DEFAULT_DL]!!</ID>
     <ID>UnsafeCallOnNullableType:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator$keys[PT_BIG_IMG]!!</ID>
     <ID>UnsafeCallOnNullableType:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
-    <ID>UtilityClassWithPublicConstructor:PTConstants.kt$PTConstants</ID>
-    <ID>UtilityClassWithPublicConstructor:ValidatorFactory.kt$ValidatorFactory</ID>
   </CurrentIssues>
 </SmellBaseline>

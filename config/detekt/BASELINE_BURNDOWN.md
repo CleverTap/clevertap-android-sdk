@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 787**  
-core: 591 · geofence: 53 · hms: 3 · pushtemplates: 140
+**Total baselined findings: 634**  
+core: 463 · geofence: 51 · hms: 2 · pushtemplates: 118
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -15,10 +15,10 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Idioms | 3 | UseRequire (1), UseOrEmpty (1), MayBeConst (1) |
 | Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
 | Library safety | 9 | DoubleMutabilityForCollection (9) |
-| Naming | 14 | FunctionParameterNaming (7), VariableNaming (4), FunctionNaming (3) |
-| Style | 156 | MaxLineLength (65), MagicNumber (46), BracesOnIfStatements (18), ReturnCount (17), ForbiddenMethodCall (10) |
+| Naming | 2 | FunctionNaming (2) |
+| Style | 49 | MagicNumber (25), ReturnCount (17), ForbiddenMethodCall (7) |
 | Complexity | 311 | LongParameterList (72), NestedBlockDepth (70), CyclomaticComplexMethod (62), TooManyFunctions (37), LongMethod (37), LargeClass (28), ComplexCondition (5) |
-| Other | 55 | UnnecessaryAbstractClass (14), LoopWithTooManyJumpStatements (11), UtilityClassWithPublicConstructor (7), NoNameShadowing (5), UnusedParameter (2), ThrowsCount (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
+| Other | 21 | LoopWithTooManyJumpStatements (11), ThrowsCount (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), MemberNameEqualsClassName (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1) |
 
 ## By rule (with how to fix and where)
 
@@ -54,25 +54,17 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Naming
 
-- **FunctionParameterNaming: 7** (pushtemplates 4, core 3). camelCase parameters.  
-  Top files: `ContentView.kt` (2), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `SyncListener.kt` (1), `ProductDisplayLinearBigContentView.kt` (1), `Style.kt` (1)
-- **VariableNaming: 4** (core 4). camelCase, no `m`/`_` prefixes (not for keys/reflection names).  
-  Top files: `CTExecutors.kt` (4)
-- **FunctionNaming: 3** (core 3). Kotlin camelCase function names (not for public API / reflection names).  
-  Top files: `CTInboxController.kt` (1), `InAppController.kt` (1), `PushProviders.kt` (1)
+- **FunctionNaming: 2** (core 2). Kotlin camelCase function names (not for public API / reflection names).  
+  Top files: `InAppController.kt` (1), `PushProviders.kt` (1)
 
 ### Style
 
-- **MaxLineLength: 65** (core 59, pushtemplates 5, geofence 1). Wrap lines > 120.  
-  Top files: `CleverTapAPI.kt` (8), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `InAppActionHandler.kt` (4), `ManifestValidator.kt` (4), `DeviceInfo.kt` (3)
-- **MagicNumber: 46** (core 33, pushtemplates 12, geofence 1). Named constants.  
-  Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTInboxBaseMessageViewHolder.kt` (2)
-- **BracesOnIfStatements: 18** (core 12, pushtemplates 6). Braces on every if/else (repo convention).  
-  Top files: `CTInboxMessage.kt` (2), `CleverTapDisplayUnitContent.kt` (2), `DeviceInfo.kt` (2), `EvalRules.kt` (2), `TriggerValue.kt` (2), `VarCache.kt` (2)
+- **MagicNumber: 25** (core 13, pushtemplates 11, geofence 1). Named constants.  
+  Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTXtensions.kt` (2)
 - **ReturnCount: 17** (core 14, pushtemplates 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
   Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1), `CTInAppNotification.kt` (1)
-- **ForbiddenMethodCall: 10** (core 8, pushtemplates 2). Log through `Logger`, no `Thread.sleep`/`println`.  
-  Top files: `DefaultXmlParser.kt` (4), `PushTemplateReceiver.kt` (2), `CTDisplayUnitType.kt` (1), `CleverTapResponse.kt` (1), `GifImageView.kt` (1), `UrlConnectionHttpClient.kt` (1)
+- **ForbiddenMethodCall: 7** (core 7). Log through `Logger`, no `Thread.sleep`/`println`.  
+  Top files: `DefaultXmlParser.kt` (4), `CTDisplayUnitType.kt` (1), `CleverTapResponse.kt` (1), `UrlConnectionHttpClient.kt` (1)
 
 ### Complexity
 
@@ -93,22 +85,10 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Other
 
-- **UnnecessaryAbstractClass: 14** (core 12, pushtemplates 2). See https://detekt.dev/docs/rules  
-  Top files: `BaseAnalyticsManager.kt` (1), `BaseEventQueueManager.kt` (1), `BaseLocationManager.kt` (1), `BaseSessionManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInAppBaseFullHtmlFragment.kt` (1)
 - **LoopWithTooManyJumpStatements: 11** (core 10, pushtemplates 1). See https://detekt.dev/docs/rules  
   Top files: `EventDataNormalizer.kt` (2), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `GifImageView.kt` (1), `LocalDataStore.kt` (1), `LoginController.kt` (1)
-- **UtilityClassWithPublicConstructor: 7** (core 4, pushtemplates 2, hms 1). See https://detekt.dev/docs/rules  
-  Top files: `ActivityLifecycleCallback.kt` (1), `CTVariableUtils.kt` (1), `FileResourcesRepoFactory.kt` (1), `MemoryCreator.kt` (1), `HmsConstants.kt` (1), `PTConstants.kt` (1)
-- **NoNameShadowing: 5** (core 4, geofence 1). See https://detekt.dev/docs/rules  
-  Top files: `CTInboxController.kt` (2), `MemoryAccessObject.kt` (1), `PlayStoreReviewHandler.kt` (1), `PendingIntentFactory.kt` (1)
-- **UnusedParameter: 2** (core 2). See https://detekt.dev/docs/rules  
-  Top files: `EventQueueManager.kt` (1), `Utils.kt` (1)
 - **ThrowsCount: 2** (core 2). See https://detekt.dev/docs/rules  
   Top files: `CustomTemplate.kt` (1), `JsonTemplatesProducer.kt` (1)
-- **MemberNameEqualsClassName: 2** (core 1, geofence 1). See https://detekt.dev/docs/rules  
-  Top files: `CTCaches.kt` (1), `CTGeofenceAPI.kt` (1)
-- **InjectDispatcher: 2** (core 2). See https://detekt.dev/docs/rules  
-  Top files: `CtDefaultDispatchers.kt` (2)
 - **ArrayPrimitive: 2** (core 2). See https://detekt.dev/docs/rules  
   Top files: `CTLocalInApp.kt` (1), `UserEventLogDAOImpl.kt` (1)
 - **UselessCallOnNotNull: 1** (core 1). See https://detekt.dev/docs/rules  
@@ -117,16 +97,12 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `DeviceInfo.kt` (1)
 - **ObjectLiteralToLambda: 1** (core 1). See https://detekt.dev/docs/rules  
   Top files: `CleverTapAPI.kt` (1)
-- **HasPlatformType: 1** (core 1). See https://detekt.dev/docs/rules  
-  Top files: `NetworkEncryptionManager.kt` (1)
+- **MemberNameEqualsClassName: 1** (geofence 1). See https://detekt.dev/docs/rules  
+  Top files: `CTGeofenceAPI.kt` (1)
 - **FunctionOnlyReturningConstant: 1** (core 1). See https://detekt.dev/docs/rules  
   Top files: `LeanplumCT.kt` (1)
 - **ForbiddenComment: 1** (core 1). See https://detekt.dev/docs/rules  
   Top files: `CleverTapAPI.kt` (1)
-- **EmptyDefaultConstructor: 1** (core 1). See https://detekt.dev/docs/rules  
-  Top files: `CTMessageDAO.kt` (1)
-- **DestructuringDeclarationWithTooManyEntries: 1** (core 1). See https://detekt.dev/docs/rules  
-  Top files: `BitmapDownloadRequestHandlerWithTimeLimit.kt` (1)
 
 ## Suggested order for the burn-down pass
 
