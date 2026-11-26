@@ -25,7 +25,7 @@ internal class ImpressionManager @JvmOverloads constructor(
     private val locale: Locale = Locale.getDefault(),
 ) {
 
-    private var sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
+    private val sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
     private var sessionImpressionsTotal = 0
 
     fun setSessionImpressions(sessionImpressions: MutableMap<String, MutableList<Long>>) {

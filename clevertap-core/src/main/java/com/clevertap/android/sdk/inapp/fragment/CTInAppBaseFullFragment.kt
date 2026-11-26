@@ -20,13 +20,11 @@ import androidx.annotation.RestrictTo
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
 
     fun addCloseImageView(relativeLayout: RelativeLayout, closeImageView: CloseImageView) {
-        relativeLayout.post(object : Runnable {
-            override fun run() {
-                val margin = closeImageView.measuredWidth / 2
-                closeImageView.x = (relativeLayout.right - margin).toFloat()
-                closeImageView.y = (relativeLayout.top - margin).toFloat()
-            }
-        })
+        relativeLayout.post {
+            val margin = closeImageView.measuredWidth / 2
+            closeImageView.x = (relativeLayout.right - margin).toFloat()
+            closeImageView.y = (relativeLayout.top - margin).toFloat()
+        }
     }
 
     /**

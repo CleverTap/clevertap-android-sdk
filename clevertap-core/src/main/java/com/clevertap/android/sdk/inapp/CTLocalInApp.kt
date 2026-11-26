@@ -25,7 +25,7 @@ public class CTLocalInApp private constructor() {
 
     public class Builder internal constructor() {
 
-        private var jsonObject = JSONObject()
+        private val jsonObject = JSONObject()
 
         public fun setInAppType(inAppType: InAppType): Builder1 =
             jsonObject.run {

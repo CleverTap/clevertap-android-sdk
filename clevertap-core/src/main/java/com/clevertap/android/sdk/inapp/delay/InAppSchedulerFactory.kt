@@ -65,7 +65,7 @@ internal object InAppSchedulerFactory {
             lifecycleOwner,
             "InAction"
         )
-        val storageStrategy = InActionStorageStrategy(logger, accountId)
+        val storageStrategy = InActionStorageStrategy()
         val dataExtractor = InActionDataExtractor()
 
         return InAppScheduler(

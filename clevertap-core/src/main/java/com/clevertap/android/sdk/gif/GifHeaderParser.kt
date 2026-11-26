@@ -75,9 +75,7 @@ internal class GifHeaderParser {
     }
 
     fun parseHeader(): GifHeader? {
-        if (rawData == null) {
-            throw IllegalStateException("You must call setData() before parseHeader()")
-        }
+        checkNotNull(rawData) { "You must call setData() before parseHeader()" }
         if (err()) {
             return header
         }

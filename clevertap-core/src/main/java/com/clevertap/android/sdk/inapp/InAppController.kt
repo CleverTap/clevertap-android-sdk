@@ -1437,9 +1437,7 @@ internal class InAppController(
             CTInAppTypeCoverImageOnly -> {
 
                 try {
-                    if (activity == null) {
-                        throw IllegalStateException("Current activity reference not found")
-                    }
+                    checkNotNull(activity) { "Current activity reference not found" }
                     logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
                     InAppNotificationActivity.launchForInAppNotification(
                         activity,
@@ -1489,9 +1487,7 @@ internal class InAppController(
 
             CTInAppTypePIP -> {
                 try {
-                    if (activity == null) {
-                        throw IllegalStateException("Current activity reference not found for PIP")
-                    }
+                    checkNotNull(activity) { "Current activity reference not found for PIP" }
                     val bridge = PIPInAppCallbacksBridge(inAppNotification, this, this, logger)
                     val pipConfig = PIPConfigFactory.create(inAppNotification, bridge, logger)
                     if (pipConfig == null) {

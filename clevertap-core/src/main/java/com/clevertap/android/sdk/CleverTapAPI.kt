@@ -1938,7 +1938,7 @@ public open class CleverTapAPI internal constructor(
             .putExtra("configBundle", Bundle().apply { putParcelable("config", config) })
         try {
             val currentActivity = CoreMetaData.getCurrentActivity()
-                ?: throw IllegalStateException("Current activity reference not found")
+                ?: error("Current activity reference not found")
             currentActivity.startActivity(intent)
             Logger.d("Displaying Notification Inbox")
         } catch (t: Throwable) {
@@ -1952,7 +1952,7 @@ public open class CleverTapAPI internal constructor(
     public open fun dismissAppInbox() {
         try {
             val appInboxActivity = coreState.coreMetaData.appInboxActivity
-                ?: throw IllegalStateException("AppInboxActivity reference not found")
+                ?: error("AppInboxActivity reference not found")
             if (!appInboxActivity.isFinishing) {
                 configLogger.verbose(accountId, "Finishing the App Inbox")
                 appInboxActivity.finish()
@@ -3181,7 +3181,7 @@ public open class CleverTapAPI internal constructor(
 
             for (instance in CleverTapInstanceStore.all()) {
                 try {
-                    instance.coreState.activityLifeCycleManager.activityResumed(activity)
+                    instance.coreState.activityLifeCycleManager.activityResumed()
                 } catch (t: Throwable) {
                     Logger.v("Throwable - ${t.localizedMessage}")
                 }
