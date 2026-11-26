@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.Constants
 /**
  * supported Display Unit Types
  */
-enum class CTDisplayUnitType(@JvmField val type: String) {
+public enum class CTDisplayUnitType(@JvmField public val type: String) {
 
     SIMPLE("simple"),
     SIMPLE_WITH_IMAGE("simple-image"),
@@ -17,7 +17,7 @@ enum class CTDisplayUnitType(@JvmField val type: String) {
 
     override fun toString(): String = type
 
-    companion object {
+    public companion object {
 
         /**
          * Returns the display type instance using the string value
@@ -26,7 +26,7 @@ enum class CTDisplayUnitType(@JvmField val type: String) {
          * @return CTDisplayUnitType
          */
         @JvmStatic
-        fun type(type: String): CTDisplayUnitType? {
+        public fun type(type: String): CTDisplayUnitType? {
             val displayUnitType = entries.firstOrNull { it.type == type }
             if (displayUnitType == null) {
                 Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")

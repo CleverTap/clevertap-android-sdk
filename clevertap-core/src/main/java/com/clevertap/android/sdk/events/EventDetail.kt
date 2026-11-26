@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.events
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-open class EventDetail(
+public open class EventDetail(
     count: Int,
     firstTime: Int,
     lastTime: Int,
@@ -16,27 +16,27 @@ open class EventDetail(
 
     private val nameValue: String? = name
 
-    open fun getCount(): Int = countValue
+    public open fun getCount(): Int = countValue
 
-    open fun getFirstTime(): Int = firstTimeValue
+    public open fun getFirstTime(): Int = firstTimeValue
 
-    open fun getLastTime(): Int = lastTimeValue
+    public open fun getLastTime(): Int = lastTimeValue
 
-    open fun getName(): String? = nameValue
+    public open fun getName(): String? = nameValue
 
     /** Kotlin property syntax, equivalent to [getCount]. */
-    val count: Int
+    public val count: Int
         @JvmSynthetic @JvmName("ktGetCount") inline get() = getCount()
 
     /** Kotlin property syntax, equivalent to [getFirstTime]. */
-    val firstTime: Int
+    public val firstTime: Int
         @JvmSynthetic @JvmName("ktGetFirstTime") inline get() = getFirstTime()
 
     /** Kotlin property syntax, equivalent to [getLastTime]. */
-    val lastTime: Int
+    public val lastTime: Int
         @JvmSynthetic @JvmName("ktGetLastTime") inline get() = getLastTime()
 
     /** Kotlin property syntax, equivalent to [getName]. */
-    val name: String?
+    public val name: String?
         @JvmSynthetic @JvmName("ktGetName") inline get() = getName()
 }

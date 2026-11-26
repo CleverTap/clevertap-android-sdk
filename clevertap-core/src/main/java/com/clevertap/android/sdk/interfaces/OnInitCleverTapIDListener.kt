@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.interfaces
 /**
  * Notifies about CleverTapID generation through callback
  */
-fun interface OnInitCleverTapIDListener {
+public fun interface OnInitCleverTapIDListener {
 
     /**
      * Callback to hand over generated cleverTapID to listener
@@ -13,5 +13,5 @@ fun interface OnInitCleverTapIDListener {
      * &#9888; Callback will be received on main thread, so avoid doing any lengthy operations from this
      * callback
      */
-    fun onInitCleverTapID(cleverTapID: String?)
+    public fun onInitCleverTapID(cleverTapID: String?)
 }

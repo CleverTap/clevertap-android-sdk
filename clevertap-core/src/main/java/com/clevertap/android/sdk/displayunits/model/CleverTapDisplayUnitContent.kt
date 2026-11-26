@@ -10,7 +10,7 @@ import org.json.JSONObject
 /**
  * Content class for holding Display Unit Content Data
  */
-open class CleverTapDisplayUnitContent private constructor(
+public open class CleverTapDisplayUnitContent private constructor(
     private val titleValue: String?,
     private val titleColorValue: String?,
     private val messageValue: String?,
@@ -56,10 +56,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getActionUrl(): String? = actionUrlValue
+    public open fun getActionUrl(): String? = actionUrlValue
 
     /** Kotlin property syntax, equivalent to [getActionUrl]. */
-    val actionUrl: String?
+    public val actionUrl: String?
         @JvmSynthetic @JvmName("ktGetActionUrl") inline get() = getActionUrl()
 
     /**
@@ -69,21 +69,21 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getContentType(): String? = contentTypeValue
+    public open fun getContentType(): String? = contentTypeValue
 
     internal fun setContentType(contentType: String?) {
         contentTypeValue = contentType
     }
 
     /** Kotlin property syntax, equivalent to [getContentType]. */
-    var contentType: String?
+    public var contentType: String?
         @JvmSynthetic @JvmName("ktGetContentType") inline get() = getContentType()
         @JvmSynthetic @JvmName("ktSetContentType") internal inline set(value) = setContentType(value)
 
-    open fun getError(): String? = errorValue
+    public open fun getError(): String? = errorValue
 
     /** Kotlin property syntax, equivalent to [getError]. */
-    val error: String?
+    public val error: String?
         @JvmSynthetic @JvmName("ktGetError") inline get() = getError()
 
     /**
@@ -91,10 +91,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getIcon(): String? = iconValue
+    public open fun getIcon(): String? = iconValue
 
     /** Kotlin property syntax, equivalent to [getIcon]. */
-    val icon: String?
+    public val icon: String?
         @JvmSynthetic @JvmName("ktGetIcon") inline get() = getIcon()
 
     /**
@@ -102,10 +102,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getMedia(): String? = mediaValue
+    public open fun getMedia(): String? = mediaValue
 
     /** Kotlin property syntax, equivalent to [getMedia]. */
-    val media: String?
+    public val media: String?
         @JvmSynthetic @JvmName("ktGetMedia") inline get() = getMedia()
 
     /**
@@ -114,10 +114,10 @@ open class CleverTapDisplayUnitContent private constructor(
      * @return attribution map, or `null`
      */
     // Defensive copy, same reason as CleverTapDisplayUnit#getMetaDataForContent(int).
-    open fun getMetaData(): HashMap<String, Any?>? = metaDataValue?.let { HashMap(it) }
+    public open fun getMetaData(): HashMap<String, Any?>? = metaDataValue?.let { HashMap(it) }
 
     /** Kotlin property syntax, equivalent to [getMetaData]. */
-    val metaData: HashMap<String, Any?>?
+    public val metaData: HashMap<String, Any?>?
         @JvmSynthetic @JvmName("ktGetMetaData") inline get() = getMetaData()
 
     /**
@@ -125,10 +125,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getMessage(): String? = messageValue
+    public open fun getMessage(): String? = messageValue
 
     /** Kotlin property syntax, equivalent to [getMessage]. */
-    val message: String?
+    public val message: String?
         @JvmSynthetic @JvmName("ktGetMessage") inline get() = getMessage()
 
     /**
@@ -136,10 +136,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getMessageColor(): String? = messageColorValue
+    public open fun getMessageColor(): String? = messageColorValue
 
     /** Kotlin property syntax, equivalent to [getMessageColor]. */
-    val messageColor: String?
+    public val messageColor: String?
         @JvmSynthetic @JvmName("ktGetMessageColor") inline get() = getMessageColor()
 
     /**
@@ -147,10 +147,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getPosterUrl(): String? = posterUrlValue
+    public open fun getPosterUrl(): String? = posterUrlValue
 
     /** Kotlin property syntax, equivalent to [getPosterUrl]. */
-    val posterUrl: String?
+    public val posterUrl: String?
         @JvmSynthetic @JvmName("ktGetPosterUrl") inline get() = getPosterUrl()
 
     /**
@@ -158,10 +158,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getTitle(): String? = titleValue
+    public open fun getTitle(): String? = titleValue
 
     /** Kotlin property syntax, equivalent to [getTitle]. */
-    val title: String?
+    public val title: String?
         @JvmSynthetic @JvmName("ktGetTitle") inline get() = getTitle()
 
     /**
@@ -169,10 +169,10 @@ open class CleverTapDisplayUnitContent private constructor(
      *
      * @return String
      */
-    open fun getTitleColor(): String? = titleColorValue
+    public open fun getTitleColor(): String? = titleColorValue
 
     /** Kotlin property syntax, equivalent to [getTitleColor]. */
-    val titleColor: String?
+    public val titleColor: String?
         @JvmSynthetic @JvmName("ktGetTitleColor") inline get() = getTitleColor()
 
     /**
@@ -181,7 +181,7 @@ open class CleverTapDisplayUnitContent private constructor(
      * @return boolean - | true, if the media type is audio
      * | false, if the media type is not an audio
      */
-    open fun mediaIsAudio(): Boolean = mediaContentType?.startsWith("audio") == true
+    public open fun mediaIsAudio(): Boolean = mediaContentType?.startsWith("audio") == true
 
     /**
      * Method to check whether media in the [CleverTapDisplayUnitContent] object is a GIF.
@@ -189,7 +189,7 @@ open class CleverTapDisplayUnitContent private constructor(
      * @return boolean - | true, if the media type is GIF
      * | false, if the media type is not a GIF
      */
-    open fun mediaIsGIF(): Boolean = mediaContentType == "image/gif"
+    public open fun mediaIsGIF(): Boolean = mediaContentType == "image/gif"
 
     /**
      * Method to check whether media in the [CleverTapDisplayUnitContent] object is an image.
@@ -197,7 +197,7 @@ open class CleverTapDisplayUnitContent private constructor(
      * @return boolean - | true, if the media type is image
      * | false, if the media type is not an image
      */
-    open fun mediaIsImage(): Boolean {
+    public open fun mediaIsImage(): Boolean {
         val contentType = mediaContentType
         return contentType != null && contentType.startsWith("image") && contentType != "image/gif"
     }
@@ -208,7 +208,7 @@ open class CleverTapDisplayUnitContent private constructor(
      * @return boolean - | true, if the media type is video
      * | false, if the media type is not a video
      */
-    open fun mediaIsVideo(): Boolean = mediaContentType?.startsWith("video") == true
+    public open fun mediaIsVideo(): Boolean = mediaContentType?.startsWith("video") == true
 
     /** The content type, or null when there is no media. */
     private val mediaContentType: String?
@@ -238,10 +238,10 @@ open class CleverTapDisplayUnitContent private constructor(
         dest.writeString(errorValue)
     }
 
-    companion object {
+    public companion object {
 
         @JvmField
-        val CREATOR: Parcelable.Creator<CleverTapDisplayUnitContent> =
+        public val CREATOR: Parcelable.Creator<CleverTapDisplayUnitContent> =
             object : Parcelable.Creator<CleverTapDisplayUnitContent> {
                 override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnitContent =
                     CleverTapDisplayUnitContent(parcel)

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventname
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.EventNameNormalizationResult
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
@@ -14,7 +15,8 @@ import com.clevertap.android.sdk.validation.pipeline.Normalizer
  * - Truncating to maximum length
  * - Trimming whitespace
  */
-class EventNameNormalizer : Normalizer<String?, EventNameNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventNameNormalizer : Normalizer<String?, EventNameNormalizationResult> {
 
     override fun normalize(input: String?, config: ValidationConfig): EventNameNormalizationResult {
         if (input == null) {

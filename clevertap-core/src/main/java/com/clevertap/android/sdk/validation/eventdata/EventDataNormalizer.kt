@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.EventDataMetrics
@@ -29,7 +30,8 @@ import kotlin.math.max
  * - Validating phone numbers
  * - Tracking structural metrics
  */
-class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
 
     // Metrics tracking
     private var maxDepth = 0

@@ -18,7 +18,7 @@ import java.util.concurrent.Callable
  * Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
  */
 @Deprecated("This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-open class CTFeatureFlagsController @Deprecated(
+public open class CTFeatureFlagsController @Deprecated(
     "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
 ) internal constructor(
     private var guidValue: String?,
@@ -40,12 +40,12 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getGuid(): String? = guidValue
+    public open fun getGuid(): String? = guidValue
 
     /** Kotlin property syntax, equivalent to [getGuid]. */
     @Suppress("DEPRECATION")
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    val guid: String?
+    public val guid: String?
         @JvmSynthetic @JvmName("ktGetGuid") inline get() = getGuid()
 
     // -----------------------------------------------------------------------//
@@ -59,7 +59,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun fetchFeatureFlags() {
+    public open fun fetchFeatureFlags() {
         val task = CTExecutorFactory.executors(config).mainTask<Void?>()
         task.execute("fetchFeatureFlags") {
             try {
@@ -81,7 +81,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun get(key: String?, defaultValue: Boolean): Boolean? {
+    public open fun get(key: String?, defaultValue: Boolean): Boolean? {
         if (!initialized) {
             logger.verbose(logTag, "Controller not initialized, returning default value - $defaultValue")
             return defaultValue
@@ -104,12 +104,12 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun isInitialized(): Boolean = initialized
+    public open fun isInitialized(): Boolean = initialized
 
     /** Kotlin property syntax, equivalent to [isInitialized]. */
     @Suppress("DEPRECATION")
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    val isInitialized: Boolean
+    public val isInitialized: Boolean
         @JvmSynthetic @JvmName("ktIsInitialized") inline get() = isInitialized()
 
     /**
@@ -119,7 +119,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun resetWithGuid(guid: String?) {
+    public open fun resetWithGuid(guid: String?) {
         guidValue = guid
         init()
     }
@@ -131,7 +131,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setGuidAndInit(cleverTapID: String?) {
+    public open fun setGuidAndInit(cleverTapID: String?) {
         if (initialized) {
             return
         }
@@ -148,7 +148,7 @@ open class CTFeatureFlagsController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     @Synchronized
     @Throws(JSONException::class)
-    open fun updateFeatureFlags(jsonObject: JSONObject) {
+    public open fun updateFeatureFlags(jsonObject: JSONObject) {
         val featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV)
         try {
             for (i in 0 until featureFlagList.length()) {

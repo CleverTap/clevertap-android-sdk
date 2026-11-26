@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -10,10 +11,11 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 
-open class BitmapInputStreamDecoder(
-    val saveBytes: Boolean = false,
-    val saveBitmap : Boolean = true,
-    val logger: Logger? = null
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public open class BitmapInputStreamDecoder(
+    public val saveBytes: Boolean = false,
+    public val saveBitmap : Boolean = true,
+    public val logger: Logger? = null
 ) : IBitmapInputStreamReader {
 
     override fun readInputStream(

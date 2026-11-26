@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.DropReason
 import com.clevertap.android.sdk.validation.ValidationConfig
@@ -22,7 +23,8 @@ import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
-class MultiValueDataValidationPipeline(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class MultiValueDataValidationPipeline(
     errorReporter: ValidationResultStack,
     logger: ILogger
 ) : EventDataValidationPipeline(errorReporter, logger) {

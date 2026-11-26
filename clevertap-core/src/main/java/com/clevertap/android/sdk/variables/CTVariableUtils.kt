@@ -13,23 +13,23 @@ import java.math.BigInteger
  * Static JVM shape is unchanged (companion + @JvmStatic / const val).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-class CTVariableUtils {
+public class CTVariableUtils {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-    companion object {
+    public companion object {
 
         private const val TAG = "CTVariableUtils"
-        const val VARS = "vars"
-        const val STRING = "string"
-        const val BOOLEAN = "boolean"
-        const val DICTIONARY = "group"
-        const val NUMBER = "number"
-        const val FILE = "file"
+        public const val VARS: String = "vars"
+        public const val STRING: String = "string"
+        public const val BOOLEAN: String = "boolean"
+        public const val DICTIONARY: String = "group"
+        public const val NUMBER: String = "number"
+        public const val FILE: String = "file"
 
         private fun log(msg: String) = Logger.d(TAG, msg)
 
         @JvmStatic
-        fun updateValuesAndKinds(
+        public fun updateValuesAndKinds(
             name: String?,
             nameComponents: Array<String>?,
             value: Any?,
@@ -84,7 +84,7 @@ class CTVariableUtils {
          * to support legacy parsing implementation
          */
         @JvmStatic
-        fun convertFlatMapToNestedMaps(map: Map<String, *>): MutableMap<String, Any?> {
+        public fun convertFlatMapToNestedMaps(map: Map<String, *>): MutableMap<String, Any?> {
             val result: MutableMap<String, Any?> = HashMap()
 
             for ((key, entryValue) in map) {
@@ -126,7 +126,7 @@ class CTVariableUtils {
          * @return Merge of both parameters with priority of diff over vars when overriding values.
          */
         @JvmStatic
-        fun mergeHelper(vars: Any?, diff: Any?): Any? {
+        public fun mergeHelper(vars: Any?, diff: Any?): Any? {
             if (diff == null) {
                 return vars
             }
@@ -171,7 +171,7 @@ class CTVariableUtils {
 
         // check test for more info
         @JvmStatic
-        fun traverse(collection: Any?, key: Any?, autoInsert: Boolean): Any? {
+        public fun traverse(collection: Any?, key: Any?, autoInsert: Boolean): Any? {
             if (collection == null) {
                 return null
             }
@@ -192,7 +192,7 @@ class CTVariableUtils {
          * Resolves the server type of variable by checking the generic type T of the default value.
          */
         @JvmStatic
-        fun <T> kindFromValue(defaultValue: T): String? {
+        public fun <T> kindFromValue(defaultValue: T): String? {
             return when (defaultValue) {
                 is Int, is Long, is Short, is Char, is Byte, is BigInteger -> NUMBER
                 is Float, is Double, is BigDecimal -> NUMBER
@@ -207,7 +207,7 @@ class CTVariableUtils {
          * converts a string of this format : "a.b.c" to  an array of strings, i.e ["a","b","c"]
          */
         @JvmStatic
-        fun getNameComponents(name: String?): Array<String> {
+        public fun getNameComponents(name: String?): Array<String> {
             return try {
                 // java.lang.String#split(regex): drops trailing empty strings, unlike Kotlin's split.
                 (name as java.lang.String).split("\\.")
@@ -254,7 +254,7 @@ class CTVariableUtils {
         }
 
         @JvmStatic
-        fun getFlatVarsJson(
+        public fun getFlatVarsJson(
             values: Map<String, *>,
             kinds: Map<String, *>
         ): JSONObject {
@@ -298,7 +298,7 @@ class CTVariableUtils {
         }
 
         @JvmStatic
-        fun deepCopyMap(originalMap: Map<*, *>): MutableMap<Any?, Any?> {
+        public fun deepCopyMap(originalMap: Map<*, *>): MutableMap<Any?, Any?> {
             val copiedMap: MutableMap<Any?, Any?> = HashMap()
             for ((key, value) in originalMap) {
                 copiedMap[key] = if (value is Map<*, *>) deepCopyMap(value) else value

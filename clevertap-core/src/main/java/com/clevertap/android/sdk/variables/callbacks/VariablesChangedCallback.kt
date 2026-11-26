@@ -5,10 +5,10 @@ package com.clevertap.android.sdk.variables.callbacks
  *
  * @author Ansh Sachdeva
  */
-abstract class VariablesChangedCallback : Runnable {
+public abstract class VariablesChangedCallback : Runnable {
     override fun run() {
         variablesChanged()
     }
 
-    abstract fun variablesChanged()
+    public abstract fun variablesChanged()
 }

@@ -252,7 +252,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
         )
     }
 
-    data class ValidationTestCase(
+    internal data class ValidationTestCase(
         val error: ValidationError,
         val expectedCode: Int,
         val values: Array<String>,

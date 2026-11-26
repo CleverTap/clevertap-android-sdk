@@ -8,12 +8,12 @@ import androidx.annotation.RestrictTo
  * @param T Type of notification message
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun interface INotificationParser<T : Any> {
+public fun interface INotificationParser<T : Any> {
 
     /**
      * Parses notification message to Bundle
      * @param message notification message received from cloud messaging provider like firebase.
      * @return [Bundle] object
      */
-    fun toBundle(message: T): Bundle?
+    public fun toBundle(message: T): Bundle?
 }

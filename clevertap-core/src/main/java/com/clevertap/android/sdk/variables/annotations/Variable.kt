@@ -18,7 +18,7 @@ package com.clevertap.android.sdk.variables.annotations
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Variable(
+public annotation class Variable(
     val group: String = "",
     val name: String = ""
 )

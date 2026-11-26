@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.db.dao
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 
-interface InboxMessageDAO {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface InboxMessageDAO {
     @WorkerThread
     fun getMessages(userId: String): ArrayList<CTMessageDAO>
     

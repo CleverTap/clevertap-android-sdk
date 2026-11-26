@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -7,7 +8,8 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_IMAGE
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 
-class NotificationBitmapDownloadRequestHandler(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class NotificationBitmapDownloadRequestHandler(
     private val iBitmapDownloadRequestHandler: IBitmapDownloadRequestHandler
 ) : IBitmapDownloadRequestHandler {
 

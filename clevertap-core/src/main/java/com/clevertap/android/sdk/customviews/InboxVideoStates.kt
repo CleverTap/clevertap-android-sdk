@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 
 /** Where each video of an inbox screen was left. The lists of all its tabs share one instance. */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-class InboxVideoStates {
+internal class InboxVideoStates {
 
     /** Where a video was left, for the media it was playing. */
     internal class VideoState(val mediaUrl: String, val positionMs: Long, val volume: Float)
