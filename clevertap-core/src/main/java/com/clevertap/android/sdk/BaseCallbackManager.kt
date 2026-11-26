@@ -23,7 +23,7 @@ abstract class BaseCallbackManager {
 
     abstract fun _notifyInboxMessagesDidUpdate()
 
-    abstract var failureFlushListener: FailureFlushListener?
+    internal abstract var failureFlushListener: FailureFlushListener?
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
@@ -33,7 +33,7 @@ abstract class BaseCallbackManager {
 
     abstract var geofenceCallback: GeofenceCallback?
 
-    abstract var scDomainListener: SCDomainListener?
+    internal abstract var scDomainListener: SCDomainListener?
 
     abstract var inAppNotificationButtonListener: InAppNotificationButtonListener?
 
@@ -78,11 +78,11 @@ abstract class BaseCallbackManager {
 
     abstract var fetchInAppsCallback: FetchInAppsCallback?
 
-    abstract var batchListener: BatchListener?
+    internal abstract var batchListener: BatchListener?
 
-    abstract val changeUserCallbackList: MutableList<ChangeUserCallback?>
+    internal abstract val changeUserCallbackList: MutableList<ChangeUserCallback?>
 
-    abstract fun addChangeUserCallback(callback: ChangeUserCallback?)
+    internal abstract fun addChangeUserCallback(callback: ChangeUserCallback?)
 
-    abstract fun removeChangeUserCallback(callback: ChangeUserCallback?)
+    internal abstract fun removeChangeUserCallback(callback: ChangeUserCallback?)
 }

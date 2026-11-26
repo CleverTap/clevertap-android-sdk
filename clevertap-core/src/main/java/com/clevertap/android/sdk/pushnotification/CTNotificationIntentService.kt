@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
+import androidx.annotation.RestrictTo
 
 /**
  * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
@@ -28,6 +29,7 @@ import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
  */
 @Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
 @Suppress("DEPRECATION")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
 
     @Deprecated("Deprecated in Java")

@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.pushnotification.fcm
 
 import android.os.Bundle
+import androidx.annotation.RestrictTo
 
-interface INotificationBundleManipulation<T> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface INotificationBundleManipulation<T> {
 
     fun addPriority(message: T): INotificationBundleManipulation<T>
 

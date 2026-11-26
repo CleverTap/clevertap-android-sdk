@@ -12,8 +12,10 @@ import androidx.work.OneTimeWorkRequest
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Utils
+import androidx.annotation.RestrictTo
 
-class CTWorkManager(private val context: Context, config: CleverTapInstanceConfig) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CTWorkManager(private val context: Context, config: CleverTapInstanceConfig) {
 
     private val accountId: String = config.accountId
     private val logger: Logger = config.logger

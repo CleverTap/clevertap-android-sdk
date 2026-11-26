@@ -43,9 +43,9 @@ import java.lang.ref.WeakReference
  * Stays public (with [RestrictTo]): [CTInboxActivity], which [com.clevertap.android.sdk.CleverTapAPI]
  * reaches through its listener, implements the nested [InboxListener].
  */
-@RestrictTo(Scope.LIBRARY)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OptIn(markerClass = [UnstableApi::class])
-open class CTInboxListViewFragment : Fragment() {
+internal open class CTInboxListViewFragment : Fragment() {
 
     @RestrictTo(Scope.LIBRARY)
     interface InboxListener {

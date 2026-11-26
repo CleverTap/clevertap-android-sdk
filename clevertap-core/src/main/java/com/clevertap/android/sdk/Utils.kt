@@ -356,7 +356,7 @@ object Utils {
      */
     @JvmStatic
     @RequiresApi(26)
-    fun getNotificationGifURI(
+    internal fun getNotificationGifURI(
         url: String?,
         context: Context,
         config: CleverTapInstanceConfig,
@@ -382,7 +382,7 @@ object Utils {
      * @param config The CleverTap instance configuration containing logger and account information
      */
     @JvmStatic
-    fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock) {
+    internal fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock) {
         val cacheDir: File? = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE)
         try {
             if (cacheDir == null || !cacheDir.exists()) {

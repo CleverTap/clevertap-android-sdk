@@ -483,7 +483,7 @@ open class LocalDataStore internal constructor(
     private fun storageKeyWithSuffix(key: String?): String = "$key:${config.accountId}"
 
     @WorkerThread
-    fun processProfileTree(
+    internal fun processProfileTree(
         dotNotationKey: String,
         value: Any?,
         operation: ProfileOperation
@@ -494,7 +494,7 @@ open class LocalDataStore internal constructor(
     }
 
     @WorkerThread
-    fun processProfileTree(
+    internal fun processProfileTree(
         newJson: JSONObject,
         operation: ProfileOperation
     ): Map<String, ProfileChange> = synchronized(profileFields) {

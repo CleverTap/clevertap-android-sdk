@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.Constants
 
 /** Rendering mode chosen for a Live Update push. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-enum class LiveUpdateMode {
+internal enum class LiveUpdateMode {
     /** SDK renders it (Core or Push Template) — chosen when the payload carries a `pt_id`. */
     SDK_RENDER,
 
@@ -20,7 +20,7 @@ enum class LiveUpdateMode {
  * notification id are unit-testable without any Android I/O (no DB, NotificationManager, etc.).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveUpdateRouter {
+internal object LiveUpdateRouter {
 
     /** True when the push is a Live Update: `wzrk_la` is "true" (case-insensitive). */
     @JvmStatic

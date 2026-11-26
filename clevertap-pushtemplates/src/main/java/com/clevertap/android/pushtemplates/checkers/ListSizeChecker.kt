@@ -1,8 +1,10 @@
 package com.clevertap.android.pushtemplates.checkers
 
 import com.clevertap.android.pushtemplates.PTLog
+import androidx.annotation.RestrictTo
 
-class ListSizeChecker(val entity: List<Any>?, var size: Int, var errorMsg: String) :
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class ListSizeChecker(val entity: List<Any>?, var size: Int, var errorMsg: String) :
     SizeChecker<List<Any>>(entity, size, errorMsg) {
 
     override fun check(): Boolean {

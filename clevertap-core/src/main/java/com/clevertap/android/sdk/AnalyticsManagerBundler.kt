@@ -3,8 +3,10 @@ package com.clevertap.android.sdk
 import android.os.Bundle
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
-object AnalyticsManagerBundler {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object AnalyticsManagerBundler {
 
     @Throws(JSONException::class)
     @JvmStatic

@@ -61,7 +61,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
-class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+class TemplateRenderer @JvmOverloads constructor(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }

@@ -19,7 +19,7 @@ import org.json.JSONObject
  * - Null/empty/malformed input yields an empty map (never throws).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveUpdatePayloadSurfacer {
+internal object LiveUpdatePayloadSurfacer {
 
     @JvmStatic
     fun flatten(dataJson: String?, existingKeys: Set<String>): Map<String, String> {

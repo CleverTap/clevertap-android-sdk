@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 interface ILogger {
     fun debug(message: String?)
 

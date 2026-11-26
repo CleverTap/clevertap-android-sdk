@@ -380,7 +380,7 @@ open class DeviceInfo internal constructor(
         get() = if (customLocale.isNullOrEmpty()) deviceLocale else customLocale
 
     /** Returns the pending device validation results and clears them. */
-    fun drainValidationResults(): List<ValidationResult> {
+    internal fun drainValidationResults(): List<ValidationResult> {
         val pending = ArrayList(validationResults)
         validationResults.clear()
         return pending
