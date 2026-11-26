@@ -15,7 +15,7 @@ import androidx.core.util.lruCache
  * @param memoryCache An optional implementation of [CacheMethods] for customizing the caching behavior.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class InMemoryLruCache<T : Any>(
+internal class InMemoryLruCache<T : Any>(
     private val maxSize: Int,
     private val memoryCache: CacheMethods<T> = object : CacheMethods<T> {
 
@@ -36,8 +36,8 @@ public class InMemoryLruCache<T : Any>(
     }
 ) {
 
-    public companion object {
-        public const val TYPE_LRU: String = "TYPE_LRU"
+    companion object {
+        const val TYPE_LRU: String = "TYPE_LRU"
     }
 
     /**
@@ -50,7 +50,7 @@ public class InMemoryLruCache<T : Any>(
      * @param value The object to be cached.
      * @return `true` if the object was successfully added, `false` otherwise.
      */
-    public fun add(key: String, value: T) : Boolean {
+    fun add(key: String, value: T) : Boolean {
         if (value.sizeInKb() > maxSize) {
             remove(key = key)
             return false
@@ -65,7 +65,7 @@ public class InMemoryLruCache<T : Any>(
      * @param key The unique key associated with the object.
      * @return The cached object if found, `null` otherwise.
      */
-    public fun get(key: String): T? {
+    fun get(key: String): T? {
         return memoryCache.get(key)
     }
 
@@ -75,14 +75,14 @@ public class InMemoryLruCache<T : Any>(
      * @param key The unique key associated with the object.
      * @return The removed object if found, `null` otherwise.
      */
-    public fun remove(key: String): T? {
+    fun remove(key: String): T? {
         return memoryCache.remove(key)
     }
 
     /**
      * Clears the entire cache, removing all cached objects.
      */
-    public fun empty() {
+    fun empty() {
         memoryCache.empty()
     }
 
@@ -91,7 +91,7 @@ public class InMemoryLruCache<T : Any>(
      *
      * @return `true` if the cache is empty, `false` otherwise.
      */
-    public fun isEmpty(): Boolean = memoryCache.isEmpty()
+    fun isEmpty(): Boolean = memoryCache.isEmpty()
 }
 
 /**
@@ -143,7 +143,7 @@ internal object LruCacheProvider {
  * @param <T> The type of objects stored in the cache.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface CacheMethods<T> {
+internal interface CacheMethods<T> {
     /**
      * Adds an object to the cache.
      *
@@ -151,29 +151,29 @@ public interface CacheMethods<T> {
      * @param value The object to be cached.
      * @return `true` if the object was successfully added, `false` otherwise.
      */
-    public fun add(key: String, value: T) : Boolean
+    fun add(key: String, value: T) : Boolean
     /**
      * Retrieves an object from the cache.
      *
      * @param key The unique key associated with the object.
      * @return The cached object if found, `null` otherwise.
      */
-    public fun get(key: String): T?
+    fun get(key: String): T?
     /**
      * Removes an object from the cache.
      *
      * @param key The unique key associated with the object.
      * @return The removed object if found, `null` otherwise.
      */
-    public fun remove(key: String): T?
+    fun remove(key: String): T?
     /**
      * Clears the entire cache, removing all cached objects.
      */
-    public fun empty()
+    fun empty()
     /**
      * Checks if the cache is empty.
      *
      * @return `true` if the cache is empty, `false` otherwise.
      */
-    public fun isEmpty(): Boolean
+    fun isEmpty(): Boolean
 }
