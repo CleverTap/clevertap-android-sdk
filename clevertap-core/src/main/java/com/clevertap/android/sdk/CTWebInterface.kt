@@ -6,42 +6,29 @@ import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.inapp.CTInAppAction
 import com.clevertap.android.sdk.inapp.InAppWebInteraction
 import java.lang.ref.WeakReference
-import java.util.ArrayList
-import java.util.HashMap
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
 /**
  * This class helps WebViews to interact with CleverTapAPI via pre-defined methods
+ *
+ * @constructor Internal constructor used by the SDK's own in-app WebViews. Kotlin `internal` (not
+ * mangled, still JVM-public) because [InAppWebInteraction] is an internal type; it was
+ * `@RestrictTo(LIBRARY_GROUP)` in Java.
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class CTWebInterface {
+open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+    instance: CleverTapAPI?,
+    host: InAppWebInteraction?
+) {
 
-    private var cleverTapWr: WeakReference<CleverTapAPI> = WeakReference(null)
+    private val cleverTapWr: WeakReference<CleverTapAPI> = WeakReference(instance)
 
-    private var hostWr: WeakReference<InAppWebInteraction> = WeakReference(null)
+    private val hostWr: WeakReference<InAppWebInteraction> = WeakReference(host)
 
-    constructor(instance: CleverTapAPI?) {
-        this.cleverTapWr = WeakReference(instance)
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI != null) {
-            val coreState: CoreState? = cleverTapAPI.coreState
-            if (coreState != null) {
-                coreState.coreMetaData.isWebInterfaceInitializedExternally = true
-            }
-        }
-    }
-
-    /**
-     * Internal constructor used by the SDK's own in-app WebViews. Kotlin `internal` (not mangled,
-     * still JVM-public) because [InAppWebInteraction] is an internal type; it was
-     * `@RestrictTo(LIBRARY_GROUP)` in Java.
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    internal constructor(instance: CleverTapAPI?, host: InAppWebInteraction?) {
-        this.cleverTapWr = WeakReference(instance)
-        this.hostWr = WeakReference(host)
+    constructor(instance: CleverTapAPI?) : this(instance, null) {
+        instance?.let { it.coreState.coreMetaData.isWebInterfaceInitializedExternally = true }
     }
 
     /**
@@ -50,10 +37,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun promptPushPermission(shouldShowFallbackSettings: Boolean) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
+        withCleverTap { cleverTapAPI ->
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             dismissInAppNotification()
             cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings)
@@ -65,15 +49,9 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun dismissInAppNotification() {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
+        withCleverTap {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            val host = hostWr.get()
-            if (host != null) {
-                host.didDismiss(null)
-            }
+            hostWr.get()?.didDismiss(null)
         }
     }
 
@@ -85,12 +63,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun addMultiValueForKey(key: String?, value: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            cleverTapAPI.addMultiValueForKey(key, value)
-        }
+        withCleverTap { it.addMultiValueForKey(key, value) }
     }
 
     /**
@@ -102,12 +75,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun incrementValue(key: String?, value: Double) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            cleverTapAPI.incrementValue(key, value)
-        }
+        withCleverTap { it.incrementValue(key, value) }
     }
 
     /**
@@ -119,12 +87,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun decrementValue(key: String?, value: Double) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            cleverTapAPI.decrementValue(key, value)
-        }
+        withCleverTap { it.decrementValue(key, value) }
     }
 
     /**
@@ -135,23 +98,9 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun addMultiValuesForKey(key: String?, values: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null")
-                return
-            }
-            if (values != null) {
-                try {
-                    val valuesArray = JSONArray(values)
-                    cleverTapAPI.addMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse values from WebView " + e.localizedMessage)
-                }
-            } else {
-                Logger.v("values passed to CTWebInterface is null")
+        withCleverTap { cleverTapAPI ->
+            withMultiValues(key, values) { validKey, valueList ->
+                cleverTapAPI.addMultiValuesForKey(validKey, valueList)
             }
         }
     }
@@ -168,35 +117,25 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun pushChargedEvent(chargeDetails: String?, items: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            var chargeDetailsHashMap: HashMap<String, Any> = HashMap()
-            if (chargeDetails != null) {
-                try {
-                    val chargeDetailsObject = JSONObject(chargeDetails)
-                    chargeDetailsHashMap = Utils.convertJSONObjectToHashMap(chargeDetailsObject)
-                } catch (e: JSONException) {
-                    Logger.v(
-                        "Unable to parse chargeDetails for Charged Event from WebView " + e
-                            .localizedMessage
-                    )
-                }
-            } else {
+        withCleverTap { cleverTapAPI ->
+            if (chargeDetails == null) {
                 Logger.v("chargeDetails passed to CTWebInterface is null")
                 return
             }
-            var itemsArrayList: ArrayList<HashMap<String, Any>>? = null
-            if (items != null) {
-                try {
-                    val itemsArray = JSONArray(items)
-                    itemsArrayList = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(itemsArray)
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse items for Charged Event from WebView " + e.localizedMessage)
-                }
-            } else {
+            val chargeDetailsHashMap: HashMap<String, Any> = try {
+                Utils.convertJSONObjectToHashMap(JSONObject(chargeDetails))
+            } catch (e: JSONException) {
+                Logger.v("Unable to parse chargeDetails for Charged Event from WebView ${e.localizedMessage}")
+                HashMap()
+            }
+            if (items == null) {
                 return
+            }
+            val itemsArrayList: ArrayList<HashMap<String, Any>>? = try {
+                Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(JSONArray(items))
+            } catch (e: JSONException) {
+                Logger.v("Unable to parse items for Charged Event from WebView ${e.localizedMessage}")
+                null
             }
             cleverTapAPI.pushChargedEvent(chargeDetailsHashMap, itemsArrayList)
         }
@@ -209,12 +148,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun pushEvent(eventName: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            cleverTapAPI.pushEvent(eventName)
-        }
+        withCleverTap { it.pushEvent(eventName) }
     }
 
     /**
@@ -225,19 +159,15 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun pushEvent(eventName: String?, eventActions: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (eventActions != null) {
-                try {
-                    val eventActionsObject = JSONObject(eventActions)
-                    cleverTapAPI.pushEvent(eventName, Utils.convertJSONObjectToHashMap(eventActionsObject))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse eventActions from WebView " + e.localizedMessage)
-                }
-            } else {
+        withCleverTap { cleverTapAPI ->
+            if (eventActions == null) {
                 Logger.v("eventActions passed to CTWebInterface is null")
+                return
+            }
+            try {
+                cleverTapAPI.pushEvent(eventName, Utils.convertJSONObjectToHashMap(JSONObject(eventActions)))
+            } catch (e: JSONException) {
+                Logger.v("Unable to parse eventActions from WebView ${e.localizedMessage}")
             }
         }
     }
@@ -249,20 +179,8 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun pushProfile(profile: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (profile != null) {
-                try {
-                    val profileObject = JSONObject(profile)
-                    cleverTapAPI.pushProfile(Utils.convertJSONObjectToHashMap(profileObject))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse profile from WebView " + e.localizedMessage)
-                }
-            } else {
-                Logger.v("profile passed to CTWebInterface is null")
-            }
+        withCleverTap { cleverTapAPI ->
+            withProfile(profile) { cleverTapAPI.pushProfile(it) }
         }
     }
 
@@ -274,10 +192,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun removeMultiValueForKey(key: String?, value: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
+        withCleverTap { cleverTapAPI ->
             if (key == null) {
                 Logger.v("Key passed to CTWebInterface is null")
                 return
@@ -298,23 +213,9 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun removeMultiValuesForKey(key: String?, values: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null")
-                return
-            }
-            if (values != null) {
-                try {
-                    val valuesArray = JSONArray(values)
-                    cleverTapAPI.removeMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse values from WebView " + e.localizedMessage)
-                }
-            } else {
-                Logger.v("values passed to CTWebInterface is null")
+        withCleverTap { cleverTapAPI ->
+            withMultiValues(key, values) { validKey, valueList ->
+                cleverTapAPI.removeMultiValuesForKey(validKey, valueList)
             }
         }
     }
@@ -326,10 +227,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun removeValueForKey(key: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
+        withCleverTap { cleverTapAPI ->
             if (key == null) {
                 Logger.v("Key passed to CTWebInterface is null")
                 return
@@ -346,23 +244,9 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun setMultiValueForKey(key: String?, values: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null")
-                return
-            }
-            if (values != null) {
-                try {
-                    val valuesArray = JSONArray(values)
-                    cleverTapAPI.setMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse values from WebView " + e.localizedMessage)
-                }
-            } else {
-                Logger.v("values passed to CTWebInterface is null")
+        withCleverTap { cleverTapAPI ->
+            withMultiValues(key, values) { validKey, valueList ->
+                cleverTapAPI.setMultiValuesForKey(validKey, valueList)
             }
         }
     }
@@ -375,20 +259,8 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun onUserLogin(profile: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.")
-        } else {
-            if (profile != null) {
-                try {
-                    val profileObject = JSONObject(profile)
-                    cleverTapAPI.onUserLogin(Utils.convertJSONObjectToHashMap(profileObject))
-                } catch (e: JSONException) {
-                    Logger.v("Unable to parse profile from WebView " + e.localizedMessage)
-                }
-            } else {
-                Logger.v("profile passed to CTWebInterface is null")
-            }
+        withCleverTap { cleverTapAPI ->
+            withProfile(profile) { cleverTapAPI.onUserLogin(it) }
         }
     }
 
@@ -403,8 +275,7 @@ open class CTWebInterface {
      */
     @JavascriptInterface
     open fun triggerInAppAction(actionJson: String?, callToAction: String?, buttonId: String?) {
-        val cleverTapAPI = cleverTapWr.get()
-        if (cleverTapAPI == null) {
+        if (cleverTapWr.get() == null) {
             Logger.d("CTWebInterface CleverTap Instance is null.")
             return
         }
@@ -429,9 +300,7 @@ open class CTWebInterface {
 
             val actionData = Bundle()
             // Element identity flows only through wzrk_element_id; button_id is no longer emitted.
-            if (buttonId != null) {
-                actionData.putString(Constants.KEY_WZRK_ELEMENT_ID, buttonId)
-            }
+            buttonId?.let { actionData.putString(Constants.KEY_WZRK_ELEMENT_ID, it) }
 
             host.triggerAction(action, callToAction, actionData)
         } catch (je: JSONException) {
@@ -448,4 +317,51 @@ open class CTWebInterface {
     /** Kotlin property syntax, equivalent to [getSdkVersion]. */
     val sdkVersion: Int
         @JvmSynthetic @JvmName("ktGetSdkVersion") inline get() = getSdkVersion()
+
+    /** Runs [action] with the CleverTap instance, or logs that it is gone. */
+    private inline fun withCleverTap(action: (CleverTapAPI) -> Unit) {
+        val cleverTapAPI = cleverTapWr.get()
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.")
+        } else {
+            action(cleverTapAPI)
+        }
+    }
+
+    /**
+     * Validates a JS multi-value call (non-null key, stringified [JSONArray] of values) and passes the
+     * parsed values on, logging what was wrong otherwise.
+     */
+    private inline fun withMultiValues(
+        key: String?,
+        values: String?,
+        action: (key: String, values: ArrayList<String>) -> Unit
+    ) {
+        if (key == null) {
+            Logger.v("Key passed to CTWebInterface is null")
+            return
+        }
+        if (values == null) {
+            Logger.v("values passed to CTWebInterface is null")
+            return
+        }
+        try {
+            action(key, Utils.convertJSONArrayToArrayList(JSONArray(values)))
+        } catch (e: JSONException) {
+            Logger.v("Unable to parse values from WebView ${e.localizedMessage}")
+        }
+    }
+
+    /** Parses a stringified profile [JSONObject] and passes it on, logging what was wrong otherwise. */
+    private inline fun withProfile(profile: String?, action: (HashMap<String, Any>) -> Unit) {
+        if (profile == null) {
+            Logger.v("profile passed to CTWebInterface is null")
+            return
+        }
+        try {
+            action(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+        } catch (e: JSONException) {
+            Logger.v("Unable to parse profile from WebView ${e.localizedMessage}")
+        }
+    }
 }
