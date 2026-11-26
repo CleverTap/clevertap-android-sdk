@@ -94,7 +94,7 @@ internal class AESCrypt(accountID: String) : Crypt() {
         return try {
             val salt = Constants.CRYPTION_SALT.toByteArray(StandardCharsets.UTF_8)
             val iv = Constants.CRYPTION_IV.toByteArray(StandardCharsets.UTF_8)
-            val keySpec: KeySpec = PBEKeySpec(password.toCharArray(), salt, 1000, 256)
+            val keySpec: KeySpec = PBEKeySpec(password.toCharArray(), salt, PBE_ITERATION_COUNT, PBE_KEY_LENGTH_BITS)
             val keyFactory = SecretKeyFactory.getInstance("PBEWithMD5And128BitAES-CBC-OpenSSL")
             val keyBytes = keyFactory.generateSecret(keySpec).encoded
             val key: SecretKey = SecretKeySpec(keyBytes, "AES")
@@ -109,6 +109,9 @@ internal class AESCrypt(accountID: String) : Crypt() {
     }
 
     companion object {
+        private const val PBE_ITERATION_COUNT = 1000
+        private const val PBE_KEY_LENGTH_BITS = 256
+
         // Build prefix and suffix strings longhand, to obfuscate them slightly.
         // Probably doesn't matter.
         private val APP_ID_KEY_PREFIX = StringBuilder()

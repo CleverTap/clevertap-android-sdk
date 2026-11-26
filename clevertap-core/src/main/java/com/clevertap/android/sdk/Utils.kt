@@ -58,6 +58,13 @@ import org.json.JSONObject
 public object Utils {
     private const val TAG = "Utils"
 
+    private const val MAX_CUSTOM_CLEVERTAP_ID_LENGTH = 64
+
+    /** Earth radius used by the backend for geofence distances (see [haversineDistance]). */
+    private const val EARTH_RADIUS_KM = 6378.2
+
+    private const val RADIANS_PER_DEGREE = PI / 180
+
     private val normalizedNameExcludePattern: Pattern = Pattern.compile("\\s+")
 
     @JvmStatic
@@ -534,7 +541,8 @@ public object Utils {
             cleverTapID.isEmpty() ->
                 "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."
 
-            cleverTapID.length > 64 -> "Custom CleverTap ID passed is greater than 64 characters. "
+            cleverTapID.length > MAX_CUSTOM_CLEVERTAP_ID_LENGTH ->
+                "Custom CleverTap ID passed is greater than 64 characters. "
 
             !cleverTapID.matches(Regex("[=|<>;+.A-Za-z0-9()!:$@_-]*")) ->
                 "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - "
@@ -652,9 +660,9 @@ public object Utils {
         // A globally-average value is usually considered to be 6371 km (6371e3).
         // This method uses 6378.2 km as the radius since this is the value
         // used by the backend, and calculations should produce the same result.
-        val earthDiameter = 2 * 6378.2
+        val earthDiameter = 2 * EARTH_RADIUS_KM
 
-        val radConvert = PI / 180
+        val radConvert = RADIANS_PER_DEGREE
         val phi1 = coordinateA.latitude * radConvert
         val phi2 = coordinateB.latitude * radConvert
 

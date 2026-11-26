@@ -16,6 +16,12 @@ import java.util.regex.Pattern
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** Read-default that no stored value uses: tells "not stored under the suffixed key" apart. */
+private const val MISSING_INT_SENTINEL = -1000
+
+/** Per-session cap applied when the in-app does not set one. */
+private const val DEFAULT_MAX_PER_SESSION = 1000
+
 @RestrictTo(Scope.LIBRARY)
 internal open class InAppFCManager(
     private val context: Context,
@@ -190,7 +196,7 @@ internal open class InAppFCManager(
         if (!config.isDefaultInstance) {
             return StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), defaultValue)
         }
-        val dummy = -1000
+        val dummy = MISSING_INT_SENTINEL
         val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
         return if (stored != dummy) { stored } else { StorageHelper.getInt(context, rawKey, defaultValue) }
     }
@@ -243,7 +249,7 @@ internal open class InAppFCManager(
 
         // 2. Has the session max count for this inapp been breached?
         try {
-            val maxPerSession = if (inapp.maxPerSession >= 0) { inapp.maxPerSession } else { 1000 }
+            val maxPerSession = if (inapp.maxPerSession >= 0) { inapp.maxPerSession } else { DEFAULT_MAX_PER_SESSION }
             if (impressionManager.perSession(id) >= maxPerSession) {
                 return true
             }

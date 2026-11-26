@@ -16,10 +16,10 @@ internal open class ValidationResultStack {
         synchronized(pendingValidationResultsLock) {
             try {
                 val pending = pendingValidationResults
-                if (pending.size > 50) {
+                if (pending.size > MAX_PENDING_RESULTS) {
                     // Trim down the list to 40, so that this trim needn't run for the next 10 events
                     // Hence, skip the first 10 elements
-                    pendingValidationResults = ArrayList(pending.subList(10, pending.size))
+                    pendingValidationResults = ArrayList(pending.subList(TRIM_COUNT, pending.size))
                 }
                 pendingValidationResults.add(vr)
             } catch (e: Exception) {
@@ -39,15 +39,15 @@ internal open class ValidationResultStack {
                 val currentSize = pending.size
                 val newSize = currentSize + vrList.size
 
-                if (newSize <= 50) {
+                if (newSize <= MAX_PENDING_RESULTS) {
                     pending.addAll(vrList)
                     return
                 }
                 // Keep the newest 40 results: skip the oldest ones from the existing list first
-                val skipCount = newSize - 40
+                val skipCount = newSize - RESULTS_KEPT_AFTER_TRIM
                 pendingValidationResults = if (skipCount >= currentSize) {
                     // Everything existing is dropped; take only the last 40 items from the new list
-                    ArrayList(vrList.takeLast(40))
+                    ArrayList(vrList.takeLast(RESULTS_KEPT_AFTER_TRIM))
                 } else {
                     // Keep some from existing, add all new ones
                     ArrayList(pending.subList(skipCount, currentSize)).apply { addAll(vrList) }
@@ -68,6 +68,10 @@ internal open class ValidationResultStack {
     }
 
     private companion object {
+        private const val MAX_PENDING_RESULTS = 50
+        private const val RESULTS_KEPT_AFTER_TRIM = 40
+        private const val TRIM_COUNT = MAX_PENDING_RESULTS - RESULTS_KEPT_AFTER_TRIM
+
         private val pendingValidationResultsLock = Any()
     }
 }

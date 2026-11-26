@@ -35,6 +35,7 @@ import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
+import java.net.HttpURLConnection
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -60,6 +61,15 @@ internal class NetworkManager constructor(
 
     companion object {
         private const val BATCH_SIZE = 50
+
+        /** Consecutive failed requests after which a handshake is forced. */
+        private const val MAX_FAILURES_BEFORE_HANDSHAKE = 5
+
+        /** Backend could not decrypt the request: fall back to unencrypted requests. */
+        private const val HTTP_DECRYPTION_FAILED = 419
+
+        /** Encryption in transit is not enabled for the account. */
+        private const val HTTP_ENCRYPTION_NOT_ENABLED = 402
     }
 
     private var responseFailureCount = 0
@@ -183,7 +193,7 @@ internal class NetworkManager constructor(
         val needsHandshake = ctApiWrapper.needsHandshake(
             eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED
         )
-        val needHandshakeDueToFailure = responseFailureCount > 5
+        val needHandshakeDueToFailure = responseFailureCount > MAX_FAILURES_BEFORE_HANDSHAKE
 
         if (needHandshakeDueToFailure) {
             setDomain(null)
@@ -529,7 +539,7 @@ internal class NetworkManager constructor(
 
     private fun handleVarsOrTemplatesResponseError(response: Response, logTag: String) {
         when (response.code) {
-            400 -> {
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
                 val errorStreamJson = response.readBody().toJsonOrNull()
                 if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
                     val errorMessage = errorStreamJson.optString("error")
@@ -540,7 +550,7 @@ internal class NetworkManager constructor(
                 return
             }
 
-            401 -> {
+            HttpURLConnection.HTTP_UNAUTHORIZED -> {
                 logger.info(
                     logTag, "Unauthorized access from a non-test profile. "
                             + "Please mark this profile as a test profile from the CleverTap dashboard."
@@ -661,7 +671,7 @@ internal class NetworkManager constructor(
     private fun handleSendQueueResponseError(response: Response) {
         logger.info(config.accountId, "Received error response code: " + response.code)
         when (response.code) {
-            419 -> {
+            HTTP_DECRYPTION_FAILED -> {
                 logger.verbose(
                     config.accountId,
                     "There is decryption failure on backend, disabling encrypted requests."
@@ -669,7 +679,7 @@ internal class NetworkManager constructor(
                 coreMetaData.isRelaxNetwork = true
             }
 
-            402 -> {
+            HTTP_ENCRYPTION_NOT_ENABLED -> {
                 logger.verbose(
                     config.accountId,
                     "Encryption in transit feature on not enabled for your account, please contact Clevertap support."

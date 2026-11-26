@@ -11,6 +11,9 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 
+/** 16 KiB read buffer for the image stream. */
+private const val STREAM_BUFFER_SIZE = 16384
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GzipBitmapInputStreamReader(
     saveBytes: Boolean = false,
@@ -30,7 +33,7 @@ internal class GzipBitmapInputStreamReader(
         return if (isGZipEncoded) {
             val gzipInputStream = GZIPInputStream(inputStream)
 
-            val bufferForGzipInputStream = ByteArray(16384)
+            val bufferForGzipInputStream = ByteArray(STREAM_BUFFER_SIZE)
             val decompressedFile = ByteArrayOutputStream()
 
             var totalBytesRead = 0

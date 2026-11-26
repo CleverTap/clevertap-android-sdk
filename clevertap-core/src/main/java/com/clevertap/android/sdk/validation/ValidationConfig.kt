@@ -264,7 +264,7 @@ internal class ValidationConfig private constructor(
         fun default(countryCodeProvider: (() -> String?)? = null): Builder {
             return Builder()
                 .addKeyLengthValidation(Constants.MAX_KEY_LENGTH)
-                .addValueLengthValidation(512)
+                .addValueLengthValidation(Constants.MAX_VALUE_LENGTH)
                 .addDepthValidation(3)
                 .addArrayKeyCountValidation(5)
                 .addObjectKeyCountValidation(5)

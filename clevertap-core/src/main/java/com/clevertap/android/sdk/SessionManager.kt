@@ -27,7 +27,7 @@ internal open class SessionManager(
             return
         }
         val now = System.currentTimeMillis()
-        if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
+        if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * Constants.ONE_MIN_IN_MILLIS) {
             config.logger.verbose(config.accountId, "Session Timed Out")
             destroySession()
         }

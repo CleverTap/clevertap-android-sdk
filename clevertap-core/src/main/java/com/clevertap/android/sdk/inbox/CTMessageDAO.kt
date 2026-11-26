@@ -114,7 +114,7 @@ internal open class CTMessageDAO() {
                 val expires: Long = if (inboxMessage.has("wzrk_ttl")) {
                     inboxMessage.getInt("wzrk_ttl").toLong()
                 } else {
-                    (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000
+                    (System.currentTimeMillis() + Constants.ONE_DAY_IN_MILLIS) / 1000
                 }
                 val cellObject = if (inboxMessage.has("msg")) { inboxMessage.getJSONObject("msg") } else { null }
                 val tagsList = ArrayList<String>()

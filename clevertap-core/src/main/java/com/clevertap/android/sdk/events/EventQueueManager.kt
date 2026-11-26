@@ -34,6 +34,9 @@ import java.util.TimeZone
 import java.util.concurrent.Future
 import androidx.annotation.RestrictTo
 
+/** Delay before an event deferred until App Launched is processed is queued again. */
+private const val DEFERRED_EVENT_RETRY_DELAY_MS = 2000L
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EventQueueManager(
     private val baseDatabaseManager: BaseDatabaseManager,
@@ -530,7 +533,7 @@ internal class EventQueueManager(
                                 addToQueue(context, event, eventType, flattenedEventData)
                                 null
                         }
-                    }, 2000)
+                    }, DEFERRED_EVENT_RETRY_DELAY_MS)
                 } else {
                     if (eventType == Constants.FETCH_EVENT || eventType == Constants.NV_EVENT) {
                         addToQueue(context, event, eventType, flattenedEventData)

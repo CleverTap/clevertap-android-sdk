@@ -47,5 +47,5 @@ internal object LiveUpdateRouter {
      */
     @JvmStatic
     fun stableId(key: String?): Int? =
-        key?.takeIf { it.isNotEmpty() }?.let { it.hashCode() and 0x7fffffff }
+        key?.takeIf { it.isNotEmpty() }?.let { it.hashCode() and Int.MAX_VALUE }
 }

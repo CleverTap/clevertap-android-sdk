@@ -180,7 +180,7 @@ public open class CTInboxMessage : Parcelable {
             this._expires = if (jsonObject.has(Constants.KEY_WZRK_TTL)) {
                 jsonObject.getLong(Constants.KEY_WZRK_TTL)
             } else {
-                System.currentTimeMillis() + 1000 * 60 * 60 * 24
+                System.currentTimeMillis() + Constants.ONE_DAY_IN_MILLIS
             }
             this.read = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ)
             if (jsonObject.has(Constants.KEY_TAGS)) {

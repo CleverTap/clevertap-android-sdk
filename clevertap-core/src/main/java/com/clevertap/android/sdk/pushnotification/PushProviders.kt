@@ -418,7 +418,7 @@ internal class PushProviders internal constructor(
 
         val lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp()
 
-        if (lastTS == 0L || lastTS > clock.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+        if (lastTS == 0L || lastTS > clock.currentTimeMillis() - Constants.ONE_DAY_IN_MILLIS) {
             try {
                 val eventObject = JSONObject()
                 eventObject.put("bk", 1)
