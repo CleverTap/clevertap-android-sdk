@@ -39,25 +39,9 @@ internal class SharedPreferencesMigration<T>(
         val editor = newSharedPreferences.edit()
 
         for ((key, value) in oldData) {
-            if (valueType.isInstance(value) && condition(value as T)) {
-                when (valueType) {
-                    Boolean::class.javaObjectType -> editor.putBoolean(key, value as Boolean)
-                    Int::class.javaObjectType ->
-                        editor.putInt(key, value as Int)
-
-                    Long::class.javaObjectType -> editor.putLong(key, value as Long)
-                    Float::class.javaObjectType -> editor.putFloat(key, value as Float)
-                    String::class.javaObjectType -> editor.putString(key, value as String)
-                    else -> {// case when valueType is Any
-                        when (value) {
-                            is Boolean -> editor.putBoolean(key, value)
-                            is Int -> editor.putInt(key, value)
-                            is Long -> editor.putLong(key, value)
-                            is Float -> editor.putFloat(key, value)
-                            is String -> editor.putString(key, value)
-                        }
-                    }
-                }
+            // value != null is implied by isInstance; it only lets the compiler see it.
+            if (value != null && valueType.isInstance(value) && condition(value as T)) {
+                putValue(editor = editor, key = key, value = value)
             }
         }
 
@@ -66,6 +50,30 @@ internal class SharedPreferencesMigration<T>(
 
         // clear old SharedPreferences
         oldSharedPreferences.edit().clear().apply()
+    }
+
+    /** Writes [value] with the editor method for [valueType]; for `Any` the value's own type decides. */
+    private fun putValue(editor: SharedPreferences.Editor, key: String, value: Any) {
+        when (valueType) {
+            Boolean::class.javaObjectType -> editor.putBoolean(key, value as Boolean)
+            Int::class.javaObjectType ->
+                editor.putInt(key, value as Int)
+
+            Long::class.javaObjectType -> editor.putLong(key, value as Long)
+            Float::class.javaObjectType -> editor.putFloat(key, value as Float)
+            String::class.javaObjectType -> editor.putString(key, value as String)
+            else -> putValueOfAnyType(editor = editor, key = key, value = value) // case when valueType is Any
+        }
+    }
+
+    private fun putValueOfAnyType(editor: SharedPreferences.Editor, key: String, value: Any) {
+        when (value) {
+            is Boolean -> editor.putBoolean(key, value)
+            is Int -> editor.putInt(key, value)
+            is Long -> editor.putLong(key, value)
+            is Float -> editor.putFloat(key, value)
+            is String -> editor.putString(key, value)
+        }
     }
 }
 

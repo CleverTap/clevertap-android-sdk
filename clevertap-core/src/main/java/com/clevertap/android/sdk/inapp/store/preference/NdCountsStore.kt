@@ -101,8 +101,12 @@ internal class NdCountsStore(
         if (parts.size != 2) {
             return null
         }
-        val today = parts[0].toIntOrNull() ?: return null
-        val lifetime = parts[1].toIntOrNull() ?: return null
-        return Counts(today, lifetime)
+        val today = parts[0].toIntOrNull()
+        val lifetime = parts[1].toIntOrNull()
+        return if (today != null && lifetime != null) {
+            Counts(today, lifetime)
+        } else {
+            null
+        }
     }
 }
