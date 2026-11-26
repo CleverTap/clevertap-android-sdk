@@ -16,10 +16,7 @@ import com.clevertap.android.sdk.profile.traversal.ProfileChange
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation
 import com.clevertap.android.sdk.usereventlogs.UserEventLog
 import com.clevertap.android.sdk.utils.NestedJsonBuilder
-import java.util.ArrayList
 import java.util.Collections
-import java.util.HashMap
-import java.util.HashSet
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
@@ -42,11 +39,18 @@ open class LocalDataStore internal constructor(
     private val nestedJsonBuilder: NestedJsonBuilder
 ) {
 
-    private val PROFILE_FIELDS_IN_THIS_SESSION = JSONObject()
+    private val profileFields = JSONObject()
 
-    private val es: ExecutorService = Executors.newFixedThreadPool(1)
+    private val executor: ExecutorService = Executors.newFixedThreadPool(1)
 
     private val eventNamespace = "local_events"
+
+    /** Prefs namespace of the deprecated local event store; non-default instances are account scoped. */
+    private val accountEventNamespace: String
+        get() = if (config.isDefaultInstance) eventNamespace else "$eventNamespace:${config.accountId}"
+
+    private val logger: Logger
+        get() = config.logger
 
     private val userNormalizedEventLogKeys: MutableSet<String?> = Collections.synchronizedSet(HashSet())
     private val normalizedEventNames: MutableMap<String?, String?> = HashMap()
@@ -61,48 +65,32 @@ open class LocalDataStore internal constructor(
      * @deprecated since `v7.1.0`. Use [readUserEventLog]
      */
     @Deprecated("since v7.1.0. Use readUserEventLog(String)")
-    fun getEventDetail(eventName: String?): EventDetail? {
-        try {
-            if (!isPersonalisationEnabled()) {
-                return null
-            }
-            val namespace: String = if (!this.config.isDefaultInstance) {
-                eventNamespace + ":" + this.config.accountId
-            } else {
-                eventNamespace
-            }
-            return decodeEventDetails(eventName, getStringFromPrefs(eventName, null, namespace))
-        } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local event detail", t)
-            return null
+    fun getEventDetail(eventName: String?): EventDetail? = try {
+        if (!config.isPersonalizationEnabled) {
+            null
+        } else {
+            decodeEventDetails(eventName, getStringFromPrefs(eventName, null, accountEventNamespace))
         }
+    } catch (t: Throwable) {
+        logger.verbose(config.accountId, "Failed to retrieve local event detail", t)
+        null
     }
 
     /**
      * @deprecated since `v7.1.0`. Use [readUserEventLogs]
      */
     @Deprecated("since v7.1.0. Use readUserEventLogs()")
-    fun getEventHistory(context: Context?): MutableMap<String, EventDetail>? {
-        try {
-            val namespace: String = if (!this.config.isDefaultInstance) {
-                eventNamespace + ":" + this.config.accountId
-            } else {
-                eventNamespace
-            }
-            // A null context throws here and is caught below, as in Java.
-            val prefs = StorageHelper.getPreferences(context!!, namespace)
-            val all = prefs.all
-            val out: MutableMap<String, EventDetail> = HashMap()
-            for (eventName in all.keys) {
-                // Java dereferenced the value without a null check; keep the same NPE (caught below).
-                // decodeEventDetails only returns null for a null input.
-                out[eventName] = decodeEventDetails(eventName, all[eventName]!!.toString())!!
-            }
-            return out
-        } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local event history", t)
-            return null
+    fun getEventHistory(context: Context?): MutableMap<String, EventDetail>? = try {
+        // A null context throws here and is caught below, as in Java.
+        val prefs = StorageHelper.getPreferences(requireNotNull(context), accountEventNamespace)
+        prefs.all.mapValuesTo(HashMap<String, EventDetail>()) { (eventName, value) ->
+            // Java dereferenced the value without a null check; a missing value fails here (caught below).
+            // decodeEventDetails only returns null for a null input.
+            checkNotNull(decodeEventDetails(eventName, checkNotNull(value).toString()))
         }
+    } catch (t: Throwable) {
+        logger.verbose(config.accountId, "Failed to retrieve local event history", t)
+        null
     }
 
     /**
@@ -120,14 +108,13 @@ open class LocalDataStore internal constructor(
                 persistEvent(context, event)
             }
         } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t)
+            logger.verbose(config.accountId, "Failed to sync with upstream", t)
         }
     }
 
     @WorkerThread
     fun persistUserEventLogsInBulk(eventNames: Set<String?>): Boolean {
-        val setOfActualAndNormalizedEventNamePair: MutableSet<Pair<String?, String?>> = HashSet()
-        eventNames.mapTo(setOfActualAndNormalizedEventNamePair) { actualEventName ->
+        val setOfActualAndNormalizedEventNamePair = eventNames.mapTo(HashSet()) { actualEventName ->
             Pair(actualEventName, getOrPutNormalizedEventName(actualEventName))
         }
         // Nulls flow through unchanged, exactly as with the former Java generics.
@@ -141,123 +128,80 @@ open class LocalDataStore internal constructor(
             return false
         }
 
-        val logger = config.logger
         val accountId = config.accountId
-        try {
+        return try {
             logger.verbose(accountId, "UserEventLog: Persisting EventLog for event $eventName")
             if (isUserEventLogExists(eventName)) {
                 logger.verbose(accountId, "UserEventLog: Updating EventLog for event $eventName")
-                return updateUserEventLog(eventName)
+                updateUserEventLog(eventName)
             } else {
                 logger.verbose(accountId, "UserEventLog: Inserting EventLog for event $eventName")
-                return insertUserEventLog(eventName)
+                insertUserEventLog(eventName)
             }
-            /*
-             * ==========TESTING BLOCK START ==========
-             */
-            /*cleanUpExtraEvents(50);
-
-            UserEventLog userEventLog = readUserEventLog(eventName);
-            logger.verbose(accountId,"UserEventLog: EventLog for event "+eventName+" = "+userEventLog);
-
-            List<UserEventLog> list = readUserEventLogs();
-            logger.verbose(accountId,"UserEventLog: All EventLog list for User "+list);
-
-            List<UserEventLog> list1 = readEventLogsForAllUsers();
-            logger.verbose(accountId,"UserEventLog: All user EventLog list "+list1);
-
-            int count = readUserEventLogCount(eventName);
-            logger.verbose(accountId,"UserEventLog: EventLog count for event "+eventName+" = "+count);
-
-            long logFirstTs = readUserEventLogFirstTs(eventName);
-            logger.verbose(accountId,"UserEventLog: EventLog firstTs for event "+eventName+" = "+logFirstTs);
-
-            long logLastTs = readUserEventLogLastTs(eventName);
-            logger.verbose(accountId,"UserEventLog: EventLog lastTs for event "+eventName+" = "+logLastTs);
-
-            boolean isUserEventLogFirstTime = isUserEventLogFirstTime(eventName);
-            logger.verbose(accountId,"UserEventLog: EventLog isUserEventLogFirstTime for event "+eventName+" = "+isUserEventLogFirstTime);*/
-            /*
-             * ==========TESTING BLOCK END ==========
-             */
         } catch (t: Throwable) {
             logger.verbose(accountId, "UserEventLog: Failed to insert user event log: for event$eventName", t)
-            return false
+            false
         }
     }
 
-    // The DAO takes non-null Strings; a null device id / normalized name failed there in Java too.
-    @WorkerThread
-    private fun updateEventByDeviceIdAndNormalizedEventName(deviceID: String?, normalizedEventName: String?): Boolean {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        val updatedEventByDeviceID =
-            dbAdapter.userEventLogDAO().updateEventByDeviceIdAndNormalizedEventName(deviceID!!, normalizedEventName!!)
-        getConfigLogger().verbose("updatedEventByDeviceID = $updatedEventByDeviceID")
-        return updatedEventByDeviceID
-    }
+    private fun userEventLogDAO() = baseDatabaseManager.loadDBAdapter(context).userEventLogDAO()
+
+    // The DAO takes non-null Strings: a missing device id or event name fails at the DAO call,
+    // as the former Java code did once it reached the DAO.
 
     @WorkerThread
     fun updateUserEventLog(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        return updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName)
+        val updatedEventByDeviceID = userEventLogDAO()
+            .updateEventByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), checkNotNull(normalizedEventName))
+        logger.verbose("updatedEventByDeviceID = $updatedEventByDeviceID")
+        return updatedEventByDeviceID
     }
 
     @WorkerThread
     private fun upsertUserEventLogsInBulk(setOfActualAndNormalizedEventNamePair: Set<Pair<String, String>>): Boolean {
         val deviceID = deviceInfo.deviceID
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        val upsertEventByDeviceID = dbAdapter.userEventLogDAO()
-            .upsertEventsByDeviceIdAndNormalizedEventName(deviceID!!, setOfActualAndNormalizedEventNamePair)
-        getConfigLogger().verbose("upsertEventByDeviceID = $upsertEventByDeviceID")
+        val upsertEventByDeviceID = userEventLogDAO()
+            .upsertEventsByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), setOfActualAndNormalizedEventNamePair)
+        logger.verbose("upsertEventByDeviceID = $upsertEventByDeviceID")
         return upsertEventByDeviceID
     }
 
-    @WorkerThread
-    private fun insertEvent(deviceID: String?, actualEventName: String?, normalizedEventName: String?): Long {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        val rowId = dbAdapter.userEventLogDAO().insertEvent(deviceID!!, actualEventName!!, normalizedEventName!!)
-        getConfigLogger().verbose("inserted rowId = $rowId")
-        return rowId
-    }
-
-    private fun getOrPutNormalizedEventName(actualEventName: String?): String? {
-        return normalizedEventNames.getOrPut(actualEventName) { Utils.getNormalizedName(actualEventName) }
-    }
+    private fun getOrPutNormalizedEventName(actualEventName: String?): String? =
+        normalizedEventNames.getOrPut(actualEventName) { Utils.getNormalizedName(actualEventName) }
 
     @WorkerThread
     fun insertUserEventLog(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        val rowId = insertEvent(deviceID, eventName, normalizedEventName)
+        val rowId = userEventLogDAO().insertEvent(
+            checkNotNull(deviceID),
+            checkNotNull(eventName),
+            checkNotNull(normalizedEventName)
+        )
+        logger.verbose("inserted rowId = $rowId")
         return rowId >= 0
-    }
-
-    @WorkerThread
-    private fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String?, normalizedEventName: String?): Boolean {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        val eventExists =
-            dbAdapter.userEventLogDAO().eventExistsByDeviceIdAndNormalizedEventName(deviceID!!, normalizedEventName!!)
-        getConfigLogger().verbose("eventExists = $eventExists")
-        return eventExists
     }
 
     @WorkerThread
     fun isUserEventLogExists(eventName: String?): Boolean {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        return eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName)
+        val eventExists = userEventLogDAO()
+            .eventExistsByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), checkNotNull(normalizedEventName))
+        logger.verbose("eventExists = $eventExists")
+        return eventExists
     }
 
     @WorkerThread
     fun isUserEventLogFirstTime(eventName: String?): Boolean {
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        if (userNormalizedEventLogKeys.contains(normalizedEventName)) {
+        if (normalizedEventName in userNormalizedEventLogKeys) {
             return false
         }
 
-        val deviceID = deviceInfo.deviceID
-        val count = readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName)
+        val count = readEventCount(deviceInfo.deviceID, normalizedEventName)
         if (count > 1) {
             userNormalizedEventLogKeys.add(normalizedEventName)
         }
@@ -266,116 +210,85 @@ open class LocalDataStore internal constructor(
 
     @WorkerThread
     fun cleanUpExtraEvents(threshold: Int, numberOfRowsToCleanup: Int): Boolean {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        val cleanUpExtraEvents = dbAdapter.userEventLogDAO().cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
-        getConfigLogger().verbose("cleanUpExtraEvents boolean= $cleanUpExtraEvents")
+        val cleanUpExtraEvents = userEventLogDAO().cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+        logger.verbose("cleanUpExtraEvents boolean= $cleanUpExtraEvents")
         return cleanUpExtraEvents
-    }
-
-    @WorkerThread
-    private fun readEventByDeviceIdAndNormalizedEventName(deviceID: String?, normalizedEventName: String?): UserEventLog? {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        return dbAdapter.userEventLogDAO().readEventByDeviceIdAndNormalizedEventName(deviceID!!, normalizedEventName!!)
     }
 
     @WorkerThread
     fun readUserEventLog(eventName: String?): UserEventLog? {
         val deviceID = deviceInfo.deviceID
         val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        return readEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName)
+        return userEventLogDAO()
+            .readEventByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), checkNotNull(normalizedEventName))
     }
 
     @WorkerThread
-    private fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String?, normalizedEventName: String?): Int {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        return dbAdapter.userEventLogDAO().readEventCountByDeviceIdAndNormalizedEventName(deviceID!!, normalizedEventName!!)
-    }
+    private fun readEventCount(deviceID: String?, normalizedEventName: String?): Int = userEventLogDAO()
+        .readEventCountByDeviceIdAndNormalizedEventName(checkNotNull(deviceID), checkNotNull(normalizedEventName))
 
     @WorkerThread
-    fun readUserEventLogCount(eventName: String?): Int {
-        val deviceID = deviceInfo.deviceID
-        val normalizedEventName = getOrPutNormalizedEventName(eventName)
-        return readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName)
-    }
-
-    @WorkerThread
-    private fun allEventsByDeviceID(deviceID: String?): List<UserEventLog> {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        return dbAdapter.userEventLogDAO().allEventsByDeviceID(deviceID!!)
-    }
+    fun readUserEventLogCount(eventName: String?): Int =
+        readEventCount(deviceInfo.deviceID, getOrPutNormalizedEventName(eventName))
 
     @WorkerThread
     fun readUserEventLogs(): List<UserEventLog> {
         val deviceID = deviceInfo.deviceID
-        return allEventsByDeviceID(deviceID)
+        return userEventLogDAO().allEventsByDeviceID(checkNotNull(deviceID))
     }
 
     @WorkerThread
-    fun readEventLogsForAllUsers(): List<UserEventLog> {
-        val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        return dbAdapter.userEventLogDAO().allEvents()
-    }
+    fun readEventLogsForAllUsers(): List<UserEventLog> = userEventLogDAO().allEvents()
 
     @WorkerThread
     fun setDataSyncFlag(event: JSONObject) {
         try {
             // Check the personalisation flag
-            val enablePersonalisation = this.config.isPersonalizationEnabled
-            if (!enablePersonalisation) {
+            if (!config.isPersonalizationEnabled) {
                 event.put("dsync", false)
                 return
             }
 
             // Always request a dsync when the App Launched event is recorded
             val eventType = event.getString("type")
-            if ("event" == eventType) {
-                val evtName = event.getString("evtName")
-                if (Constants.APP_LAUNCHED_EVENT == evtName) {
-                    getConfigLogger().verbose(
-                        getConfigAccountId(),
-                        "Local cache needs to be updated (triggered by App Launched)"
-                    )
-                    event.put("dsync", true)
-                    return
-                }
+            if ("event" == eventType && Constants.APP_LAUNCHED_EVENT == event.getString("evtName")) {
+                logger.verbose(config.accountId, "Local cache needs to be updated (triggered by App Launched)")
+                event.put("dsync", true)
+                return
             }
 
             // If a profile event, then blindly set it to true
             if ("profile" == eventType) {
                 event.put("dsync", true)
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache needs to be updated (profile event)")
+                logger.verbose(config.accountId, "Local cache needs to be updated (profile event)")
                 return
             }
 
             // Default to expire in 20 minutes
             val now = (System.currentTimeMillis() / 1000).toInt()
-
-            val expiresIn = getLocalCacheExpiryInterval(20 * 60)
-
+            val expiresIn = getIntFromPrefs("local_cache_expires_in", 20 * 60)
             val lastUpdate = getIntFromPrefs("local_cache_last_update", now)
 
             if (lastUpdate + expiresIn < now) {
                 event.put("dsync", true)
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache needs to be updated")
+                logger.verbose(config.accountId, "Local cache needs to be updated")
             } else {
                 event.put("dsync", false)
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache doesn't need to be updated")
+                logger.verbose(config.accountId, "Local cache doesn't need to be updated")
             }
         } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t)
+            logger.verbose(config.accountId, "Failed to sync with upstream", t)
         }
     }
 
     val profile: JSONObject
-        get() {
-            try {
-                synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
-                    return JSONObject(PROFILE_FIELDS_IN_THIS_SESSION.toString())
-                }
-            } catch (e: JSONException) {
-                // Handle exception or return empty object
-                return JSONObject()
+        get() = try {
+            synchronized(profileFields) {
+                JSONObject(profileFields.toString())
             }
+        } catch (e: JSONException) {
+            // Handle exception or return empty object
+            JSONObject()
         }
 
     fun getProfileProperty(key: String?): Any? {
@@ -383,9 +296,8 @@ open class LocalDataStore internal constructor(
             return null
         }
 
-        synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
-            val profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET)[key]
-            return profileChange?.oldValue
+        synchronized(profileFields) {
+            return processProfileTree(key, GET_MARKER, ProfileOperation.GET)[key]?.oldValue
         }
     }
 
@@ -400,40 +312,22 @@ open class LocalDataStore internal constructor(
 
         // Pattern#split matches the former String#split(regex) semantics.
         val parts = Pattern.compile("\\|").split(encoded)
-        return EventDetail(
-            Integer.parseInt(parts[0]), Integer.parseInt(parts[1]),
-            Integer.parseInt(parts[2]), name
-        )
+        return EventDetail(parts[0].toInt(), parts[1].toInt(), parts[2].toInt(), name)
     }
 
     /**
      * @deprecated since `v7.1.0` in favor of DB. See [UserEventLog]
      */
     @Deprecated("since v7.1.0 in favor of DB. See UserEventLog")
-    private fun encodeEventDetails(first: Int, last: Int, count: Int): String {
-        return "$count|$first|$last"
-    }
-
-    private fun getConfigAccountId(): String? {
-        return this.config.accountId
-    }
-
-    private fun getConfigLogger(): Logger {
-        return this.config.logger
-    }
+    private fun encodeEventDetails(first: Int, last: Int, count: Int): String = "$count|$first|$last"
 
     private fun getIntFromPrefs(rawKey: String, defaultValue: Int): Int {
-        if (this.config.isDefaultInstance) {
-            val dummy = -1000
-            val _new = StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), dummy)
-            return if (_new != dummy) _new else StorageHelper.getInt(this.context, rawKey, defaultValue)
-        } else {
-            return StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), defaultValue)
+        if (!config.isDefaultInstance) {
+            return StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), defaultValue)
         }
-    }
-
-    private fun getLocalCacheExpiryInterval(defaultInterval: Int): Int {
-        return getIntFromPrefs("local_cache_expires_in", defaultInterval)
+        val dummy = -1000
+        val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
+        return if (stored != dummy) stored else StorageHelper.getInt(context, rawKey, defaultValue)
     }
 
     /**
@@ -441,69 +335,44 @@ open class LocalDataStore internal constructor(
      */
     @Deprecated("since v7.1.0 in favor of DB. See UserEventLog")
     private fun getStringFromPrefs(rawKey: String?, defaultValue: String?, nameSpace: String): String? {
-        if (this.config.isDefaultInstance) {
-            val _new = StorageHelper
-                .getString(this.context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue)
-            return _new ?: StorageHelper.getString(this.context, nameSpace, rawKey!!, defaultValue)
-        } else {
-            return StorageHelper.getString(this.context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue)
+        val suffixed = StorageHelper.getString(context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue)
+        if (!config.isDefaultInstance) {
+            return suffixed
         }
-    }
-
-    private fun getUserProfileID(): String? {
-        return this.config.accountId
+        // A null key fails here, as in Java (callers catch it).
+        return suffixed ?: StorageHelper.getString(context, nameSpace, requireNotNull(rawKey), defaultValue)
     }
 
     // local cache/profile key expiry handling
     fun inflateLocalProfileAsync(context: Context) {
-        val accountID = this.config.accountId
+        val accountID = config.accountId
 
-        this.postAsyncSafely("LocalDataStore#inflateLocalProfileAsync") {
+        postAsyncSafely("LocalDataStore#inflateLocalProfileAsync") {
             val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-            synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
+            synchronized(profileFields) {
                 try {
                     val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.deviceID)
                         ?: return@postAsyncSafely
 
-                    val keys: Iterator<*> = profile.keys()
-                    while (keys.hasNext()) {
+                    for (key in profile.keys()) {
                         try {
-                            val key = keys.next() as String
-                            val value = profile.get(key)
-                            if (value is JSONObject) {
-                                val jsonObject = profile.getJSONObject(key)
-                                PROFILE_FIELDS_IN_THIS_SESSION.put(key, jsonObject)
-                            } else if (value is JSONArray) {
-                                val jsonArray = profile.getJSONArray(key)
-                                PROFILE_FIELDS_IN_THIS_SESSION.put(key, jsonArray)
-                            } else {
-                                var decrypted: Any? = value
-                                if (value is String) {
-                                    decrypted = cryptHandler.decryptSafe(value)
-                                    if (decrypted == null) {
-                                        decrypted = value
-                                    }
-                                }
-                                PROFILE_FIELDS_IN_THIS_SESSION.put(key, decrypted)
+                            when (val value = profile.get(key)) {
+                                is JSONObject -> profileFields.put(key, profile.getJSONObject(key))
+                                is JSONArray -> profileFields.put(key, profile.getJSONArray(key))
+                                is String -> profileFields.put(key, cryptHandler.decryptSafe(value) ?: value)
+                                else -> profileFields.put(key, value)
                             }
                         } catch (e: JSONException) {
                             // no-op
                         }
                     }
 
-                    getConfigLogger().verbose(
-                        getConfigAccountId(),
-                        "Local Data Store - Inflated local profile $PROFILE_FIELDS_IN_THIS_SESSION"
-                    )
+                    logger.verbose(config.accountId, "Local Data Store - Inflated local profile $profileFields")
                 } catch (t: Throwable) {
                     //no-op
                 }
             }
         }
-    }
-
-    private fun isPersonalisationEnabled(): Boolean {
-        return this.config.isPersonalizationEnabled
     }
 
     /**
@@ -513,71 +382,58 @@ open class LocalDataStore internal constructor(
     @SuppressLint("CommitPrefEdits")
     private fun persistEvent(context: Context, event: JSONObject) {
         try {
-            val evtName: String? = event.getString("evtName")
-            if (evtName == null) {
-                return
-            }
-            val namespace: String = if (!this.config.isDefaultInstance) {
-                eventNamespace + ":" + this.config.accountId
-            } else {
-                eventNamespace
-            }
+            val evtName: String = event.getString("evtName") ?: return
+            val namespace = accountEventNamespace
             val prefs = StorageHelper.getPreferences(context, namespace)
 
             val now = (System.currentTimeMillis() / 1000).toInt()
 
             val encoded = getStringFromPrefs(evtName, encodeEventDetails(now, now, 0), namespace)
-            // Java dereferenced the decoded detail without a null check; the NPE is caught below.
-            val ed = decodeEventDetails(evtName, encoded)!!
+            // Java dereferenced the decoded detail without a null check; that failure is caught below.
+            val ed = checkNotNull(decodeEventDetails(evtName, encoded))
 
-            val updateEncoded = encodeEventDetails(ed.firstTime, now, ed.count + 1)
             val editor = prefs.edit()
-            editor.putString(storageKeyWithSuffix(evtName), updateEncoded)
+            editor.putString(storageKeyWithSuffix(evtName), encodeEventDetails(ed.firstTime, now, ed.count + 1))
             StorageHelper.persist(editor)
         } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to persist event locally", t)
+            logger.verbose(config.accountId, "Failed to persist event locally", t)
         }
     }
 
     private fun persistLocalProfileAsync() {
-        val profileID = this.config.accountId
+        val profileID = config.accountId
 
-        this.postAsyncSafely("LocalDataStore#persistLocalProfileAsync") {
-            synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
+        postAsyncSafely("LocalDataStore#persistLocalProfileAsync") {
+            synchronized(profileFields) {
                 val profile = JSONObject()
                 var encryptionFailed = false
 
-                // Copy all fields from PROFILE_FIELDS_IN_THIS_SESSION to profile
+                // Copy all fields from profileFields to profile
                 try {
-                    val keys = PROFILE_FIELDS_IN_THIS_SESSION.keys()
-                    while (keys.hasNext()) {
-                        val key = keys.next()
-                        profile.put(key, PROFILE_FIELDS_IN_THIS_SESSION.get(key))
+                    for (key in profileFields.keys()) {
+                        profile.put(key, profileFields.get(key))
                     }
                 } catch (e: JSONException) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to copy profile fields", e)
+                    logger.verbose(config.accountId, "Failed to copy profile fields", e)
                 }
 
                 // Encrypts only the pii keys before storing to DB
                 val isMediumEncryption = EncryptionLevel.fromInt(config.encryptionLevel) == EncryptionLevel.MEDIUM
                 for (piiKey in piiDBKeys) {
                     try {
-                        if (profile.has(piiKey)) {
-                            var value: Any? = profile.opt(piiKey)
-                            if (value is String) {
-                                if (isMediumEncryption) {
-                                    value = cryptHandler.encryptSafe(value)
-                                    if (value == null) {
-                                        encryptionFailed = true
-                                        // Don't update profile with null, keep original
-                                        continue
-                                    }
-                                    profile.put(piiKey, value)
-                                }
-                            }
+                        val value = profile.opt(piiKey)
+                        if (!profile.has(piiKey) || value !is String || !isMediumEncryption) {
+                            continue
                         }
+                        val encrypted = cryptHandler.encryptSafe(value)
+                        if (encrypted == null) {
+                            encryptionFailed = true
+                            // Don't update profile with null, keep original
+                            continue
+                        }
+                        profile.put(piiKey, encrypted)
                     } catch (e: JSONException) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Failed to encrypt pii key: $piiKey", e)
+                        logger.verbose(config.accountId, "Failed to encrypt pii key: $piiKey", e)
                         encryptionFailed = true
                     }
                 }
@@ -589,127 +445,72 @@ open class LocalDataStore internal constructor(
 
                 val dbAdapter = baseDatabaseManager.loadDBAdapter(context)
                 val status = dbAdapter.storeUserProfile(profileID, deviceInfo.deviceID, profile)
-                getConfigLogger().verbose(
-                    getConfigAccountId(),
-                    "Persist Local Profile complete with status $status for id $profileID"
-                )
+                logger.verbose(config.accountId, "Persist Local Profile complete with status $status for id $profileID")
             }
         }
     }
 
     private fun postAsyncSafely(name: String, runnable: Runnable) {
         try {
-            val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
-
-            if (executeSync) {
+            if (Thread.currentThread().id == executorThreadId) {
                 runnable.run()
-            } else {
-                es.submit(Runnable {
-                    EXECUTOR_THREAD_ID = Thread.currentThread().id
-                    try {
-                        getConfigLogger().verbose(
-                            getConfigAccountId(),
-                            "Local Data Store Executor service: Starting task - $name"
-                        )
-                        runnable.run()
-                    } catch (t: Throwable) {
-                        getConfigLogger().verbose(
-                            getConfigAccountId(),
-                            "Executor service: Failed to complete the scheduled task", t
-                        )
-                    }
-                })
+                return
             }
+            executor.submit(Runnable {
+                executorThreadId = Thread.currentThread().id
+                try {
+                    logger.verbose(config.accountId, "Local Data Store Executor service: Starting task - $name")
+                    runnable.run()
+                } catch (t: Throwable) {
+                    logger.verbose(config.accountId, "Executor service: Failed to complete the scheduled task", t)
+                }
+            })
         } catch (t: Throwable) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to submit task to the executor service", t)
+            logger.verbose(config.accountId, "Failed to submit task to the executor service", t)
         }
-    }
-
-    private fun profileValueIsEmpty(value: Any?): Boolean {
-        if (value == null) {
-            return true
-        }
-
-        var isEmpty = false
-
-        if (value is String) {
-            isEmpty = value.trim { it <= ' ' }.isEmpty()
-        }
-
-        if (value is JSONArray) {
-            isEmpty = value.length() <= 0
-        }
-
-        return isEmpty
-    }
-
-    private fun profileValuesAreEqual(value1: Any?, value2: Any?): Boolean {
-        // convert to strings and compare
-        // stringify handles null values
-        return stringify(value1) == stringify(value2)
     }
 
     private fun resetLocalProfileSync() {
-        synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
-            val keys = PROFILE_FIELDS_IN_THIS_SESSION.keys()
-            val keysToRemove: MutableList<String> = ArrayList()
-            while (keys.hasNext()) {
-                keysToRemove.add(keys.next())
-            }
-            for (key in keysToRemove) {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key)
-            }
+        synchronized(profileFields) {
+            // Snapshot the keys first: removing while iterating keys() is not supported.
+            profileFields.keys().asSequence().toList().forEach { profileFields.remove(it) }
         }
 
         // Load the older profile from cache into the db
         inflateLocalProfileAsync(context)
     }
 
-    private fun storageKeyWithSuffix(key: String?): String {
-        return key + ":" + this.config.accountId
-    }
-
-    private fun stringify(value: Any?): String {
-        return value?.toString() ?: ""
-    }
+    private fun storageKeyWithSuffix(key: String?): String = "$key:${config.accountId}"
 
     @WorkerThread
     fun processProfileTree(
         dotNotationKey: String,
         value: Any?,
         operation: ProfileOperation
-    ): Map<String, ProfileChange> {
-        return try {
-            val nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value)
-            processProfileTree(nestedProfile, operation)
-        } catch (e: JSONException) {
-            Collections.emptyMap()
-        }
+    ): Map<String, ProfileChange> = try {
+        processProfileTree(nestedJsonBuilder.buildFromPath(dotNotationKey, value), operation)
+    } catch (e: JSONException) {
+        emptyMap()
     }
 
     @WorkerThread
     fun processProfileTree(
         newJson: JSONObject,
         operation: ProfileOperation
-    ): Map<String, ProfileChange> {
-        synchronized(PROFILE_FIELDS_IN_THIS_SESSION) {
-            val result = profileStateTraverser.traverse(
-                PROFILE_FIELDS_IN_THIS_SESSION,
-                newJson,
-                operation
-            )
+    ): Map<String, ProfileChange> = synchronized(profileFields) {
+        val result = profileStateTraverser.traverse(profileFields, newJson, operation)
 
-            if (operation != ProfileOperation.GET) {
-                persistLocalProfileAsync()
-            }
-
-            // Return the changes map
-            return result.changes
+        if (operation != ProfileOperation.GET) {
+            persistLocalProfileAsync()
         }
+
+        // Return the changes map
+        result.changes
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
     companion object {
-        private var EXECUTOR_THREAD_ID: Long = 0
+        // Written by the executor thread, read by callers; not volatile, exactly as in Java.
+        private var executorThreadId: Long = 0
     }
 }

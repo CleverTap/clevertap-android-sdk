@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.concurrent.Callable
 import java.util.regex.Pattern
 import org.json.JSONArray
 import org.json.JSONObject
@@ -31,12 +30,11 @@ internal open class InAppFCManager(
     private val ddMMyyyy = SimpleDateFormat("ddMMyyyy", Locale.US)
 
     init {
-        val task = executors.postAsyncSafelyTask<Void?>()
         val initDeviceId = deviceId
-        task.execute("initInAppFCManager", Callable<Void?> {
+        executors.postAsyncSafelyTask<Void?>().execute("initInAppFCManager") {
             init(initDeviceId)
             null
-        })
+        }
     }
 
     fun canShow(
@@ -63,72 +61,65 @@ internal open class InAppFCManager(
                 return true
             }
 
-            if (!hasSessionCapacityMaxedOut(inapp)
-                && !hasLifetimeCapacityMaxedOut(inapp)
-                && !hasDailyCapacityMaxedOut(inapp)
-            ) {
-                return true
-            }
+            return !hasSessionCapacityMaxedOut(inapp) &&
+                !hasLifetimeCapacityMaxedOut(inapp) &&
+                !hasDailyCapacityMaxedOut(inapp)
         } catch (t: Throwable) {
             return false
         }
-        return false
     }
 
-    fun changeUser(deviceId: String?) {
+    fun changeUser(newDeviceId: String?) {
         // reset counters
         impressionManager.clearSessionData()
-        this.deviceId = deviceId
-        init(deviceId)
+        deviceId = newDeviceId
+        init(newDeviceId)
     }
 
     fun didShow(context: Context, inapp: CTInAppNotification) {
         val id = getInAppID(inapp) ?: return
 
-        val task = executors.ioTask<Void?>()
-        task.execute("recordInAppImpressionsAndCounts", Callable<Void?> {
+        executors.ioTask<Void?>().execute("recordInAppImpressionsAndCounts") {
             impressionManager.recordImpression(id)
 
             incrementInAppCountsInPersistentStore(id)
 
-            var shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0)
-            StorageHelper
-                .putInt(
-                    context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
-                    ++shownToday
-                )
+            val shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0)
+            StorageHelper.putInt(
+                context,
+                storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
+                shownToday + 1
+            )
             null
-        })
+        }
     }
 
     val shownTodayCount: Int
         get() = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0)
 
-    fun getInAppsCount(context: Context): JSONArray? {
-        try {
-            // tlc: [[targetID, todayCount, lifetime]]
-            val arr = JSONArray()
-            val prefs = StorageHelper
-                .getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
-            val all = prefs.all
-            for ((key, value) in all) {
-                //inApp: "targetID" -> "todayCount,lifetime"
-                if (value is String) {
-                    val parts = javaSplit(value, ",")
-                    if (parts.size == 2) {
-                        val a = JSONArray()
-                        a.put(0, key)
-                        a.put(1, Integer.parseInt(parts[0]))
-                        a.put(2, Integer.parseInt(parts[1]))
-                        arr.put(a)
-                    }
-                }
+    fun getInAppsCount(context: Context): JSONArray? = try {
+        // tlc: [[targetID, todayCount, lifetime]]
+        val arr = JSONArray()
+        val prefs = getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
+        for ((key, value) in prefs.all) {
+            //inApp: "targetID" -> "todayCount,lifetime"
+            if (value !is String) {
+                continue
             }
-            return arr
-        } catch (t: Throwable) {
-            Logger.v("Failed to get in apps count", t)
-            return null
+            val parts = javaSplit(value, ",")
+            if (parts.size == 2) {
+                arr.put(
+                    JSONArray()
+                        .put(0, key)
+                        .put(1, parts[0].toInt())
+                        .put(2, parts[1].toInt())
+                )
+            }
         }
+        arr
+    } catch (t: Throwable) {
+        Logger.v("Failed to get in apps count", t)
+        null
     }
 
     fun processResponse(context: Context, response: JSONObject) {
@@ -146,13 +137,11 @@ internal open class InAppFCManager(
             val editor = prefs.edit()
 
             for (i in 0 until arr.length()) {
-                val o = arr.get(i)
-                if (o is Int) {
-                    editor.remove("" + o)
-                    Logger.d("Purged stale in-app - $o")
-                } else if (o is String) {
-                    editor.remove(o)
-                    Logger.d("Purged stale in-app - $o")
+                when (val o = arr.get(i)) {
+                    is Int, is String -> {
+                        editor.remove(o.toString())
+                        Logger.d("Purged stale in-app - $o")
+                    }
                 }
             }
 
@@ -168,19 +157,10 @@ internal open class InAppFCManager(
             context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY, deviceId)),
             perDay
         )
-        StorageHelper
-            .putInt(
-                context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId)),
-                perSession
-            )
-    }
-
-    private fun getConfigAccountId(): String? {
-        return this.config.accountId
-    }
-
-    private fun getConfigLogger(): Logger {
-        return this.config.logger
+        StorageHelper.putInt(
+            context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId)),
+            perSession
+        )
     }
 
     private fun getInAppCountsFromPersistentStore(inappID: String): IntArray {
@@ -190,53 +170,38 @@ internal open class InAppFCManager(
         )
         val str = prefs.getString(inappID, null) ?: return intArrayOf(0, 0)
 
-        try {
+        return try {
             val parts = javaSplit(str, ",")
             if (parts.size != 2) {
-                return intArrayOf(0, 0)
+                intArrayOf(0, 0)
+            } else {
+                // protocol: todayCount,lifeTimeCount
+                intArrayOf(parts[0].toInt(), parts[1].toInt())
             }
-
-            // protocol: todayCount,lifeTimeCount
-            return intArrayOf(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]))
         } catch (t: Throwable) {
-            return intArrayOf(0, 0)
+            intArrayOf(0, 0)
         }
     }
 
-    fun getInAppID(inapp: CTInAppNotification): String? {
-        val inappId = inapp.id ?: return null
-
-        if (inappId.isNotEmpty()) {
-            try {
-                return inapp.id
-            } catch (ignored: Throwable) {
-                return null
-            }
-        }
-        return null
-    }
+    fun getInAppID(inapp: CTInAppNotification): String? = inapp.id?.takeIf { it.isNotEmpty() }
 
     private fun getIntFromPrefs(rawKey: String, defaultValue: Int): Int {
-        if (this.config.isDefaultInstance) {
-            val dummy = -1000
-            val _new = StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), dummy)
-            return if (_new != dummy) _new else StorageHelper.getInt(this.context, rawKey, defaultValue)
-        } else {
-            return StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), defaultValue)
+        if (!config.isDefaultInstance) {
+            return StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), defaultValue)
         }
+        val dummy = -1000
+        val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
+        return if (stored != dummy) stored else StorageHelper.getInt(context, rawKey, defaultValue)
     }
 
-    private fun getKeyWithDeviceId(key: String, deviceId: String?): String {
-        return "$key:$deviceId"
-    }
+    private fun getKeyWithDeviceId(key: String, deviceId: String?): String = "$key:$deviceId"
 
     private fun getStringFromPrefs(rawKey: String, defaultValue: String?): String? {
-        if (this.config.isDefaultInstance) {
-            val _new = StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue)
-            return _new ?: StorageHelper.getString(this.context, rawKey, defaultValue)
-        } else {
-            return StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue)
+        if (!config.isDefaultInstance) {
+            return StorageHelper.getString(context, storageKeyWithSuffix(rawKey), defaultValue)
         }
+        return StorageHelper.getString(context, storageKeyWithSuffix(rawKey), defaultValue)
+            ?: StorageHelper.getString(context, rawKey, defaultValue)
     }
 
     private fun hasDailyCapacityMaxedOut(inapp: CTInAppNotification): Boolean {
@@ -250,21 +215,12 @@ internal open class InAppFCManager(
         }
 
         // 2. Has the daily count been maxed out for this inapp?
-        try {
+        return try {
             val maxPerDay = inapp.totalDailyCount
-            if (maxPerDay == -1) {
-                return false
-            }
-
-            val counts = getInAppCountsFromPersistentStore(id)
-            if (counts[0] >= maxPerDay) {
-                return true
-            }
+            maxPerDay != -1 && getInAppCountsFromPersistentStore(id)[0] >= maxPerDay
         } catch (t: Throwable) {
-            return true
+            true
         }
-
-        return false
     }
 
     private fun hasLifetimeCapacityMaxedOut(inapp: CTInAppNotification): Boolean {
@@ -274,16 +230,11 @@ internal open class InAppFCManager(
             return false
         }
 
-        try {
-            val counts = getInAppCountsFromPersistentStore(id)
-            if (counts[1] >= inapp.totalLifetimeCount) {
-                return true
-            }
+        return try {
+            getInAppCountsFromPersistentStore(id)[1] >= inapp.totalLifetimeCount
         } catch (e: Exception) {
-            return true
+            true
         }
-
-        return false
     }
 
     private fun hasSessionCapacityMaxedOut(inapp: CTInAppNotification): Boolean {
@@ -292,9 +243,7 @@ internal open class InAppFCManager(
         // 2. Has the session max count for this inapp been breached?
         try {
             val maxPerSession = if (inapp.maxPerSession >= 0) inapp.maxPerSession else 1000
-
-            val c = impressionManager.perSession(id)
-            if (c >= maxPerSession) {
+            if (impressionManager.perSession(id) >= maxPerSession) {
                 return true
             }
         } catch (t: Throwable) {
@@ -302,30 +251,25 @@ internal open class InAppFCManager(
         }
 
         // 3. Have we shown enough of in-apps this session?
-        val c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId), 1)
-        val sessionTotal = impressionManager.perSessionTotal()
-        return (sessionTotal >= c)
+        val maxPerSessionTotal = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId), 1)
+        return impressionManager.perSessionTotal() >= maxPerSessionTotal
     }
 
     private fun incrementInAppCountsInPersistentStore(inappID: String) {
-        val current = getInAppCountsFromPersistentStore(inappID)
-        current[0] = current[0] + 1
-        current[1] = current[1] + 1
+        val (todayCount, lifetimeCount) = getInAppCountsFromPersistentStore(inappID)
 
-        val prefs = getPreferences(
+        val editor = getPreferences(
             context,
             storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId))
-        )
-        val editor = prefs.edit()
+        ).edit()
 
         // protocol: todayCount,lifeTimeCount
-        editor.putString(inappID, current[0].toString() + "," + current[1])
+        editor.putString(inappID, "${todayCount + 1},${lifetimeCount + 1}")
         StorageHelper.persist(editor)
     }
 
     private fun init(deviceId: String?) {
-        getConfigLogger()
-            .verbose(config.accountId + ":async_deviceID", "InAppFCManager init() called")
+        config.logger.verbose("${config.accountId}:async_deviceID", "InAppFCManager init() called")
         try {
             migrateToNewPrefsKey(deviceId)
             val today = ddMMyyyy.format(clock.newDate())
@@ -346,34 +290,25 @@ internal open class InAppFCManager(
                     storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId))
                 )
                 val editor = prefs.edit()
-                val all = prefs.all
-                for (inapp in all.keys) {
-                    val ov = all[inapp]
-                    if (ov !is String) {
-                        editor.remove(inapp)
-                        continue
-                    }
-
-                    val oldValues = javaSplit(ov, ",")
-                    if (oldValues.size != 2) {
+                for ((inapp, ov) in prefs.all) {
+                    val oldValues = (ov as? String)?.let { javaSplit(it, ",") }
+                    if (oldValues == null || oldValues.size != 2) {
                         editor.remove(inapp)
                         continue
                     }
 
                     // protocol: todayCount,lifeTimeCount
                     try {
-                        editor.putString(inapp, "0," + oldValues[1])
+                        editor.putString(inapp, "0,${oldValues[1]}")
                     } catch (t: Throwable) {
-                        getConfigLogger()
-                            .verbose(getConfigAccountId(), "Failed to reset todayCount for inapp $inapp", t)
+                        config.logger.verbose(config.accountId, "Failed to reset todayCount for inapp $inapp", t)
                     }
                 }
 
                 StorageHelper.persist(editor)
             }
         } catch (e: Exception) {
-            getConfigLogger()
-                .verbose(getConfigAccountId(), "Failed to init inapp manager " + e.localizedMessage)
+            config.logger.verbose(config.accountId, "Failed to init inapp manager ${e.localizedMessage}")
         }
     }
 
@@ -419,38 +354,33 @@ internal open class InAppFCManager(
             val accountBasedInApps = legacyInAppStore.readInApps()
             if (accountBasedInApps.length() > 0) {
                 Logger.d("migrating in-apps from account id to device id based preference.")
-                val accountBasedInAppsList = Utils.toJSONObjectList(accountBasedInApps)
-                inAppStore.storeServerSideInApps(accountBasedInAppsList)
+                inAppStore.storeServerSideInApps(Utils.toJSONObjectList(accountBasedInApps))
                 legacyInAppStore.removeInApps()
                 Logger.d("Finished migrating in-apps from account id to device id based preference.")
             }
         }
 
-        if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null //F
-            || getStringFromPrefs("ict_date", null) == null
-        ) /*T | F*/ {
+        // Migrate only when the device-scoped date is missing and a legacy one exists.
+        if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null ||
+            getStringFromPrefs("ict_date", null) == null
+        ) {
             return
         }
 
         Logger.v("Migrating InAppFC Prefs")
 
-        val ict_date = getStringFromPrefs("ict_date", "20140428")
-        StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), ict_date)
+        val ictDate = getStringFromPrefs("ict_date", "20140428")
+        StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), ictDate)
 
         val keyCountsShownToday = getIntFromPrefs(storageKeyWithSuffix(Constants.KEY_COUNTS_SHOWN_TODAY), 0)
-        StorageHelper
-            .putInt(
-                context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
-                keyCountsShownToday
-            )
+        StorageHelper.putInt(
+            context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
+            keyCountsShownToday
+        )
     }
 
-    private fun storageKeyWithSuffix(key: String): String {
-        return key + ":" + getConfigAccountId()
-    }
+    private fun storageKeyWithSuffix(key: String): String = "$key:${config.accountId}"
 
     // String#split(regex) semantics (trailing empty strings removed), unlike Kotlin's split.
-    private fun javaSplit(value: String, regex: String): Array<String> {
-        return Pattern.compile(regex).split(value)
-    }
+    private fun javaSplit(value: String, regex: String): Array<String> = Pattern.compile(regex).split(value)
 }

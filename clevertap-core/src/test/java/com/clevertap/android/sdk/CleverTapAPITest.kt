@@ -54,8 +54,8 @@ class CleverTapAPITest : BaseTestCase() {
 
     private fun verifyCommonConstructorBehavior() {
         verifyOrder {
-            coreState.sessionManager.setLastVisitTime()
-            coreState.sessionManager.setUserLastVisitTs()
+            coreState.sessionManager.updateLastVisitTime()
+            coreState.sessionManager.updateUserLastVisitTs()
             coreState.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
             coreState.deviceInfo.setCurrentUserOptOutStateFromStorage()
             coreState.deviceInfo.setSystemEventsAllowedStateFromStorage()
@@ -121,7 +121,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         assertTrue(coreState.coreMetaData.isLocationForGeofence)
         assertEquals(coreState.coreMetaData.geofenceSDKVersion, 45)
-        verify { coreState.locationManager._setLocation(location) }
+        verify { coreState.locationManager.updateLocation(location) }
     }
 
     @Test
@@ -208,7 +208,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertNotEquals(expectedAccountId, accountId)
             assertNotEquals(expectedToken, accountToken)
-            assertNotEquals(expectedRegion, getAccountRegion())
+            assertNotEquals(expectedRegion, accountRegion)
         }
     }
 
@@ -231,7 +231,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertEquals(expectedAccountId, accountId)
             assertEquals(expectedToken, accountToken)
-            assertEquals(expectedRegion, getAccountRegion())
+            assertEquals(expectedRegion, accountRegion)
         }
     }
 

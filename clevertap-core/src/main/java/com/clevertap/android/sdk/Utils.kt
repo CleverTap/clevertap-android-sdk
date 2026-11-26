@@ -21,7 +21,6 @@ import android.os.Looper
 import android.os.Process
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
@@ -38,12 +37,14 @@ import com.google.firebase.messaging.RemoteMessage
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.Locale
-import java.util.Objects
 import java.util.Scanner
 import java.util.regex.Pattern
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -64,30 +65,22 @@ object Utils {
         if (collection == null || key == null) {
             return false
         }
-        for (entry in collection) {
-            if (key.equals(entry, ignoreCase = true)) {
-                return true
-            }
-        }
-        return false
+        return collection.any { key.equals(it, ignoreCase = true) }
     }
 
     @JvmStatic
     @Suppress("DEPRECATION")
     fun convertBundleObjectToHashMap(b: Bundle): HashMap<String, Any> {
-        val map = HashMap<String, Any>()
+        // Bundle values may be null; the Java map accepted them as-is.
+        val map = HashMap<String, Any?>()
         for (s in b.keySet()) {
-            val o = b.get(s)
-
-            if (o is Bundle) {
-                map.putAll(convertBundleObjectToHashMap(o))
-            } else {
-                // Bundle values may be null; the Java map accepted them as-is.
-                @Suppress("UNCHECKED_CAST")
-                (map as HashMap<String, Any?>)[s] = b.get(s)
+            when (val o = b.get(s)) {
+                is Bundle -> map.putAll(convertBundleObjectToHashMap(o))
+                else -> map[s] = o
             }
         }
-        return map
+        @Suppress("UNCHECKED_CAST")
+        return map as HashMap<String, Any>
     }
 
     @JvmStatic
@@ -95,13 +88,14 @@ object Utils {
         jsonArray: JSONArray?
     ): ArrayList<HashMap<String, Any>> {
         val hashMapArrayList = ArrayList<HashMap<String, Any>>()
-        if (jsonArray != null) {
-            for (i in 0 until jsonArray.length()) {
-                try {
-                    hashMapArrayList.add(convertJSONObjectToHashMap(jsonArray.getJSONObject(i)))
-                } catch (e: JSONException) {
-                    Logger.v(TAG, "Could not convert JSONArray of JSONObjects to ArrayList of HashMaps", e)
-                }
+        if (jsonArray == null) {
+            return hashMapArrayList
+        }
+        for (i in 0 until jsonArray.length()) {
+            try {
+                hashMapArrayList.add(convertJSONObjectToHashMap(jsonArray.getJSONObject(i)))
+            } catch (e: JSONException) {
+                Logger.v(TAG, "Could not convert JSONArray of JSONObjects to ArrayList of HashMaps", e)
             }
         }
         return hashMapArrayList
@@ -109,64 +103,61 @@ object Utils {
 
     @JvmStatic
     fun convertJSONArrayToArrayList(array: JSONArray?): ArrayList<String> {
-        val listdata = ArrayList<String>()
-        if (array != null) {
-            for (i in 0 until array.length()) {
-                try {
-                    listdata.add(array.getString(i))
-                } catch (e: JSONException) {
-                    Logger.v(TAG, "Could not convert JSONArray to ArrayList", e)
-                }
+        val listData = ArrayList<String>()
+        if (array == null) {
+            return listData
+        }
+        for (i in 0 until array.length()) {
+            try {
+                listData.add(array.getString(i))
+            } catch (e: JSONException) {
+                Logger.v(TAG, "Could not convert JSONArray to ArrayList", e)
             }
         }
-        return listdata
+        return listData
     }
 
     @JvmStatic
     fun convertJSONObjectToHashMap(b: JSONObject): HashMap<String, Any> {
         val map = HashMap<String, Any>()
-        val keys = b.keys()
-
-        while (keys.hasNext()) {
+        for (s in b.keys()) {
             try {
-                val s = keys.next()
-                val o = b.get(s)
-                if (o is JSONObject) {
-                    map.putAll(convertJSONObjectToHashMap(o))
-                } else {
-                    map[s] = b.get(s)
+                when (val o = b.get(s)) {
+                    is JSONObject -> map.putAll(convertJSONObjectToHashMap(o))
+                    else -> map[s] = o
                 }
             } catch (ignored: Throwable) {
                 // Ignore
             }
         }
-
         return map
     }
 
     @JvmStatic
     fun convertToTitleCase(text: String?): String? {
-        if (text == null || text.isEmpty()) {
+        if (text.isNullOrEmpty()) {
             return text
         }
 
-        val converted = StringBuilder()
-
         var convertNext = true
-        for (c in text.toCharArray()) {
-            var ch = c
-            if (Character.isSpaceChar(ch)) {
-                convertNext = true
-            } else if (convertNext) {
-                ch = Character.toTitleCase(ch)
-                convertNext = false
-            } else {
-                ch = Character.toLowerCase(ch)
-            }
-            converted.append(ch)
-        }
+        return buildString {
+            for (c in text) {
+                val ch = when {
+                    Character.isSpaceChar(c) -> {
+                        convertNext = true
+                        c
+                    }
 
-        return converted.toString()
+                    convertNext -> {
+                        convertNext = false
+                        Character.toTitleCase(c)
+                    }
+
+                    else -> Character.toLowerCase(c)
+                }
+                append(ch)
+            }
+        }
     }
 
     // used by inapp.
@@ -177,9 +168,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun getNowInMillis(): Long {
-        return System.currentTimeMillis()
-    }
+    fun getNowInMillis(): Long = System.currentTimeMillis()
 
     @JvmStatic
     @SuppressLint("MissingPermission")
@@ -245,8 +234,10 @@ object Utils {
     fun getDownloadedBitmapPostFallbackIconCheck(
         fallbackToAppIcon: Boolean, context: Context?,
         ic: DownloadedBitmap
-    ): DownloadedBitmap {
-        return if (ic.bitmap != null) ic else (if (fallbackToAppIcon) getAppIcon(context) else ic)
+    ): DownloadedBitmap = when {
+        ic.bitmap != null -> ic
+        fallbackToAppIcon -> getAppIcon(context)
+        else -> ic
     }
 
     /**
@@ -308,15 +299,12 @@ object Utils {
                 downloadRequest
             )
 
-            config.logger.debug(config.accountId, "Downloaded GIF in : " + downloadedBitmap.downloadTime)
+            config.logger.debug(config.accountId, "Downloaded GIF in : ${downloadedBitmap.downloadTime}")
 
             return if (downloadedBitmap.status == DownloadedBitmap.Status.SUCCESS && downloadedBitmap.bytes != null) {
                 downloadedBitmap
             } else {
-                config.logger.debug(
-                    config.accountId,
-                    "Failed to download gif " + downloadedBitmap.status.statusValue
-                )
+                config.logger.debug(config.accountId, "Failed to download gif ${downloadedBitmap.status.statusValue}")
                 null
             }
         } catch (e: Exception) {
@@ -348,14 +336,11 @@ object Utils {
                 return null
             }
 
-            val file = File(pushDir, clock.currentTimeMillis().toString() + ".gif")
+            val file = File(pushDir, "${clock.currentTimeMillis()}.gif")
             Files.write(file.toPath(), gifBytes)
 
             // Return content URI using FileProvider
-            return FileProvider.getUriForFile(
-                context,
-                context.packageName + ".clevertap.fileprovider", file
-            )
+            return FileProvider.getUriForFile(context, "${context.packageName}.clevertap.fileprovider", file)
         } catch (e: Exception) {
             config.logger.debug(
                 config.accountId,
@@ -409,29 +394,23 @@ object Utils {
             val currentTimeMillis = clock.currentTimeMillis()
             var deletedCount = 0
             for (file in files) {
-                if (file.isFile && file.name.endsWith(".gif")) {
-                    try {
-                        val fileName = file.name
-                        val timestampStr = fileName.substring(0, fileName.lastIndexOf(".gif"))
-                        val fileTimestamp = java.lang.Long.parseLong(timestampStr)
+                if (!file.isFile || !file.name.endsWith(".gif")) {
+                    continue
+                }
+                try {
+                    val fileName = file.name
+                    val fileTimestamp = fileName.substring(0, fileName.lastIndexOf(".gif")).toLong()
 
-                        // Check if file is one day or older
-                        if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
-                            if (file.delete()) {
-                                deletedCount++
-                            } else {
-                                config.logger.debug(
-                                    config.accountId,
-                                    "Failed to delete old GIF file: " + file.name
-                                )
-                            }
+                    // Check if file is one day or older
+                    if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
+                        if (file.delete()) {
+                            deletedCount++
+                        } else {
+                            config.logger.debug(config.accountId, "Failed to delete old GIF file: ${file.name}")
                         }
-                    } catch (e: Exception) {
-                        config.logger.debug(
-                            config.accountId,
-                            "Skipping file with invalid file name format: " + file.name
-                        )
                     }
+                } catch (e: Exception) {
+                    config.logger.debug(config.accountId, "Skipping file with invalid file name format: ${file.name}")
                 }
             }
             if (deletedCount > 0) {
@@ -449,9 +428,8 @@ object Utils {
     }
 
     @JvmStatic
-    fun getThumbnailImage(context: Context?, image: String?): Int {
-        return context?.resources?.getIdentifier(image, "drawable", context.packageName) ?: -1
-    }
+    fun getThumbnailImage(context: Context?, image: String?): Int =
+        context?.resources?.getIdentifier(image, "drawable", context.packageName) ?: -1
 
     /**
      * Checks whether a particular permission is available or not.
@@ -460,21 +438,15 @@ object Utils {
      * @param permission The fully qualified Android permission name
      */
     @JvmStatic
-    fun hasPermission(context: Context, permission: String): Boolean {
-        return try {
-            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission)
-        } catch (t: Throwable) {
-            false
-        }
+    fun hasPermission(context: Context, permission: String): Boolean = try {
+        PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission)
+    } catch (t: Throwable) {
+        false
     }
 
     @JvmStatic
-    fun isActivityDead(activity: Activity?): Boolean {
-        if (activity == null) {
-            return true
-        }
-        return activity.isFinishing || activity.isDestroyed
-    }
+    fun isActivityDead(activity: Activity?): Boolean =
+        activity == null || activity.isFinishing || activity.isDestroyed
 
     @JvmStatic
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -483,19 +455,15 @@ object Utils {
             return false
         }
 
-        val pm = context.packageManager
-        val packageName = context.packageName
-
-        val packageInfo: PackageInfo
         try {
-            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES)
-            // Java iterated the array without a null check; keep the same NPE if it is null.
-            val services = packageInfo.services!!
-            for (serviceInfo in services) {
-                if (serviceInfo.name == clazz.name) {
-                    Logger.v(TAG, "Service " + serviceInfo.name + " found")
-                    return true
-                }
+            val packageInfo: PackageInfo =
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SERVICES)
+            // Java iterated the array without a null check: an app without services still fails here.
+            val services = checkNotNull(packageInfo.services) { "package has no services" }
+            val serviceInfo = services.firstOrNull { it.name == clazz.name }
+            if (serviceInfo != null) {
+                Logger.v(TAG, "Service ${serviceInfo.name} found")
+                return true
             }
         } catch (e: PackageManager.NameNotFoundException) {
             Logger.d(TAG, "Intent Service name not found exception - ", e)
@@ -505,13 +473,8 @@ object Utils {
 
     @JvmStatic
     @Throws(JSONException::class)
-    fun optionalStringKey(o: JSONObject, k: String): String? {
-        if (o.has(k) && !o.isNull(k)) {
-            return o.getString(k)
-        }
-
-        return null
-    }
+    fun optionalStringKey(o: JSONObject, k: String): String? =
+        if (o.has(k) && !o.isNull(k)) o.getString(k) else null
 
     /**
      * Handy method to post any runnable to run on the main thread.
@@ -520,30 +483,23 @@ object Utils {
      */
     @JvmStatic
     fun runOnUiThread(runnable: Runnable?) {
-        if (runnable != null) {
+        runnable ?: return
+        if (Looper.myLooper() == Looper.getMainLooper()) {
             //run if already on the UI thread
-            if (Looper.myLooper() == Looper.getMainLooper()) {
-                runnable.run()
-            } else {
-                //post on UI thread if called from Non-UI thread.
-                val mainHandler = Handler(Looper.getMainLooper())
-                mainHandler.post(runnable)
-            }
+            runnable.run()
+        } else {
+            //post on UI thread if called from Non-UI thread.
+            Handler(Looper.getMainLooper()).post(runnable)
         }
     }
 
     @JvmStatic
     fun setPackageNameFromResolveInfoList(context: Context, launchIntent: Intent) {
-        val resolveInfoList: List<android.content.pm.ResolveInfo>? =
-            context.packageManager.queryIntentActivities(launchIntent, 0)
-        if (resolveInfoList != null) {
-            val appPackageName = context.packageName
-            for (resolveInfo in resolveInfoList) {
-                if (appPackageName == resolveInfo.activityInfo.packageName) {
-                    launchIntent.setPackage(appPackageName)
-                    break
-                }
-            }
+        val resolveInfoList: List<android.content.pm.ResolveInfo> =
+            context.packageManager.queryIntentActivities(launchIntent, 0) ?: return
+        val appPackageName = context.packageName
+        if (resolveInfoList.any { appPackageName == it.activityInfo.packageName }) {
+            launchIntent.setPackage(appPackageName)
         }
     }
 
@@ -555,48 +511,34 @@ object Utils {
     @Throws(JSONException::class)
     fun stringToBundle(content: String?): Bundle {
         val bundle = Bundle()
-
-        if (!TextUtils.isEmpty(content)) {
-            val jsonObject = JSONObject(content!!)
-            val iter: Iterator<*> = jsonObject.keys()
-            while (iter.hasNext()) {
-                val key = iter.next() as String
-                val value = jsonObject.getString(key)
-                bundle.putString(key, value)
-            }
+        if (content.isNullOrEmpty()) {
+            return bundle
         }
-
+        val jsonObject = JSONObject(content)
+        for (key in jsonObject.keys()) {
+            bundle.putString(key, jsonObject.getString(key))
+        }
         return bundle
     }
 
     @JvmStatic
     fun validateCTID(cleverTapID: String?): Boolean {
-        if (cleverTapID == null) {
-            Logger.i(
-                TAG,
+        val error = when {
+            cleverTapID == null ->
                 "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."
-            )
-            return false
-        }
-        if (cleverTapID.isEmpty()) {
-            Logger.i(
-                TAG,
+
+            cleverTapID.isEmpty() ->
                 "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."
-            )
-            return false
-        }
-        if (cleverTapID.length > 64) {
-            Logger.i(TAG, "Custom CleverTap ID passed is greater than 64 characters. ")
-            return false
-        }
-        if (!cleverTapID.matches(Regex("[=|<>;+.A-Za-z0-9()!:$@_-]*"))) {
-            Logger.i(
-                TAG,
+
+            cleverTapID.length > 64 -> "Custom CleverTap ID passed is greater than 64 characters. "
+
+            !cleverTapID.matches(Regex("[=|<>;+.A-Za-z0-9()!:$@_-]*")) ->
                 "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - "
-            )
-            return false
+
+            else -> return true
         }
-        return true
+        Logger.i(TAG, error)
+        return false
     }
 
     @JvmStatic
@@ -619,18 +561,22 @@ object Utils {
 
     @Throws(NullPointerException::class)
     private fun getAppIcon(context: Context?): DownloadedBitmap {
+        // A null context fails with an NPE, as declared: first caught by the logo fallback, then
+        // thrown from the fallback (no error handling there - handled upstream), exactly as in Java.
+        fun requireContext(): Context = context ?: throw NullPointerException("context is null")
+
         // Try to get the app logo first
-        try {
-            // A null context throws an NPE here, which is handled by the fallback below as in Java.
-            val logo = context!!.packageManager.getApplicationLogo(context.applicationInfo)
+        return try {
+            val ctx = requireContext()
+            val logo = ctx.packageManager.getApplicationLogo(ctx.applicationInfo)
                 ?: throw Exception("Logo is null")
-            return DownloadedBitmapFactory.successBitmap(drawableToBitmap(logo), 0, null)
+            DownloadedBitmapFactory.successBitmap(drawableToBitmap(logo), 0, null)
         } catch (e: Exception) {
             Logger.v(TAG, "Failed to get app logo, falling back to app icon", e)
             // Try to get the app icon now
-            // No error handling here - handle upstream
-            return DownloadedBitmapFactory.successBitmap(
-                drawableToBitmap(context!!.packageManager.getApplicationIcon(context.applicationInfo)),
+            val ctx = requireContext()
+            DownloadedBitmapFactory.successBitmap(
+                drawableToBitmap(ctx.packageManager.getApplicationIcon(ctx.applicationInfo)),
                 0, null
             )
         }
@@ -640,67 +586,53 @@ object Utils {
     fun getSCDomain(domain: String): String {
         // Pattern#split(input, limit) matches the former String#split(regex, limit).
         val parts = Pattern.compile("\\.").split(domain, 2)
-        return parts[0] + "." + AUTH + "." + parts[1]
+        return "${parts[0]}.$AUTH.${parts[1]}"
     }
 
     @JvmStatic
     fun isRenderFallback(remoteMessage: RemoteMessage, context: Context?): Boolean {
-        val renderRateKillSwitch = java.lang.Boolean
-            .parseBoolean(remoteMessage.data[Constants.WZRK_TSR_FB]) //tsrfb
-        val renderRateFallback = java.lang.Boolean
-            .parseBoolean(remoteMessage.data[Constants.NOTIFICATION_RENDER_FALLBACK])
+        // Boolean.parseBoolean semantics: only a case-insensitive "true" is true.
+        val renderRateKillSwitch = "true".equals(remoteMessage.data[Constants.WZRK_TSR_FB], ignoreCase = true) //tsrfb
+        val renderRateFallback =
+            "true".equals(remoteMessage.data[Constants.NOTIFICATION_RENDER_FALLBACK], ignoreCase = true)
 
         return !renderRateKillSwitch && renderRateFallback
     }
 
     @JvmStatic
     fun navigateToAndroidSettingsForNotifications(context: Context) {
-        val intent = Intent()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-            intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        } else {
-            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS")
-            intent.putExtra("app_package", context.packageName)
-            intent.putExtra("app_uid", context.applicationInfo.uid)
+        val intent = Intent().apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            } else {
+                action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                putExtra("app_package", context.packageName)
+                putExtra("app_uid", context.applicationInfo.uid)
+            }
         }
         context.startActivity(intent)
     }
 
     @JvmStatic
     @WorkerThread
-    fun isMainProcess(context: Context, mainProcessName: String?): Boolean {
-        try {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
-
-            // Java dereferenced both without null checks; the NPE is caught below.
-            val processInfos = am!!.runningAppProcesses!!
-
-            val myPid = Process.myPid()
-
-            for (info in processInfos) {
-                if (info.pid == myPid && mainProcessName!! == info.processName) {
-                    return true
-                }
-            }
-        } catch (e: Exception) {
-            Logger.v(TAG, "Error checking if main process", e)
+    fun isMainProcess(context: Context, mainProcessName: String?): Boolean = try {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
+        // Java dereferenced both without null checks; that failure is caught below.
+        val processInfos = checkNotNull(am?.runningAppProcesses) { "running app processes unavailable" }
+        val myPid = Process.myPid()
+        processInfos.any { info ->
+            info.pid == myPid && checkNotNull(mainProcessName) { "main process name is null" } == info.processName
         }
-        return false
+    } catch (e: Exception) {
+        Logger.v(TAG, "Error checking if main process", e)
+        false
     }
 
     @JvmStatic
-    fun toJSONObjectList(jsonArray: JSONArray): MutableList<JSONObject> {
-        val jsonObjectList: MutableList<JSONObject> = ArrayList()
-        for (index in 0 until jsonArray.length()) {
-            val obj = jsonArray.optJSONObject(index)
-            if (obj != null) {
-                jsonObjectList.add(obj)
-            }
-        }
-        return jsonObjectList
-    }
+    fun toJSONObjectList(jsonArray: JSONArray): MutableList<JSONObject> =
+        (0 until jsonArray.length()).mapNotNullTo(ArrayList()) { jsonArray.optJSONObject(it) }
 
     /**
      * Calculates the haversine distance between two locations on Earth.
@@ -716,21 +648,21 @@ object Utils {
         // A globally-average value is usually considered to be 6371 km (6371e3).
         // This method uses 6378.2 km as the radius since this is the value
         // used by the backend, and calculations should produce the same result.
-        val EARTH_DIAMETER = 2 * 6378.2
+        val earthDiameter = 2 * 6378.2
 
-        val RAD_CONVERT = Math.PI / 180
-        val phi1 = coordinateA.latitude * RAD_CONVERT
-        val phi2 = coordinateB.latitude * RAD_CONVERT
+        val radConvert = PI / 180
+        val phi1 = coordinateA.latitude * radConvert
+        val phi2 = coordinateB.latitude * radConvert
 
-        val deltaPhi = (coordinateB.latitude - coordinateA.latitude) * RAD_CONVERT
-        val deltaLambda = (coordinateB.longitude - coordinateA.longitude) * RAD_CONVERT
+        val deltaPhi = (coordinateB.latitude - coordinateA.latitude) * radConvert
+        val deltaLambda = (coordinateB.longitude - coordinateA.longitude) * radConvert
 
-        val sinPhi = Math.sin(deltaPhi / 2)
-        val sinLambda = Math.sin(deltaLambda / 2)
+        val sinPhi = sin(deltaPhi / 2)
+        val sinLambda = sin(deltaLambda / 2)
 
-        val a = sinPhi * sinPhi + Math.cos(phi1) * Math.cos(phi2) * sinLambda * sinLambda
+        val a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda
         // Distance in km
-        return EARTH_DIAMETER * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return earthDiameter * atan2(sqrt(a), sqrt(1 - a))
     }
 
     /**
@@ -758,9 +690,7 @@ object Utils {
      */
     @JvmStatic
     fun getNormalizedName(name: String?): String? {
-        if (name == null) {
-            return null
-        }
+        name ?: return null
         // lowercase with English locale for consistent behavior with the backend and across different device locales
         return normalizedNameExcludePattern.matcher(name).replaceAll("").lowercase(Locale.ENGLISH)
     }
@@ -773,7 +703,6 @@ object Utils {
      * @see getNormalizedName
      */
     @JvmStatic
-    fun areNamesNormalizedEqual(name: String?, other: String?): Boolean {
-        return Objects.equals(getNormalizedName(name), getNormalizedName(other))
-    }
+    fun areNamesNormalizedEqual(name: String?, other: String?): Boolean =
+        getNormalizedName(name) == getNormalizedName(other)
 }

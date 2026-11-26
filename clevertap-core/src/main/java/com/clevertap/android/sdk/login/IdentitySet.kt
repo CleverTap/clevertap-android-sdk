@@ -14,7 +14,7 @@ internal open class IdentitySet {
         init(keys)
     }
 
-    private constructor(hashSet: HashSet<String>) {
+    private constructor(hashSet: Set<String>) {
         identities.addAll(hashSet)
     }
 

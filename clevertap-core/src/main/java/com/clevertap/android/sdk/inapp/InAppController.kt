@@ -391,8 +391,8 @@ internal class InAppController(
             InAppActionType.KEY_VALUES -> {
                 val keyValues = action.keyValues
                 if (keyValues?.isNotEmpty() == true) {
-                    if (callbackManager.getInAppNotificationButtonListener() != null) {
-                        callbackManager.getInAppNotificationButtonListener()
+                    if (callbackManager.inAppNotificationButtonListener != null) {
+                        callbackManager.inAppNotificationButtonListener
                             ?.onInAppButtonClick(keyValues)
                     }
                 }
@@ -516,7 +516,7 @@ internal class InAppController(
             )
         }
         try {
-            val listener = callbackManager.getInAppNotificationListener()
+            val listener = callbackManager.inAppNotificationListener
             if (listener != null) {
                 val notifKVS = if (inAppNotification.customExtras != null) {
                     Utils.convertJSONObjectToHashMap(inAppNotification.customExtras!!)
@@ -565,7 +565,7 @@ internal class InAppController(
 
     private fun notifyOnShow(inAppNotification: CTInAppNotification) {
         try {
-            callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
+            callbackManager.inAppNotificationListener?.onShow(inAppNotification)
         } catch (t: Throwable) {
             logger.verbose(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
@@ -1325,7 +1325,7 @@ internal class InAppController(
     }
 
     private fun checkBeforeShowApprovalBeforeDisplay(inAppNotification: CTInAppNotification): Boolean {
-        val listener = callbackManager.getInAppNotificationListener()
+        val listener = callbackManager.inAppNotificationListener
 
         return if (listener != null) {
             val kvs = if (inAppNotification.customExtras != null) {

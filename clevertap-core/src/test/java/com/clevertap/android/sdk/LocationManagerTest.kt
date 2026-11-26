@@ -49,7 +49,7 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_null_when_Location_is_null() {
-        val future = locationManager._setLocation(null)
+        val future = locationManager.updateLocation(null)
 
         assertNull(future)
     }
@@ -59,7 +59,7 @@ class LocationManagerTest : BaseTestCase() {
         CoreMetaData.setAppForeground(false)
         coreMetaData.isLocationForGeofence = false
 
-        val future = locationManager._setLocation(location)
+        val future = locationManager.updateLocation(location)
 
         assertNull(future)
     }
@@ -71,7 +71,7 @@ class LocationManagerTest : BaseTestCase() {
         coreMetaData.isLocationForGeofence = true
         locationManager.lastLocationPingTimeForGeofence = 100
 
-        val future = locationManager._setLocation(location)
+        val future = locationManager.updateLocation(location)
 
         assertNull(future)
         assertEquals(locationManager.lastLocationPingTimeForGeofence, 100)
@@ -88,7 +88,7 @@ class LocationManagerTest : BaseTestCase() {
         coreMetaData.isLocationForGeofence = true
         locationManager.lastLocationPingTimeForGeofence = 100
 
-        val futureActual = locationManager._setLocation(location)
+        val futureActual = locationManager.updateLocation(location)
 
         verify { eventQueueManager.queueEvent(any(), any(), any()) }
         assertNotNull(futureActual)
@@ -102,7 +102,7 @@ class LocationManagerTest : BaseTestCase() {
         coreMetaData.isLocationForGeofence = false
         locationManager.lastLocationPingTime = 100
 
-        val future = locationManager._setLocation(location)
+        val future = locationManager.updateLocation(location)
 
         assertNull(future)
         assertEquals(locationManager.lastLocationPingTime, 100)
@@ -119,7 +119,7 @@ class LocationManagerTest : BaseTestCase() {
         coreMetaData.isLocationForGeofence = false
         locationManager.lastLocationPingTime = 100
 
-        val futureActual = locationManager._setLocation(location)
+        val futureActual = locationManager.updateLocation(location)
 
         verify { eventQueueManager.queueEvent(any(), any(), any()) }
         assertNotNull(futureActual)
@@ -128,7 +128,7 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_getLocation_returns_null_when_location_manager_dont_have_providers_enabled() {
-        val actualLocation = locationManager._getLocation()
+        val actualLocation = locationManager.findBestLocation()
         assertNull(actualLocation)
     }
 
@@ -139,7 +139,7 @@ class LocationManagerTest : BaseTestCase() {
         shadowOf.setProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER, true)
         shadowOf.setLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER, location)
 
-        val actualLocation = locationManager._getLocation()
+        val actualLocation = locationManager.findBestLocation()
 
         assertEquals(location, actualLocation)
     }
@@ -151,7 +151,7 @@ class LocationManagerTest : BaseTestCase() {
         shadowOf.setProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER, true)
         shadowOf.setLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER, null)
 
-        val actualLocation = locationManager._getLocation()
+        val actualLocation = locationManager.findBestLocation()
 
         assertNull(actualLocation)
     }
@@ -171,7 +171,7 @@ class LocationManagerTest : BaseTestCase() {
         }
         shadowOf.setLastKnownLocation(android.location.LocationManager.GPS_PROVIDER, gpsLocation)
 
-        val actualLocation = locationManager._getLocation()
+        val actualLocation = locationManager.findBestLocation()
 
         assertEquals(gpsLocation, actualLocation)
     }

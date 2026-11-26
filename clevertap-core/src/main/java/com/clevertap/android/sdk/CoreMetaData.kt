@@ -6,7 +6,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import java.lang.ref.WeakReference
-import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
 
@@ -23,8 +22,6 @@ open class CoreMetaData : CleverTapMetaData() {
     private var appLaunchPushed = false
 
     private val appLaunchPushedLock = Any()
-
-    private var currentScreenName: String? = null
 
     var currentSessionId: Int = 0
 
@@ -90,8 +87,11 @@ open class CoreMetaData : CleverTapMetaData() {
             appInboxActivityReference = WeakReference(activity)
         }
 
+    var screenName: String? = null
+        private set
+
     fun setCurrentScreenName(currentScreenName: String?) {
-        this.currentScreenName = currentScreenName
+        screenName = currentScreenName
     }
 
     @Synchronized
@@ -120,29 +120,21 @@ open class CoreMetaData : CleverTapMetaData() {
     var campaign: String?
         get() = campaignValue
         set(campaign) {
-            if (this.campaignValue == null) {
-                this.campaignValue = campaign
+            if (campaignValue == null) {
+                campaignValue = campaign
             }
         }
 
-    fun getCustomSdkVersion(customSdkName: String): Int {
-        var version = customSdkVersions[customSdkName]
-        if (version == null) {
-            version = sharedCustomSdkVersions[customSdkName]
-        }
-        return version ?: 0
-    }
+    fun getCustomSdkVersion(customSdkName: String): Int =
+        customSdkVersions[customSdkName] ?: sharedCustomSdkVersions[customSdkName] ?: 0
 
     fun setCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
         customSdkVersions[customSdkName] = customSdkVersion
     }
 
+    // Instance versions override the shared ones registered by modules.
     val allCustomSdkVersions: MutableMap<String, Int>
-        get() {
-            val allCustomSdkVersions: MutableMap<String, Int> = HashMap(sharedCustomSdkVersions)
-            allCustomSdkVersions.putAll(customSdkVersions)
-            return allCustomSdkVersions
-        }
+        get() = HashMap(sharedCustomSdkVersions).apply { putAll(customSdkVersions) }
 
     // only set if not already set during the session
     @get:Synchronized
@@ -150,8 +142,8 @@ open class CoreMetaData : CleverTapMetaData() {
     var medium: String?
         get() = mediumValue
         set(medium) {
-            if (this.mediumValue == null) {
-                this.mediumValue = medium
+            if (mediumValue == null) {
+                mediumValue = medium
             }
         }
 
@@ -162,13 +154,10 @@ open class CoreMetaData : CleverTapMetaData() {
     var source: String?
         get() = sourceValue
         set(source) {
-            if (this.sourceValue == null) {
-                this.sourceValue = source
+            if (sourceValue == null) {
+                sourceValue = source
             }
         }
-
-    val screenName: String?
-        get() = currentScreenName
 
     // only set if not already set during the session
     @get:Synchronized
@@ -176,50 +165,24 @@ open class CoreMetaData : CleverTapMetaData() {
     var wzrkParams: JSONObject?
         get() = wzrkParamsValue
         set(wzrkParams) {
-            if (this.wzrkParamsValue == null) {
-                this.wzrkParamsValue = wzrkParams
+            if (wzrkParamsValue == null) {
+                wzrkParamsValue = wzrkParams
             }
         }
 
-    fun inCurrentSession(): Boolean {
-        return currentSessionId > 0
-    }
+    fun inCurrentSession(): Boolean = currentSessionId > 0
 
     var isAppLaunchPushed: Boolean
-        get() {
-            synchronized(appLaunchPushedLock) {
-                return appLaunchPushed
-            }
-        }
-        set(pushed) {
-            synchronized(appLaunchPushedLock) {
-                appLaunchPushed = pushed
-            }
-        }
+        get() = synchronized(appLaunchPushedLock) { appLaunchPushed }
+        set(pushed) = synchronized(appLaunchPushedLock) { appLaunchPushed = pushed }
 
     var isCurrentUserOptedOut: Boolean
-        get() {
-            synchronized(optOutFlagLock) {
-                return currentUserOptedOut
-            }
-        }
-        set(enable) {
-            synchronized(optOutFlagLock) {
-                currentUserOptedOut = enable
-            }
-        }
+        get() = synchronized(optOutFlagLock) { currentUserOptedOut }
+        set(enable) = synchronized(optOutFlagLock) { currentUserOptedOut = enable }
 
     var enabledSystemEvents: Boolean
-        get() {
-            synchronized(optOutFlagLock) {
-                return allowSystemEvents
-            }
-        }
-        set(enable) {
-            synchronized(optOutFlagLock) {
-                allowSystemEvents = enable
-            }
-        }
+        get() = synchronized(optOutFlagLock) { allowSystemEvents }
+        set(enable) = synchronized(optOutFlagLock) { allowSystemEvents = enable }
 
     /**
      * Checks if CT instance should send fresh app launch flag (fl: true).
@@ -228,10 +191,8 @@ open class CoreMetaData : CleverTapMetaData() {
      * 2. This instance has NOT yet sent fl:true
      */
     val isFreshAppLaunch: Boolean
-        get() {
-            synchronized(freshAppLaunchLock) {
-                return getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent
-            }
+        get() = synchronized(freshAppLaunchLock) {
+            getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent
         }
 
     /**
@@ -258,36 +219,25 @@ open class CoreMetaData : CleverTapMetaData() {
         private var initialAppEnteredForegroundTime = 0
 
         @JvmStatic
-        fun getCurrentActivity(): Activity? {
-            return currentActivity?.get()
-        }
+        fun getCurrentActivity(): Activity? = currentActivity?.get()
 
         @JvmStatic
-        fun getInitialAppEnteredForegroundTime(): Int {
-            return initialAppEnteredForegroundTime
-        }
+        fun getInitialAppEnteredForegroundTime(): Int = initialAppEnteredForegroundTime
 
         @JvmStatic
         fun setCurrentActivity(activity: Activity?) {
-            if (activity == null) {
-                currentActivity = null
-                return
-            }
-            if (!activity.localClassName.contains("InAppNotificationActivity")) {
-                currentActivity = WeakReference(activity)
+            when {
+                activity == null -> currentActivity = null
+                !activity.localClassName.contains("InAppNotificationActivity") ->
+                    currentActivity = WeakReference(activity)
             }
         }
 
         @JvmStatic
-        fun getCurrentActivityName(): String? {
-            val current = getCurrentActivity()
-            return current?.localClassName
-        }
+        fun getCurrentActivityName(): String? = getCurrentActivity()?.localClassName
 
         @JvmStatic
-        fun isAppForeground(): Boolean {
-            return appForeground
-        }
+        fun isAppForeground(): Boolean = appForeground
 
         @JvmStatic
         fun setAppForeground(isForeground: Boolean) {
@@ -295,19 +245,17 @@ open class CoreMetaData : CleverTapMetaData() {
         }
 
         @JvmStatic
-        fun setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime: Int) {
-            this.initialAppEnteredForegroundTime = initialAppEnteredForegroundTime
+        fun setInitialAppEnteredForegroundTime(time: Int) {
+            initialAppEnteredForegroundTime = time
         }
 
         @JvmStatic
-        fun getActivityCount(): Int {
-            return activityCount
-        }
+        fun getActivityCount(): Int = activityCount
 
         @JvmStatic
         fun setSharedCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
             // Shared versions reach af for every instance, so they must not replace a built-in af field
-            if (CTJsonConverter.RESERVED_AF_KEYS.contains(customSdkName)) {
+            if (customSdkName in CTJsonConverter.RESERVED_AF_KEYS) {
                 Logger.v("Ignoring SDK version for reserved af key $customSdkName")
                 return
             }
