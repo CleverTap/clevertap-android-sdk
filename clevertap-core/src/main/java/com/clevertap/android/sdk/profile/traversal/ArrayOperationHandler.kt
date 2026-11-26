@@ -173,29 +173,55 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         val arrayLength = min(oldArray.length(), newArray.length())
 
         for (i in 0 until arrayLength) {
-            val oldElement = oldArray.get(i)
-            val newElement = newArray.get(i)
-
-            when {
-                oldElement is JSONObject && newElement is JSONObject -> {
-                    val elementChanges = mutableMapOf<String, ProfileChange>()
-                    recursiveTraversal(oldElement, newElement, "", elementChanges)
-                    if (elementChanges.isNotEmpty()) {
-                        arrayModified = true
-                    }
-                }
-                oldElement is Number && newElement is Number -> {
-                    val result = applyNumberOperation(oldElement, newElement, operation)
-                    if (!JsonComparisonUtils.areEqual(oldElement, result)) {
-                        oldArray.put(i, result)
-                        arrayModified = true
-                    }
-                }
+            val elementModified = processArrayElement(
+                oldArray = oldArray,
+                newArray = newArray,
+                i = i,
+                operation = operation,
+                recursiveTraversal = recursiveTraversal
+            )
+            if (elementModified) {
+                arrayModified = true
             }
         }
 
         if (arrayModified) {
             changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
+        }
+    }
+
+    /**
+     * Applies [operation] to the element at [i]: nested objects are traversed, numbers are
+     * updated in place in [oldArray]; anything else is left alone.
+     *
+     * @return true if the element changed
+     */
+    private fun processArrayElement(
+        oldArray: JSONArray,
+        newArray: JSONArray,
+        i: Int,
+        operation: ProfileOperation,
+        recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
+    ): Boolean {
+        val oldElement = oldArray.get(i)
+        val newElement = newArray.get(i)
+
+        return when {
+            oldElement is JSONObject && newElement is JSONObject -> {
+                val elementChanges = mutableMapOf<String, ProfileChange>()
+                recursiveTraversal(oldElement, newElement, "", elementChanges)
+                elementChanges.isNotEmpty()
+            }
+            oldElement is Number && newElement is Number -> {
+                val result = applyNumberOperation(oldElement, newElement, operation)
+                if (!JsonComparisonUtils.areEqual(oldElement, result)) {
+                    oldArray.put(i, result)
+                    true
+                } else {
+                    false
+                }
+            }
+            else -> false
         }
     }
 

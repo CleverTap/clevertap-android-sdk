@@ -85,6 +85,28 @@ internal class DeleteOperationHandler(
         }
     }
 
+    /** Deletes from [oldElement] every field that [newElement] names. */
+    private fun deleteFieldsFromElement(oldElement: JSONObject, newElement: JSONObject) {
+        val elementKeys = newElement.keys()
+        while (elementKeys.hasNext()) {
+            val key = elementKeys.next()
+            val value = newElement.get(key)
+            handleDelete(
+                oldElement,
+                key,
+                value,
+                "",
+                mutableMapOf()
+            ) { target, source, _, _ -> deleteNestedFields(target, source) }
+        }
+    }
+
+    private fun deleteNestedFields(target: JSONObject, source: JSONObject?) {
+        if (source != null) {
+            handleDeleteRecursive(target, source)
+        }
+    }
+
     /**
      * Deletes specific fields from array elements.
      * Each element in newArray specifies which fields to delete from corresponding oldArray element.
@@ -104,22 +126,7 @@ internal class DeleteOperationHandler(
             val newElement = newArray.get(i)
 
             if (oldElement is JSONObject && newElement is JSONObject) {
-                val elementKeys = newElement.keys()
-                while (elementKeys.hasNext()) {
-                    val key = elementKeys.next()
-                    val value = newElement.get(key)
-                    handleDelete(
-                        oldElement,
-                        key,
-                        value,
-                        "",
-                        mutableMapOf()
-                    ) { target, source, _, _ ->
-                        if (source != null) {
-                           handleDeleteRecursive(target, source)
-                        }
-                    }
-                }
+                deleteFieldsFromElement(oldElement = oldElement, newElement = newElement)
                 arrayModified = true
 
                 // Mark for removal if empty
