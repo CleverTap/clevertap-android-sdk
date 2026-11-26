@@ -24,6 +24,10 @@ def (major,minor,patch) = libraryVersion.split("\\.")
 kotlin {
     // AGP 9 forces KGP 2.2.10; keep the published kotlin-stdlib dependency the same as before
     coreLibrariesVersion = "2.0.10"
+    // Explicit API mode (SDK-6380): every public declaration needs an explicit visibility and return
+    // type, so nothing becomes public API by accident. Warning mode while the existing code is
+    // migrated; switched to explicitApi() (errors) once it is clean.
+    explicitApiWarning()
 }
 
 android {
