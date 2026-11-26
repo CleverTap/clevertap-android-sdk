@@ -106,25 +106,10 @@ internal open class CTMessageDAO() {
         ): CTMessageDAO? {
             return try {
                 val id = if (inboxMessage.has("_id")) { inboxMessage.getString("_id") } else { null }
-                val date: Long = if (inboxMessage.has("date")) {
-                    inboxMessage.getInt("date").toLong()
-                } else {
-                    System.currentTimeMillis() / 1000
-                }
-                val expires: Long = if (inboxMessage.has("wzrk_ttl")) {
-                    inboxMessage.getInt("wzrk_ttl").toLong()
-                } else {
-                    (System.currentTimeMillis() + Constants.ONE_DAY_IN_MILLIS) / 1000
-                }
+                val date: Long = dateOf(inboxMessage)
+                val expires: Long = expiresOf(inboxMessage)
                 val cellObject = if (inboxMessage.has("msg")) { inboxMessage.getJSONObject("msg") } else { null }
-                val tagsList = ArrayList<String>()
-                //Part of "msg" object
-                val tagsArray = if (cellObject?.has("tags") == true) { cellObject.getJSONArray("tags") } else { null }
-                if (tagsArray != null) {
-                    for (i in 0 until tagsArray.length()) {
-                        tagsList.add(tagsArray.getString(i))
-                    }
-                }
+                val tagsList = tagsOf(cellObject)
                 val campaignId = if (inboxMessage.has("wzrk_id")) { inboxMessage.getString("wzrk_id") } else { "0_0" }
                 if (campaignId.equals("0_0", ignoreCase = true)) {
                     inboxMessage.put("wzrk_id", campaignId) //For test inbox Notification Viewed
@@ -148,6 +133,37 @@ internal open class CTMessageDAO() {
                 Logger.d("Unable to parse Notification inbox message to CTMessageDao - ${e.localizedMessage}")
                 null
             }
+        }
+
+        /** The message date in seconds, or now when absent. */
+        private fun dateOf(inboxMessage: JSONObject): Long {
+            return if (inboxMessage.has("date")) {
+                inboxMessage.getInt("date").toLong()
+            } else {
+                System.currentTimeMillis() / 1000
+            }
+        }
+
+        /** The message expiry in seconds, or one day from now when absent. */
+        private fun expiresOf(inboxMessage: JSONObject): Long {
+            return if (inboxMessage.has("wzrk_ttl")) {
+                inboxMessage.getInt("wzrk_ttl").toLong()
+            } else {
+                (System.currentTimeMillis() + Constants.ONE_DAY_IN_MILLIS) / 1000
+            }
+        }
+
+        /** The "tags" of the "msg" object, if any. */
+        private fun tagsOf(cellObject: JSONObject?): ArrayList<String> {
+            val tagsList = ArrayList<String>()
+            //Part of "msg" object
+            val tagsArray = if (cellObject?.has("tags") == true) { cellObject.getJSONArray("tags") } else { null }
+            if (tagsArray != null) {
+                for (i in 0 until tagsArray.length()) {
+                    tagsList.add(tagsArray.getString(i))
+                }
+            }
+            return tagsList
         }
 
         private fun wzrkFieldsOf(root: JSONObject): JSONObject {
