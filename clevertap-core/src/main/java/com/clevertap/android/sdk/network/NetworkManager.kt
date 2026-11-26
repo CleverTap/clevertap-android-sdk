@@ -751,11 +751,11 @@ internal class NetworkManager constructor(
         networkRepo.setDomain(domainName)
         ctApiWrapper.ctApi.cachedDomain = domainName
 
-        if (callbackManager.getSCDomainListener() != null) {
+        if (callbackManager.scDomainListener != null) {
             if (domainName != null) {
-                callbackManager.getSCDomainListener()?.onSCDomainAvailable(Utils.getSCDomain(domainName))
+                callbackManager.scDomainListener?.onSCDomainAvailable(Utils.getSCDomain(domainName))
             } else {
-                callbackManager.getSCDomainListener()?.onSCDomainUnavailable()
+                callbackManager.scDomainListener?.onSCDomainUnavailable()
             }
         }
     }

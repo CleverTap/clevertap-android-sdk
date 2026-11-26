@@ -167,7 +167,7 @@ internal open class LoginController(
     }
 
     open fun recordDeviceIDErrors() {
-        for (validationResult in deviceInfo.getValidationResults()) {
+        for (validationResult in deviceInfo.drainValidationResults()) {
             validationResultStack.pushValidationResult(validationResult)
         }
     }

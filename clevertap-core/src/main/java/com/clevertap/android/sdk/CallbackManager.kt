@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.Utils.runOnUiThread
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
-import com.clevertap.android.sdk.interfaces.NotificationRenderedListener
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener
 import com.clevertap.android.sdk.interfaces.SCDomainListener
 import com.clevertap.android.sdk.login.ChangeUserCallback
@@ -16,7 +15,6 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 import java.lang.ref.WeakReference
-import java.util.ArrayList
 import java.util.Collections
 
 @RestrictTo(Scope.LIBRARY)
@@ -29,11 +27,17 @@ internal open class CallbackManager(
 
     override var geofenceCallback: GeofenceCallback? = null
 
-    private var scDomainListener: SCDomainListener? = null
+    override var scDomainListener: SCDomainListener? = null
 
     private var inAppNotificationButtonListenerWeakReference: WeakReference<InAppNotificationButtonListener?>? = null
 
-    private var inAppNotificationListener: InAppNotificationListener? = null
+    override var inAppNotificationButtonListener: InAppNotificationButtonListener?
+        get() = inAppNotificationButtonListenerWeakReference?.get()
+        set(listener) {
+            inAppNotificationButtonListenerWeakReference = WeakReference(listener)
+        }
+
+    override var inAppNotificationListener: InAppNotificationListener? = null
 
     override val pushPermissionResponseListenerList: MutableList<PushPermissionResponseListener?> = ArrayList()
 
@@ -43,8 +47,6 @@ internal open class CallbackManager(
 
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     private var featureFlagListenerWeakReference: WeakReference<CTFeatureFlagsListener?>? = null
-
-    private var notificationRenderedListener: NotificationRenderedListener? = null
 
     private val onInitCleverTapIDListeners: MutableList<OnInitCleverTapIDListener?> =
         Collections.synchronizedList(ArrayList())
@@ -68,8 +70,8 @@ internal open class CallbackManager(
     override var batchListener: BatchListener? = null
 
     override fun _notifyInboxMessagesDidUpdate() {
-        if (this.inboxListener != null) {
-            Utils.runOnUiThread {
+        if (inboxListener != null) {
+            runOnUiThread {
                 inboxListener?.inboxMessagesDidUpdate()
             }
         }
@@ -91,41 +93,15 @@ internal open class CallbackManager(
     override var featureFlagListener: CTFeatureFlagsListener?
         get() = featureFlagListenerWeakReference?.get()
         set(listener) {
-            this.featureFlagListenerWeakReference = WeakReference(listener)
+            featureFlagListenerWeakReference = WeakReference(listener)
         }
 
-    override fun getSCDomainListener(): SCDomainListener? {
-        return scDomainListener
-    }
-
-    override fun setSCDomainListener(scDomainListener: SCDomainListener?) {
-        this.scDomainListener = scDomainListener
-    }
-
-    override fun getInAppNotificationButtonListener(): InAppNotificationButtonListener? {
-        return inAppNotificationButtonListenerWeakReference?.get()
-    }
-
-    override fun setInAppNotificationButtonListener(
-        inAppNotificationButtonListener: InAppNotificationButtonListener?
-    ) {
-        this.inAppNotificationButtonListenerWeakReference = WeakReference(inAppNotificationButtonListener)
-    }
-
-    override fun getInAppNotificationListener(): InAppNotificationListener? {
-        return inAppNotificationListener
-    }
-
-    override fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?) {
-        this.inAppNotificationListener = inAppNotificationListener
-    }
-
     override fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?) {
-        this.pushPermissionResponseListenerList.add(pushPermissionResponseListener)
+        pushPermissionResponseListenerList.add(pushPermissionResponseListener)
     }
 
     override fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?) {
-        this.pushPermissionResponseListenerList.remove(pushPermissionResponseListener)
+        pushPermissionResponseListenerList.remove(pushPermissionResponseListener)
     }
 
     /**
@@ -137,7 +113,7 @@ internal open class CallbackManager(
         get() = productConfigListenerWeakReference?.get()
         set(productConfigListener) {
             if (productConfigListener != null) {
-                this.productConfigListenerWeakReference = WeakReference(productConfigListener)
+                productConfigListenerWeakReference = WeakReference(productConfigListener)
             }
         }
 
@@ -151,24 +127,15 @@ internal open class CallbackManager(
 
     override fun notifyCleverTapIDChanged(id: String?) {
         synchronized(onInitCleverTapIDListeners) {
-            for (listener in onInitCleverTapIDListeners) {
-                listener?.onInitCleverTapID(id)
-            }
+            onInitCleverTapIDListeners.forEach { it?.onInitCleverTapID(id) }
         }
     }
 
     //Profile
     override fun notifyUserProfileInitialized(deviceID: String?) {
-        val resolvedDeviceID = deviceID ?: deviceInfo.deviceID
-
-        if (resolvedDeviceID == null) {
-            return
-        }
-
-        val sl: SyncListener?
+        val resolvedDeviceID = deviceID ?: deviceInfo.deviceID ?: return
         try {
-            sl = syncListener
-            sl?.profileDidInitialize(resolvedDeviceID)
+            syncListener?.profileDidInitialize(resolvedDeviceID)
         } catch (t: Throwable) {
             // Ignore
         }
@@ -180,7 +147,7 @@ internal open class CallbackManager(
         } else {
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Failed to set - DisplayUnitListener can't be null"
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to set - DisplayUnitListener can't be null"
             )
         }
     }
@@ -195,21 +162,21 @@ internal open class CallbackManager(
      * @param displayUnits - Array of Display Units [CleverTapDisplayUnit]
      */
     override fun notifyDisplayUnitsLoaded(displayUnits: ArrayList<CleverTapDisplayUnit>?) {
-        if (displayUnits != null && displayUnits.isNotEmpty()) {
-            if (displayUnitListenerWeakReference != null && displayUnitListenerWeakReference?.get() != null) {
-                runOnUiThread {
-                    //double check to ensure null safety
-                    displayUnitListenerWeakReference?.get()?.onDisplayUnitsLoaded(displayUnits)
-                }
-            } else {
-                config.logger.verbose(
-                    config.accountId,
-                    Constants.FEATURE_DISPLAY_UNIT + "No registered listener, failed to notify"
-                )
+        when {
+            displayUnits.isNullOrEmpty() -> config.logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}No Display Units found"
+            )
+
+            displayUnitListenerWeakReference?.get() != null -> runOnUiThread {
+                //double check to ensure null safety
+                displayUnitListenerWeakReference?.get()?.onDisplayUnitsLoaded(displayUnits)
             }
-        } else {
-            config.logger
-                .verbose(config.accountId, Constants.FEATURE_DISPLAY_UNIT + "No Display Units found")
+
+            else -> config.logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}No registered listener, failed to notify"
+            )
         }
     }
 

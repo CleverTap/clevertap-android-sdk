@@ -80,8 +80,8 @@ class CallbackManagerTest : BaseTestCase() {
     @Test
     fun test_SetterGetterInAppNotificationButtonListener() {
         val listener = InAppNotificationButtonListener { }
-        callbackManager.setInAppNotificationButtonListener(listener)
-        assertEquals(listener, callbackManager.getInAppNotificationButtonListener())
+        callbackManager.inAppNotificationButtonListener = listener
+        assertEquals(listener, callbackManager.inAppNotificationButtonListener)
     }
 
     @Test
@@ -97,8 +97,8 @@ class CallbackManagerTest : BaseTestCase() {
 
             override fun onDismissed(extras: MutableMap<String, Any>?, actionExtras: MutableMap<String, Any>?) {}
         }
-        callbackManager.setInAppNotificationListener(listener)
-        assertEquals(listener, callbackManager.getInAppNotificationListener())
+        callbackManager.inAppNotificationListener = listener
+        assertEquals(listener, callbackManager.inAppNotificationListener)
     }
 
     @Test

@@ -184,8 +184,8 @@ open class CleverTapAPI internal constructor(
 
         task = coreState.executors.postAsyncSafelyTask<Void?>()
         task.execute("setStatesAsync") {
-            coreState.sessionManager.setLastVisitTime()
-            coreState.sessionManager.setUserLastVisitTs()
+            coreState.sessionManager.updateLastVisitTime()
+            coreState.sessionManager.updateUserLastVisitTs()
             coreState.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
             coreState.deviceInfo.setCurrentUserOptOutStateFromStorage()
             coreState.deviceInfo.setSystemEventsAllowedStateFromStorage()
@@ -460,7 +460,7 @@ open class CleverTapAPI internal constructor(
     @RestrictTo(Scope.LIBRARY_GROUP)
     @WorkerThread
     open fun setSCDomainListener(scDomainListener: SCDomainListener?) {
-        coreState.callbackManager.setSCDomainListener(scDomainListener)
+        coreState.callbackManager.scDomainListener = scDomainListener
 
         @Suppress("SENSELESS_COMPARISON")
         if (coreState.networkManager != null) {
@@ -883,10 +883,10 @@ open class CleverTapAPI internal constructor(
      *
      * Getter returns the [InAppNotificationListener] object; setter sets it.
      */
-    open fun getInAppNotificationListener(): InAppNotificationListener? = coreState.callbackManager.getInAppNotificationListener()
+    open fun getInAppNotificationListener(): InAppNotificationListener? = coreState.callbackManager.inAppNotificationListener
 
     open fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?) {
-        coreState.callbackManager.setInAppNotificationListener(inAppNotificationListener)
+        coreState.callbackManager.inAppNotificationListener = inAppNotificationListener
     }
 
     /** Kotlin property syntax, equivalent to [getInAppNotificationListener] / [setInAppNotificationListener]. */
@@ -1011,10 +1011,10 @@ open class CleverTapAPI internal constructor(
      * Setter: set the user profile location in CleverTap;
      * location can then be used for geo-segmentation etc.
      */
-    open fun getLocation(): Location? = coreState.locationManager._getLocation()
+    open fun getLocation(): Location? = coreState.locationManager.findBestLocation()
 
     open fun setLocation(location: Location?) {
-        coreState.locationManager._setLocation(location)
+        coreState.locationManager.updateLocation(location)
     }
 
     /** Kotlin property syntax, equivalent to [getLocation] / [setLocation]. */
@@ -1909,7 +1909,7 @@ open class CleverTapAPI internal constructor(
     //Listener
 
     open fun setInAppNotificationButtonListener(listener: InAppNotificationButtonListener?) {
-        coreState.callbackManager.setInAppNotificationButtonListener(listener)
+        coreState.callbackManager.inAppNotificationButtonListener = listener
     }
 
     open fun setInboxMessageButtonListener(listener: InboxMessageButtonListener?) {
@@ -1941,7 +1941,7 @@ open class CleverTapAPI internal constructor(
     open fun setLocationForGeofences(location: Location?, sdkVersion: Int): Future<*>? {
         coreState.coreMetaData.isLocationForGeofence = true
         coreState.coreMetaData.geofenceSDKVersion = sdkVersion
-        return coreState.locationManager._setLocation(location)
+        return coreState.locationManager.updateLocation(location)
     }
 
     /**
@@ -3906,10 +3906,10 @@ open class CleverTapAPI internal constructor(
             val manifest = ManifestInfo.getInstance(context)
             val accountId = manifest.accountId
             val accountToken = manifest.accountToken
-            val accountRegion = manifest.getAccountRegion()
-            val proxyDomain = manifest.getProxyDomain()
-            val spikyProxyDomain = manifest.getSpikeyProxyDomain()
-            val handshakeDomain = manifest.getHandshakeDomain()
+            val accountRegion = manifest.accountRegion
+            val proxyDomain = manifest.proxyDomain
+            val spikyProxyDomain = manifest.spikeyProxyDomain
+            val handshakeDomain = manifest.handshakeDomain
             if (accountId == null || accountToken == null) {
                 Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance")
                 return null
