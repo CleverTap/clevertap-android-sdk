@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
-import java.util.ArrayList
 
 // Public (restricted) because already-Kotlin public types (e.g. network.FetchInAppListener)
 // take it in their signatures.
@@ -34,19 +33,11 @@ abstract class BaseCallbackManager {
 
     abstract var geofenceCallback: GeofenceCallback?
 
-    // Kept as accessor functions (not properties): Java callers need the exact JVM names
-    // getSCDomainListener/setSCDomainListener and Kotlin callers already use the call form.
-    abstract fun getSCDomainListener(): SCDomainListener?
+    abstract var scDomainListener: SCDomainListener?
 
-    abstract fun setSCDomainListener(scDomainListener: SCDomainListener?)
+    abstract var inAppNotificationButtonListener: InAppNotificationButtonListener?
 
-    abstract fun getInAppNotificationButtonListener(): InAppNotificationButtonListener?
-
-    abstract fun setInAppNotificationButtonListener(inAppNotificationButtonListener: InAppNotificationButtonListener?)
-
-    abstract fun getInAppNotificationListener(): InAppNotificationListener?
-
-    abstract fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?)
+    abstract var inAppNotificationListener: InAppNotificationListener?
 
     abstract val pushPermissionResponseListenerList: MutableList<PushPermissionResponseListener?>
 

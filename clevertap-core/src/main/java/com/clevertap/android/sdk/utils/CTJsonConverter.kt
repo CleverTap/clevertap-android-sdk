@@ -87,8 +87,8 @@ internal object CTJsonConverter {
             evtData.put("OS", deviceInfo.osName)
             evtData.put("wdt", deviceInfo.width)
             evtData.put("hgt", deviceInfo.height)
-            evtData.put("dpi", deviceInfo.getDPI())
-            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()))
+            evtData.put("dpi", deviceInfo.dpi)
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.context))
             evtData.put("locale", deviceInfo.locale)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -96,13 +96,13 @@ internal object CTJsonConverter {
             }
             deviceInfo.library?.let { evtData.put("lib", it) }
 
-            val manifestInfo = ManifestInfo.getInstance(deviceInfo.getContext())
-            val proxyDomain = manifestInfo.getProxyDomain()
+            val manifestInfo = ManifestInfo.getInstance(deviceInfo.context)
+            val proxyDomain = manifestInfo.proxyDomain
             if (!proxyDomain.isNullOrEmpty()) {
                 evtData.put("proxyDomain", proxyDomain)
             }
 
-            val spikyProxyDomain = manifestInfo.getSpikeyProxyDomain()
+            val spikyProxyDomain = manifestInfo.spikeyProxyDomain
             if (!spikyProxyDomain.isNullOrEmpty()) {
                 evtData.put("spikyProxyDomain", spikyProxyDomain)
             }

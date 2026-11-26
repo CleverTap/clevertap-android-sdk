@@ -124,7 +124,7 @@ class InAppControllerTest {
 
         mockInAppListener = mockk(relaxed = true)
         every { mockInAppListener.beforeShow(any()) } returns true
-        every { mockCallbackManager.getInAppNotificationListener() } returns mockInAppListener
+        every { mockCallbackManager.inAppNotificationListener } returns mockInAppListener
 
         mockManifestInfo = mockk()
         every { mockManifestInfo.excludedActivities } returns EXCLUDED_ACTIVITY_NAME
@@ -311,7 +311,7 @@ class InAppControllerTest {
     @Test
     fun `triggerInAppAction should trigger inAppButtonListener for KV actions`() {
         val mockInAppButtonListener = mockk<InAppNotificationButtonListener>(relaxed = true)
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns mockInAppButtonListener
+        every { mockCallbackManager.inAppNotificationButtonListener } returns mockInAppButtonListener
 
         val keyValues = hashMapOf(
             "key1" to "value1",
@@ -379,7 +379,7 @@ class InAppControllerTest {
 
     @Test
     fun `inAppActionTriggered adds kv action descriptors as a nested payload`() {
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns null
+        every { mockCallbackManager.inAppNotificationButtonListener } returns null
         val keyValues = hashMapOf("key1" to "value1", "key2" to "value2")
         val actionJsonString = """
         {
@@ -1669,7 +1669,7 @@ class InAppControllerTest {
 
     @Test
     fun `inAppActionTriggered should NOT include wzrk_dl for KEY_VALUES action`() {
-        every { mockCallbackManager.getInAppNotificationButtonListener() } returns mockk(relaxed = true)
+        every { mockCallbackManager.inAppNotificationButtonListener } returns mockk(relaxed = true)
         val inAppController = createInAppController()
         val callToAction = "Submit"
 

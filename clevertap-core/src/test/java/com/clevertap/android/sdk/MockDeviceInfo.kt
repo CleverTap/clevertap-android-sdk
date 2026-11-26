@@ -35,16 +35,12 @@ class MockDeviceInfo(
     override val carrier: String
         get() = "Android"
 
-    override fun getContext(): Context {
-        return super.getContext()
-    }
 
     override val countryCode: String
         get() = "us"
 
-    override fun getDPI(): Int {
-        return 420
-    }
+    override val dpi: Int
+        get() = 420
 
     override val googleAdID: String
         get() = "__48703e3cc2ff468ab3c641edf2770d74"

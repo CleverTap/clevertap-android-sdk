@@ -14,244 +14,78 @@ import org.jetbrains.annotations.TestOnly
  */
 // todo lp Remove context dependency from here
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class ManifestInfo {
-
-    val accountId: String?
-    val accountToken: String?
-    private val accountRegion: String?
-    private val proxyDomain: String?
-    private val spikyProxyDomain: String?
-    private val handshakeDomain: String?
-    private val useADID: Boolean
-    val isAppLaunchedDisabled: Boolean
-    val notificationIcon: String?
-    private val excludedActivitiesForInApps: String?
-    private val sslPinning: Boolean
-    val isBackgroundSync: Boolean
-    private val useCustomID: Boolean
-
+open class ManifestInfo(
+    val accountId: String?,
+    val accountToken: String?,
+    accountRegion: String?,
+    proxyDomain: String?,
+    spikyProxyDomain: String?,
+    handshakeDomain: String?,
+    private val useADID: Boolean,
+    val isAppLaunchedDisabled: Boolean,
+    val notificationIcon: String?,
+    val excludedActivities: String?,
+    private val sslPinning: Boolean,
+    val isBackgroundSync: Boolean,
+    private val useCustomID: Boolean,
     @get:JvmName("getFCMSenderId")
-    val fcmSenderId: String?
-    val packageName: String?
-    private val beta: Boolean
-    private val fragmentlessInAppBanners: Boolean
-    val intentServiceName: String?
-    val devDefaultPushChannelId: String?
-    val profileKeys: Array<String>?
-    val encryptionLevel: Int
-    private val provider1: String?
-    private val provider2: String?
-    val encryptionInTransit: String?
-
-    private constructor(context: Context?) {
-        var metaData: Bundle? = null
-        try {
-            // A null context throws here and is swallowed, exactly as the Java version did.
-            val pm = context!!.packageManager
-            val ai = pm.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
-            metaData = ai.metaData
-        } catch (t: Throwable) {
-            // no-op
-        }
-        if (metaData == null) {
-            metaData = Bundle()
-        }
-
-        // start -> assign these if they did not happen in changeCredentials
-        accountId = ccAccountId ?: _getManifestStringValueForKey(metaData, LABEL_ACCOUNT_ID)
-        accountToken = ccAccountToken ?: _getManifestStringValueForKey(metaData, LABEL_TOKEN)
-        accountRegion = ccAccountRegion ?: _getManifestStringValueForKey(metaData, LABEL_REGION)
-        proxyDomain = ccProxyDomain ?: _getManifestStringValueForKey(metaData, LABEL_PROXY_DOMAIN)
-        spikyProxyDomain = ccSpikyProxyDomain ?: _getManifestStringValueForKey(metaData, LABEL_SPIKY_PROXY_DOMAIN)
-        handshakeDomain = ccHandshakeDomain ?: _getManifestStringValueForKey(metaData, LABEL_CLEVERTAP_HANDSHAKE_DOMAIN)
-        // end -> assign these if they did not happen in changeCredentials
-
-        notificationIcon = _getManifestStringValueForKey(metaData, LABEL_NOTIFICATION_ICON)
-        useADID = "1" == _getManifestStringValueForKey(metaData, LABEL_USE_GOOGLE_AD_ID)
-        isAppLaunchedDisabled = "1" == _getManifestStringValueForKey(metaData, LABEL_DISABLE_APP_LAUNCH)
-        excludedActivitiesForInApps = _getManifestStringValueForKey(metaData, LABEL_INAPP_EXCLUDE)
-        sslPinning = "1" == _getManifestStringValueForKey(metaData, LABEL_SSL_PINNING)
-        isBackgroundSync = "1" == _getManifestStringValueForKey(metaData, LABEL_BACKGROUND_SYNC)
-        useCustomID = "1" == _getManifestStringValueForKey(metaData, LABEL_CUSTOM_ID)
-
-        var fcmSenderIdTemp: String?
-        fcmSenderIdTemp = _getManifestStringValueForKey(metaData, LABEL_FCM_SENDER_ID)
-        if (fcmSenderIdTemp != null) {
-            fcmSenderIdTemp = fcmSenderIdTemp.replace("id:", "")
-        }
-        fcmSenderId = fcmSenderIdTemp
-
-        var encLvlTemp: Int
-        try {
-            val manifestEncryptionLevel = _getManifestStringValueForKey(metaData, LABEL_ENCRYPTION_LEVEL)
-            var parsedEncryptionLevel = 0
-            if (manifestEncryptionLevel != null) {
-                parsedEncryptionLevel = Integer.parseInt(manifestEncryptionLevel)
-            }
-
-            if (parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 2) {
-                encLvlTemp = parsedEncryptionLevel
-            } else {
-                Logger.v("Invalid encryption level is used, defaulting to no encryption")
-                encLvlTemp = 0
-            }
-        } catch (t: Throwable) {
-            encLvlTemp = 0
-            Logger.v("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.cause)
-        }
-        encryptionLevel = encLvlTemp
-
-        packageName = _getManifestStringValueForKey(metaData, LABEL_PACKAGE_NAME)
-        beta = "1" == _getManifestStringValueForKey(metaData, LABEL_BETA)
-        fragmentlessInAppBanners = "1" == _getManifestStringValueForKey(metaData, LABEL_INAPP_FRAGMENTLESS_BANNERS)
-        intentServiceName = _getManifestStringValueForKey(metaData, LABEL_INTENT_SERVICE)
-        devDefaultPushChannelId = _getManifestStringValueForKey(metaData, LABEL_DEFAULT_CHANNEL_ID)
-        profileKeys = parseProfileKeys(metaData)
-        provider1 = _getManifestStringValueForKey(metaData, LABEL_PUSH_PROVIDER_1)
-        provider2 = _getManifestStringValueForKey(metaData, LABEL_PUSH_PROVIDER_2)
-        encryptionInTransit = _getManifestStringValueForKey(metaData, LABEL_ENCRYPTION_IN_TRANSIT)
-        registerModuleSdkVersions(metaData)
-    }
-
-    constructor(
-        accountId: String?,
-        accountToken: String?,
-        accountRegion: String?,
-        proxyDomain: String?,
-        spikyProxyDomain: String?,
-        handshakeDomain: String?,
-        useADID: Boolean,
-        appLaunchedDisabled: Boolean,
-        notificationIcon: String?,
-        excludedActivitiesForInApps: String?,
-        sslPinning: Boolean,
-        backgroundSync: Boolean,
-        useCustomID: Boolean,
-        fcmSenderId: String?,
-        packageName: String?,
-        beta: Boolean,
-        intentServiceName: String?,
-        devDefaultPushChannelId: String?,
-        profileKeys: Array<String>?,
-        encryptionLevel: Int,
-        provider1: String?,
-        provider2: String?,
-        encryptionInTransit: String?
-    ) {
-        // assign these if they did not happen in change creds
-        this.accountId = accountId
-        this.accountToken = accountToken
-        this.accountRegion = accountRegion
-        this.proxyDomain = proxyDomain
-        this.spikyProxyDomain = spikyProxyDomain
-        this.handshakeDomain = handshakeDomain
-
-        this.useADID = useADID
-        this.isAppLaunchedDisabled = appLaunchedDisabled
-        this.notificationIcon = notificationIcon
-        this.excludedActivitiesForInApps = excludedActivitiesForInApps
-        this.sslPinning = sslPinning
-        this.isBackgroundSync = backgroundSync
-        this.useCustomID = useCustomID
-        this.fcmSenderId = fcmSenderId
-        this.packageName = packageName
-        this.beta = beta
-        // Not exposed through this explicit constructor; only set via the manifest flag.
-        this.fragmentlessInAppBanners = false
-        this.intentServiceName = intentServiceName
-        this.devDefaultPushChannelId = devDefaultPushChannelId
-        this.profileKeys = profileKeys
-        this.encryptionLevel = encryptionLevel
-        this.provider1 = provider1
-        this.provider2 = provider2
-        this.encryptionInTransit = encryptionInTransit
-    }
-
-    val excludedActivities: String?
-        get() = excludedActivitiesForInApps
-
-    fun enableBeta(): Boolean {
-        return beta
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    fun getAccountRegion(): String? {
-        Logger.v("ManifestInfo: getAccountRegion called, returning region:$accountRegion")
-        return accountRegion
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    fun getProxyDomain(): String? {
-        Logger.v("ManifestInfo: getProxyDomain called, returning proxyDomain:$proxyDomain")
-        return proxyDomain
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    fun getSpikeyProxyDomain(): String? {
-        Logger.v("ManifestInfo: getSpikeyProxyDomain called, returning spikeyProxyDomain:$spikyProxyDomain")
-        return spikyProxyDomain
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    fun getHandshakeDomain(): String? {
-        Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:$handshakeDomain")
-        return handshakeDomain
-    }
-
+    val fcmSenderId: String?,
+    val packageName: String?,
+    private val beta: Boolean,
+    val intentServiceName: String?,
+    val devDefaultPushChannelId: String?,
+    val profileKeys: Array<String>?,
+    val encryptionLevel: Int,
+    val vendorOneProvider: String?,
+    val vendorTwoProvider: String?,
+    val encryptionInTransit: String?,
     /**
      * Whether custom-html header/footer in-apps may fall back to a WindowManager overlay when the
      * host Activity is not a [androidx.fragment.app.FragmentActivity]. Opt-in (default false),
      * enabled by the gaming wrapper SDKs via the `CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS`
-     * manifest flag.
+     * manifest flag; only set from the manifest.
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    val isFragmentlessInAppBannersEnabled: Boolean
-        get() = fragmentlessInAppBanners
+    val isFragmentlessInAppBannersEnabled: Boolean = false
+) {
+
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY)
+    val accountRegion: String? = accountRegion
+        get() {
+            Logger.v("ManifestInfo: getAccountRegion called, returning region:$field")
+            return field
+        }
+
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY)
+    val proxyDomain: String? = proxyDomain
+        get() {
+            Logger.v("ManifestInfo: getProxyDomain called, returning proxyDomain:$field")
+            return field
+        }
+
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY)
+    val spikeyProxyDomain: String? = spikyProxyDomain
+        get() {
+            Logger.v("ManifestInfo: getSpikeyProxyDomain called, returning spikeyProxyDomain:$field")
+            return field
+        }
+
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY)
+    val handshakeDomain: String? = handshakeDomain
+        get() {
+            Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:$field")
+            return field
+        }
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY)
     val isSSLPinningEnabled: Boolean
         get() = sslPinning
 
-    fun useCustomId(): Boolean {
-        return useCustomID
-    }
+    fun enableBeta(): Boolean = beta
 
-    fun useGoogleAdId(): Boolean {
-        return useADID
-    }
+    fun useCustomId(): Boolean = useCustomID
 
-    private fun parseProfileKeys(metaData: Bundle): Array<String> {
-        val profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER)
-        // Pattern#split matches the former String#split(regex) semantics (trailing empties dropped).
-        return if (!profileKeyString.isNullOrEmpty()) {
-            Pattern.compile(Constants.SEPARATOR_COMMA).split(profileKeyString)
-        } else {
-            Constants.NULL_STRING_ARRAY
-        }
-    }
-
-    /**
-     * This returns string representation of int,boolean,string,float value of given key
-     *
-     * @param manifest bundle to retrieve values from
-     * @param name     key of bundle
-     * @return string representation of int,boolean,string,float
-     */
-    @Suppress("DEPRECATION")
-    private fun _getManifestStringValueForKey(manifest: Bundle, name: String): String? {
-        return try {
-            val o = manifest.get(name)
-            o?.toString()
-        } catch (t: Throwable) {
-            null
-        }
-    }
-
-    val vendorOneProvider: String?
-        get() = provider1
-
-    val vendorTwoProvider: String?
-        get() = provider2
+    fun useGoogleAdId(): Boolean = useADID
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     companion object {
@@ -302,54 +136,119 @@ open class ManifestInfo {
         // End - Capture the credentials from ChangeCredentials
 
         // Locks on ManifestInfo.class, the monitor the former `static synchronized` method used.
-        @JvmStatic
-        fun getInstance(context: Context?): ManifestInfo {
-            synchronized(ManifestInfo::class.java) {
-                if (instance == null) {
-                    instance = ManifestInfo(context)
-                }
-                return instance!!
-            }
+        fun getInstance(context: Context?): ManifestInfo = synchronized(ManifestInfo::class.java) {
+            instance ?: fromManifest(context).also { instance = it }
         }
 
         // Only added for testing
         @TestOnly
-        @JvmStatic
         fun clearPreloadedManifestInfo() {
             instance = null
         }
 
-        @JvmStatic
         fun changeCredentials(id: String?, token: String?, region: String?) {
             ccAccountId = id
             ccAccountToken = token
             ccAccountRegion = region
         }
 
-        @JvmStatic
-        fun changeCredentials(id: String?, token: String?, _proxyDomain: String?, _spikyProxyDomain: String?) {
+        fun changeCredentials(id: String?, token: String?, proxyDomain: String?, spikyProxyDomain: String?) {
             ccAccountId = id
             ccAccountToken = token
-            ccProxyDomain = _proxyDomain
-            ccSpikyProxyDomain = _spikyProxyDomain
+            ccProxyDomain = proxyDomain
+            ccSpikyProxyDomain = spikyProxyDomain
         }
 
-        @JvmStatic
         fun changeCredentials(
             id: String?,
             token: String?,
-            _proxyDomain: String?,
-            _spikyProxyDomain: String?,
+            proxyDomain: String?,
+            spikyProxyDomain: String?,
             customHandshakeDomain: String?
         ) {
             ccAccountId = id
             ccAccountToken = token
-            ccProxyDomain = _proxyDomain
-            ccSpikyProxyDomain = _spikyProxyDomain
+            ccProxyDomain = proxyDomain
+            ccSpikyProxyDomain = spikyProxyDomain
             ccHandshakeDomain = customHandshakeDomain
         }
 
-        @JvmStatic
+        private fun fromManifest(context: Context?): ManifestInfo {
+            val metaData = try {
+                // A null context throws here and is swallowed, exactly as the Java version did.
+                val ctx = requireNotNull(context)
+                ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).metaData
+            } catch (t: Throwable) {
+                null
+            } ?: Bundle()
+
+            fun value(key: String) = manifestStringValue(metaData, key)
+            fun flag(key: String) = "1" == value(key)
+
+            return ManifestInfo(
+                // credentials passed to changeCredentials win over the manifest
+                accountId = ccAccountId ?: value(LABEL_ACCOUNT_ID),
+                accountToken = ccAccountToken ?: value(LABEL_TOKEN),
+                accountRegion = ccAccountRegion ?: value(LABEL_REGION),
+                proxyDomain = ccProxyDomain ?: value(LABEL_PROXY_DOMAIN),
+                spikyProxyDomain = ccSpikyProxyDomain ?: value(LABEL_SPIKY_PROXY_DOMAIN),
+                handshakeDomain = ccHandshakeDomain ?: value(LABEL_CLEVERTAP_HANDSHAKE_DOMAIN),
+                notificationIcon = value(LABEL_NOTIFICATION_ICON),
+                useADID = flag(LABEL_USE_GOOGLE_AD_ID),
+                isAppLaunchedDisabled = flag(LABEL_DISABLE_APP_LAUNCH),
+                excludedActivities = value(LABEL_INAPP_EXCLUDE),
+                sslPinning = flag(LABEL_SSL_PINNING),
+                isBackgroundSync = flag(LABEL_BACKGROUND_SYNC),
+                useCustomID = flag(LABEL_CUSTOM_ID),
+                fcmSenderId = value(LABEL_FCM_SENDER_ID)?.replace("id:", ""),
+                encryptionLevel = parseEncryptionLevel(value(LABEL_ENCRYPTION_LEVEL)),
+                packageName = value(LABEL_PACKAGE_NAME),
+                beta = flag(LABEL_BETA),
+                isFragmentlessInAppBannersEnabled = flag(LABEL_INAPP_FRAGMENTLESS_BANNERS),
+                intentServiceName = value(LABEL_INTENT_SERVICE),
+                devDefaultPushChannelId = value(LABEL_DEFAULT_CHANNEL_ID),
+                profileKeys = parseProfileKeys(value(Constants.CLEVERTAP_IDENTIFIER)),
+                vendorOneProvider = value(LABEL_PUSH_PROVIDER_1),
+                vendorTwoProvider = value(LABEL_PUSH_PROVIDER_2),
+                encryptionInTransit = value(LABEL_ENCRYPTION_IN_TRANSIT)
+            ).also { registerModuleSdkVersions(metaData) }
+        }
+
+        private fun parseEncryptionLevel(manifestEncryptionLevel: String?): Int = try {
+            val level = manifestEncryptionLevel?.toInt() ?: 0
+            if (level in 0..2) {
+                level
+            } else {
+                Logger.v("Invalid encryption level is used, defaulting to no encryption")
+                0
+            }
+        } catch (t: Throwable) {
+            Logger.v("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.cause)
+            0
+        }
+
+        private fun parseProfileKeys(profileKeyString: String?): Array<String> =
+            // Pattern#split matches the former String#split(regex) semantics (trailing empties dropped).
+            if (!profileKeyString.isNullOrEmpty()) {
+                Pattern.compile(Constants.SEPARATOR_COMMA).split(profileKeyString)
+            } else {
+                Constants.NULL_STRING_ARRAY
+            }
+
+        /**
+         * This returns string representation of int,boolean,string,float value of given key
+         *
+         * @param manifest bundle to retrieve values from
+         * @param name     key of bundle
+         * @return string representation of int,boolean,string,float
+         */
+        @Suppress("DEPRECATION")
+        private fun manifestStringValue(manifest: Bundle, name: String): String? = try {
+            manifest.get(name)?.toString()
+        } catch (t: Throwable) {
+            null
+        }
+
         fun registerModuleSdkVersions(metaData: Bundle) {
             try {
                 for (key in metaData.keySet()) {
@@ -364,7 +263,7 @@ open class ManifestInfo {
                     }
                     try {
                         // A numeric android:value is stored as an Integer, anything else as a String
-                        val version = if (value is Int) value else Integer.parseInt(value.toString())
+                        val version = if (value is Int) value else value.toString().toInt()
                         CoreMetaData.setSharedCustomSdkVersion(name, version)
                     } catch (e: NumberFormatException) {
                         Logger.v("Ignoring non numeric SDK version in manifest for $key")
