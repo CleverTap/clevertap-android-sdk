@@ -1,33 +1,27 @@
 package com.clevertap.android.sdk.validation
 
 import androidx.annotation.RestrictTo
-import kotlin.math.max
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 open class ValidationResultStack {
 
+    /**
+     * The pending results, oldest first. Returned as the live list outside the lock (as before).
+     */
     var pendingValidationResults = ArrayList<ValidationResult>()
         private set
 
     //Validation
-    open fun pushValidationResult(vr: ValidationResult?) {
+    open fun pushValidationResult(vr: ValidationResult) {
         synchronized(pendingValidationResultsLock) {
             try {
-                val len = pendingValidationResults.size
-                if (len > 50) {
-                    val trimmed = ArrayList<ValidationResult>()
-                    // Trim down the list to 40, so that this loop needn't run for the next 10 events
+                val pending = pendingValidationResults
+                if (pending.size > 50) {
+                    // Trim down the list to 40, so that this trim needn't run for the next 10 events
                     // Hence, skip the first 10 elements
-                    for (i in 10 until len) {
-                        trimmed.add(pendingValidationResults[i])
-                    }
-                    @Suppress("UNCHECKED_CAST")
-                    (trimmed as ArrayList<ValidationResult?>).add(vr)
-                    pendingValidationResults = trimmed
-                } else {
-                    @Suppress("UNCHECKED_CAST")
-                    (pendingValidationResults as ArrayList<ValidationResult?>).add(vr)
+                    pendingValidationResults = ArrayList(pending.subList(10, pending.size))
                 }
+                pendingValidationResults.add(vr)
             } catch (e: Exception) {
                 // no-op
             }
@@ -35,39 +29,28 @@ open class ValidationResultStack {
     }
 
     open fun pushValidationResult(vrList: List<ValidationResult>?) {
-        if (vrList == null || vrList.isEmpty()) {
+        if (vrList.isNullOrEmpty()) {
             return
         }
 
         synchronized(pendingValidationResultsLock) {
             try {
-                val currentSize = pendingValidationResults.size
+                val pending = pendingValidationResults
+                val currentSize = pending.size
                 val newSize = currentSize + vrList.size
 
-                if (newSize > 50) {
-                    val trimmed = ArrayList<ValidationResult>()
-
-                    // Calculate how many items to skip from the existing list
-                    val skipCount = newSize - 40
-
-                    // If we need to skip more than what we have, just use the new list
-                    if (skipCount >= currentSize) {
-                        // Take only the last 40 items from the new list
-                        val startIndex = vrList.size - 40
-                        for (i in max(0, startIndex) until vrList.size) {
-                            trimmed.add(vrList[i])
-                        }
-                    } else {
-                        // Keep some from existing, add all new ones
-                        for (i in skipCount until currentSize) {
-                            trimmed.add(pendingValidationResults[i])
-                        }
-                        trimmed.addAll(vrList)
-                    }
-
-                    pendingValidationResults = trimmed
+                if (newSize <= 50) {
+                    pending.addAll(vrList)
+                    return
+                }
+                // Keep the newest 40 results: skip the oldest ones from the existing list first
+                val skipCount = newSize - 40
+                pendingValidationResults = if (skipCount >= currentSize) {
+                    // Everything existing is dropped; take only the last 40 items from the new list
+                    ArrayList(vrList.takeLast(40))
                 } else {
-                    pendingValidationResults.addAll(vrList)
+                    // Keep some from existing, add all new ones
+                    ArrayList(pending.subList(skipCount, currentSize)).apply { addAll(vrList) }
                 }
             } catch (e: Exception) {
                 // no-op
@@ -75,20 +58,13 @@ open class ValidationResultStack {
         }
     }
 
-    open fun popValidationResult(): ValidationResult? {
-        // really a shift
-        var vr: ValidationResult? = null
-
-        synchronized(pendingValidationResultsLock) {
-            try {
-                if (pendingValidationResults.isNotEmpty()) {
-                    vr = pendingValidationResults.removeAt(0)
-                }
-            } catch (e: Exception) {
-                // no-op
-            }
+    // really a shift
+    open fun popValidationResult(): ValidationResult? = synchronized(pendingValidationResultsLock) {
+        try {
+            pendingValidationResults.removeFirstOrNull()
+        } catch (e: Exception) {
+            null
         }
-        return vr
     }
 
     private companion object {
