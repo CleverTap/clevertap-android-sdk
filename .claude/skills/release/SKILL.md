@@ -158,7 +158,7 @@ existing tag or branch that would collide. Stop and ask if any check fails.
 9. 🚦 Commit. Preview the message first. Stage production files only.
 10. 🚦 Push the release branch first if it is not on the remote yet (the PR base must exist there), confirm
     that push separately, then push the chores branch
-11. 🚦 Open the PR — title `docs changes and version bump <JIRA-ID>`, base = the release branch
+11. 🚦 Open the PR — title `chore(<JIRA-ID>): release <module> <version> docs and version bump` (see the `conventional-commits` skill), base = the release branch
 
 ### 🛑 Human gate — PR review
 
@@ -200,7 +200,7 @@ signing will verify.
 
 Compare today against the planned release date. If it slipped, **stop and ask**: either correct
 the date in `CHANGELOG.md`, `templates/CTCORECHANGELOG.md` and `docs/CTCORECHANGELOG.md` with a
-follow-up commit to master, or knowingly accept the mismatch. Never let the GitHub release name
+small `chore/` PR (`develop`, then `master`), or knowingly accept the mismatch. Never let the GitHub release name
 disagree with the changelog.
 
 ### Publish
@@ -419,7 +419,7 @@ running — it writes into a shared team folder.
 
 Useful flags: `--replace` updates a same-named file instead of creating a duplicate (plain uploads
 do **not** deduplicate); `--anyone` grants "anyone with the link" if folder inheritance is not
-enough.
+enough. It makes the builds public by link, so 🚦 confirm it separately and do not pass it by default.
 
 If it fails, the two likely causes are the Drive API being disabled on the project, or the
 `drive.file` scope being too narrow — the script detects the first and explains the fix, and
@@ -427,7 +427,7 @@ If it fails, the two likely causes are the Drive API being disabled on the proje
 
 **Fallback:** if the script is unavailable — a different machine, missing credentials — ask the user
 to upload both APKs to the
-[Drive folder](https://drive.google.com/drive/folders/1fK79PXJh4gz3-LqZAYa-AcMNsR6MVcZV) by hand and
+Drive folder (the id is in `BR_DRIVE_FOLDER_ID`; ask the release owner) by hand and
 give you the two share links. Nothing else in the phase changes.
 
 🚦 Preview the new row, confirm, then add it to the top of the table on Confluence page

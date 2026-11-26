@@ -540,18 +540,18 @@ Repeat the module-scoped tasks for every module being released — `:clevertap-p
 then click **Publish** yourself. That check is what makes the choice of task low-risk: a command
 that silently failed to upload would be caught here, not after the release was announced.
 
-### Prerequisites — all verified present on this machine (2026-07-28)
+### Prerequisites
 
 The publish is fully non-interactive: the GPG passphrase lives in `signing.password`, so nothing
-prompts for input and the skill can run it directly.
+prompts for input and the skill can run it directly. Check these (key names only, never print values):
 
-| Requirement | Status |
+| Requirement | Where |
 |---|---|
-| `~/.gradle/gradle.properties` → `signing.keyId`, `signing.password`, `signing.secretKeyRingFile` | ✅ all present |
-| `~/.gradle/gradle.properties` → `mavenCentralUsername`, `mavenCentralPassword` | ✅ present |
-| `developerId`, `developerName`, `developerEmail` | ✅ present in both `~/.gradle/gradle.properties` and `local.properties` |
-| The `.gpg` keyring file that `signing.secretKeyRingFile` points at | ✅ exists |
-| GPG installed, secret key present, not expired or revoked | ✅ `gpg` found, 1 secret key, no expiry set |
+| `signing.keyId`, `signing.password`, `signing.secretKeyRingFile` | `~/.gradle/gradle.properties` |
+| `mavenCentralUsername`, `mavenCentralPassword` | `~/.gradle/gradle.properties` |
+| `developerId`, `developerName`, `developerEmail` | `~/.gradle/gradle.properties` or `local.properties` |
+| The `.gpg` keyring file that `signing.secretKeyRingFile` points at | exists on disk |
+| GPG installed, secret key present, not expired or revoked | `gpg --list-secret-keys` |
 
 `local.properties` also carries `ossrhUsername` / `ossrhPassword`. Those are legacy OSSRH
 credentials; the Central Portal path does not read them. Harmless, but not what authenticates

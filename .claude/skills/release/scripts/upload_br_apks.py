@@ -44,13 +44,15 @@ from googleapiclient.http import MediaFileUpload
 # Least privilege: drive.file grants access only to files this script creates.
 # If Drive rejects writing into the folder, widen to ".../auth/drive".
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+# Note: with drive.file, --replace only finds files this script created. A same-named file uploaded by
+# hand is not seen, so a second copy is created.
 
 CONFIG_DIR = os.path.expanduser("~/.config/br-drive-upload")
 CLIENT_SECRET = os.path.join(CONFIG_DIR, "client_secret.json")
 TOKEN = os.path.join(CONFIG_DIR, "token.json")
 
 # "SDK Bearded Robot Builds" — https://wizrocket.atlassian.net/wiki/x/C4CGPQE
-DEFAULT_FOLDER_ID = "1fK79PXJh4gz3-LqZAYa-AcMNsR6MVcZV"
+DEFAULT_FOLDER_ID = os.environ.get("BR_DRIVE_FOLDER_ID", "")
 
 MIME_BY_EXT = {
     ".apk": "application/vnd.android.package-archive",
@@ -89,7 +91,7 @@ def get_service():
 
 def find_existing(svc, name, folder_id):
     """Return the id of a same-named file already in the folder, if any."""
-    safe = name.replace("'", "\\'")
+    safe = name.replace("\\", "\\\\").replace("'", "\\'")
     resp = (
         svc.files()
         .list(
@@ -157,6 +159,8 @@ def main():
                     help="also grant 'anyone with the link' read access")
     args = ap.parse_args()
 
+    if not args.folder:
+        sys.exit("Set BR_DRIVE_FOLDER_ID or pass --folder <drive folder id>.")
     missing = [p for p in args.files if not os.path.isfile(p)]
     if missing:
         sys.exit("File not found: " + ", ".join(missing))

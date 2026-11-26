@@ -310,12 +310,7 @@ The Drive MCP's `create_file` only accepts content as `base64Content` / `textCon
 file-path, URL or resumable-upload parameter. So the bytes would have to be *generated as tool-call
 arguments*, which does not fit:
 
-| | Release APK | Debug APK |
-|---|---|---|
-| Raw size | 10,522,004 bytes | ~26 MB |
-| As base64 | 14,029,341 chars | ~35 MB |
-| Est. tokens | ~4.7 million | ~12 million |
-| Versus a 1M context window | **4.7× over** | **12× over** |
+The APKs are 10 to 26 MB, far too large to pass as tool-call arguments in base64.
 
 Base64 is not the problem — it is imposed by the JSON tool boundary, and even a hypothetical
 zero-overhead text encoding would still be ~3.5× over. The problem is the file size. There is also no
