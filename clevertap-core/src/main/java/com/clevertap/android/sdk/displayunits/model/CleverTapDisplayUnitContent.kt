@@ -212,7 +212,7 @@ public open class CleverTapDisplayUnitContent private constructor(
 
     /** The content type, or null when there is no media. */
     private val mediaContentType: String?
-        get() = if (mediaValue != null) contentTypeValue else null
+        get() = if (mediaValue != null) { contentTypeValue } else { null }
 
     override fun toString(): String =
         "[ title:$titleValue, titleColor:$titleColorValue message:$messageValue, messageColor:$messageColorValue, " +
@@ -300,7 +300,11 @@ public open class CleverTapDisplayUnitContent private constructor(
         }
 
         /** The nested object at [key] (throws if present but not an object), or null when absent. */
-        private fun JSONObject.objectOrNull(key: String): JSONObject? = if (has(key)) getJSONObject(key) else null
+        private fun JSONObject.objectOrNull(key: String): JSONObject? = if (has(key)) {
+            getJSONObject(key)
+        } else {
+            null
+        }
 
         /** getString(key) when present, "" when absent or when this object is null. */
         private fun JSONObject?.stringOrEmpty(key: String): String =
@@ -317,8 +321,11 @@ public open class CleverTapDisplayUnitContent private constructor(
          * @return attribution map, or `null` if it would be empty
          */
         private fun parseMetaData(contentObject: JSONObject, actionUrl: String?): HashMap<String, Any?>? {
-            val metaDataObject = if (contentObject.has(Constants.KEY_METADATA))
-                contentObject.optJSONObject(Constants.KEY_METADATA) else null
+            val metaDataObject = if (contentObject.has(Constants.KEY_METADATA)) {
+                contentObject.optJSONObject(Constants.KEY_METADATA)
+            } else {
+                null
+            }
             val metaData = HashMap<String, Any?>()
             for (key in metaDataObject?.keys() ?: emptyList<String>().iterator()) {
                 // keys only come from a non-null metaDataObject

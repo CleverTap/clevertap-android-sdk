@@ -115,7 +115,10 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun readEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): UserEventLog? {
+    override fun readEventByDeviceIdAndNormalizedEventName(
+        deviceID: String,
+        normalizedEventName: String
+    ): UserEventLog? {
         val tName = table.tableName
         val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
         val selectionArgs = arrayOf(deviceID, normalizedEventName)
@@ -126,7 +129,9 @@ internal class UserEventLogDAOImpl(
                 if (cursor.moveToFirst()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
+                        normalizedEventName = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
+                        ),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -196,7 +201,11 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID: String, normalizedEventName: String, count: Int): Boolean {
+    override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(
+        deviceID: String,
+        normalizedEventName: String,
+        count: Int
+    ): Boolean {
         val tName = table.tableName
         val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ? AND ${Column.COUNT} = ?"
         val selectionArgs = arrayOf(deviceID, normalizedEventName, count.toString())
@@ -239,7 +248,9 @@ internal class UserEventLogDAOImpl(
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
+                        normalizedEventName = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
+                        ),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -269,7 +280,9 @@ internal class UserEventLogDAOImpl(
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
+                        normalizedEventName = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
+                        ),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -292,11 +305,15 @@ internal class UserEventLogDAOImpl(
             return false
         }
         if (numberOfRowsToCleanup < 0) {
-            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0")
+            logger.verbose(
+                "Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0"
+            )
             return false
         }
         if (numberOfRowsToCleanup >= threshold) {
-            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold")
+            logger.verbose(
+                "Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold"
+            )
             return false
         }
 

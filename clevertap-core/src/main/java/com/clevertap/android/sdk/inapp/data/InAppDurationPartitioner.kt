@@ -92,7 +92,9 @@ internal object InAppDurationPartitioner {
      * @return [UnknownAndInAction] containing partitioned in-apps
      */
     fun partitionServerSideMetaInApps(inAppsList: List<JSONObject>): UnknownAndInAction {
-        if (inAppsList.isEmpty()) return UnknownAndInAction.empty()
+        if (inAppsList.isEmpty()) {
+            return UnknownAndInAction.empty()
+        }
 
         val (inAction, unknown) = inAppsList.partition { hasInActionDuration(it) }
         return UnknownAndInAction(
@@ -134,7 +136,9 @@ internal object InAppDurationPartitioner {
      * Used by legacy, client-side, and app-launch server-side sources.
      */
     private fun partitionByDelay(inAppsList: List<JSONObject>): ImmediateAndDelayed {
-        if (inAppsList.isEmpty()) return ImmediateAndDelayed.empty()
+        if (inAppsList.isEmpty()) {
+            return ImmediateAndDelayed.empty()
+        }
 
         val (delayed, immediate) = inAppsList.partition { hasDelayedDuration(it) }
         return ImmediateAndDelayed(

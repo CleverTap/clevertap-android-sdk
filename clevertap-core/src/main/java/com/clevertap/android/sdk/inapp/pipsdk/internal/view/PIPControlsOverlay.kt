@@ -31,7 +31,9 @@ internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
         animate().cancel()
         controlsVisible = true
         animate().alpha(1f).setDuration(CONTROLS_FADE_DURATION_MS).start()
-        if (autoHide) mainHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY_MS)
+        if (autoHide) {
+            mainHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY_MS)
+        }
     }
 
     fun hideControls() {

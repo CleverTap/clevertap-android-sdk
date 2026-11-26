@@ -81,6 +81,10 @@ internal data class ContentFetchItem(
             }
 
         private fun JSONObject.optNullableString(key: String): String? =
-            if (has(key) && !isNull(key)) optString(key).ifEmpty { null } else null
+            if (has(key) && !isNull(key)) {
+                optString(key).ifEmpty { null }
+            } else {
+                null
+            }
     }
 }

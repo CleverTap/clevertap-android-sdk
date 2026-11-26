@@ -526,7 +526,7 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetEncryptionLevel") inline get() = getEncryptionLevel()
 
     public open fun setEncryptionInTransit(encryptionInTransit: Boolean) {
-        encryptionInTransitValue = if (encryptionInTransit) "1" else "0"
+        encryptionInTransitValue = if (encryptionInTransit) { "1" } else { "0" }
     }
 
     public open fun isEncryptionInTransitEnabled(): Boolean = try {
@@ -578,7 +578,7 @@ public open class CleverTapInstanceConfig : Parcelable {
     }
 
     private fun defaultSuffix(tag: String): String =
-        "[${if (tag.isNotEmpty()) ":$tag" else ""}:$accountIdValue]"
+        "[${if (tag.isNotEmpty()) { ":$tag" } else { "" }}:$accountIdValue]"
 
     public companion object {
 
@@ -709,6 +709,6 @@ public open class CleverTapInstanceConfig : Parcelable {
 
         private fun Parcel.readFlag(): Boolean = readByte().toInt() != 0x00
 
-        private fun Parcel.writeFlag(value: Boolean) = writeByte(if (value) 0x01 else 0x00)
+        private fun Parcel.writeFlag(value: Boolean) = writeByte(if (value) { 0x01 } else { 0x00 })
     }
 }

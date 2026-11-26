@@ -77,7 +77,9 @@ internal open class InAppResponse(
             val fileStore = storeRegistry.filesStore
             val legacyInAppStore = storeRegistry.legacyInAppStore
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null ||
+                legacyInAppStore == null || fileStore == null
+            ) {
                 logger.verbose(config.accountId, "Stores are not initialised, ignoring inapps!!!!")
                 return
             }

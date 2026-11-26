@@ -263,7 +263,7 @@ public open class ManifestInfo(
                     }
                     try {
                         // A numeric android:value is stored as an Integer, anything else as a String
-                        val version = if (value is Int) value else value.toString().toInt()
+                        val version = if (value is Int) { value } else { value.toString().toInt() }
                         CoreMetaData.setSharedCustomSdkVersion(name, version)
                     } catch (e: NumberFormatException) {
                         Logger.v("Ignoring non numeric SDK version in manifest for $key")

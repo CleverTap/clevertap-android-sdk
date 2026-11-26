@@ -48,7 +48,9 @@ internal class InboxV2Response(
     // ── /a1 decorator chain entry point ──────────────────────────────────────
     @WorkerThread
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        if (jsonBody == null) return
+        if (jsonBody == null) {
+            return
+        }
         processResponse(jsonBody, InboxV2DeliverySource.A1)
     }
 

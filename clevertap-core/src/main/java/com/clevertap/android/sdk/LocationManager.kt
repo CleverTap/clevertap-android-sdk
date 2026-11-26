@@ -65,7 +65,7 @@ internal open class LocationManager(
         // min 10 second interval between location pings
         val now = now
         val forGeofence = coreMetaData.isLocationForGeofence
-        val lastPing = if (forGeofence) lastLocationPingTimeForGeofence else lastLocationPingTime
+        val lastPing = if (forGeofence) { lastLocationPingTimeForGeofence } else { lastLocationPingTime }
         if (now <= lastPing + Constants.LOCATION_PING_INTERVAL_IN_SECONDS) {
             return null
         }

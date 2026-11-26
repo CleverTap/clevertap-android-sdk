@@ -48,7 +48,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         dest.writeString(actionUrl)
         dest.writeMap(keyValues)
         dest.writeParcelable(customTemplateInAppData, flags)
-        dest.writeByte((if (shouldFallbackToSettings) 0x01 else 0x00).toByte())
+        dest.writeByte((if (shouldFallbackToSettings) { 0x01 } else { 0x00 }).toByte())
     }
 
     override fun describeContents(): Int {
@@ -80,16 +80,30 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
 
         other as CTInAppAction
 
-        if (shouldFallbackToSettings != other.shouldFallbackToSettings) return false
-        if (type != other.type) return false
-        if (actionUrl != other.actionUrl) return false
-        if (keyValues != other.keyValues) return false
-        if (customTemplateInAppData != other.customTemplateInAppData) return false
+        if (shouldFallbackToSettings != other.shouldFallbackToSettings) {
+            return false
+        }
+        if (type != other.type) {
+            return false
+        }
+        if (actionUrl != other.actionUrl) {
+            return false
+        }
+        if (keyValues != other.keyValues) {
+            return false
+        }
+        if (customTemplateInAppData != other.customTemplateInAppData) {
+            return false
+        }
 
         return true
     }

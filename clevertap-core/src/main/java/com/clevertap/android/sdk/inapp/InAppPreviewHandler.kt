@@ -33,7 +33,9 @@ internal class InAppPreviewHandler(
                 val inappNotifs = JSONArray().put(
                     if (shouldUseHalfInterstitial(extras)) {
                         getHalfInterstitialInApp(inappPreviewPayload) ?: run {
-                            logger.debug("Failed to parse the image-interstitial notification. Aborting preview display")
+                            logger.debug(
+                                "Failed to parse the image-interstitial notification. Aborting preview display"
+                            )
                             return@execute
                         }
                     } else {
@@ -89,7 +91,9 @@ internal class InAppPreviewHandler(
     }
 
     private fun wrapImageInterstitialContent(content: String): String? {
-        if (content.isBlank()) return null
+        if (content.isBlank()) {
+            return null
+        }
 
         return try {
             val html = Utils.readAssetFile(context, Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME) ?: return null

@@ -75,7 +75,7 @@ internal object CTJsonConverter {
         val googleAdID = deviceInfo.googleAdID
         if (googleAdID != null) {
             val baseAdIDKey = "GoogleAdID"
-            val adIDKey = if (deviceIsMultiUser) "${Constants.MULTI_USER_PREFIX}$baseAdIDKey" else baseAdIDKey
+            val adIDKey = if (deviceIsMultiUser) { "${Constants.MULTI_USER_PREFIX}$baseAdIDKey" } else { baseAdIDKey }
             evtData.put(adIDKey, googleAdID)
             evtData.put("GoogleAdIDLimit", deviceInfo.isLimitAdTrackingEnabled)
         }

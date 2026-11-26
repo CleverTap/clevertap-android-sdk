@@ -181,10 +181,11 @@ internal class DatabaseHelper internal constructor(
                 }
 
                 if (value is JSONObject) {
-                    if (value.has(COMMAND_SET))
+                    if (value.has(COMMAND_SET)) {
                         jsonObject.put(key, value.getJSONArray(COMMAND_SET))
-                    else if (value.has(COMMAND_ADD))
+                    } else if (value.has(COMMAND_ADD)) {
                         jsonObject.put(key, value.getJSONArray(COMMAND_ADD))
+                    }
                 }
             }
 

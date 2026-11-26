@@ -100,7 +100,8 @@ internal open class InAppFCManager(
     fun getInAppsCount(context: Context): JSONArray? = try {
         // tlc: [[targetID, todayCount, lifetime]]
         val arr = JSONArray()
-        val prefs = getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
+        val prefs =
+            getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
         for ((key, value) in prefs.all) {
             //inApp: "targetID" -> "todayCount,lifetime"
             if (value !is String) {
@@ -191,7 +192,7 @@ internal open class InAppFCManager(
         }
         val dummy = -1000
         val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
-        return if (stored != dummy) stored else StorageHelper.getInt(context, rawKey, defaultValue)
+        return if (stored != dummy) { stored } else { StorageHelper.getInt(context, rawKey, defaultValue) }
     }
 
     private fun getKeyWithDeviceId(key: String, deviceId: String?): String = "$key:$deviceId"
@@ -242,7 +243,7 @@ internal open class InAppFCManager(
 
         // 2. Has the session max count for this inapp been breached?
         try {
-            val maxPerSession = if (inapp.maxPerSession >= 0) inapp.maxPerSession else 1000
+            val maxPerSession = if (inapp.maxPerSession >= 0) { inapp.maxPerSession } else { 1000 }
             if (impressionManager.perSession(id) >= maxPerSession) {
                 return true
             }

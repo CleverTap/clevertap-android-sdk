@@ -34,7 +34,11 @@ internal interface UserEventLogDAO {
 
     // Check if an event exists by deviceID and count
     @WorkerThread
-    fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID: String, normalizedEventName: String, count: Int): Boolean
+    fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(
+        deviceID: String,
+        normalizedEventName: String,
+        count: Int
+    ): Boolean
 
     // Get all events for a particular deviceID
     @WorkerThread

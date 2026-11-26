@@ -47,7 +47,7 @@ public open class LocalDataStore internal constructor(
 
     /** Prefs namespace of the deprecated local event store; non-default instances are account scoped. */
     private val accountEventNamespace: String
-        get() = if (config.isDefaultInstance) eventNamespace else "$eventNamespace:${config.accountId}"
+        get() = if (config.isDefaultInstance) { eventNamespace } else { "$eventNamespace:${config.accountId}" }
 
     private val logger: Logger
         get() = config.logger
@@ -327,7 +327,7 @@ public open class LocalDataStore internal constructor(
         }
         val dummy = -1000
         val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
-        return if (stored != dummy) stored else StorageHelper.getInt(context, rawKey, defaultValue)
+        return if (stored != dummy) { stored } else { StorageHelper.getInt(context, rawKey, defaultValue) }
     }
 
     /**

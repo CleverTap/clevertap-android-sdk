@@ -71,16 +71,30 @@ internal class CTInAppNotificationMedia : Parcelable {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
 
         other as CTInAppNotificationMedia
 
-        if (orientation != other.orientation) return false
-        if (mediaUrl != other.mediaUrl) return false
-        if (contentType != other.contentType) return false
-        if (contentDescription != other.contentDescription) return false
-        if (cacheKey != other.cacheKey) return false
+        if (orientation != other.orientation) {
+            return false
+        }
+        if (mediaUrl != other.mediaUrl) {
+            return false
+        }
+        if (contentType != other.contentType) {
+            return false
+        }
+        if (contentDescription != other.contentDescription) {
+            return false
+        }
+        if (cacheKey != other.cacheKey) {
+            return false
+        }
 
         return true
     }

@@ -96,13 +96,15 @@ internal object CanonicalJson {
     private const val FORM_FEED = '\u000C'
 
     fun of(text: String): String? {
-        if (text.length > MAX_LENGTH) return null
+        if (text.length > MAX_LENGTH) {
+            return null
+        }
         val lexer = Lexer(text)
         val out = StringBuilder(text.length)
         lexer.skipWhitespace()
         val isContainer = lexer.peek() == '{' || lexer.peek() == '['
         val ok = isContainer && Reader(lexer).readValue(out, depth = 0) && lexer.isAtEnd
-        return if (ok) out.toString() else null
+        return if (ok) { out.toString() } else { null }
     }
 
     /** Grammar and canonical output. Depth is checked on entry to every object and array. */
@@ -122,7 +124,9 @@ internal object CanonicalJson {
         }
 
         private fun readObject(out: StringBuilder, depth: Int): Boolean {
-            if (depth > MAX_DEPTH) return false
+            if (depth > MAX_DEPTH) {
+                return false
+            }
             lexer.consume('{')
             val members = TreeMap<String, String>()
             var ok = true
@@ -130,9 +134,13 @@ internal object CanonicalJson {
             while (ok && more) {
                 ok = readMember(members, depth)
                 more = ok && lexer.consumeAfterWhitespace(',')
-                if (ok && !more) ok = lexer.consume('}')
+                if (ok && !more) {
+                    ok = lexer.consume('}')
+                }
             }
-            if (ok) writeObject(members, out)
+            if (ok) {
+                writeObject(members, out)
+            }
             return ok
         }
 
@@ -141,7 +149,9 @@ internal object CanonicalJson {
             val key = lexer.readString()
             val value = StringBuilder()
             val ok = key != null && lexer.consumeAfterWhitespace(':') && readValue(value, depth)
-            if (ok && key != null) members[key] = value.toString() // a repeated key keeps its last value
+            if (ok && key != null) {
+                members[key] = value.toString() // a repeated key keeps its last value
+            }
             return ok
         }
 
@@ -149,7 +159,9 @@ internal object CanonicalJson {
             out.append('{')
             var first = true
             for ((key, value) in members) {
-                if (!first) out.append(',')
+                if (!first) {
+                    out.append(',')
+                }
                 first = false
                 out.append(quote(key)).append(':').append(value)
             }
@@ -157,7 +169,9 @@ internal object CanonicalJson {
         }
 
         private fun readArray(out: StringBuilder, depth: Int): Boolean {
-            if (depth > MAX_DEPTH) return false
+            if (depth > MAX_DEPTH) {
+                return false
+            }
             lexer.consume('[')
             out.append('[')
             var ok = true
@@ -165,7 +179,11 @@ internal object CanonicalJson {
             while (ok && more) {
                 ok = readValue(out, depth)
                 more = ok && lexer.consumeAfterWhitespace(',')
-                if (more) out.append(',') else if (ok) ok = lexer.consume(']')
+                if (more) {
+                    out.append(',')
+                } else if (ok) {
+                    ok = lexer.consume(']')
+                }
             }
             out.append(']')
             return ok
@@ -173,19 +191,25 @@ internal object CanonicalJson {
 
         private fun appendString(out: StringBuilder): Boolean {
             val s = lexer.readString()
-            if (s != null) out.append(quote(s))
+            if (s != null) {
+                out.append(quote(s))
+            }
             return s != null
         }
 
         private fun appendLiteral(literal: String, out: StringBuilder): Boolean {
             val ok = lexer.readLiteral(literal)
-            if (ok) out.append(literal)
+            if (ok) {
+                out.append(literal)
+            }
             return ok
         }
 
         private fun appendNumber(out: StringBuilder): Boolean {
             val token = lexer.readNumberToken()
-            if (token != null) out.append(normaliseNumber(token))
+            if (token != null) {
+                out.append(normaliseNumber(token))
+            }
             return token != null
         }
     }
@@ -201,7 +225,7 @@ internal object CanonicalJson {
                 return pos == text.length
             }
 
-        fun peek(): Char = if (pos < text.length) text[pos] else END
+        fun peek(): Char = if (pos < text.length) { text[pos] } else { END }
 
         fun skipWhitespace() {
             while (pos < text.length && text[pos] in WHITESPACE) pos++
@@ -209,7 +233,9 @@ internal object CanonicalJson {
 
         fun consume(expected: Char): Boolean {
             val found = peek() == expected
-            if (found) pos++
+            if (found) {
+                pos++
+            }
             return found
         }
 
@@ -220,7 +246,9 @@ internal object CanonicalJson {
 
         /** A double-quoted string with standard escapes only. Returns the decoded text, or null. */
         fun readString(): String? {
-            if (!consume('"')) return null
+            if (!consume('"')) {
+                return null
+            }
             val sb = StringBuilder()
             var ok = true
             var closed = false
@@ -233,11 +261,11 @@ internal object CanonicalJson {
                     else -> sb.append(ch)
                 }
             }
-            return if (ok && closed) sb.toString() else null
+            return if (ok && closed) { sb.toString() } else { null }
         }
 
         private fun readEscape(sb: StringBuilder): Boolean {
-            val ch = if (pos < text.length) text[pos++] else END
+            val ch = if (pos < text.length) { text[pos++] } else { END }
             val decoded = when (ch) {
                 '"', '\\', '/' -> ch
                 'b' -> '\b'
@@ -248,22 +276,28 @@ internal object CanonicalJson {
                 'u' -> readUnicodeEscape()
                 else -> null
             }
-            if (decoded != null) sb.append(decoded)
+            if (decoded != null) {
+                sb.append(decoded)
+            }
             return decoded != null
         }
 
         /** Exactly four hex digits. toIntOrNull alone would also accept a sign, as in "\u-001". */
         private fun readUnicodeEscape(): Char? {
             val end = pos + HEX_DIGITS
-            val digits = if (end <= text.length) text.substring(pos, end) else ""
-            val code = if (digits.all(::isHexDigit)) digits.toIntOrNull(HEX_RADIX) else null
-            if (code != null) pos = end
+            val digits = if (end <= text.length) { text.substring(pos, end) } else { "" }
+            val code = if (digits.all(::isHexDigit)) { digits.toIntOrNull(HEX_RADIX) } else { null }
+            if (code != null) {
+                pos = end
+            }
             return code?.toChar()
         }
 
         fun readLiteral(literal: String): Boolean {
             val found = text.startsWith(literal, pos)
-            if (found) pos += literal.length
+            if (found) {
+                pos += literal.length
+            }
             return found
         }
 
@@ -272,13 +306,17 @@ internal object CanonicalJson {
             val start = pos
             consume('-')
             var ok = readDigits(integerPart = true)
-            if (ok && consume('.')) ok = readDigits(integerPart = false)
-            if (ok && (peek() == 'e' || peek() == 'E')) {
-                pos++
-                if (peek() == '+' || peek() == '-') pos++
+            if (ok && consume('.')) {
                 ok = readDigits(integerPart = false)
             }
-            return if (ok) text.substring(start, pos) else null
+            if (ok && (peek() == 'e' || peek() == 'E')) {
+                pos++
+                if (peek() == '+' || peek() == '-') {
+                    pos++
+                }
+                ok = readDigits(integerPart = false)
+            }
+            return if (ok) { text.substring(start, pos) } else { null }
         }
 
         /** JSON forbids a leading zero in the integer part: "0" and "0.5" are fine, "01" is not. */
@@ -322,7 +360,7 @@ internal object CanonicalJson {
                 '\t' -> sb.append("\\t")
                 '\b' -> sb.append("\\b")
                 FORM_FEED -> sb.append("\\f")
-                else -> if (ch < ' ') sb.append("\\u%04x".format(Locale.ROOT, ch.code)) else sb.append(ch)
+                else -> if (ch < ' ') { sb.append("\\u%04x".format(Locale.ROOT, ch.code)) } else { sb.append(ch) }
             }
         }
         return sb.append('"').toString()

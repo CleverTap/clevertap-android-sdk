@@ -258,9 +258,9 @@ public class CTInAppNotification : Parcelable {
         dest.writeString(campaignId)
         dest.writeValue(inAppType)
         dest.writeString(html)
-        dest.writeByte((if (this.isExcludeFromCaps) 0x01 else 0x00).toByte())
-        dest.writeByte((if (this.isShowClose) 0x01 else 0x00).toByte())
-        dest.writeByte((if (this.isDarkenScreen) 0x01 else 0x00).toByte())
+        dest.writeByte((if (this.isExcludeFromCaps) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (this.isShowClose) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (this.isDarkenScreen) { 0x01 } else { 0x00 }).toByte())
         dest.writeInt(maxPerSession)
         dest.writeInt(totalLifetimeCount)
         dest.writeInt(totalDailyCount)
@@ -291,21 +291,21 @@ public class CTInAppNotification : Parcelable {
         dest.writeString(messageColor)
         dest.writeTypedList<CTInAppNotificationButton?>(_buttons)
         dest.writeTypedList<CTInAppNotificationMedia?>(_mediaList)
-        dest.writeByte((if (this.showCloseButton) 0x01 else 0x00).toByte())
+        dest.writeByte((if (this.showCloseButton) { 0x01 } else { 0x00 }).toByte())
         dest.writeInt(buttonCount)
-        dest.writeByte((if (isTablet) 0x01 else 0x00).toByte())
+        dest.writeByte((if (isTablet) { 0x01 } else { 0x00 }).toByte())
         dest.writeString(customInAppUrl)
-        dest.writeByte((if (this.isJsEnabled) 0x01 else 0x00).toByte())
-        dest.writeByte((if (isPortrait) 0x01 else 0x00).toByte())
-        dest.writeByte((if (isLandscape) 0x01 else 0x00).toByte())
-        dest.writeByte((if (isLocalInApp) 0x01 else 0x00).toByte())
-        dest.writeByte((if (fallBackToNotificationSettings) 0x01 else 0x00).toByte())
+        dest.writeByte((if (this.isJsEnabled) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (isPortrait) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (isLandscape) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (isLocalInApp) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (fallBackToNotificationSettings) { 0x01 } else { 0x00 }).toByte())
         dest.writeString(landscapeImageUrl)
         dest.writeLong(timeToLive)
         dest.writeParcelable(customTemplateData, flags)
         dest.writeDouble(aspectRatio)
-        dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
-        dest.writeByte((if (swipeToDismiss) 0x01 else 0x00).toByte())
+        dest.writeByte((if (isRequestForPushPermission) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (swipeToDismiss) { 0x01 } else { 0x00 }).toByte())
     }
 
     /**
@@ -397,7 +397,10 @@ public class CTInAppNotification : Parcelable {
             maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1)
             inAppType = CTInAppType.fromString(type)
             isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false)
-            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.WHITE)
+            backgroundColor = jsonObject.optString(
+                Constants.KEY_BG,
+                backgroundColor
+            ).toValidColorOrFallback(Constants.WHITE)
             isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
                 Constants.KEY_PORTRAIT
             )
@@ -407,13 +410,19 @@ public class CTInAppNotification : Parcelable {
             val titleObject = jsonObject.optJSONObject(Constants.KEY_TITLE)
             if (titleObject != null) {
                 title = titleObject.optString(Constants.KEY_TEXT, "")
-                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(Constants.BLACK)
+                titleColor = titleObject.optString(
+                    Constants.KEY_COLOR,
+                    titleColor
+                ).toValidColorOrFallback(Constants.BLACK)
             }
 
             val msgObject = jsonObject.optJSONObject(Constants.KEY_MESSAGE)
             if (msgObject != null) {
                 message = msgObject.optString(Constants.KEY_TEXT, "")
-                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK)
+                messageColor = msgObject.optString(
+                    Constants.KEY_COLOR,
+                    messageColor
+                ).toValidColorOrFallback(Constants.BLACK)
             }
 
             showCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
@@ -510,9 +519,11 @@ public class CTInAppNotification : Parcelable {
                 html = data.getString(Constants.INAPP_HTML_TAG)
                 customInAppUrl = data.optString(Constants.KEY_URL, "")
                 customExtras =
-                    if (data.optJSONObject(Constants.KEY_KV) != null) data.getJSONObject(
-                        Constants.KEY_KV
-                    ) else JSONObject()
+                    if (data.optJSONObject(Constants.KEY_KV) != null) {
+                        data.getJSONObject(Constants.KEY_KV)
+                    } else {
+                        JSONObject()
+                    }
 
                 val displayParams = jsonObject.optJSONObject(Constants.INAPP_WINDOW)
                 if (displayParams != null) {

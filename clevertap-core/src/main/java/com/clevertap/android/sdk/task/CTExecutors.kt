@@ -102,7 +102,7 @@ public open class CTExecutors {
      * @return
      */
     public open fun <TResult> postAsyncSafelyTask(): Task<TResult> =
-        postAsyncSafelyTask(if (config != null) config.accountId else singleThreadExecutorTag)
+        postAsyncSafelyTask(if (config != null) { config.accountId } else { singleThreadExecutorTag })
 
     /**
      * Use this task to use your own custom executor for executing jobs & getting callbacks on default executors

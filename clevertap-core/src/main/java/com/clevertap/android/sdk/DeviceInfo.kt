@@ -78,7 +78,7 @@ internal open class DeviceInfo internal constructor(
 
         val locale: String = readDeviceLocale()
 
-        val appBucket: String? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) readAppBucket() else null
+        val appBucket: String? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) { readAppBucket() } else { null }
 
         private fun readWindowSize(): WindowSize {
             val wm = getWindowManager()
@@ -375,7 +375,7 @@ internal open class DeviceInfo internal constructor(
 
     val locale: String?
         // If locale is set by the client then use that, otherwise fetch it from the device
-        get() = if (customLocale.isNullOrEmpty()) deviceLocale else customLocale
+        get() = if (customLocale.isNullOrEmpty()) { deviceLocale } else { customLocale }
 
     /** Returns the pending device validation results and clears them. */
     internal fun drainValidationResults(): List<ValidationResult> {
@@ -735,7 +735,11 @@ internal open class DeviceInfo internal constructor(
             }
 
             cachedDeviceType = try {
-                if (checkNotNull(context).resources.getBoolean(R.bool.ctIsTablet)) TABLET else SMART_PHONE
+                if (checkNotNull(context).resources.getBoolean(R.bool.ctIsTablet)) {
+                    TABLET
+                } else {
+                    SMART_PHONE
+                }
             } catch (e: Exception) {
                 // resource not found or context is null
                 Logger.d(TAG, "Failed to decide whether device is a smart phone or tablet!", e)

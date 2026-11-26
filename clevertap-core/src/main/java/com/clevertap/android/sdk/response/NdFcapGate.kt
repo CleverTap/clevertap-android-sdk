@@ -47,7 +47,8 @@ internal object NdFcapGate {
             val canShow = ndFCManager.canShow(
                 id = campaignId,
                 excludeFromCaps = NdFCManager.isExcludeFromCaps(json),
-                maxPerSession = json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED), // mdc = per-target session cap
+                // mdc = per-target session cap
+                maxPerSession = json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED),
                 frequencyLimitsMaxedOut = false, // advanced whenLimits already applied at evaluation time
             )
             if (!canShow) {

@@ -55,7 +55,9 @@ internal class StoreRegistryInAppQueue(
     @WorkerThread
     @Synchronized
     override fun enqueueAll(inApps: List<JSONObject>) {
-        if (inApps.isEmpty()) return
+        if (inApps.isEmpty()) {
+            return
+        }
 
         val currentQueue = getQueue().toMutableList()
         currentQueue.addAll(inApps)

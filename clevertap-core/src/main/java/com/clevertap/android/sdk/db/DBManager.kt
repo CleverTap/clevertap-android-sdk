@@ -206,7 +206,7 @@ internal class DBManager constructor(
     //Event
     @WorkerThread
     override fun queueEventToDB(context: Context, event: JSONObject, type: Int) {
-        val table = if (type == Constants.PROFILE_EVENT) PROFILE_EVENTS else EVENTS
+        val table = if (type == Constants.PROFILE_EVENT) { PROFILE_EVENTS } else { EVENTS }
         queueEventForTable(context, event, table)
     }
 

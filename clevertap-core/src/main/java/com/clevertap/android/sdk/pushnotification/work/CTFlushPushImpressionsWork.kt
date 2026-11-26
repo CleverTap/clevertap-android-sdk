@@ -10,7 +10,10 @@ import com.clevertap.android.sdk.flushPushImpressionsOnPostAsyncSafely
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+internal class CTFlushPushImpressionsWork(
+    context: Context,
+    workerParams: WorkerParameters
+) : Worker(context, workerParams) {
 
     val tag = "CTFlushPushImpressionsWork"
 
@@ -28,8 +31,9 @@ internal class CTFlushPushImpressionsWork(context: Context, workerParams: Worker
                 !it.coreState.config.isAnalyticsOnly
             }
             .forEach {
-                if (checkIfStopped())
+                if (checkIfStopped()) {
                     return Result.success()
+                }
 
                 it.apply {
                     Logger.d(tag, "flushing queue for push impressions on CT instance = $accountId")

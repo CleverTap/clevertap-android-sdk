@@ -94,9 +94,13 @@ internal class NdCountsStore(
 
     /** Parses a `"today,lifetime"` value, or null if absent/malformed. */
     private fun parseOrNull(raw: String?): Counts? {
-        if (raw.isNullOrEmpty()) return null
+        if (raw.isNullOrEmpty()) {
+            return null
+        }
         val parts = raw.split(",")
-        if (parts.size != 2) return null
+        if (parts.size != 2) {
+            return null
+        }
         val today = parts[0].toIntOrNull() ?: return null
         val lifetime = parts[1].toIntOrNull() ?: return null
         return Counts(today, lifetime)

@@ -92,7 +92,7 @@ internal object JsonUtil {
     private fun mapToJsonObject(map: Map<String, *>): JSONObject {
         val obj = JSONObject()
         for ((key, value) in map) {
-            obj.put(key, if (value is Editable) value.toString() else toJsonValue(value))
+            obj.put(key, if (value is Editable) { value.toString() } else { toJsonValue(value) })
         }
         return obj
     }

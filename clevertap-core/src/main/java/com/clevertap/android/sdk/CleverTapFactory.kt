@@ -227,12 +227,13 @@ internal object CleverTapFactory {
         }
         val inAppDaoLoaderTask = executors.postAsyncSafelyTask<Unit>()
         inAppDaoLoaderTask.execute("loadInAppsDao") {
-            (inAppDelayManager.storageStrategy as DelayedInAppStorageStrategy).delayedLegacyInAppStore = DelayedLegacyInAppStore(
-                databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
-                cryptHandler,
-                config.logger,
-                accountId
-            )
+            (inAppDelayManager.storageStrategy as DelayedInAppStorageStrategy).delayedLegacyInAppStore =
+                DelayedLegacyInAppStore(
+                    databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
+                    cryptHandler,
+                    config.logger,
+                    accountId
+                )
         }
 
         // DeviceInfo is created earlier (above) so the device-id resolution can be posted first.
@@ -248,7 +249,15 @@ internal object CleverTapFactory {
         val nestedJsonBuilder = NestedJsonBuilder()
 
         val localDataStore =
-            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateTraverser, nestedJsonBuilder)
+            LocalDataStore(
+                context,
+                config,
+                cryptHandler,
+                deviceInfo,
+                databaseManager,
+                profileStateTraverser,
+                nestedJsonBuilder
+            )
 
         val eventMediator =
             EventMediator(config, coreMetaData, networkRepo)

@@ -225,10 +225,41 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
                 maxValueLength = maxValueLength,
                 depth = depth + 1
             )
-            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
-            is List<*> -> cleanList(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
-            is Array<*> -> cleanList(value.toList(), parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
-            is JSONArray -> cleanJSONArray(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is JSONObject -> cleanJSONObject(
+                value,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth + 1
+            )
+            is List<*> -> cleanList(
+                value,
+                parentKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
+            is Array<*> -> cleanList(
+                value.toList(),
+                parentKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
+            is JSONArray -> cleanJSONArray(
+                value,
+                parentKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
             else -> return cleanPrimitiveValue(value, parentKey, valueCharsNotAllowed, maxValueLength)
         }
 
@@ -269,7 +300,15 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
                 continue
             }
 
-            val cleanedValue = cleanAnyValue(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            val cleanedValue = cleanAnyValue(
+                value,
+                parentKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -316,7 +355,15 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
                 is JSONArray -> arrayKeyCount++
             }
 
-            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            val cleanedValue = cleanAnyValue(
+                value,
+                cleanedKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
 
             if (cleanedValue != null) {
                 cleaned.put(cleanedKey, cleanedValue)
@@ -354,7 +401,15 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
                 continue
             }
 
-            val cleanedValue = cleanAnyValue(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            val cleanedValue = cleanAnyValue(
+                value,
+                parentKey,
+                keyCharsNotAllowed,
+                maxKeyLength,
+                valueCharsNotAllowed,
+                maxValueLength,
+                depth
+            )
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -406,7 +461,12 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
         return result
     }
 
-    private fun cleanPrimitiveValue(value: Any?, key: String, valueCharsNotAllowed: Set<Char>?, maxValueLength: Int?): Any? {
+    private fun cleanPrimitiveValue(
+        value: Any?,
+        key: String,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?
+    ): Any? {
         return when (value) {
             is Int, is Long, is Float, is Double, is Boolean -> value
             is String -> cleanStringValue(value, key, valueCharsNotAllowed, maxValueLength)
@@ -419,7 +479,12 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
         }
     }
 
-    private fun cleanStringValue(value: String, key: String, valueCharsNotAllowed: Set<Char>?, maxValueLength: Int?): String? {
+    private fun cleanStringValue(
+        value: String,
+        key: String,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?
+    ): String? {
         val original = value
         var cleaned = value.trim()
 

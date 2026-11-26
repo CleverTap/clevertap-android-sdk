@@ -164,13 +164,17 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
         }
 
         // A streamable content has a media url.
-        playMedia.invoke(checkNotNull(firstContentItem.media), firstContentItem.mediaIsAudio(), firstContentItem.mediaIsVideo())
+        playMedia.invoke(
+            checkNotNull(firstContentItem.media),
+            firstContentItem.mediaIsAudio(),
+            firstContentItem.mediaIsVideo()
+        )
         return true
     }
 
     private fun setMuteIconState(icon: ImageView, context: Context, volume: Float) {
         val isMuted = volume <= 0
-        val drawableRes = if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
+        val drawableRes = if (isMuted) { R.drawable.ct_volume_off } else { R.drawable.ct_volume_on }
         // When muted, the action available is "Unmute"; when audible, the action is "Mute"
         val contentDescRes = if (isMuted) {
             R.string.ct_unmute_button_content_description
@@ -195,7 +199,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
         return when {
             diff < 60 -> "Just Now"
             diff > 60 && diff < 59 * 60 -> "${diff / 60} mins ago"
-            diff > 59 * 60 && diff < 23 * 59 * 60 -> if (hours > 1) "$hours hours ago" else "$hours hour ago"
+            diff > 59 * 60 && diff < 23 * 59 * 60 -> if (hours > 1) { "$hours hours ago" } else { "$hours hour ago" }
             diff > 24 * 60 * 60 && diff < 48 * 60 * 60 -> "Yesterday"
             else -> {
                 @SuppressLint("SimpleDateFormat")
@@ -286,7 +290,11 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
     /** Every inbox row layout has the read dot; only rows built in tests may lack it. */
     protected fun showReadState(isRead: Boolean) {
         checkNotNull(readDot) { "Inbox row layout without a read dot" }.visibility =
-            if (isRead) View.GONE else View.VISIBLE
+            if (isRead) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
     }
 
     /** Clears what the previous message left on a media view: hidden, [bgColor] background, no description. */
@@ -427,7 +435,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
         } else {
             val fullWidth = displayMetrics.widthPixels
             val isSquare = inboxMessage.requireOrientation().equals("p", ignoreCase = true)
-            fullWidth to if (isSquare) fullWidth else (fullWidth * 0.5625f).roundToInt()
+            fullWidth to if (isSquare) { fullWidth } else { (fullWidth * 0.5625f).roundToInt() }
         }
         progressBar.layoutParams = RelativeLayout.LayoutParams(width, height)
     }

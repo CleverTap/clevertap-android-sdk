@@ -167,7 +167,10 @@ internal class ContentFetchManager(
         } else {
             when (response.code) {
                 429 -> {
-                    logger.info(TAG, "Content fetch request was rate limited (429). Consider reducing request frequency.")
+                    logger.info(
+                        TAG,
+                        "Content fetch request was rate limited (429). Consider reducing request frequency."
+                    )
                 }
 
                 else -> logger.info(TAG, "Content fetch request failed with response code: ${response.code}")

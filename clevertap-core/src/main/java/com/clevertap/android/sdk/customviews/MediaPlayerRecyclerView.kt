@@ -263,7 +263,7 @@ internal class MediaPlayerRecyclerView : RecyclerView {
 
     /** Switches between muted and full volume and returns the new volume. */
     private fun toggleMute(): Float {
-        handle.setPlayerVolume(if (handle.playerVolume() > MUTED_VOLUME) MUTED_VOLUME else FULL_VOLUME)
+        handle.setPlayerVolume(if (handle.playerVolume() > MUTED_VOLUME) { MUTED_VOLUME } else { FULL_VOLUME })
         return handle.playerVolume()
     }
 
@@ -305,7 +305,10 @@ internal class MediaPlayerRecyclerView : RecyclerView {
         val video = playingVideo ?: return
         val messageId = video.messageId ?: return
         val mediaUrl = video.mediaUrl ?: return
-        states.remember(messageId, InboxVideoStates.VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume()))
+        states.remember(
+            messageId,
+            InboxVideoStates.VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume())
+        )
     }
 
     private companion object {

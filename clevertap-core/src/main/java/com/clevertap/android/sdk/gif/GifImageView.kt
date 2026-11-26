@@ -151,7 +151,7 @@ internal open class GifImageView : AppCompatImageView, Runnable {
                 // but I use previous frame time to make code more readable
                 val delay = (decoder.getNextDelay() - frameDecodeTime).toInt()
                 if (delay > 0) {
-                    Thread.sleep(if (framesDisplayDuration > 0) framesDisplayDuration else delay.toLong())
+                    Thread.sleep(if (framesDisplayDuration > 0) { framesDisplayDuration } else { delay.toLong() })
                 }
             } catch (e: InterruptedException) {
                 // suppress exception

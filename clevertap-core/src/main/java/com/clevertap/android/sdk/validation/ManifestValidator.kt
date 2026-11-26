@@ -96,17 +96,20 @@ internal object ManifestValidator {
     }
 
     private fun validateActivityInManifest(application: Application, activityClass: Class<*>) {
-        val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_ACTIVITIES)
+        val packageInfo =
+            application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_ACTIVITIES)
         logPresence(packageInfo.activities, activityClass.name, SDK_PACKAGE_PREFIX)
     }
 
     private fun validateReceiverInManifest(application: Application, receiverClassName: String) {
-        val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_RECEIVERS)
+        val packageInfo =
+            application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_RECEIVERS)
         logPresence(packageInfo.receivers, receiverClassName, CLEVERTAP_PACKAGE_PREFIX)
     }
 
     private fun validateServiceInManifest(application: Application, serviceClassName: String) {
-        val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_SERVICES)
+        val packageInfo =
+            application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_SERVICES)
         logPresence(packageInfo.services, serviceClassName, SDK_PACKAGE_PREFIX)
     }
 
@@ -117,7 +120,7 @@ internal object ManifestValidator {
     private fun logPresence(components: Array<out ComponentInfo>?, className: String, prefix: String) {
         val isPresent = requireNotNull(components).any { it.name == className }
         val shortName = className.replaceFirst(prefix, "")
-        Logger.i(if (isPresent) "$shortName is present" else "$shortName not present")
+        Logger.i(if (isPresent) { "$shortName is present" } else { "$shortName not present" })
     }
 
     private fun validationApplicationLifecyleCallback(context: Context) {

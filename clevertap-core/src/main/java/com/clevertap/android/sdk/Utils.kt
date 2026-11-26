@@ -474,7 +474,11 @@ public object Utils {
     @JvmStatic
     @Throws(JSONException::class)
     public fun optionalStringKey(o: JSONObject, k: String): String? =
-        if (o.has(k) && !o.isNull(k)) o.getString(k) else null
+        if (o.has(k) && !o.isNull(k)) {
+            o.getString(k)
+        } else {
+            null
+        }
 
     /**
      * Handy method to post any runnable to run on the main thread.

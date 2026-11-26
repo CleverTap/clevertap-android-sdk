@@ -40,6 +40,8 @@ internal class CryptFactory(
     }
 
     fun getAesGcmCrypt() : AESGCMCrypt {
-        return cryptInstances.getOrPut(EncryptionAlgorithm.AES_GCM) { getCrypt(EncryptionAlgorithm.AES_GCM, accountId, ctKeyGenerator) } as AESGCMCrypt
+        return cryptInstances.getOrPut(EncryptionAlgorithm.AES_GCM) {
+            getCrypt(EncryptionAlgorithm.AES_GCM, accountId, ctKeyGenerator)
+        } as AESGCMCrypt
     }
 }

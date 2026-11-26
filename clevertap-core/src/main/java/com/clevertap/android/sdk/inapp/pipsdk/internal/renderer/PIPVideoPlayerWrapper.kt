@@ -70,7 +70,9 @@ internal class PIPVideoPlayerWrapper {
      */
     @OptIn(UnstableApi::class)
     fun initPlayer(context: Context, url: String) {
-        if (player != null) return
+        if (player != null) {
+            return
+        }
 
         val bandwidthMeter = DefaultBandwidthMeter.Builder(context).build()
         val trackSelector = DefaultTrackSelector(context, AdaptiveTrackSelection.Factory())
@@ -132,12 +134,12 @@ internal class PIPVideoPlayerWrapper {
 
     fun toggleMute() {
         _isMuted = !_isMuted
-        player?.volume = if (_isMuted) 0f else 1f
+        player?.volume = if (_isMuted) { 0f } else { 1f }
     }
 
     fun setMuted(muted: Boolean) {
         _isMuted = muted
-        player?.volume = if (muted) 0f else 1f
+        player?.volume = if (muted) { 0f } else { 1f }
     }
 
     /**
@@ -185,7 +187,7 @@ internal class PIPVideoPlayerWrapper {
 
         // Restore state
         p.playWhenReady = _isPlaying
-        p.volume = if (_isMuted) 0f else 1f
+        p.volume = if (_isMuted) { 0f } else { 1f }
         return surface
     }
 
@@ -323,7 +325,7 @@ internal class PIPVideoPlayerWrapper {
         // getRetryDelayMsFor returns C.TIME_UNSET for them, making the Loader set fatalError
         // immediately — the retry count is never reached.
         override fun getMinimumLoadableRetryCount(dataType: Int): Int {
-            return if (networkRetryEnabled) Int.MAX_VALUE else super.getMinimumLoadableRetryCount(dataType)
+            return if (networkRetryEnabled) { Int.MAX_VALUE } else { super.getMinimumLoadableRetryCount(dataType) }
         }
     }
 }

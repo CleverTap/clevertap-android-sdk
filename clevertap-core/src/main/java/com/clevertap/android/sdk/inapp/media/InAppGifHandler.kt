@@ -23,7 +23,9 @@ internal class InAppGifHandler(
         config: InAppMediaConfig,
         clickListener: View.OnClickListener?
     ) {
-        if (config.gifImageId == 0) return
+        if (config.gifImageId == 0) {
+            return
+        }
         val gifByteArray = resourceProvider.cachedInAppGifV1(media.mediaUrl) ?: return
         gifImageView = relativeLayout?.findViewById(config.gifImageId)
         gifImageView?.let { view ->

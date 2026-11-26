@@ -81,7 +81,9 @@ internal class ProfileStateTraverser(
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
-        if (source == null) return
+        if (source == null) {
+            return
+        }
 
         val keys = source.keys()
         while (keys.hasNext()) {
@@ -96,7 +98,13 @@ internal class ProfileStateTraverser(
                         deleteHandler.handleDelete(
                             target, key, newValue, currentPath, changes
                         ) { nestedTarget, nestedSource, nestedPath, nestedChanges ->
-                            traverseRecursive(nestedTarget, nestedSource, nestedPath, nestedChanges, ProfileOperation.DELETE)
+                            traverseRecursive(
+                                nestedTarget,
+                                nestedSource,
+                                nestedPath,
+                                nestedChanges,
+                                ProfileOperation.DELETE
+                            )
                         }
                     }
                     else -> {
@@ -121,7 +129,7 @@ internal class ProfileStateTraverser(
      * Builds a dot-notation path from base path and key.
      */
     private fun buildPath(basePath: String, key: String): String {
-        return if (basePath.isEmpty()) key else "$basePath.$key"
+        return if (basePath.isEmpty()) { key } else { "$basePath.$key" }
     }
 
     companion object {

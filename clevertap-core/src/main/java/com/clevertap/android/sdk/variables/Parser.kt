@@ -75,7 +75,7 @@ internal open class Parser(private val ctVariables: CTVariables) {
                 val name = annotation?.name.orEmpty()
 
                 val baseName = name.ifEmpty { field.name }
-                val variableName = if (group.isNotEmpty()) "$group.$baseName" else baseName
+                val variableName = if (group.isNotEmpty()) { "$group.$baseName" } else { baseName }
 
                 val fieldType = field.type
                 when (fieldType.toString()) {

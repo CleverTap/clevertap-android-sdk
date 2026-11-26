@@ -106,7 +106,10 @@ internal class NdEvaluationManager(
 
                 ndTriggersManager.increment(campaignId)
 
-                if (ndLimitsMatcher.matchWhenLimits(whenLimits = EvalRules.whenLimits(inApp), campaignId = campaignId)) {
+                if (ndLimitsMatcher.matchWhenLimits(
+                    whenLimits = EvalRules.whenLimits(inApp),
+                    campaignId = campaignId
+                )) {
                     val ti = campaignId.toLongOrNull() ?: continue
                     // Append without a contains() guard: a re-vote while a prior send is in flight must
                     // not be dropped (onSentHeaders removes only what was sent). Server dedups.
@@ -244,7 +247,10 @@ internal class NdEvaluationManager(
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
         if (wzrkId.isEmpty()) {
             // CG stubs always ship wzrk_id; log rather than drop silently if one doesn't.
-            config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
+            config.logger.verbose(
+                config.accountId,
+                "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})"
+            )
             return
         }
         suppressedNdCampaigns.add(
@@ -274,10 +280,18 @@ internal class NdEvaluationManager(
         if (endpointId != ENDPOINT_A1) {
             return
         }
-        if (HeaderVoteLists.removeSentEvalIds(sentHeader = allHeaders, evalMetaKey = Constants.ND_SS_EVAL_META, evalIds = evaluatedNdCampaignIds)) {
+        if (HeaderVoteLists.removeSentEvalIds(
+            sentHeader = allHeaders,
+            evalMetaKey = Constants.ND_SS_EVAL_META,
+            evalIds = evaluatedNdCampaignIds
+        )) {
             saveEvaluatedNdIds()
         }
-        if (HeaderVoteLists.removeSentSuppressed(sentHeader = allHeaders, suppressedMetaKey = Constants.ND_SUPPRESSED_META, suppressed = suppressedNdCampaigns)) {
+        if (HeaderVoteLists.removeSentSuppressed(
+            sentHeader = allHeaders,
+            suppressedMetaKey = Constants.ND_SUPPRESSED_META,
+            suppressed = suppressedNdCampaigns
+        )) {
             saveSuppressedNdIds()
         }
     }

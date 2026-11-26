@@ -21,7 +21,9 @@ internal open class CTInboxTabAdapter(fm: FragmentManager, size: Int) :
     override fun getCount(): Int = fragmentList.size
 
     override fun getItem(position: Int): Fragment =
-        checkNotNull(fragmentList[position]) { "Every slot is filled through addFragment() before the adapter is attached" }
+        checkNotNull(fragmentList[position]) {
+            "Every slot is filled through addFragment() before the adapter is attached"
+        }
 
     /**
      * The fragment in [position], or null while that slot is still empty. The page-change listener

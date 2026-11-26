@@ -108,7 +108,7 @@ internal class InboxPendingActionsDAOImpl(
                 val paramsIdx = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
                 val expiresIdx = cursor.getColumnIndexOrThrow(Column.EXPIRES)
                 while (cursor.moveToNext()) {
-                    val raw = if (cursor.isNull(paramsIdx)) null else cursor.getString(paramsIdx)
+                    val raw = if (cursor.isNull(paramsIdx)) { null } else { cursor.getString(paramsIdx) }
                     val params = raw?.let {
                         try {
                             JSONObject(it)
@@ -212,7 +212,9 @@ internal class InboxPendingActionsDAOImpl(
 
     @WorkerThread
     override fun addPendingDeletes(rows: List<PendingDelete>, userId: String): Boolean {
-        if (rows.isEmpty()) return true
+        if (rows.isEmpty()) {
+            return true
+        }
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return false
@@ -250,7 +252,9 @@ internal class InboxPendingActionsDAOImpl(
         messageIds: List<String>,
         userId: String
     ): Boolean {
-        if (messageIds.isEmpty()) return true
+        if (messageIds.isEmpty()) {
+            return true
+        }
         val placeholders = buildString {
             append("?")
             repeat(messageIds.size - 1) { append(", ?") }
@@ -286,7 +290,9 @@ internal class InboxPendingActionsDAOImpl(
 
     @WorkerThread
     override fun addPendingReads(rows: List<PendingRead>, userId: String): Boolean {
-        if (rows.isEmpty()) return true
+        if (rows.isEmpty()) {
+            return true
+        }
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return false
@@ -345,7 +351,9 @@ internal class InboxPendingActionsDAOImpl(
         }
 
     private fun deleteBatch(table: String, messageIds: List<String>, userId: String): Boolean {
-        if (messageIds.isEmpty()) return true
+        if (messageIds.isEmpty()) {
+            return true
+        }
         val placeholders = buildString {
             append("?")
             repeat(messageIds.size - 1) { append(", ?") }

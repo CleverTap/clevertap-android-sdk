@@ -24,7 +24,7 @@ internal object JsonFlattener {
 
         json.keys().forEach { key ->
             val value = json.get(key)
-            val newKey = if (prefix.isEmpty()) key else "$prefix.$key"
+            val newKey = if (prefix.isEmpty()) { key } else { "$prefix.$key" }
 
             when (value) {
                 is JSONObject -> {

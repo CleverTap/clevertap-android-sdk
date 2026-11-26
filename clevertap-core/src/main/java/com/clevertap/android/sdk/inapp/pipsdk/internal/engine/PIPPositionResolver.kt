@@ -32,7 +32,9 @@ internal object PIPPositionResolver {
         // vertical (or horizontal) positions share the same coordinate, so the PIP stays
         // at the correct edge rather than jumping to the opposite one.
         val right = (containerWidth - pipWidth - horizontalMarginPx - safeInsets.right).toFloat().coerceAtLeast(left)
-        val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom).toFloat().coerceAtLeast(top)
+        val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom)
+            .toFloat()
+            .coerceAtLeast(top)
         val midX = (left + right) / 2f
         val midY = (top + bottom) / 2f
 

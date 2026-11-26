@@ -158,7 +158,9 @@ internal class InAppController(
          */
         @JvmStatic
         fun getDisplayingInApp(inAppId: String?): CTInAppNotification? {
-            if (inAppId == null) return null
+            if (inAppId == null) {
+                return null
+            }
             return currentlyDisplayingInApp?.takeIf { it.campaignId == inAppId }
         }
 
@@ -738,7 +740,12 @@ internal class InAppController(
             )
 
         // Option 2 fast path: show the /a1 winner now when waiting can't change the outcome.
-        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, contentFetchItems, appLaunchedProperties, userLocation)) {
+        if (tryAppLaunchFastPath(
+            serverSideInAppsToDisplayImmediate,
+            contentFetchItems,
+            appLaunchedProperties,
+            userLocation
+        )) {
             return
         }
 
@@ -816,7 +823,7 @@ internal class InAppController(
             return emptyList()
         }
         val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
-        return if (synthetics.all { it != null }) synthetics.filterNotNull() else emptyList()
+        return if (synthetics.all { it != null }) { synthetics.filterNotNull() } else { emptyList() }
     }
 
     /**
@@ -1210,7 +1217,9 @@ internal class InAppController(
 
     private fun inAppDidDismiss(inAppNotification: CTInAppNotification) {
         logger.verbose(defaultLogTag, "Running inAppDidDismiss")
-        if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp?.campaignId == inAppNotification.campaignId)) {
+        if (currentlyDisplayingInApp != null &&
+            (currentlyDisplayingInApp?.campaignId == inAppNotification.campaignId)
+        ) {
             currentlyDisplayingInApp = null
             // Nothing is on screen now, so there is nothing to restore after a process kill.
             // Called on the in-app background thread, so the database is used directly.

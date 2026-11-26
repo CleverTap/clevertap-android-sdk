@@ -19,7 +19,10 @@ import androidx.annotation.RestrictTo
  * @param logger An optional [ILogger] for debugging and tracking purposes.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val logger: ILogger? = null): MemoryAccessObject<ByteArray> {
+internal class FileMemoryAccessObject(
+    private val ctCaches: CTCaches,
+    private val logger: ILogger? = null
+): MemoryAccessObject<ByteArray> {
     /**
      * Fetches a file from in-memory cache by key.
      *

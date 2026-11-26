@@ -97,21 +97,23 @@ public object Constants {
     // ---- Native Display (ND) frequency caps (SDK-6055) ----
     // ND == Display Units channel. SS + legacy only (no CS mode). Mirrors the in-app keys above.
     // Response keys (LC -> SDK). Campaign content still arrives under DISPLAY_UNIT_JSON_RESPONSE_KEY ("adUnit_notifs").
-    public const val DISPLAY_UNIT_NOTIFS_SS_KEY: String = "adUnit_notifs_ss"                 // advanced-rule metadata bundle (rules only)
-    public const val DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY: String = "adUnit_notifs_applaunched" // app-launch content + CG-suppressed stubs
+    // advanced-rule metadata bundle (rules only)
+    public const val DISPLAY_UNIT_NOTIFS_SS_KEY: String = "adUnit_notifs_ss"
+    // app-launch content + CG-suppressed stubs
+    public const val DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY: String = "adUnit_notifs_applaunched"
     public const val DISPLAY_UNIT_NOTIFS_STALE_KEY: String = "adUnit_stale"                  // dead-target GC ids
     // Request meta keys (SDK -> LC)
-    public const val ND_SS_EVAL_META: String = "adUnit_eval"                                 // eligible advanced ND campaign votes
-    public const val ND_SUPPRESSED_META: String = "adUnit_suppressed"                        // CG-suppression acks (app-launch path only)
-    public const val ND_TARGET_SHOWN_LIST: String = "ndtlc"                                  // [[ti, todayCount, lifetimeCount], ...]
+    public const val ND_SS_EVAL_META: String = "adUnit_eval" // eligible advanced ND campaign votes
+    public const val ND_SUPPRESSED_META: String = "adUnit_suppressed" // CG-suppression acks (app-launch path only)
+    public const val ND_TARGET_SHOWN_LIST: String = "ndtlc" // [[ti, todayCount, lifetimeCount], ...]
     // Wire keys with directional overload (mirror in-app imc/imp)
-    public const val ND_MAX_PER_SESSION_KEY: String = "ndmc"                                 // resp: session ceiling; also storage key
-    public const val ND_MAX_PER_DAY_KEY: String = "ndmp"                                     // req: SDK daily count; resp: daily ceiling
+    public const val ND_MAX_PER_SESSION_KEY: String = "ndmc" // resp: session ceiling; also storage key
+    public const val ND_MAX_PER_DAY_KEY: String = "ndmp" // req: SDK daily count; resp: daily ceiling
     // ND store prefs namespace + keys
-    public const val ND_KEY: String = "adUnit"                                               // ND metadata store prefs namespace
+    public const val ND_KEY: String = "adUnit" // ND metadata store prefs namespace
     public const val PREFS_ND_KEY_SS: String = DISPLAY_UNIT_NOTIFS_SS_KEY                    // metadata bundle pref key
-    public const val PREFS_EVALUATED_ND_KEY_SS: String = "evaluated_nd_ss"                   // pending adUnit_eval report
-    public const val PREFS_SUPPRESSED_ND_KEY: String = "suppressed_nd"                       // pending adUnit_suppressed report
+    public const val PREFS_EVALUATED_ND_KEY_SS: String = "evaluated_nd_ss" // pending adUnit_eval report
+    public const val PREFS_SUPPRESSED_ND_KEY: String = "suppressed_nd" // pending adUnit_suppressed report
 
     public const val INBOX_JSON_RESPONSE_KEY: String = "inbox_notifs"
     public const val INBOX_V2_JSON_RESPONSE_KEY: String = "inbox_notifs_v2"
@@ -178,11 +180,14 @@ public object Constants {
     public const val KEY_TRIGGERS_PER_INAPP: String = "triggers_per_inapp"
 
     // ---- Native Display (ND) frequency-cap storage keys (SDK-6055), mirror the in-app keys above ----
-    public const val KEY_ND_MAX_PER_DAY: String = "ndstmcd"                 // stored ND daily ceiling (mirror of istmcd_inapp)
-    public const val KEY_ND_COUNTS_SHOWN_TODAY: String = "ndstc"            // stored ND global shown-today (mirror of istc_inapp)
-    public const val KEY_ND_LAST_RESET_DATE: String = "nd_ict_date"         // ddMMyyyy of the last daily reset (mirror of ict_date)
-    public const val KEY_ND_COUNTS_PER_TARGET: String = "nd_counts_per_target"   // NdCountsStore namespace (per-target counts + globals)
-    public const val KEY_ND_IMPRESSIONS_PER_TARGET: String = "nd_impressions"    // ND ImpressionStore namespace (whenLimits timestamps)
+    public const val KEY_ND_MAX_PER_DAY: String = "ndstmcd" // stored ND daily ceiling (mirror of istmcd_inapp)
+    public const val KEY_ND_COUNTS_SHOWN_TODAY: String = "ndstc" // stored ND global shown-today (mirror of istc_inapp)
+    // ddMMyyyy of the last daily reset (mirror of ict_date)
+    public const val KEY_ND_LAST_RESET_DATE: String = "nd_ict_date"
+    // NdCountsStore namespace (per-target counts + globals)
+    public const val KEY_ND_COUNTS_PER_TARGET: String = "nd_counts_per_target"
+    // ND ImpressionStore namespace (whenLimits timestamps)
+    public const val KEY_ND_IMPRESSIONS_PER_TARGET: String = "nd_impressions"
     public const val KEY_ND_TRIGGERS_PER_TARGET: String = "nd_triggers_per_target" // onEvery/onExactly trigger counts
     public const val INAPP_ID_IN_PAYLOAD: String = "ti"
     public const val LOCATION_PING_INTERVAL_IN_SECONDS: Int = 10
@@ -468,7 +473,8 @@ public object Constants {
     /**
      * Valid indexes for the App Inbox item and buttons.
      */
-    public const val APP_INBOX_ITEM_CONTENT_PAGE_INDEX: Int = 0 //used for non-carousel templates as they have only one page of content to display
+    //used for non-carousel templates as they have only one page of content to display
+    public const val APP_INBOX_ITEM_CONTENT_PAGE_INDEX: Int = 0
     public const val APP_INBOX_ITEM_INDEX: Int = -1
     public const val APP_INBOX_CTA1_INDEX: Int = 0
     public const val APP_INBOX_CTA2_INDEX: Int = 1
