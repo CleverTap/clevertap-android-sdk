@@ -195,21 +195,11 @@
     <ID>CyclomaticComplexMethod:VarCache.kt$VarCache$private fun startFilesDownload(clientRegisteredVars: Map&lt;String, Var&lt;*&gt;&gt;, func: () -&gt; Unit)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:BitmapDownloadRequestHandlerWithTimeLimit.kt$BitmapDownloadRequestHandlerWithTimeLimit$val (_, fallbackToAppIcon, context, instanceConfig, downloadTimeLimitInMillis) = bitmapDownloadRequest</ID>
     <ID>DoubleMutabilityForCollection:CTInAppAction.kt$CTInAppAction$var keyValues: HashMap&lt;String, String&gt;? private set</ID>
-    <ID>DoubleMutabilityForCollection:CTInAppNotification.kt$CTInAppNotification$private var _buttons = ArrayList&lt;CTInAppNotificationButton&gt;()</ID>
-    <ID>DoubleMutabilityForCollection:CTInAppNotification.kt$CTInAppNotification$private var _mediaList = ArrayList&lt;CTInAppNotificationMedia&gt;()</ID>
     <ID>DoubleMutabilityForCollection:CTInboxController.kt$CTInboxController$private var messagesList: MutableList&lt;CTMessageDAO&gt; = dbAdapter.getMessages(userId)</ID>
-    <ID>DoubleMutabilityForCollection:CTInboxListViewFragment.kt$CTInboxListViewFragment$internal var inboxMessages: MutableList&lt;CTInboxMessage&gt; = ArrayList()</ID>
-    <ID>DoubleMutabilityForCollection:CTInboxMessage.kt$CTInboxMessage$private var _inboxMessageContents: ArrayList&lt;CTInboxMessageContent&gt; = ArrayList()</ID>
-    <ID>DoubleMutabilityForCollection:CTInboxMessage.kt$CTInboxMessage$private var _tags: MutableList&lt;String&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:CTInboxStyleConfig.kt$CTInboxStyleConfig$/** Kotlin property syntax, equivalent to [getTabs] / [setTabs]. */ public var tabs: ArrayList&lt;String&gt;? @JvmSynthetic @JvmName("ktGetTabs") inline get() = getTabs() @JvmSynthetic @JvmName("ktSetTabs") inline set(value) = setTabs(value)</ID>
-    <ID>DoubleMutabilityForCollection:CTMessageDAO.kt$CTMessageDAO$private var tagsList: MutableList&lt;String&gt; = ArrayList()</ID>
-    <ID>DoubleMutabilityForCollection:CTVariableUtils.kt$CTVariableUtils.Companion$var currentMap = result</ID>
     <ID>DoubleMutabilityForCollection:CleverTapDisplayUnit.kt$CleverTapDisplayUnit$/** Custom Key Value Pairs */ private var customExtrasValue: HashMap&lt;String, String&gt;? = getKeyValues(kvObject)</ID>
-    <ID>DoubleMutabilityForCollection:CustomTemplateContext.kt$CustomTemplateContext$@Suppress("UNCHECKED_CAST") var innerMap = currentMap[keyPart] as? MutableMap&lt;String, Any&gt;</ID>
-    <ID>DoubleMutabilityForCollection:CustomTemplateContext.kt$CustomTemplateContext$var currentMap: MutableMap&lt;String, Any&gt; = map</ID>
     <ID>DoubleMutabilityForCollection:EvaluationManager.kt$EvaluationManager$// Internal list to track client-side suppressed in-app notifications. This map is used to identify the suppressedIDs for raised and profile events together. @VisibleForTesting internal var suppressedClientSideInApps: MutableList&lt;Map&lt;String, Any?&gt;&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:EvaluationManager.kt$EvaluationManager$// Internal list to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events together. @VisibleForTesting internal var evaluatedServerSideCampaignIds: MutableList&lt;Long&gt; = ArrayList()</ID>
-    <ID>DoubleMutabilityForCollection:GifHeader.kt$GifHeader$var frames: MutableList&lt;GifFrame&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$// App-Launched CG-suppression acks (bare {wzrk_id, wzrk_pivot, wzrk_cgId}), via recordCgSuppressed. @VisibleForTesting internal var suppressedNdCampaigns: MutableList&lt;Map&lt;String, Any?&gt;&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$@VisibleForTesting internal var evaluatedNdCampaignIds: MutableList&lt;Long&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:ValidationResultStack.kt$ValidationResultStack$/** * The pending results, oldest first. Returned as the live list outside the lock (as before). */ var pendingValidationResults = ArrayList&lt;ValidationResult&gt;() private set</ID>
@@ -247,20 +237,13 @@
     <ID>ForbiddenMethodCall:Logger.kt$Logger.Companion$v(tagWith(suffix), message, t)</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger.Companion$v(tagWith(suffix), message.requireMessage())</ID>
     <ID>ForbiddenMethodCall:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$e(Constants.CLEVERTAP_LOG_TAG, "SSL pinning is enabled but could not be set up, using normal HTTPS", e)</ID>
-    <ID>FunctionNaming:BaseCallbackManager.kt$BaseCallbackManager$abstract fun _notifyInboxInitialized()</ID>
-    <ID>FunctionNaming:BaseCallbackManager.kt$BaseCallbackManager$abstract fun _notifyInboxMessagesDidUpdate()</ID>
-    <ID>FunctionNaming:CTInboxController.kt$CTInboxController$@AnyThread fun _deleteMessageWithId(messageId: String?): Boolean</ID>
-    <ID>FunctionNaming:CTInboxController.kt$CTInboxController$@AnyThread fun _deleteMessagesForIds(messageIDs: List&lt;String&gt;): Boolean</ID>
-    <ID>FunctionNaming:CTInboxController.kt$CTInboxController$@AnyThread fun _markReadForMessageWithId(messageId: String?): Boolean</ID>
     <ID>FunctionNaming:CTInboxController.kt$CTInboxController$@AnyThread fun _markReadForMessagesWithIds(messageIDs: List&lt;String&gt;): Boolean</ID>
     <ID>FunctionNaming:InAppController.kt$InAppController$private fun _showNotificationIfAvailable()</ID>
-    <ID>FunctionNaming:InboxV2Response.kt$InboxV2Response$@WorkerThread private fun _processInboxMessages(messages: JSONArray, source: InboxV2DeliverySource)</ID>
     <ID>FunctionNaming:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>FunctionOnlyReturningConstant:LeanplumCT.kt$LeanplumCT$@JvmStatic public fun getPurchaseEventName(): String</ID>
     <ID>FunctionParameterNaming:CTProductConfigController.kt$CTProductConfigController$Key: String?</ID>
     <ID>FunctionParameterNaming:CleverTapAPI.kt$CleverTapAPI.Companion$_accountId: String?</ID>
     <ID>FunctionParameterNaming:GifDecoder.kt$GifDecoder$`is`: InputStream?</ID>
-    <ID>FunctionParameterNaming:IdentitySet.kt$IdentitySet$Key: String?</ID>
     <ID>FunctionParameterNaming:SyncListener.kt$SyncListener$CleverTapID: String?</ID>
     <ID>HasPlatformType:NetworkEncryptionManager.kt$NetworkEncryptionManager$fun sessionEncryptionKey()</ID>
     <ID>InjectDispatcher:CtDefaultDispatchers.kt$CtDefaultDispatchers$IO</ID>
@@ -358,7 +341,6 @@
     <ID>LongMethod:CryptMigrator.kt$CryptMigrator$private fun migrateDBProfile(level: EncryptionLevel): Boolean</ID>
     <ID>LongMethod:CtDatabase.kt$DatabaseHelper$override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int)</ID>
     <ID>LongMethod:CustomTemplateContext.kt$CustomTemplateContext$private fun getOverrideValue(argument: TemplateArgument, overrides: JSONObject?): Any?</ID>
-    <ID>LongMethod:CustomTemplateContext.kt$CustomTemplateContext$public fun getMap(name: String): Map&lt;String, Any&gt;?</ID>
     <ID>LongMethod:DBManager.kt$DBManager$override fun cleanupSentEvents( context: Context, eventIds: List&lt;String&gt;, profileEventIds: List&lt;String&gt; ): Boolean</ID>
     <ID>LongMethod:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
     <ID>LongMethod:DelayedLegacyInAppDAO.kt$DelayedLegacyInAppDAOImpl$@WorkerThread override fun insertBatch(delayedInApps: List&lt;DelayedLegacyInAppData&gt;): Boolean</ID>
@@ -611,74 +593,20 @@
     <ID>LoopWithTooManyJumpStatements:ProductConfigSettings.kt$ProductConfigSettings$for</ID>
     <ID>LoopWithTooManyJumpStatements:PushProviders.kt$PushProviders$for</ID>
     <ID>LoopWithTooManyJumpStatements:VarCache.kt$VarCache$for</ID>
-    <ID>MagicNumber:AESCrypt.kt$AESCrypt$1000</ID>
-    <ID>MagicNumber:AESCrypt.kt$AESCrypt$256</ID>
-    <ID>MagicNumber:AESGCMCrypt.kt$AESGCMCrypt$128</ID>
     <ID>MagicNumber:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$1000</ID>
-    <ID>MagicNumber:AnalyticsManager.kt$AnalyticsManager$10</ID>
     <ID>MagicNumber:AnalyticsManager.kt$AnalyticsManager$1000</ID>
-    <ID>MagicNumber:BitmapInputStreamDecoder.kt$BitmapInputStreamDecoder$16384</ID>
-    <ID>MagicNumber:BitmapInputStreamReader.kt$BitmapInputStreamReader$16384</ID>
-    <ID>MagicNumber:CTExecutorFactory.kt$CTExecutorFactory$8</ID>
-    <ID>MagicNumber:CTFirebaseMessagingReceiver.kt$CTFirebaseMessagingReceiver.&lt;no name provided&gt;$1000</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$120</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$130</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$140</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$200</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$210</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$280</ID>
-    <ID>MagicNumber:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$80</ID>
-    <ID>MagicNumber:CTInAppBaseFullNativeFragment.kt$CTInAppBaseFullNativeFragment$480.0f</ID>
-    <ID>MagicNumber:CTInAppBasePartialNativeFragment.kt$CTInAppBasePartialNativeFragment.GestureListener$300</ID>
-    <ID>MagicNumber:CTInAppBasePartialNativeFragment.kt$CTInAppBasePartialNativeFragment.GestureListener$50</ID>
-    <ID>MagicNumber:CTInAppHtmlBannerOverlay.kt$CTInAppHtmlBannerOverlay$250</ID>
-    <ID>MagicNumber:CTInAppHtmlCoverFragment.kt$CTInAppHtmlCoverFragment$4</ID>
-    <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification$30</ID>
-    <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification$50</ID>
-    <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification$85</ID>
-    <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification$90</ID>
     <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification.Companion$1000</ID>
-    <ID>MagicNumber:CTInAppWebView.kt$CTInAppWebView$188293</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$0.5625f</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$1.76f</ID>
     <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$1000</ID>
     <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$1000L</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$2000</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$23</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$24</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$3f</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$4</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$48</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$48f</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$4f</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$59</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$6</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$60</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$6f</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$8</ID>
-    <ID>MagicNumber:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$9f</ID>
-    <ID>MagicNumber:CTInboxListViewFragment.kt$CTInboxListViewFragment$1000</ID>
-    <ID>MagicNumber:CTInboxListViewFragment.kt$CTInboxListViewFragment$18</ID>
     <ID>MagicNumber:CTInboxMessage.kt$CTInboxMessage$1000</ID>
-    <ID>MagicNumber:CTInboxMessage.kt$CTInboxMessage$24</ID>
-    <ID>MagicNumber:CTInboxMessage.kt$CTInboxMessage$60</ID>
-    <ID>MagicNumber:CTKeyGenerator.kt$CTKeyGenerator$256</ID>
     <ID>MagicNumber:CTMessageDAO.kt$CTMessageDAO.Companion$1000</ID>
-    <ID>MagicNumber:CTMessageDAO.kt$CTMessageDAO.Companion$24</ID>
-    <ID>MagicNumber:CTMessageDAO.kt$CTMessageDAO.Companion$60</ID>
     <ID>MagicNumber:CTProductConfigController.kt$CTProductConfigController$1000L</ID>
     <ID>MagicNumber:CTXtensions.kt$180.0</ID>
     <ID>MagicNumber:CTXtensions.kt$90.0</ID>
     <ID>MagicNumber:Cache.kt$1024</ID>
-    <ID>MagicNumber:CleverTapAPI.kt$CleverTapAPI$5</ID>
-    <ID>MagicNumber:CleverTapAPI.kt$CleverTapAPI.Companion$20000</ID>
-    <ID>MagicNumber:CleverTapAPI.kt$CleverTapAPI.Companion$4</ID>
     <ID>MagicNumber:CleverTapInstanceConfig.kt$CleverTapInstanceConfig$3</ID>
-    <ID>MagicNumber:CleverTapInstanceConfig.kt$CleverTapInstanceConfig$4</ID>
     <ID>MagicNumber:Clock.kt$Clock$1000</ID>
-    <ID>MagicNumber:ContentFetchManager.kt$ContentFetchManager$429</ID>
     <ID>MagicNumber:CoreNotificationRenderer.kt$CoreNotificationRenderer$1000L</ID>
-    <ID>MagicNumber:CoreNotificationRenderer.kt$CoreNotificationRenderer$4</ID>
     <ID>MagicNumber:CtApi.kt$CtApi$1000</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$3</ID>
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$5</ID>
@@ -687,8 +615,6 @@
     <ID>MagicNumber:CtDatabase.kt$DatabaseHelper$8</ID>
     <ID>MagicNumber:EvaluationManager.kt$EvaluationManager$1000</ID>
     <ID>MagicNumber:EventDataNormalizer.kt$EventDataNormalizer$1000</ID>
-    <ID>MagicNumber:EventQueueManager.kt$EventQueueManager$2000</ID>
-    <ID>MagicNumber:FilePreloaderExecutors.kt$FilePreloaderExecutors$5</ID>
     <ID>MagicNumber:GifDecoder.kt$GifDecoder$0x000000ff</ID>
     <ID>MagicNumber:GifDecoder.kt$GifDecoder$0xFF</ID>
     <ID>MagicNumber:GifDecoder.kt$GifDecoder$0xff</ID>
@@ -719,59 +645,16 @@
     <ID>MagicNumber:GifHeaderParser.kt$GifHeaderParser$7</ID>
     <ID>MagicNumber:GifHeaderParser.kt$GifHeaderParser$8</ID>
     <ID>MagicNumber:GifImageView.kt$GifImageView$1000000</ID>
-    <ID>MagicNumber:GzipBitmapInputStreamReader.kt$GzipBitmapInputStreamReader$16384</ID>
-    <ID>MagicNumber:IOExecutor.kt$IOExecutor.Companion$60L</ID>
-    <ID>MagicNumber:ImpressionManager.kt$ImpressionManager$7</ID>
     <ID>MagicNumber:InAppController.kt$InAppController$1000</ID>
-    <ID>MagicNumber:InAppFCManager.kt$InAppFCManager$1000</ID>
-    <ID>MagicNumber:InboxDeleteCall.kt$InboxDeleteCall$200</ID>
-    <ID>MagicNumber:InboxFetchCall.kt$InboxFetchCall$200</ID>
     <ID>MagicNumber:LeanplumCT.kt$LeanplumCT$1000000.0</ID>
-    <ID>MagicNumber:LiveUpdateRouter.kt$LiveUpdateRouter$0x7fffffff</ID>
     <ID>MagicNumber:LocalDataStore.kt$LocalDataStore$1000</ID>
-    <ID>MagicNumber:LocalDataStore.kt$LocalDataStore$20</ID>
-    <ID>MagicNumber:LocalDataStore.kt$LocalDataStore$60</ID>
-    <ID>MagicNumber:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$400</ID>
-    <ID>MagicNumber:NetworkManager.kt$NetworkManager$400</ID>
-    <ID>MagicNumber:NetworkManager.kt$NetworkManager$401</ID>
-    <ID>MagicNumber:NetworkManager.kt$NetworkManager$402</ID>
-    <ID>MagicNumber:NetworkManager.kt$NetworkManager$419</ID>
-    <ID>MagicNumber:NetworkManager.kt$NetworkManager$5</ID>
-    <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$10</ID>
     <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$1000</ID>
     <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$1000L</ID>
-    <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$24</ID>
-    <ID>MagicNumber:NetworkRepo.kt$NetworkRepo$60</ID>
-    <ID>MagicNumber:PIPConfig.kt$PIPConfig$10</ID>
-    <ID>MagicNumber:PIPConfig.kt$PIPConfig$90</ID>
-    <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$16.0</ID>
     <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$3</ID>
-    <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$35</ID>
-    <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$4</ID>
-    <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$5000</ID>
-    <ID>MagicNumber:PIPConfigFactory.kt$PIPConfigFactory$9.0</ID>
-    <ID>MagicNumber:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper.PIPLoadErrorPolicy$16_000L</ID>
-    <ID>MagicNumber:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper.PIPLoadErrorPolicy$2000L</ID>
-    <ID>MagicNumber:PartialHtmlInAppGestureListener.kt$PartialHtmlInAppGestureListener$300</ID>
-    <ID>MagicNumber:PartialHtmlInAppGestureListener.kt$PartialHtmlInAppGestureListener$50</ID>
-    <ID>MagicNumber:PushProviders.kt$PushProviders$1000</ID>
-    <ID>MagicNumber:PushProviders.kt$PushProviders$24</ID>
-    <ID>MagicNumber:PushProviders.kt$PushProviders$60</ID>
-    <ID>MagicNumber:QueueHeaderBuilder.kt$QueueHeaderBuilder$3</ID>
-    <ID>MagicNumber:RectangleImageView.kt$RectangleImageView$0.5625f</ID>
-    <ID>MagicNumber:SessionManager.kt$SessionManager$1000</ID>
-    <ID>MagicNumber:SessionManager.kt$SessionManager$60</ID>
     <ID>MagicNumber:UriHelper.kt$UriHelper$4</ID>
-    <ID>MagicNumber:Utils.kt$Utils$180</ID>
-    <ID>MagicNumber:Utils.kt$Utils$6378.2</ID>
-    <ID>MagicNumber:Utils.kt$Utils$64</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$3</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$5</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$50</ID>
-    <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$512</ID>
-    <ID>MagicNumber:ValidationResultStack.kt$ValidationResultStack$10</ID>
-    <ID>MagicNumber:ValidationResultStack.kt$ValidationResultStack$40</ID>
-    <ID>MagicNumber:ValidationResultStack.kt$ValidationResultStack$50</ID>
     <ID>MaxLineLength:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$" \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle"</ID>
     <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"${Constants.LOG_TAG_GEOFENCES}JSON Exception when raising GeoFence event $eventName - ${e.localizedMessage}"</ID>
     <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - ${e.localizedMessage}"</ID>
@@ -875,7 +758,6 @@
     <ID>NestedBlockDepth:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$public fun setImageUrl(imageUrl: String, contentDescription: String?): Builder6</ID>
     <ID>NestedBlockDepth:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>NestedBlockDepth:CTProductConfigController.kt$CTProductConfigController$private fun convertServerJsonToMap(jsonObject: JSONObject): HashMap&lt;String, String&gt;</ID>
-    <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun convertFlatMapToNestedMaps(map: Map&lt;String, *&gt;): MutableMap&lt;String, Any?&gt;</ID>
     <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun getFlatVarsJson( values: Map&lt;String, *&gt;, kinds: Map&lt;String, *&gt; ): JSONObject</ID>
     <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun mergeHelper(vars: Any?, diff: Any?): Any?</ID>
     <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun updateValuesAndKinds( name: String?, nameComponents: Array&lt;String&gt;?, value: Any?, kind: String?, values: MutableMap&lt;String, *&gt;?, kinds: MutableMap&lt;String, *&gt;? )</ID>
@@ -895,7 +777,6 @@
     <ID>NestedBlockDepth:CryptMigrator.kt$CryptMigrator$private fun migrateDBProfile(level: EncryptionLevel): Boolean</ID>
     <ID>NestedBlockDepth:CtDatabase.kt$DatabaseHelper$private fun migrateDataString(dataString: String): String</ID>
     <ID>NestedBlockDepth:CustomTemplateContext.kt$CustomTemplateContext$private fun getOverrideValue(argument: TemplateArgument, overrides: JSONObject?): Any?</ID>
-    <ID>NestedBlockDepth:CustomTemplateContext.kt$CustomTemplateContext$public fun getMap(name: String): Map&lt;String, Any&gt;?</ID>
     <ID>NestedBlockDepth:CustomTemplateInAppData.kt$CustomTemplateInAppData$internal fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList&lt;String&gt;)</ID>
     <ID>NestedBlockDepth:DataMigrationRepository.kt$DataMigrationRepository$override fun inAppDataFiles( keysToMigrate: List&lt;String&gt;, migrate: (String) -&gt; String? )</ID>
     <ID>NestedBlockDepth:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
@@ -1684,7 +1565,5 @@
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR</ID>
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val IO_EXECUTOR: IOExecutor</ID>
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()</ID>
-    <ID>VariableNaming:InAppTimerManager.kt$InAppTimerManager$private val TAG = "[InAppTimerManager:$tagSuffix]:"</ID>
-    <ID>VariableNaming:ValidationResult.kt$ValidationResult$var `object`: Any? = null</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 2052**  
-core: 1684 · geofence: 142 · hms: 3 · pushtemplates: 223
+**Total baselined findings: 1905**  
+core: 1563 · geofence: 138 · hms: 3 · pushtemplates: 201
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -14,12 +14,12 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Null safety | 404 | NullableToStringCall (158), UnsafeCallOnNullableType (141), CanBeNonNullable (88), MapGetWithNotNullAssertionOperator (17) |
 | Idioms | 3 | UseRequire (1), UseOrEmpty (1), MayBeConst (1) |
 | Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
-| Library safety | 20 | DoubleMutabilityForCollection (20) |
-| Naming | 38 | FunctionParameterNaming (14), FunctionNaming (9), VariableNaming (8), PackageNaming (7) |
-| Style | 412 | MagicNumber (190), ReturnCount (83), MaxLineLength (66), ForbiddenMethodCall (54), BracesOnIfStatements (19) |
-| Complexity | 787 | LongMethod (247), NestedBlockDepth (188), LongParameterList (124), CyclomaticComplexMethod (121), TooManyFunctions (69), LargeClass (30), ComplexCondition (8) |
+| Library safety | 9 | DoubleMutabilityForCollection (9) |
+| Naming | 22 | FunctionParameterNaming (8), PackageNaming (7), VariableNaming (4), FunctionNaming (3) |
+| Style | 297 | ReturnCount (83), MagicNumber (75), MaxLineLength (66), ForbiddenMethodCall (54), BracesOnIfStatements (19) |
+| Complexity | 784 | LongMethod (246), NestedBlockDepth (186), LongParameterList (124), CyclomaticComplexMethod (121), TooManyFunctions (69), LargeClass (30), ComplexCondition (8) |
 | Public docs | 305 | UndocumentedPublicFunction (224), UndocumentedPublicProperty (47), UndocumentedPublicClass (34) |
-| Other | 73 | LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (14), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), ThrowsCount (4), UnusedParameter (2), SafeCast (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
+| Other | 71 | LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (14), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), ThrowsCount (4), UnusedParameter (2), SafeCast (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
 
@@ -52,26 +52,26 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Library safety
 
-- **DoubleMutabilityForCollection: 20** (core 19, pushtemplates 1). `val` + mutable collection, or `var` + read-only collection.  
-  Top files: `CTInAppNotification.kt` (2), `CTInboxMessage.kt` (2), `CustomTemplateContext.kt` (2), `EvaluationManager.kt` (2), `NdEvaluationManager.kt` (2), `CTInAppAction.kt` (1)
+- **DoubleMutabilityForCollection: 9** (core 9). `val` + mutable collection, or `var` + read-only collection.  
+  Top files: `EvaluationManager.kt` (2), `NdEvaluationManager.kt` (2), `CTInAppAction.kt` (1), `CTInboxController.kt` (1), `CTInboxStyleConfig.kt` (1), `CleverTapDisplayUnit.kt` (1)
 
 ### Naming
 
-- **FunctionParameterNaming: 14** (pushtemplates 9, core 5). camelCase parameters.  
-  Top files: `ContentView.kt` (5), `TimerSmallContentView.kt` (2), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `GifDecoder.kt` (1), `IdentitySet.kt` (1)
-- **FunctionNaming: 9** (core 9). Kotlin camelCase function names (not for public API / reflection names).  
-  Top files: `CTInboxController.kt` (4), `BaseCallbackManager.kt` (2), `InAppController.kt` (1), `InboxV2Response.kt` (1), `PushProviders.kt` (1)
-- **VariableNaming: 8** (core 6, geofence 1, pushtemplates 1). camelCase, no `m`/`_` prefixes (not for keys/reflection names).  
-  Top files: `CTExecutors.kt` (4), `InAppTimerManager.kt` (1), `ValidationResult.kt` (1), `CTGeofenceTaskManager.kt` (1), `TemplateRenderer.kt` (1)
+- **FunctionParameterNaming: 8** (core 4, pushtemplates 4). camelCase parameters.  
+  Top files: `ContentView.kt` (2), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `GifDecoder.kt` (1), `SyncListener.kt` (1), `ProductDisplayLinearBigContentView.kt` (1)
 - **PackageNaming: 7** (core 7). Lower-case package segments (e.g. `product_config`, `featureFlags`) - public API packages, needs a deprecation plan.  
   Top files: `CTProductConfigConstants.kt` (1), `CTProductConfigController.kt` (1), `CTProductConfigFactory.kt` (1), `CTProductConfigListener.kt` (1), `DefaultXmlParser.kt` (1), `ProductConfigSettings.kt` (1)
+- **VariableNaming: 4** (core 4). camelCase, no `m`/`_` prefixes (not for keys/reflection names).  
+  Top files: `CTExecutors.kt` (4)
+- **FunctionNaming: 3** (core 3). Kotlin camelCase function names (not for public API / reflection names).  
+  Top files: `CTInboxController.kt` (1), `InAppController.kt` (1), `PushProviders.kt` (1)
 
 ### Style
 
-- **MagicNumber: 190** (core 161, pushtemplates 25, geofence 4). Named constants.  
-  Top files: `CTInboxBaseMessageViewHolder.kt` (18), `GifHeaderParser.kt` (18), `GifDecoder.kt` (11), `CTInAppBaseFullFragment.kt` (7), `PIPConfigFactory.kt` (6), `Utils.kt` (6)
 - **ReturnCount: 83** (core 76, pushtemplates 4, geofence 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
   Top files: `InAppController.kt` (4), `TriggersMatcher.kt` (4), `CleverTapAPI.kt` (3), `NetworkManager.kt` (3), `PushProviders.kt` (3), `Utils.kt` (3)
+- **MagicNumber: 75** (core 62, pushtemplates 12, geofence 1). Named constants.  
+  Top files: `GifHeaderParser.kt` (18), `GifDecoder.kt` (11), `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3)
 - **MaxLineLength: 66** (core 60, pushtemplates 5, geofence 1). Wrap lines > 120.  
   Top files: `CleverTapAPI.kt` (8), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `InAppActionHandler.kt` (4), `ManifestValidator.kt` (4), `Utils.kt` (4)
 - **ForbiddenMethodCall: 54** (core 32, geofence 14, pushtemplates 8). Log through `Logger`, no `Thread.sleep`/`println`.  
@@ -81,9 +81,9 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Complexity
 
-- **LongMethod: 247** (core 198, pushtemplates 27, geofence 22). Extract private functions (threshold 30 lines).  
+- **LongMethod: 246** (core 197, pushtemplates 27, geofence 22). Extract private functions (threshold 30 lines).  
   Top files: `InAppController.kt` (8), `AnalyticsManager.kt` (7), `PushProviders.kt` (7), `CTInAppNotification.kt` (6), `EventDataNormalizer.kt` (5), `EventQueueManager.kt` (5)
-- **NestedBlockDepth: 188** (core 167, pushtemplates 15, geofence 6). Guard clauses, extract functions (threshold 3).  
+- **NestedBlockDepth: 186** (core 165, pushtemplates 15, geofence 6). Guard clauses, extract functions (threshold 3).  
   Top files: `UserEventLogDAOImpl.kt` (7), `Utils.kt` (7), `NetworkManager.kt` (6), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `CTInAppNotification.kt` (4)
 - **LongParameterList: 124** (core 102, pushtemplates 22). Parameter objects / default args.  
   Top files: `CleverTapAPI.kt` (9), `EventDataNormalizer.kt` (5), `NotificationBitmapUtils.kt` (5), `ArrayOperationHandler.kt` (4), `CustomTemplateContext.kt` (4), `OperationHandler.kt` (4)
@@ -125,8 +125,6 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CTCaches.kt` (1), `CTGeofenceAPI.kt` (1)
 - **InjectDispatcher: 2** (core 2). See https://detekt.dev/docs/rules  
   Top files: `CtDefaultDispatchers.kt` (2)
-- **ConstructorParameterNaming: 2** (pushtemplates 2). See https://detekt.dev/docs/rules  
-  Top files: `TimerBigContentView.kt` (1), `TimerSmallContentView.kt` (1)
 - **ArrayPrimitive: 2** (core 2). See https://detekt.dev/docs/rules  
   Top files: `CTLocalInApp.kt` (1), `UserEventLogDAOImpl.kt` (1)
 - **UselessCallOnNotNull: 1** (core 1). See https://detekt.dev/docs/rules  

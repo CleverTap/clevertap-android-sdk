@@ -17,8 +17,6 @@
     <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
     <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; id.contains("remind") &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
     <ID>ComplexCondition:Utils.kt$Utils$key.startsWith("pt_img") &amp;&amp; key.length &gt; 6 &amp;&amp; key[6].isDigit() &amp;&amp; !key.endsWith(ALT_TEXT_SUFFIX)</ID>
-    <ID>ConstructorParameterNaming:TimerBigContentView.kt$TimerBigContentView$timer_end: Long?</ID>
-    <ID>ConstructorParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$timer_end: Long?</ID>
     <ID>CyclomaticComplexMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
     <ID>CyclomaticComplexMethod:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
     <ID>CyclomaticComplexMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
@@ -39,7 +37,6 @@
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun createValidatorFromKeys( templateType: TemplateType, keys: Map&lt;String, Checker&lt;out Any&gt;&gt; ): Validator?</ID>
     <ID>CyclomaticComplexMethod:VerticalImageContentView.kt$VerticalImageContentView$protected fun setupButton( buttonData: VerticalImageButtonData?, notificationId: Int, isCollapsed: Boolean = false, )</ID>
-    <ID>DoubleMutabilityForCollection:TemplateRenderer.kt$TemplateRenderer$internal var actionButtonPendingIntents = mutableMapOf&lt;String, PendingIntent&gt;()</ID>
     <ID>ForbiddenMethodCall:PTLog.kt$PTLog$d(PTConstants.LOG_TAG, message)</ID>
     <ID>ForbiddenMethodCall:PTLog.kt$PTLog$d(PTConstants.LOG_TAG, message, t)</ID>
     <ID>ForbiddenMethodCall:PTLog.kt$PTLog$i(PTConstants.LOG_TAG, message)</ID>
@@ -49,14 +46,9 @@
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(1000)</ID>
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(PTConstants.PT_INPUT_TIMEOUT.toLong())</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_bg: String?</ID>
-    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg: String?</ID>
-    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_msg_summary: String?</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_text_clr: String?</ID>
-    <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_title: String?</ID>
     <ID>FunctionParameterNaming:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$pt_product_display_action: String?</ID>
     <ID>FunctionParameterNaming:Style.kt$Style$pt_title: String?</ID>
-    <ID>FunctionParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$pt_chrono_title_clr: String?</ID>
-    <ID>FunctionParameterNaming:TimerSmallContentView.kt$TimerSmallContentView$pt_title_clr: String?</ID>
     <ID>LargeClass:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
     <ID>LargeClass:TemplateDataFactory.kt$TemplateDataFactory</ID>
     <ID>LargeClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
@@ -117,25 +109,12 @@
     <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$3</ID>
     <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$4</ID>
     <ID>MagicNumber:FiveIconSmallContentView.kt$FiveIconSmallContentView$5</ID>
-    <ID>MagicNumber:NotificationBitmapUtils.kt$NotificationBitmapUtils$0.5f</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$3</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$4</ID>
     <ID>MagicNumber:PendingIntentFactory.kt$PendingIntentFactory$5</ID>
     <ID>MagicNumber:ProductDisplayLinearBigContentView.kt$ProductDisplayLinearBigContentView$3</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.00001</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.00001f</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$0.5f</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$15</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$255</ID>
-    <ID>MagicNumber:ProgressTrackRenderer.kt$ProgressTrackRenderer$3</ID>
     <ID>MagicNumber:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$1000</ID>
-    <ID>MagicNumber:RatingContentView.kt$RatingContentView$5</ID>
-    <ID>MagicNumber:TemplateRenderer.kt$TemplateRenderer$4</ID>
-    <ID>MagicNumber:TimerSmallContentView.kt$TimerSmallContentView$3</ID>
-    <ID>MagicNumber:Utils.kt$Utils$1000</ID>
-    <ID>MagicNumber:Utils.kt$Utils$5</ID>
     <ID>MagicNumber:Utils.kt$Utils$6</ID>
-    <ID>MagicNumber:ValidatorFactory.kt$ValidatorFactory.Companion$3</ID>
     <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_THREE_IMAGE_LIST]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:ContentValidator.kt$ContentValidator$keys[PT_MSG]!!</ID>
@@ -224,6 +203,5 @@
     <ID>UnsafeCallOnNullableType:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
     <ID>UtilityClassWithPublicConstructor:PTConstants.kt$PTConstants</ID>
     <ID>UtilityClassWithPublicConstructor:ValidatorFactory.kt$ValidatorFactory</ID>
-    <ID>VariableNaming:TemplateRenderer.kt$TemplateRenderer$val pt_json = extras.getString(PT_JSON)</ID>
   </CurrentIssues>
 </SmellBaseline>
