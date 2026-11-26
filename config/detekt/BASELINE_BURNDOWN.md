@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 3465**  
-core: 2797 · geofence: 158 · hms: 16 · pushtemplates: 494
+**Total baselined findings: 2700**  
+core: 2189 · geofence: 158 · hms: 6 · pushtemplates: 347
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -18,7 +18,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Naming | 38 | FunctionParameterNaming (14), FunctionNaming (9), VariableNaming (8), PackageNaming (7) |
 | Style | 801 | BracesOnIfStatements (246), MaxLineLength (228), MagicNumber (190), ReturnCount (83), ForbiddenMethodCall (54) |
 | Complexity | 773 | LongMethod (232), NestedBlockDepth (189), LongParameterList (124), CyclomaticComplexMethod (124), TooManyFunctions (69), LargeClass (27), ComplexCondition (8) |
-| Public docs | 1070 | UndocumentedPublicProperty (672), UndocumentedPublicFunction (342), UndocumentedPublicClass (56) |
+| Public docs | 305 | UndocumentedPublicFunction (224), UndocumentedPublicProperty (47), UndocumentedPublicClass (34) |
 | Other | 265 | NewLineAtEndOfFile (168), LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (14), EmptyFunctionBlock (8), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), WildcardImport (5), UnusedPrivateProperty (5), UnusedParameter (4), ThrowsCount (4), UnnecessaryApply (3), SafeCast (2), ObjectLiteralToLambda (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ConstructorParameterNaming (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
@@ -114,12 +114,12 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Public docs
 
-- **UndocumentedPublicProperty: 672** (core 511, pushtemplates 146, hms 9, geofence 6). KDoc on public properties.  
-  Top files: `Constants.kt` (385), `PTConstants.kt` (146), `CoreMetaData.kt` (24), `ManifestInfo.kt` (22), `CTInAppNotification.kt` (21), `HmsConstants.kt` (9)
-- **UndocumentedPublicFunction: 342** (core 313, geofence 28, pushtemplates 1). KDoc on public functions.  
-  Top files: `CleverTapAPI.kt` (37), `CleverTapInstanceConfig.kt` (33), `Utils.kt` (24), `LeanplumCT.kt` (22), `Logger.kt` (20), `CoreMetaData.kt` (19)
-- **UndocumentedPublicClass: 56** (core 48, pushtemplates 4, geofence 3, hms 1). KDoc on public types (start with bucket-A API; @RestrictTo types can stay brief).  
-  Top files: `CTLocalInApp.kt` (8), `Logger.kt` (3), `Constants.kt` (2), `HttpBitmapLoader.kt` (2), `TemplateRenderer.kt` (2), `ActionButtonClickHandler.kt` (1)
+- **UndocumentedPublicFunction: 224** (core 195, geofence 28, pushtemplates 1). KDoc on public functions.  
+  Top files: `CleverTapInstanceConfig.kt` (31), `CleverTapAPI.kt` (25), `LeanplumCT.kt` (22), `Logger.kt` (20), `CTLocalInApp.kt` (18), `CTInboxStyleConfig.kt` (14)
+- **UndocumentedPublicProperty: 47** (core 41, geofence 6). KDoc on public properties.  
+  Top files: `CTInAppNotification.kt` (21), `Logger.kt` (4), `CTLocalInApp.kt` (3), `CTInAppNotificationButton.kt` (2), `CTInboxImageData.kt` (2), `CleverTapInstanceConfig.kt` (2)
+- **UndocumentedPublicClass: 34** (core 28, geofence 3, pushtemplates 3). KDoc on public types (start with bucket-A API; @RestrictTo types can stay brief).  
+  Top files: `CTLocalInApp.kt` (8), `Logger.kt` (3), `TemplateRenderer.kt` (2), `Application.kt` (1), `CTInAppAction.kt` (1), `CTInAppNotification.kt` (1)
 
 ### Other
 

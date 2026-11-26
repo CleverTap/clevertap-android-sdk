@@ -1,6 +1,11 @@
 package com.clevertap.android.pushtemplates
 
 //Using common keys from core-sdk constants
+/**
+ * Push Templates payload keys and values (`pt_*`) as sent in the CleverTap push payload, plus
+ * template IDs and notification defaults. Most keys are read by the SDK itself; apps reference them
+ * mainly when building or inspecting push payloads (e.g. `PT_DISMISS_ON_CLICK`).
+ */
 public open class PTConstants {
 
     public companion object {

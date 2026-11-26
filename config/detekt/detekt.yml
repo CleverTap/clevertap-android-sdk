@@ -41,6 +41,11 @@ config:
 # ==============================================================================
 # These rules only look at public declarations; `internal`/`private` code is never flagged.
 # @RestrictTo types are public to the JVM and will be flagged - they are in the baseline.
+# Docs are required only on CUSTOMER-FACING API. `ignoreAnnotated: RestrictTo` skips public-but-
+# @RestrictTo SDK plumbing and everything inside a @RestrictTo type. Every `internal` declaration is
+# @RestrictTo too, so "public and not @RestrictTo" == customer API (what the BCV .api dumps track).
+# Constant holders whose properties are payload/manifest keys (PTConstants, HmsConstants) are
+# documented once at class level instead of per key.
 comments:
   active: true
   UndocumentedPublicClass:
@@ -48,12 +53,15 @@ comments:
     searchInNestedClass: true
     searchInInnerClass: true
     excludes: ['**/test/**', '**/androidTest/**', '**/testFixtures/**']
+    ignoreAnnotated: ['RestrictTo']
   UndocumentedPublicFunction:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/testFixtures/**']
+    ignoreAnnotated: ['RestrictTo']
   UndocumentedPublicProperty:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/testFixtures/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/testFixtures/**', '**/PTConstants.kt', '**/HmsConstants.kt']
+    ignoreAnnotated: ['RestrictTo']
 
 # ==============================================================================
 # 3. CLEAN CODE & COMPLEXITY (stricter than detekt defaults; existing code is baselined)

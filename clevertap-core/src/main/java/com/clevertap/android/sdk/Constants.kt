@@ -8,6 +8,8 @@ import androidx.annotation.StringDef
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object Constants {
 
+    // Nested types don't inherit the outer @RestrictTo in BCV's dump - restrict it explicitly.
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Retention(AnnotationRetention.SOURCE)
     @StringDef(TYPE_EMAIL, TYPE_PHONE, TYPE_IDENTITY)
     public annotation class IdentityType

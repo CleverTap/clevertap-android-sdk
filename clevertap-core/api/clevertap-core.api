@@ -504,9 +504,6 @@ public final class com/clevertap/android/sdk/CleverTapInstanceConfig$Companion {
 	public final fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
 }
 
-public abstract interface annotation class com/clevertap/android/sdk/Constants$IdentityType : java/lang/annotation/Annotation {
-}
-
 public abstract interface class com/clevertap/android/sdk/FetchInboxCallback {
 	public abstract fun onInboxFetched (Z)V
 }
