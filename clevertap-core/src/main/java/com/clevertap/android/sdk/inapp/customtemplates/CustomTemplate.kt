@@ -159,46 +159,128 @@ public class CustomTemplate private constructor(
             return thisRef
         }
 
+        /**
+         * Adds a [String] argument. Read its value with [CustomTemplateContext.getString].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun stringArgument(name: String, defaultValue: String): T {
             addArgument(name, STRING, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Boolean] argument. Read its value with [CustomTemplateContext.getBoolean].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun booleanArgument(name: String, defaultValue: Boolean): T {
             addArgument(name, BOOLEAN, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Byte] argument. Read its value with [CustomTemplateContext.getByte].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun byteArgument(name: String, defaultValue: Byte): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Short] argument. Read its value with [CustomTemplateContext.getShort].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun shortArgument(name: String, defaultValue: Short): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Int] argument. Read its value with [CustomTemplateContext.getInt].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun intArgument(name: String, defaultValue: Int): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Long] argument. Read its value with [CustomTemplateContext.getLong].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun longArgument(name: String, defaultValue: Long): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Float] argument. Read its value with [CustomTemplateContext.getFloat].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun floatArgument(name: String, defaultValue: Float): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a [Double] argument. Read its value with [CustomTemplateContext.getDouble].
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @param defaultValue the value used when the in-app doesn't configure one
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun doubleArgument(name: String, defaultValue: Double): T {
             addArgument(name, NUMBER, defaultValue)
             return thisRef
         }
 
+        /**
+         * Adds a file argument. The file is downloaded and cached before the template is presented, and
+         * [CustomTemplateContext.getFile] returns its local path. If a file fails to download, the
+         * in-app is skipped and the template is not triggered.
+         *
+         * @param name the argument name; must be non-blank, unique across the template's arguments, and not
+         * begin or end with "." nor contain "..". A "." groups the argument under a parent (see [mapArgument])
+         * @throws [CustomTemplateException] if the name is invalid or already defined
+         * @return this builder
+         */
         public fun fileArgument(name: String): T {
             addArgument(name, FILE, null)
             return thisRef

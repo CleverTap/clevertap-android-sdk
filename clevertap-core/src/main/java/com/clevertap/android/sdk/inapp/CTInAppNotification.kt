@@ -16,66 +16,107 @@ import org.json.JSONException
 import org.json.JSONObject
 import kotlin.reflect.KClass
 
+/**
+ * An in-app notification campaign, parsed from its JSON payload. The SDK passes it to
+ * [com.clevertap.android.sdk.InAppNotificationListener.onShow]; all properties are read-only.
+ */
 public class CTInAppNotification : Parcelable {
 
+    /** The in-app's id from the payload (`ti`); an empty string if the payload has none. */
     public var id: String? = null
         private set
 
+    /** The campaign id from the payload (`wzrk_id`); an empty string if the payload has none. */
     public var campaignId: String? = null
         private set
 
+    /** The template of this in-app, or [CTInAppType.UNKNOWN] for an unrecognised type. */
     public var inAppType: CTInAppType? = null
         private set
 
+    /**
+     * `true` when the campaign is excluded from the global frequency caps (`efc` or
+     * `excludeGlobalFCaps` is 1).
+     */
     public var isExcludeFromCaps: Boolean = false
         private set
 
     private var _actionExtras: JSONObject? = null
+    /**
+     * A copy of the action extras. Legacy field: it is only restored from a [Parcel] and is never set
+     * from the payload, so it is `null` for in-apps built by the SDK.
+     */
     public val actionExtras: JSONObject?
         get() = _actionExtras?.copy()
 
     private var _jsonDescription: JSONObject
+    /** A copy of the JSON payload this in-app was built from. */
     public val jsonDescription: JSONObject
         get() = _jsonDescription.copy()
 
+    /**
+     * Legacy field: it is only restored from a [Parcel] and is never set from the payload, so it is
+     * `null` for in-apps built by the SDK.
+     */
     public var landscapeImageUrl: String? = null
         private set
 
+    /** The maximum number of times per session this in-app may be shown (`mdc`); -1 when not set. */
     public var maxPerSession: Int = 0
         private set
 
     private val _buttons = ArrayList<CTInAppNotificationButton>()
 
+    /** The buttons of a native in-app template, in payload order; empty for HTML in-apps. */
     public val buttons: List<CTInAppNotificationButton>
         get() = _buttons
 
+    /** `true` when the in-app supports landscape orientation; `false` for HTML in-apps. */
     public var isLandscape: Boolean = false
         private set
 
+    /**
+     * `true` when the in-app supports portrait orientation (the default when the payload doesn't say);
+     * `false` for HTML in-apps.
+     */
     public var isPortrait: Boolean = false
         private set
 
+    /** The title text of a native in-app template; `null` if the payload has no title object. */
     public var title: String? = null
         private set
 
+    /** The message text of a native in-app template; `null` if the payload has no message object. */
     public var message: String? = null
         private set
 
+    /**
+     * When the in-app expires, in Unix epoch seconds (`wzrk_ttl`); defaults to two days after it was
+     * parsed ([defaultTtl]).
+     */
     public var timeToLive: Long = 0
         private set
 
+    /** The maximum number of times per day this in-app may be shown (`tdc`); -1 when not set. */
     public var totalDailyCount: Int = 0
         private set
 
+    /** The maximum number of times in total this in-app may be shown (`tlc`); -1 when not set. */
     public var totalLifetimeCount: Int = 0
         private set
 
+    /** `true` for an in-app built with [CTLocalInApp] rather than sent by a campaign. */
     public var isLocalInApp: Boolean = false
         private set
 
+    /**
+     * `true` when a local push-permission in-app should open the notification settings if the
+     * permission was already denied (see [CTLocalInApp.Builder.Builder6.setFallbackToSettings]).
+     */
     public var fallBackToNotificationSettings: Boolean = false
         private set
 
+    /** `true` when the in-app requests the push notification permission (`rfp`). */
     public var isRequestForPushPermission: Boolean = false
         private set
 
@@ -649,6 +690,7 @@ public class CTInAppNotification : Parcelable {
     }
 
     public companion object {
+        /** Sentinel aspect ratio meaning an HTML in-app has no aspect ratio set. */
         public const val HTML_DEFAULT_ASPECT_RATIO: Double = -1.0
 
         private const val EMPTY_JSON = "{}"
@@ -660,6 +702,7 @@ public class CTInAppNotification : Parcelable {
         private const val HTML_INTERSTITIAL_HEIGHT_PERCENT = 85
         private const val HTML_HALF_INTERSTITIAL_HEIGHT_PERCENT = 50
 
+        /** [Parcelable.Creator] that restores a [CTInAppNotification] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInAppNotification> =
             object : Parcelable.Creator<CTInAppNotification> {
@@ -672,6 +715,11 @@ public class CTInAppNotification : Parcelable {
                 }
             }
 
+        /**
+         * Returns the expiry used when an in-app payload has no `wzrk_ttl`: two days from now.
+         *
+         * @return the default expiry, in Unix epoch seconds
+         */
         @JvmStatic
         public fun defaultTtl(): Long {
             return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000

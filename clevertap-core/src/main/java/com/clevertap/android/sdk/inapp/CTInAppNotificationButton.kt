@@ -6,8 +6,12 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppAction.CREATOR.createFromJson
 import org.json.JSONObject
 
+/**
+ * A button of an in-app notification, as listed in [CTInAppNotification.buttons].
+ */
 public class CTInAppNotificationButton : Parcelable {
 
+    /** The button label; an empty string if none was set. */
     public val text: String
 
     internal val backgroundColor: String
@@ -39,6 +43,11 @@ public class CTInAppNotificationButton : Parcelable {
         action = parcel.readParcelable<CTInAppAction?>(CTInAppAction::class.java.getClassLoader())
     }
 
+    /**
+     * Returns the custom key-value pairs of the button's action.
+     *
+     * @return the key-value pairs, or `null` if the button has no action or its action carries none
+     */
     public fun getKeyValues(): Map<String, String>? {
         return action?.keyValues
     }
@@ -101,6 +110,7 @@ public class CTInAppNotificationButton : Parcelable {
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CTInAppNotificationButton] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInAppNotificationButton> =
             object : Parcelable.Creator<CTInAppNotificationButton> {

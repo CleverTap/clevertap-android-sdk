@@ -1,5 +1,11 @@
 package com.clevertap.android.sdk.inapp
 
+/**
+ * The in-app notification templates. [toString] returns the template identifier used in the in-app
+ * payload, for example `interstitial`.
+ *
+ * @see CTInAppNotification.inAppType
+ */
 public enum class CTInAppType(private val type: String) {
     CTInAppTypeHTML("html"),
     CTInAppTypeCoverHTML("coverHtml"),
@@ -25,6 +31,12 @@ public enum class CTInAppType(private val type: String) {
     }
 
     public companion object {
+        /**
+         * Looks up a template by its payload identifier (the value of [toString]).
+         *
+         * @param type the payload identifier, for example `cover-image`
+         * @return the matching template, or [UNKNOWN] if [type] is `null` or unrecognised
+         */
         @JvmStatic
         public fun fromString(type: String?): CTInAppType {
             return when (type) {

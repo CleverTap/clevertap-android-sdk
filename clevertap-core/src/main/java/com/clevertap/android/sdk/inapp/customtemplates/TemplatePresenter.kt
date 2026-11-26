@@ -25,6 +25,15 @@ public fun interface CustomTemplatePresenter<C : CustomTemplateContext> {
  */
 public interface TemplatePresenter : CustomTemplatePresenter<TemplateContext> {
 
+    /**
+     * Called when the template should be closed, for example when an action of type "close" is
+     * triggered. Remove the template's UI and call [TemplateContext.setDismissed].
+     *
+     * Called synchronously on the thread that triggered the close action, which is not necessarily the
+     * main thread.
+     *
+     * @param context the context of the invocation to close
+     */
     public fun onClose(context: TemplateContext)
 }
 
