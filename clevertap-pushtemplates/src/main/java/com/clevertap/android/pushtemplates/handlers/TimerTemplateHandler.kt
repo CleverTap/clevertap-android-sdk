@@ -45,54 +45,7 @@ internal object TimerTemplateHandler {
                         ?.validate() == true
                 ) {
                     val applicationContext = context.applicationContext
-                    val basicTemplateBundle = extras.clone() as Bundle
-                    basicTemplateBundle.remove("wzrk_rnv")
-                    basicTemplateBundle.putString(
-                        Constants.WZRK_PUSH_ID,
-                        null
-                    ) // skip dupe check
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_ID,
-                        "pt_basic"
-                    ) // set to basic
-
-
-                    basicTemplateBundle.putString(PTConstants.PT_TITLE, data.terminalTextData.title)
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_BIG_IMG,
-                        data.terminalMediaData.bigImage.url
-                    )
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_BIG_IMG_ALT_TEXT,
-                        data.terminalMediaData.bigImage.altText
-                    )
-                    basicTemplateBundle.putString(PTConstants.PT_MSG, data.terminalTextData.message)
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_MSG_SUMMARY,
-                        data.terminalTextData.messageSummary
-                    )
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_GIF,
-                        data.terminalMediaData.gif.url
-                    )
-
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_GIF_FRAMES,
-                        data.terminalMediaData.gif.numberOfFrames.toString()
-                    )
-
-                    basicTemplateBundle.putString(
-                        PTConstants.PT_SCALE_TYPE,
-                        data.terminalMediaData.scaleType.toString()
-                    )
-
-
-                    basicTemplateBundle.remove(PTConstants.PT_JSON)
-
-                    // force random id generation
-                    basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
-                    basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
-                    basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
+                    val basicTemplateBundle = terminalBasicTemplateBundle(extras, data)
                     val templateRenderer: INotificationRenderer =
                         TemplateRenderer(
                             applicationContext,
@@ -114,6 +67,62 @@ internal object TimerTemplateHandler {
                 }
             }, (delay - 100)
         )
+    }
+
+    /**
+     * Copy of [extras] turned into a `pt_basic` payload that shows the terminal text and media of
+     * [data], with the dedupe and collapse keys cleared so it renders as a new notification.
+     */
+    private fun terminalBasicTemplateBundle(extras: Bundle, data: TimerTemplateData): Bundle {
+        val basicTemplateBundle = extras.clone() as Bundle
+        basicTemplateBundle.remove("wzrk_rnv")
+        basicTemplateBundle.putString(
+            Constants.WZRK_PUSH_ID,
+            null
+        ) // skip dupe check
+        basicTemplateBundle.putString(
+            PTConstants.PT_ID,
+            "pt_basic"
+        ) // set to basic
+
+
+        basicTemplateBundle.putString(PTConstants.PT_TITLE, data.terminalTextData.title)
+        basicTemplateBundle.putString(
+            PTConstants.PT_BIG_IMG,
+            data.terminalMediaData.bigImage.url
+        )
+        basicTemplateBundle.putString(
+            PTConstants.PT_BIG_IMG_ALT_TEXT,
+            data.terminalMediaData.bigImage.altText
+        )
+        basicTemplateBundle.putString(PTConstants.PT_MSG, data.terminalTextData.message)
+        basicTemplateBundle.putString(
+            PTConstants.PT_MSG_SUMMARY,
+            data.terminalTextData.messageSummary
+        )
+        basicTemplateBundle.putString(
+            PTConstants.PT_GIF,
+            data.terminalMediaData.gif.url
+        )
+
+        basicTemplateBundle.putString(
+            PTConstants.PT_GIF_FRAMES,
+            data.terminalMediaData.gif.numberOfFrames.toString()
+        )
+
+        basicTemplateBundle.putString(
+            PTConstants.PT_SCALE_TYPE,
+            data.terminalMediaData.scaleType.toString()
+        )
+
+
+        basicTemplateBundle.remove(PTConstants.PT_JSON)
+
+        // force random id generation
+        basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
+        basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
+        basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
+        return basicTemplateBundle
     }
 
 
