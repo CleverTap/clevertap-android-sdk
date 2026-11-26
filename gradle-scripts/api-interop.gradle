@@ -57,7 +57,13 @@ def collectFindings = {
                 // single-quoted: a slashy string would interpolate `$default`
                 def d = (m =~ 'synthetic fun (\\S+)\\$default \\(')
                 if (d.find()) {
-                    findings << "DEFAULT_ARGS ${module} ${shortName}.${d.group(1)}"
+                    // @JvmOverloads keeps the synthetic $default bridge but adds Java-visible
+                    // overloads; only flag when Java sees a single arity.
+                    def fn = d.group(1)
+                    def javaOverloads = visible.count { it =~ "fun ${java.util.regex.Pattern.quote(fn)} \\(" }
+                    if (javaOverloads <= 1) {
+                        findings << "DEFAULT_ARGS ${module} ${shortName}.${fn}"
+                    }
                 }
             }
             visible.each { m ->
