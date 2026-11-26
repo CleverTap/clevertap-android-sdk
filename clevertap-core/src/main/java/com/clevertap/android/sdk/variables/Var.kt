@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.variables
 
-import android.text.TextUtils
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -13,22 +12,20 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
  * Character, String, or Map. You may nest maps arbitrarily.
  * @author Ansh Sachdeva
  */
-open class Var<T> internal constructor(private val ctVariables: CTVariables) {
-
-    private var name: String? = null
-
-    private var nameComponents: Array<String>? = null
+open class Var<T> internal constructor(
+    private val ctVariables: CTVariables,
+    private val name: String,
+    private val nameComponents: Array<String>,
+    private val defaultValue: T?,
+    private val kind: String?
+) {
 
     @JvmField
     var stringValue: String? = null
 
     private var numberValue: Double? = null
 
-    private var defaultValue: T? = null
-
-    private var value: T? = null
-
-    private var kind: String? = null
+    private var value: T? = defaultValue
 
     private var hadStarted = false // flag to indicate whether the callbacks were invoked for the starting value of the variable
 
@@ -44,7 +41,7 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
     @Synchronized
     open fun update() {
         val oldValue = value
-        value = ctVariables.getVarCache().getMergedValueFromComponentArray<T>(nameComponents!!)
+        value = ctVariables.varCache.getMergedValueFromComponentArray<T>(nameComponents)
         if (value == null && oldValue == null) {
             return
         }
@@ -52,34 +49,44 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
             return
         }
         cacheComputedValues()
-        if (ctVariables.hasVarsRequestCompleted()) {
+        if (ctVariables.hasVarsRequestCompleted) {
             hadStarted = true
             triggerValueChanged()
 
             // trigger file ready, start download if not.
-            if (CTVariableUtils.FILE == kind) {
+            if (isFileKind) {
                 @Suppress("UNCHECKED_CAST")
-                ctVariables.getVarCache().fileVarUpdated(this as Var<String>)
+                ctVariables.varCache.fileVarUpdated(this as Var<String>)
             }
         }
     }
 
+    private val isFileKind: Boolean
+        get() = CTVariableUtils.FILE == kind
+
     private fun cacheComputedValues() {
-        val value = value
-        if (value is String) {
-            stringValue = value
-            modifyNumberValue(value)
-            modifyValue(numberValue)
-        } else if (value is Number) {
-            stringValue = "" + value
-            numberValue = value.toDouble()
-            modifyValue(value)
-        } else if (value != null && value !is Iterable<*> && value !is Map<*, *>) {
-            stringValue = value.toString()
-            numberValue = null
-        } else {
-            stringValue = null
-            numberValue = null
+        when (val value = value) {
+            is String -> {
+                stringValue = value
+                modifyNumberValue(value)
+                modifyValue(numberValue)
+            }
+
+            is Number -> {
+                stringValue = value.toString()
+                numberValue = value.toDouble()
+                modifyValue(value)
+            }
+
+            null, is Iterable<*>, is Map<*, *> -> {
+                stringValue = null
+                numberValue = null
+            }
+
+            else -> {
+                stringValue = value.toString()
+                numberValue = null
+            }
         }
     }
 
@@ -93,33 +100,23 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
             return
         }
 
-        val defaultValue = defaultValue
-        if (defaultValue is Byte) {
-            value = src.toByte() as T
-        } else if (defaultValue is Short) {
-            value = src.toShort() as T
-        } else if (defaultValue is Int) {
-            value = src.toInt() as T
-        } else if (defaultValue is Long) {
-            value = src.toLong() as T
-        } else if (defaultValue is Float) {
-            value = src.toFloat() as T
-        } else if (defaultValue is Double) {
-            value = src.toDouble() as T
-        } else if (defaultValue is Char) {
-            value = src.toInt().toChar() as T
+        value = when (defaultValue) {
+            is Byte -> src.toByte() as T
+            is Short -> src.toShort() as T
+            is Int -> src.toInt() as T
+            is Long -> src.toLong() as T
+            is Float -> src.toFloat() as T
+            is Double -> src.toDouble() as T
+            is Char -> src.toInt().toChar() as T
+            else -> return
         }
     }
 
     private fun modifyNumberValue(src: String) {
-        try {
-            numberValue = java.lang.Double.valueOf(src)
+        numberValue = try {
+            src.toDouble()
         } catch (e: NumberFormatException) {
-            numberValue = null
-            val defaultValue = defaultValue
-            if (defaultValue is Number) {
-                numberValue = defaultValue.toDouble()
-            }
+            (defaultValue as? Number)?.toDouble()
         }
     }
 
@@ -133,60 +130,42 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
         }
     }
 
-    override fun toString(): String {
-        return if (CTVariableUtils.FILE == kind) {
-            val filePath = ctVariables.getVarCache().filePathFromDisk(stringValue)
-            "Var($name,$filePath)"
-        } else {
-            "Var($name,$value)"
-        }
+    override fun toString(): String = if (isFileKind) {
+        "Var($name,${ctVariables.varCache.filePathFromDisk(stringValue)})"
+    } else {
+        "Var($name,$value)"
     }
 
     internal fun warnIfNotStarted() {
-        if (!ctVariables.hasVarsRequestCompleted() && !printedCallbackWarning) {
+        if (!ctVariables.hasVarsRequestCompleted && !printedCallbackWarning) {
             log(
                 "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for " +
-                        name + " is ready. Otherwise, your app may not use the most up-to-date value."
+                    "$name is ready. Otherwise, your app may not use the most up-to-date value."
             )
             printedCallbackWarning = true
         }
     }
 
-    open fun name(): String? {
-        return name
-    }
+    open fun name(): String? = name
 
-    open fun nameComponents(): Array<String>? {
-        return nameComponents
-    }
+    open fun nameComponents(): Array<String>? = nameComponents
 
-    open fun kind(): String? {
-        return kind
-    }
+    open fun kind(): String? = kind
 
     @Suppress("UNCHECKED_CAST")
-    open fun defaultValue(): T {
-        return defaultValue as T
-    }
+    open fun defaultValue(): T = defaultValue as T
 
     @Suppress("UNCHECKED_CAST")
     open fun value(): T {
         warnIfNotStarted()
-
-        return if (CTVariableUtils.FILE == kind) {
-            ctVariables.getVarCache().filePathFromDisk(stringValue) as T
+        return if (isFileKind) {
+            ctVariables.varCache.filePathFromDisk(stringValue) as T
         } else {
             value as T
         }
     }
 
-    internal fun rawFileValue(): String? {
-        return if (CTVariableUtils.FILE == kind) {
-            stringValue
-        } else {
-            null
-        }
-    }
+    internal fun rawFileValue(): String? = if (isFileKind) stringValue else null
 
     open fun addValueChangedCallback(callback: VariableCallback<T>?) {
         if (callback == null) {
@@ -198,7 +177,7 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
             valueChangedHandlers.add(callback)
         }
 
-        if (ctVariables.hasVarsRequestCompleted()) {
+        if (ctVariables.hasVarsRequestCompleted) {
             callback.onValueChanged(this)
         }
     }
@@ -225,8 +204,8 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
 
     open fun stringValue(): String? {
         warnIfNotStarted()
-        return if (CTVariableUtils.FILE == kind) {
-            ctVariables.getVarCache().filePathFromDisk(stringValue)
+        return if (isFileKind) {
+            ctVariables.varCache.filePathFromDisk(stringValue)
         } else {
             stringValue
         }
@@ -287,11 +266,11 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
         @JvmStatic
         @JvmName("define")
         internal fun <T> define(name: String?, defaultValue: T, kind: String?, ctVariables: CTVariables): Var<T>? {
-            if (TextUtils.isEmpty(name)) {
+            if (name.isNullOrEmpty()) {
                 log("Empty name parameter provided.")
                 return null
             }
-            if (name!!.startsWith(".") || name.endsWith(".")) {
+            if (name.startsWith(".") || name.endsWith(".")) {
                 log("Variable name starts or ends with a `.` which is not allowed: $name")
                 return null
             }
@@ -300,25 +279,17 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
                 return null
             }
 
-            val existing = ctVariables.getVarCache().getVariable<T>(name)
-            if (existing != null) {
-                return existing
-            }
+            ctVariables.varCache.getVariable<T>(name)?.let { return it }
 
-            val `var` = Var<T>(ctVariables)
+            val variable = Var(ctVariables, name, CTVariableUtils.getNameComponents(name), defaultValue, kind)
             try {
-                `var`.name = name
-                `var`.nameComponents = CTVariableUtils.getNameComponents(name)
-                `var`.defaultValue = defaultValue
-                `var`.value = defaultValue
-                `var`.kind = kind
-                `var`.cacheComputedValues()
-                ctVariables.getVarCache().registerVariable(`var`)
-                `var`.update()
+                variable.cacheComputedValues()
+                ctVariables.varCache.registerVariable(variable)
+                variable.update()
             } catch (t: Throwable) {
                 Logger.v(TAG, "Error defining variable: $name", t)
             }
-            return `var`
+            return variable
         }
     }
 }

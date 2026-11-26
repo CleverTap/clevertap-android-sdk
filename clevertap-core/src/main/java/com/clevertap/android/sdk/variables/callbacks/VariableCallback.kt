@@ -14,9 +14,10 @@ abstract class VariableCallback<T> : Runnable {
     }
 
     override fun run() {
-        val variable = variable!!
+        // the SDK always sets the variable before posting this callback
+        val variable = checkNotNull(variable) { "VariableCallback run without a variable" }
         synchronized(variable) {
-            this.onValueChanged(variable)
+            onValueChanged(variable)
         }
     }
 

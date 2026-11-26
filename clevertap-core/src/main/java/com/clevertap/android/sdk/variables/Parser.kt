@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.variables
 
-import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.variables.CTVariableUtils.Companion.BOOLEAN
@@ -29,7 +28,8 @@ internal open class Parser(private val ctVariables: CTVariables) {
     open fun parseVariables(vararg instances: Any?) {
         try {
             for (instance in instances) {
-                parseVariablesHelper(instance, instance!!.javaClass)
+                // a null instance aborts the remaining ones (caught below), as before
+                parseVariablesHelper(instance, checkNotNull(instance).javaClass)
             }
         } catch (t: Throwable) {
             log("Error parsing variables", t)
@@ -44,7 +44,8 @@ internal open class Parser(private val ctVariables: CTVariables) {
     open fun parseVariablesForClasses(vararg classes: Class<*>?) {
         try {
             for (clazz in classes) {
-                parseVariablesHelper(null, clazz!!)
+                // a null class aborts the remaining ones (caught below), as before
+                parseVariablesHelper(null, checkNotNull(clazz))
             }
         } catch (t: Throwable) {
             log("Error parsing variables", t)
@@ -63,57 +64,35 @@ internal open class Parser(private val ctVariables: CTVariables) {
     @VisibleForTesting
     internal fun parseVariablesHelper(instance: Any?, clazz: Class<*>) {
         try {
-            val fields = clazz.fields
-
-            for (field in fields) {
-                var group = ""
-                var name = ""
-                if (field.isAnnotationPresent(Variable::class.java)) {
-                    val annotation: Variable? = field.getAnnotation(Variable::class.java)
-                    if (annotation != null) {
-                        group = annotation.group
-                        name = annotation.name
-                    }
-                } else {
+            for (field in clazz.fields) {
+                if (!field.isAnnotationPresent(Variable::class.java)) {
                     continue
                 }
+                val annotation: Variable? = field.getAnnotation(Variable::class.java)
+                val group = annotation?.group.orEmpty()
+                val name = annotation?.name.orEmpty()
 
-                var variableName = name
-                if (TextUtils.isEmpty(variableName)) {
-                    variableName = field.name
-                }
-                if (!TextUtils.isEmpty(group)) {
-                    variableName = "$group.$variableName"
-                }
+                val baseName = name.ifEmpty { field.name }
+                val variableName = if (group.isNotEmpty()) "$group.$baseName" else baseName
 
                 val fieldType = field.type
-                val fieldTypeString = fieldType.toString()
-                if (fieldTypeString == "int") {
-                    defineVariable(instance, variableName, field.getInt(instance), NUMBER, field)
-                } else if (fieldTypeString == "byte") {
-                    defineVariable(instance, variableName, field.getByte(instance), NUMBER, field)
-                } else if (fieldTypeString == "short") {
-                    defineVariable(instance, variableName, field.getShort(instance), NUMBER, field)
-                } else if (fieldTypeString == "long") {
-                    defineVariable(instance, variableName, field.getLong(instance), NUMBER, field)
-                } else if (fieldTypeString == "char") {
-                    defineVariable(instance, variableName, field.getChar(instance), NUMBER, field)
-                } else if (fieldTypeString == "float") {
-                    defineVariable(instance, variableName, field.getFloat(instance), NUMBER, field)
-                } else if (fieldTypeString == "double") {
-                    defineVariable(instance, variableName, field.getDouble(instance), NUMBER, field)
-                } else if (fieldTypeString == "boolean") {
-                    defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field)
-                } else if (fieldType.isPrimitive) {
-                    log("Variable $variableName is an unsupported primitive type.")
-                } else if (fieldType.isArray) {
-                    log("Variable $variableName is an unsupported type of Array.")
-                } else if (Map::class.java.isAssignableFrom(fieldType)) {
-                    defineVariable(instance, variableName, field.get(instance), DICTIONARY, field)
-                } else {
-                    val value = field.get(instance)
-                    val stringValue = value?.toString()
-                    defineVariable(instance, variableName, stringValue, STRING, field)
+                when (fieldType.toString()) {
+                    "int" -> defineVariable(instance, variableName, field.getInt(instance), NUMBER, field)
+                    "byte" -> defineVariable(instance, variableName, field.getByte(instance), NUMBER, field)
+                    "short" -> defineVariable(instance, variableName, field.getShort(instance), NUMBER, field)
+                    "long" -> defineVariable(instance, variableName, field.getLong(instance), NUMBER, field)
+                    "char" -> defineVariable(instance, variableName, field.getChar(instance), NUMBER, field)
+                    "float" -> defineVariable(instance, variableName, field.getFloat(instance), NUMBER, field)
+                    "double" -> defineVariable(instance, variableName, field.getDouble(instance), NUMBER, field)
+                    "boolean" -> defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field)
+                    else -> when {
+                        fieldType.isPrimitive -> log("Variable $variableName is an unsupported primitive type.")
+                        fieldType.isArray -> log("Variable $variableName is an unsupported type of Array.")
+                        Map::class.java.isAssignableFrom(fieldType) ->
+                            defineVariable(instance, variableName, field.get(instance), DICTIONARY, field)
+
+                        else -> defineVariable(instance, variableName, field.get(instance)?.toString(), STRING, field)
+                    }
                 }
             }
         } catch (t: Throwable) {
@@ -136,8 +115,8 @@ internal open class Parser(private val ctVariables: CTVariables) {
     @VisibleForTesting
     internal fun <T> defineVariable(instance: Any?, name: String?, value: T, kind: String?, field: Field?) {
         // we first call var.define(..) with field name, value and kind
-        val `var` = Var.define(name, value, kind, ctVariables)
-        if (`var` == null) {
+        val definedVar = Var.define(name, value, kind, ctVariables)
+        if (definedVar == null) {
             log("Something went wrong, variable '$name' is null, returning")
             return
         }
@@ -145,11 +124,11 @@ internal open class Parser(private val ctVariables: CTVariables) {
         val hasInstance = instance != null
         val weakInstance = WeakReference(instance)
 
-        `var`.addValueChangedCallback(object : VariableCallback<T>() {
+        definedVar.addValueChangedCallback(object : VariableCallback<T>() {
             override fun onValueChanged(variable: Var<T>) {
                 val instanceFromWeakRef = weakInstance.get()
                 if ((hasInstance && instanceFromWeakRef == null) || field == null) {
-                    `var`.removeValueChangedHandler(this)
+                    definedVar.removeValueChangedHandler(this)
                     return
                 }
                 try {
@@ -157,26 +136,22 @@ internal open class Parser(private val ctVariables: CTVariables) {
                     if (!accessible) {
                         field.isAccessible = true
                     }
-                    field.set(instanceFromWeakRef, `var`.value())
+                    field.set(instanceFromWeakRef, definedVar.value())
                     if (!accessible) {
                         field.isAccessible = false
                     }
                 } catch (e: IllegalArgumentException) {
-                    log("Invalid value " + `var`.value() + " for field " + `var`.name(), e)
+                    log("Invalid value ${definedVar.value()} for field ${definedVar.name()}", e)
                 } catch (e: IllegalAccessException) {
-                    log("Error setting value for field " + `var`.name(), e)
+                    log("Error setting value for field ${definedVar.name()}", e)
                 }
             }
         })
     }
 
     private companion object {
-        private fun log(msg: String) {
-            Logger.v("variables", msg)
-        }
+        private fun log(msg: String) = Logger.v("variables", msg)
 
-        private fun log(msg: String, t: Throwable) {
-            Logger.v("variables", msg, t)
-        }
+        private fun log(msg: String, t: Throwable) = Logger.v("variables", msg, t)
     }
 }

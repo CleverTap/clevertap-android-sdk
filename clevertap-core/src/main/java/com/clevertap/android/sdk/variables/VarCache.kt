@@ -9,12 +9,9 @@ import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.task.CTExecutorFactory
-import com.clevertap.android.sdk.task.OnSuccessListener
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Objects
-import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -23,18 +20,15 @@ import java.util.concurrent.ConcurrentHashMap
  * @author Ansh Sachdeva.
  */
 internal open class VarCache(
-    config: CleverTapInstanceConfig,
-    ctx: Context,
+    private val instanceConfig: CleverTapInstanceConfig,
+    private val variablesCtx: Context,
     private val fileResourcesRepoImpl: FileResourcesRepoImpl,
     private val variablesRepo: VariablesRepo
 ) {
     private val valuesFromClient: MutableMap<String, Any?> = HashMap()
     private val vars: MutableMap<String, Var<*>> = ConcurrentHashMap()
     private val defaultKinds: MutableMap<String, String?> = HashMap()
-    private val variablesCtx: Context = ctx
-    private val instanceConfig: CleverTapInstanceConfig = config
 
-    @JvmField
     var merged: Any? = null
     private var globalCallbacksRunnable: Runnable? = null
 
@@ -46,10 +40,11 @@ internal open class VarCache(
     /**
      * If invoked with a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define.
      *
-     * @param var
+     * @param variable a registered variable (its name components are set by [Var.define])
      */
     @VisibleForTesting
-    internal fun mergeVariable(`var`: Var<*>) {
+    internal fun mergeVariable(variable: Var<*>) {
+        val merged = merged
         if (merged == null) {
             log("mergeVariable() called, but `merged` member is null.")
             return
@@ -58,57 +53,55 @@ internal open class VarCache(
             return
         }
 
-        val firstComponent = `var`.nameComponents()!![0]
+        val nameComponents = checkNotNull(variable.nameComponents())
+        val firstComponent = nameComponents[0]
         val defaultValue = valuesFromClient[firstComponent]
         val mergedMap: MutableMap<String, Any?> = JsonUtil.uncheckedCast(merged)
         val mergedValue = mergedMap[firstComponent]
 
-        val shouldMerge: Boolean = if (CTVariableUtils.FILE == `var`.kind()) {
+        val shouldMerge = if (CTVariableUtils.FILE == variable.kind()) {
             defaultValue == null && mergedValue != null
         } else {
             defaultValue != null && defaultValue != mergedValue
         }
+        if (!shouldMerge) {
+            return
+        }
 
-        if (shouldMerge) {
-            val newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue)
+        mergedMap[firstComponent] = CTVariableUtils.mergeHelper(defaultValue, mergedValue)
 
-            mergedMap[firstComponent] = newValue
-
-            val name = StringBuilder(firstComponent)
-            for (i in 1 until `var`.nameComponents()!!.size) {
-                val existing = vars[name.toString()]
-                existing?.update()
-                name.append('.').append(`var`.nameComponents()!![i])
-            }
+        val name = StringBuilder(firstComponent)
+        for (i in 1 until nameComponents.size) {
+            vars[name.toString()]?.update()
+            name.append('.').append(nameComponents[i])
         }
     }
 
     @Synchronized
-    open fun registerVariable(`var`: Var<*>) {
-        log("registerVariable() called with: var = [" + `var`.name() + "]")
-        vars[`var`.name()!!] = `var`
+    open fun registerVariable(variable: Var<*>) {
+        log("registerVariable() called with: var = [${variable.name()}]")
+        vars[checkNotNull(variable.name())] = variable
 
-        var defaultValue: Any? = `var`.defaultValue()
-        if (defaultValue is Map<*, *>) {
-            defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue))
+        val defaultValue = variable.defaultValue().let {
+            if (it is Map<*, *>) CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(it)) else it
         }
         CTVariableUtils.updateValuesAndKinds(
-            `var`.name(),
-            `var`.nameComponents(),
+            variable.name(),
+            variable.nameComponents(),
             defaultValue,
-            `var`.kind(),
+            variable.kind(),
             valuesFromClient,
             defaultKinds
         )
 
-        mergeVariable(`var`)
+        mergeVariable(variable)
     }
 
     @Synchronized
     open fun getMergedValue(variableName: String?): Any? {
-        val `var` = vars[variableName]
-        if (`var` != null && CTVariableUtils.FILE == `var`.kind()) {
-            return filePathFromDisk(`var`.stringValue)
+        val variable = vars[variableName]
+        if (variable != null && CTVariableUtils.FILE == variable.kind()) {
+            return filePathFromDisk(variable.stringValue)
         }
 
         val components = CTVariableUtils.getNameComponents(variableName)
@@ -121,12 +114,8 @@ internal open class VarCache(
     }
 
     @Synchronized
-    open fun <T> getMergedValueFromComponentArray(components: Array<out Any?>): T {
-        return getMergedValueFromComponentArray(
-            components,
-            if (merged != null) merged else valuesFromClient
-        )
-    }
+    open fun <T> getMergedValueFromComponentArray(components: Array<out Any?>): T =
+        getMergedValueFromComponentArray(components, merged ?: valuesFromClient)
 
     @Synchronized
     open fun <T> getMergedValueFromComponentArray(components: Array<out Any?>, values: Any?): T {
@@ -162,12 +151,8 @@ internal open class VarCache(
     private fun handleAbVariantsData() {
         try {
             val variantsFromCache = variablesRepo.loadVariantsFromCache()
-            val variants: JSONArray = if (variantsFromCache == null) {
-                JSONArray()
-            } else {
-                JSONArray(variantsFromCache)
-            }
-            abVariants = Objects.requireNonNull(JsonUtil.listFromJson<Map<String, Any?>>(variants))!!
+            val variants = if (variantsFromCache == null) JSONArray() else JSONArray(variantsFromCache)
+            abVariants = JsonUtil.listFromJsonSafe(variants)
         } catch (e: Exception) {
             log("Could not load variants", e)
         }
@@ -201,102 +186,78 @@ internal open class VarCache(
 
     private fun saveDiffsAsync() {
         val task = CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask<Void?>()
-        task.execute("VarCache#saveDiffsAsync", Callable<Void?> {
+        task.execute("VarCache#saveDiffsAsync") {
             saveDiffs()
             saveAbVariants()
             null
-        })
+        }
     }
 
     @WorkerThread
     private fun saveDiffs() {
         log("saveDiffs() called")
-        val variablesCipher = JsonUtil.toJson(diffs)
-        if (variablesCipher != null) {
-            variablesRepo.storeDataInCache(variablesCipher)
-        }
+        JsonUtil.toJson(diffs)?.let { variablesRepo.storeDataInCache(it) }
     }
 
     @WorkerThread
     private fun saveAbVariants() {
         log("saveAbVariables() called")
-        val variantsCipher = JsonUtil.toJson(abVariants)
-        if (variantsCipher != null) {
-            variablesRepo.storeVariantsInCache(variantsCipher)
-        }
+        JsonUtil.toJson(abVariants)?.let { variablesRepo.storeVariantsInCache(it) }
     }
 
     private fun applyVariableDiffs(
         diffs: Map<String, Any?>?,
-        clientRegisteredVars: HashMap<String, Var<*>>
+        clientRegisteredVars: Map<String, Var<*>>
     ) {
         log("applyVariableDiffs() called with: diffs = [$diffs]")
-        if (diffs != null) {
-            this.diffs = diffs
-            merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs)
-            log("applyVariableDiffs: updated value of merged=[$merged]")
+        if (diffs == null) {
+            return
+        }
+        this.diffs = diffs
+        merged = CTVariableUtils.mergeHelper(valuesFromClient, diffs)
+        log("applyVariableDiffs: updated value of merged=[$merged]")
 
-            for ((name, _) in clientRegisteredVars) {
-                val `var` = vars[name]
-                `var`?.update()
-            }
+        for (name in clientRegisteredVars.keys) {
+            vars[name]?.update()
         }
     }
 
-    private fun startFilesDownload(
-        clientRegisteredVars: HashMap<String, Var<*>>,
-        func: Function0<Unit>
-    ) {
+    private fun startFilesDownload(clientRegisteredVars: Map<String, Var<*>>, func: () -> Unit) {
         if (clientRegisteredVars.isEmpty()) {
-            log(
-                "There are no variables registered by the client. Not downloading files " +
-                        "& posting global callbacks"
-            )
+            log("There are no variables registered by the client. Not downloading files & posting global callbacks")
             return
         }
 
-        val skipped = StringBuilder()
-        skipped.append("Skipped these file vars cause urls are not present :")
-        skipped.append("\n")
-
-        val added = StringBuilder()
-        added.append("Adding these files to download :")
-        added.append("\n")
-
+        val skipped = StringBuilder("Skipped these file vars cause urls are not present :\n")
+        val added = StringBuilder("Adding these files to download :\n")
         val urls = ArrayList<Pair<String, CtCacheType>>()
 
-        for ((name, _) in clientRegisteredVars) {
-            val `var` = vars[name]
-
-            if (`var` != null && `var`.kind()!! == CTVariableUtils.FILE) {
-                val url = `var`.rawFileValue()
-
-                if (url != null) {
-                    val isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger)
-                        .isFileCached(url)
-                    if (!isFileCached) {
-                        urls.add(Pair(url, CtCacheType.FILES))
-                        added.append(name).append(" : ").append(url)
-                        added.append("\n")
-                    }
-                } else {
-                    skipped.append(name)
-                    skipped.append("\n")
-                }
+        for (name in clientRegisteredVars.keys) {
+            val variable = vars[name]
+            // a registered variable always has a kind (set by Var.define)
+            if (variable == null || checkNotNull(variable.kind()) != CTVariableUtils.FILE) {
+                continue
+            }
+            val url = variable.rawFileValue()
+            if (url == null) {
+                skipped.append(name).append("\n")
+                continue
+            }
+            val isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).isFileCached(url)
+            if (!isFileCached) {
+                urls.add(Pair(url, CtCacheType.FILES))
+                added.append(name).append(" : ").append(url).append("\n")
             }
         }
         log(skipped.toString())
         log(added.toString())
 
         if (urls.isEmpty()) {
-            func.invoke() // triggers global files callbacks
+            func() // triggers global files callbacks
             return
         }
-        val completion: (Map<String, Boolean>) -> Unit = {
-            // triggers global files callbacks to client
-            func.invoke()
-        }
-        fileResourcesRepoImpl.preloadFilesAndCache(urls, completion)
+        // triggers global files callbacks to client
+        fileResourcesRepoImpl.preloadFilesAndCache(urls, completionCallback = { func() })
     }
 
     @Synchronized
@@ -304,9 +265,7 @@ internal open class VarCache(
         globalCallbacksRunnable?.run()
     }
 
-    open fun getDefineVarsData(): JSONObject {
-        return CTVariableUtils.getFlatVarsJson(valuesFromClient, defaultKinds)
-    }
+    open fun getDefineVarsData(): JSONObject = CTVariableUtils.getFlatVarsJson(valuesFromClient, defaultKinds)
 
     @Synchronized
     open fun clearUserContent() {
@@ -314,8 +273,7 @@ internal open class VarCache(
         // 1. clear Var state to allow callback invocation when server values are downloaded
         val clientRegisteredVars = HashMap(vars)
         for (name in clientRegisteredVars.keys) {
-            val `var` = vars[name]
-            `var`?.clearStartFlag()
+            vars[name]?.clearStartFlag()
         }
 
         // 2. reset server values for previous user
@@ -327,53 +285,44 @@ internal open class VarCache(
     }
 
     @Synchronized
-    open fun <T> getVariable(name: String?): Var<T>? {
-        return JsonUtil.uncheckedCast(vars[name])
-    }
+    open fun <T> getVariable(name: String?): Var<T>? = JsonUtil.uncheckedCast(vars[name])
 
-    @VisibleForTesting
-    internal fun getVariablesCount(): Int {
-        return vars.size
-    }
+    @get:VisibleForTesting
+    internal val variablesCount: Int
+        get() = vars.size
 
     @Synchronized
     open fun setGlobalCallbacksRunnable(runnable: Runnable?) {
         globalCallbacksRunnable = runnable
     }
 
-    open fun filePathFromDisk(url: String?): String? {
-        return FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).cachedFilePath(url)
-    }
+    open fun filePathFromDisk(url: String?): String? =
+        FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).cachedFilePath(url)
 
     open fun fileVarUpdated(fileVar: Var<String>) {
         val url = fileVar.rawFileValue()
         val task = CTExecutorFactory.executors(instanceConfig).ioTask<Boolean>()
-        task.addOnSuccessListener(OnSuccessListener { isCached ->
-            if (isCached) {
+        task.addOnSuccessListener { isCached ->
+            if (isCached || url == null) {
+                // a null url counts as cached (see the task below)
                 fileVar.triggerFileIsReady()
             } else {
-                val list: MutableList<Pair<String, CtCacheType>> = ArrayList()
-                list.add(Pair(url!!, CtCacheType.FILES))
-                val completion: (Map<String, Boolean>) -> Unit = { fileVar.triggerFileIsReady() }
-                fileResourcesRepoImpl.preloadFilesAndCache(list, completion)
+                fileResourcesRepoImpl.preloadFilesAndCache(
+                    listOf(Pair(url, CtCacheType.FILES)),
+                    completionCallback = { fileVar.triggerFileIsReady() }
+                )
             }
-        })
-        task.execute("isFileCached", Callable {
+        }
+        task.execute("isFileCached") {
             url == null || FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).isFileCached(url)
-        })
+        }
     }
 
-    open fun variants(): List<Map<String, Any?>> {
-        return abVariants
-    }
+    open fun variants(): List<Map<String, Any?>> = abVariants
 
     private companion object {
-        private fun log(msg: String) {
-            Logger.d("variables", msg)
-        }
+        private fun log(msg: String) = Logger.d("variables", msg)
 
-        private fun log(msg: String, t: Throwable) {
-            Logger.d("variables", msg, t)
-        }
+        private fun log(msg: String, t: Throwable) = Logger.d("variables", msg, t)
     }
 }

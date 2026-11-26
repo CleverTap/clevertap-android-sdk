@@ -89,14 +89,14 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.init()
     var success = false
     var callback = false
-    ctVariables.setHasVarsRequestCompleted(false)
+    ctVariables.hasVarsRequestCompleted = false
 
     ctVariables.handleVariableResponse(null) { isSuccessful ->
       success = isSuccessful
       callback = true
     }
 
-    assertTrue(ctVariables.hasVarsRequestCompleted())
+    assertTrue(ctVariables.hasVarsRequestCompleted)
     verify { varCache.loadDiffsAndTriggerHandlers(any()) }
     assertTrue(callback)
     assertFalse(success)
@@ -221,7 +221,7 @@ class CTVariablesTest : BaseTestCase() {
     assertEquals(2, var1.value())
 
     ctVariables.clearUserContent()
-    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertFalse(ctVariables.hasVarsRequestCompleted)
     assertEquals(1, var1.value())
 
     ctVariables.handleVariableResponse(JSONObject().put("var1", 3), null)
@@ -239,7 +239,7 @@ class CTVariablesTest : BaseTestCase() {
     assertEquals(mapOf("var1" to 111, "var2" to 2), group.value())
 
     ctVariables.clearUserContent()
-    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertFalse(ctVariables.hasVarsRequestCompleted)
     assertEquals(mapOf("var1" to 1, "var2" to 2), group.value())
 
     ctVariables.handleVariableResponse(JSONObject().put("group.var2", 222), null)

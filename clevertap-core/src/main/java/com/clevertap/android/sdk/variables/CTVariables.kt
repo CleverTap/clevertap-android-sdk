@@ -12,9 +12,11 @@ import org.json.JSONObject
  *
  * @author Ansh Sachdeva
  */
-internal open class CTVariables(private val varCache: VarCache) {
+internal open class CTVariables(internal val varCache: VarCache) {
 
-    private var hasVarsRequestCompleted = false
+    /** false until the first variables response (or error) is handled; reset on user switch. */
+    open var hasVarsRequestCompleted = false
+
     private var preRegisteredFilesDownloaded = false
 
     private val variablesChangedCallbacks: MutableList<VariablesChangedCallback> = ArrayList()
@@ -24,20 +26,15 @@ internal open class CTVariables(private val varCache: VarCache) {
         ArrayList()
 
     init {
-        val triggerGlobalCallbacks = Runnable {
+        varCache.setGlobalCallbacksRunnable {
             synchronized(variablesChangedCallbacks) {
-                for (callback in variablesChangedCallbacks) {
-                    Utils.runOnUiThread(callback)
-                }
+                variablesChangedCallbacks.forEach { Utils.runOnUiThread(it) }
             }
             synchronized(oneTimeVariablesChangedCallbacks) {
-                for (callback in oneTimeVariablesChangedCallbacks) {
-                    Utils.runOnUiThread(callback)
-                }
+                oneTimeVariablesChangedCallbacks.forEach { Utils.runOnUiThread(it) }
                 oneTimeVariablesChangedCallbacks.clear()
             }
         }
-        this.varCache.setGlobalCallbacksRunnable(triggerGlobalCallbacks)
     }
 
     open fun init() {
@@ -65,8 +62,8 @@ internal open class CTVariables(private val varCache: VarCache) {
     }
 
     open fun handleVariableResponseError(fetchCallback: FetchVariablesCallback?) {
-        if (!hasVarsRequestCompleted()) {
-            setHasVarsRequestCompleted(true)
+        if (!hasVarsRequestCompleted) {
+            hasVarsRequestCompleted = true
             varCache.loadDiffsAndTriggerHandlers {
                 triggerGlobalFilesCallbacks()
                 preRegisteredFilesDownloaded = true
@@ -79,9 +76,8 @@ internal open class CTVariables(private val varCache: VarCache) {
         response: JSONObject,
         fetchCallback: FetchVariablesCallback?
     ) {
-        setHasVarsRequestCompleted(true)
-        var variableDiffs: Map<String, Any?>? = JsonUtil.mapFromJson(response)
-        variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs!!)
+        hasVarsRequestCompleted = true
+        val variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(JsonUtil.mapFromJson<Any?>(response))
         varCache.updateDiffsAndTriggerHandlers(variableDiffs) {
             triggerGlobalFilesCallbacks()
             preRegisteredFilesDownloaded = true
@@ -94,14 +90,10 @@ internal open class CTVariables(private val varCache: VarCache) {
      */
     private fun triggerGlobalFilesCallbacks() {
         synchronized(variablesChangedCallbacksNoDownloadsPending) {
-            for (callback in variablesChangedCallbacksNoDownloadsPending) {
-                Utils.runOnUiThread(callback)
-            }
+            variablesChangedCallbacksNoDownloadsPending.forEach { Utils.runOnUiThread(it) }
         }
         synchronized(oneTimeVariablesChangedCallbacksNoDownloadsPending) {
-            for (callback in oneTimeVariablesChangedCallbacksNoDownloadsPending) {
-                Utils.runOnUiThread(callback)
-            }
+            oneTimeVariablesChangedCallbacksNoDownloadsPending.forEach { Utils.runOnUiThread(it) }
             oneTimeVariablesChangedCallbacksNoDownloadsPending.clear()
         }
     }
@@ -111,7 +103,7 @@ internal open class CTVariables(private val varCache: VarCache) {
      */
     open fun clearUserContent() {
         logD("Clear user content in CTVariables")
-        setHasVarsRequestCompleted(false) // disable callbacks and wait until fetch is finished
+        hasVarsRequestCompleted = false // disable callbacks and wait until fetch is finished
         preRegisteredFilesDownloaded = false
         varCache.clearUserContent()
     }
@@ -211,21 +203,7 @@ internal open class CTVariables(private val varCache: VarCache) {
         }
     }
 
-    open fun hasVarsRequestCompleted(): Boolean {
-        return hasVarsRequestCompleted
-    }
-
-    open fun setHasVarsRequestCompleted(completed: Boolean) {
-        hasVarsRequestCompleted = completed
-    }
-
-    internal fun getVarCache(): VarCache {
-        return varCache
-    }
-
     private companion object {
-        private fun logD(msg: String) {
-            Logger.d("variables", msg)
-        }
+        private fun logD(msg: String) = Logger.d("variables", msg)
     }
 }
