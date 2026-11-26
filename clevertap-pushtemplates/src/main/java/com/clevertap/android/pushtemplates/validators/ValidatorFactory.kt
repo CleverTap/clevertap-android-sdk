@@ -4,11 +4,13 @@ import com.clevertap.android.pushtemplates.AutoCarouselTemplateData
 import com.clevertap.android.pushtemplates.BaseTextData
 import com.clevertap.android.pushtemplates.BasicTemplateData
 import com.clevertap.android.pushtemplates.CancelTemplateData
+import com.clevertap.android.pushtemplates.CarouselData
 import com.clevertap.android.pushtemplates.FiveIconsTemplateData
 import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.InputBoxTemplateData
 import com.clevertap.android.pushtemplates.ManualCarouselTemplateData
+import com.clevertap.android.pushtemplates.MediaData
 import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.ProgressTemplateData
 import com.clevertap.android.pushtemplates.RatingTemplateData
@@ -255,29 +257,9 @@ internal class ValidatorFactory {
                         .build()
                 }
 
-                is AutoCarouselTemplateData -> {
-                    builder
-                        .addBasicTextValidation(templateData.carouselData.baseContent.textData)
-                        .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(
-                            templateData.carouselData.imageList,
-                            CAROUSEL_MIN_IMAGES,
-                            key = PT_THREE_IMAGE_LIST
-                        )
-                        .build()
-                }
+                is AutoCarouselTemplateData -> buildCarouselCheckers(builder, templateData.carouselData)
 
-                is ManualCarouselTemplateData -> {
-                    builder
-                        .addBasicTextValidation(templateData.carouselData.baseContent.textData)
-                        .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(
-                            templateData.carouselData.imageList,
-                            CAROUSEL_MIN_IMAGES,
-                            key = PT_THREE_IMAGE_LIST
-                        )
-                        .build()
-                }
+                is ManualCarouselTemplateData -> buildCarouselCheckers(builder, templateData.carouselData)
 
                 is RatingTemplateData -> {
                     builder
@@ -291,79 +273,16 @@ internal class ValidatorFactory {
                         .build()
                 }
 
-                is FiveIconsTemplateData -> {
-                    builder
-                        .addDeepLinkValidation(
-                            templateData.baseContent.deepLinkList,
-                            ICONS_MIN_ITEMS,
-                            PT_FIVE_DEEPLINK_LIST
-                        )
-                        .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
-                        .build()
-                }
+                is FiveIconsTemplateData ->
+                    buildIconsCheckers(builder, templateData.baseContent.deepLinkList, templateData.imageList)
 
-                is IconsTemplateData -> {
-                    builder
-                        .addDeepLinkValidation(
-                            templateData.baseContent.deepLinkList,
-                            ICONS_MIN_ITEMS,
-                            PT_FIVE_DEEPLINK_LIST
-                        )
-                        .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
-                        .build()
-                }
+                is IconsTemplateData ->
+                    buildIconsCheckers(builder, templateData.baseContent.deepLinkList, templateData.imageList)
 
-                is ProductTemplateData -> {
-                    val productBuilder = builder
-                        .addBasicTextValidation(templateData.baseContent.textData)
-                        .addImageListValidation(
-                            templateData.imageList,
-                            PRODUCT_ITEM_COUNT,
-                            exact = true,
-                            key = PT_PRODUCT_THREE_IMAGE_LIST
-                        )
-                        .addStringListValidation(
-                            templateData.baseContent.deepLinkList,
-                            PRODUCT_ITEM_COUNT,
-                            PT_THREE_DEEPLINK_LIST,
-                            "Three required deeplinks not present",
-                            exact = true
-                        )
-                        .addStringValidation(
-                            templateData.displayActionText,
-                            PT_PRODUCT_DISPLAY_ACTION,
-                            "Button label is missing or empty"
-                        )
+                is ProductTemplateData -> buildProductCheckers(builder, templateData)
 
-                        productBuilder.addStringListValidation(
-                            templateData.bigTextList,
-                            PRODUCT_ITEM_COUNT,
-                            PT_BIG_TEXT_LIST,
-                            "Three required product titles not present",
-                            exact = true
-                        )
-
-                        productBuilder.addStringListValidation(
-                            templateData.smallTextList,
-                            PRODUCT_ITEM_COUNT,
-                            PT_SMALL_TEXT_LIST,
-                            "Three required product descriptions not present",
-                            exact = true
-                        )
-
-                    productBuilder.build()
-                }
-
-                is ZeroBezelTemplateData -> {
-                    builder
-                        .addBasicTextValidation(templateData.baseContent.textData)
-                        .addStringValidation(
-                            templateData.mediaData.bigImage.url,
-                            PT_BIG_IMG,
-                            "Display Image is missing or empty"
-                        )
-                        .build()
-                }
+                is ZeroBezelTemplateData ->
+                    buildBigImageCheckers(builder, templateData.baseContent.textData, templateData.mediaData)
 
                 is TimerTemplateData -> {
                     builder
@@ -371,32 +290,10 @@ internal class ValidatorFactory {
                         .build()
                 }
 
-                is InputBoxTemplateData -> {
-                    builder
-                        .addBasicTextValidation(templateData.textData)
-                        .addStringValidation(
-                            templateData.inputFeedback,
-                            PT_INPUT_FEEDBACK,
-                            "Feedback Text is missing"
-                        )
-                        .addJsonArrayValidation(
-                            templateData.actions,
-                            PT_ACTIONS,
-                            "Actions is missing or empty"
-                        )
-                        .build()
-                }
+                is InputBoxTemplateData -> buildInputBoxCheckers(builder, templateData)
 
-                is VerticalImageTemplateData -> {
-                    builder
-                        .addBasicTextValidation(templateData.baseContent.textData)
-                        .addStringValidation(
-                            templateData.mediaData.bigImage.url,
-                            PT_BIG_IMG,
-                            "Display Image is missing or empty"
-                        )
-                        .build()
-                }
+                is VerticalImageTemplateData ->
+                    buildBigImageCheckers(builder, templateData.baseContent.textData, templateData.mediaData)
 
                 is CancelTemplateData -> {
                     // No validation needed for cancel template
@@ -409,6 +306,115 @@ internal class ValidatorFactory {
                 }
             }
         }
+
+        /** Auto and manual carousel: text, a deep link and at least [CAROUSEL_MIN_IMAGES] images. */
+        private fun buildCarouselCheckers(
+            builder: ValidationCheckersBuilder,
+            carouselData: CarouselData
+        ): Map<String, Checker<out Any>> =
+            builder
+                .addBasicTextValidation(carouselData.baseContent.textData)
+                .addDeepLinkValidation(carouselData.baseContent.deepLinkList)
+                .addImageListValidation(
+                    carouselData.imageList,
+                    CAROUSEL_MIN_IMAGES,
+                    key = PT_THREE_IMAGE_LIST
+                )
+                .build()
+
+        /** Five icons and icons: at least [ICONS_MIN_ITEMS] deep links and images. */
+        private fun buildIconsCheckers(
+            builder: ValidationCheckersBuilder,
+            deepLinkList: ArrayList<String>,
+            imageList: ArrayList<ImageData>
+        ): Map<String, Checker<out Any>> =
+            builder
+                .addDeepLinkValidation(
+                    deepLinkList,
+                    ICONS_MIN_ITEMS,
+                    PT_FIVE_DEEPLINK_LIST
+                )
+                .addImageListValidation(imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
+                .build()
+
+        /** Product display: text, an action label and exactly [PRODUCT_ITEM_COUNT] of each product list. */
+        private fun buildProductCheckers(
+            builder: ValidationCheckersBuilder,
+            templateData: ProductTemplateData
+        ): Map<String, Checker<out Any>> {
+            val productBuilder = builder
+                .addBasicTextValidation(templateData.baseContent.textData)
+                .addImageListValidation(
+                    templateData.imageList,
+                    PRODUCT_ITEM_COUNT,
+                    exact = true,
+                    key = PT_PRODUCT_THREE_IMAGE_LIST
+                )
+                .addStringListValidation(
+                    templateData.baseContent.deepLinkList,
+                    PRODUCT_ITEM_COUNT,
+                    PT_THREE_DEEPLINK_LIST,
+                    "Three required deeplinks not present",
+                    exact = true
+                )
+                .addStringValidation(
+                    templateData.displayActionText,
+                    PT_PRODUCT_DISPLAY_ACTION,
+                    "Button label is missing or empty"
+                )
+
+            productBuilder.addStringListValidation(
+                templateData.bigTextList,
+                PRODUCT_ITEM_COUNT,
+                PT_BIG_TEXT_LIST,
+                "Three required product titles not present",
+                exact = true
+            )
+
+            productBuilder.addStringListValidation(
+                templateData.smallTextList,
+                PRODUCT_ITEM_COUNT,
+                PT_SMALL_TEXT_LIST,
+                "Three required product descriptions not present",
+                exact = true
+            )
+
+            return productBuilder.build()
+        }
+
+        /** Zero bezel and vertical image: text and a display image. */
+        private fun buildBigImageCheckers(
+            builder: ValidationCheckersBuilder,
+            textData: BaseTextData,
+            mediaData: MediaData
+        ): Map<String, Checker<out Any>> =
+            builder
+                .addBasicTextValidation(textData)
+                .addStringValidation(
+                    mediaData.bigImage.url,
+                    PT_BIG_IMG,
+                    "Display Image is missing or empty"
+                )
+                .build()
+
+        /** Input box: text, the feedback text and the actions. */
+        private fun buildInputBoxCheckers(
+            builder: ValidationCheckersBuilder,
+            templateData: InputBoxTemplateData
+        ): Map<String, Checker<out Any>> =
+            builder
+                .addBasicTextValidation(templateData.textData)
+                .addStringValidation(
+                    templateData.inputFeedback,
+                    PT_INPUT_FEEDBACK,
+                    "Feedback Text is missing"
+                )
+                .addJsonArrayValidation(
+                    templateData.actions,
+                    PT_ACTIONS,
+                    "Actions is missing or empty"
+                )
+                .build()
 
         /**
          * Creates the appropriate validator instance based on template type and validation checkers
