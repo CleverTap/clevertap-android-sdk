@@ -10,7 +10,7 @@ import org.json.JSONObject
 /**
  * This model class holds the data of an individual Display Unit.
  */
-open class CleverTapDisplayUnit private constructor(
+public open class CleverTapDisplayUnit private constructor(
     private var jsonObjectValue: JSONObject?,
     /** Display unit identifier */
     private var unitIDValue: String?,
@@ -62,10 +62,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return String
      */
-    open fun getBgColor(): String? = bgColorValue
+    public open fun getBgColor(): String? = bgColorValue
 
     /** Kotlin property syntax, equivalent to [getBgColor]. */
-    val bgColor: String?
+    public val bgColor: String?
         @JvmSynthetic @JvmName("ktGetBgColor") inline get() = getBgColor()
 
     /**
@@ -73,10 +73,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return ArrayList<CleverTapDisplayUnitContent>
      */
-    open fun getContents(): ArrayList<CleverTapDisplayUnitContent>? = contentsValue
+    public open fun getContents(): ArrayList<CleverTapDisplayUnitContent>? = contentsValue
 
     /** Kotlin property syntax, equivalent to [getContents]. */
-    val contents: ArrayList<CleverTapDisplayUnitContent>?
+    public val contents: ArrayList<CleverTapDisplayUnitContent>?
         @JvmSynthetic @JvmName("ktGetContents") inline get() = getContents()
 
     /**
@@ -84,10 +84,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return HashMap<String, String>
      */
-    open fun getCustomExtras(): HashMap<String, String>? = customExtrasValue
+    public open fun getCustomExtras(): HashMap<String, String>? = customExtrasValue
 
     /** Kotlin property syntax, equivalent to [getCustomExtras]. */
-    val customExtras: HashMap<String, String>?
+    public val customExtras: HashMap<String, String>?
         @JvmSynthetic @JvmName("ktGetCustomExtras") inline get() = getCustomExtras()
 
     /**
@@ -103,7 +103,7 @@ open class CleverTapDisplayUnit private constructor(
      * @param contentIndex zero-based index into [getContents]
      * @return item-level attribution; never null
      */
-    open fun getMetaDataForContent(contentIndex: Int): HashMap<String, Any?> {
+    public open fun getMetaDataForContent(contentIndex: Int): HashMap<String, Any?> {
         val contents = contentsValue
         if (contents == null || contentIndex !in contents.indices) {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Content index $contentIndex out of range for unit $unitIDValue")
@@ -113,10 +113,10 @@ open class CleverTapDisplayUnit private constructor(
         return contents[contentIndex].getMetaData()?.let { HashMap(it) } ?: HashMap()
     }
 
-    open fun getError(): String? = errorValue
+    public open fun getError(): String? = errorValue
 
     /** Kotlin property syntax, equivalent to [getError]. */
-    val error: String?
+    public val error: String?
         @JvmSynthetic @JvmName("ktGetError") inline get() = getError()
 
     /**
@@ -124,10 +124,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return JSONObject
      */
-    open fun getJsonObject(): JSONObject? = jsonObjectValue
+    public open fun getJsonObject(): JSONObject? = jsonObjectValue
 
     /** Kotlin property syntax, equivalent to [getJsonObject]. */
-    val jsonObject: JSONObject?
+    public val jsonObject: JSONObject?
         @JvmSynthetic @JvmName("ktGetJsonObject") inline get() = getJsonObject()
 
     /**
@@ -135,10 +135,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return CTDisplayUnitType
      */
-    open fun getType(): CTDisplayUnitType? = typeValue
+    public open fun getType(): CTDisplayUnitType? = typeValue
 
     /** Kotlin property syntax, equivalent to [getType]. */
-    val type: CTDisplayUnitType?
+    public val type: CTDisplayUnitType?
         @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
     /**
@@ -146,10 +146,10 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return String
      */
-    open fun getUnitID(): String? = unitIDValue
+    public open fun getUnitID(): String? = unitIDValue
 
     /** Kotlin property syntax, equivalent to [getUnitID]. */
-    val unitID: String?
+    public val unitID: String?
         @JvmSynthetic @JvmName("ktGetUnitID") inline get() = getUnitID()
 
     /**
@@ -157,7 +157,7 @@ open class CleverTapDisplayUnit private constructor(
      *
      * @return JSONObject
      */
-    open fun getWZRKFields(): JSONObject? {
+    public open fun getWZRKFields(): JSONObject? {
         val jsonObject = jsonObjectValue ?: return null
         return try {
             val fields = JSONObject()
@@ -174,7 +174,7 @@ open class CleverTapDisplayUnit private constructor(
     }
 
     /** Kotlin property syntax, equivalent to [getWZRKFields]. */
-    val wzrkFields: JSONObject?
+    public val wzrkFields: JSONObject?
         @JvmSynthetic @JvmName("ktGetWZRKFields") inline get() = getWZRKFields()
 
     override fun toString(): String = try {
@@ -245,10 +245,10 @@ open class CleverTapDisplayUnit private constructor(
         }
     }
 
-    companion object {
+    public companion object {
 
         @JvmField
-        val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> = object : Parcelable.Creator<CleverTapDisplayUnit> {
+        public val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> = object : Parcelable.Creator<CleverTapDisplayUnit> {
             override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnit = CleverTapDisplayUnit(parcel)
 
             override fun newArray(size: Int): Array<CleverTapDisplayUnit?> = arrayOfNulls(size)
@@ -261,7 +261,7 @@ open class CleverTapDisplayUnit private constructor(
          * @return - CleverTapDisplayUnit - always returns non-null instance
          */
         @JvmStatic
-        fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit {
+        public fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit {
             if (jsonObject == null) {
                 // what the Java original reported for its NPE (null message)
                 return errorDisplayUnit(null)

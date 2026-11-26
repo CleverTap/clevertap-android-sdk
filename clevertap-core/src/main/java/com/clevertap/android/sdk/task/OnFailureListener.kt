@@ -7,7 +7,7 @@ import androidx.annotation.RestrictTo
  * @param TResult
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun interface OnFailureListener<TResult> {
+public fun interface OnFailureListener<TResult> {
 
-    fun onFailure(result: TResult)
+    public fun onFailure(result: TResult)
 }

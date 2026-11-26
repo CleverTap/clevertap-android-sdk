@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.propertykey
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -19,7 +20,8 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
-class EventPropertyKeyValidationPipeline(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventPropertyKeyValidationPipeline(
     private val errorReporter: ValidationResultStack,
     private val logger: ILogger
 ) : ValidationPipeline<String?, PropertyKeyValidationResult> {

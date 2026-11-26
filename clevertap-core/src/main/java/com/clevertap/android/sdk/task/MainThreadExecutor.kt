@@ -11,9 +11,9 @@ import java.util.concurrent.Executor
  * Public + RestrictTo (not internal): exposed through the public `CTExecutors.MAIN_EXECUTOR` field.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class MainThreadExecutor : Executor {
+public open class MainThreadExecutor : Executor {
 
-    var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
+    public var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
 
     override fun execute(command: Runnable) {
         mainThreadHandler.post(command)

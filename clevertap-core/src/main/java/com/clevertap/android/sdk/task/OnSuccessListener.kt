@@ -7,6 +7,6 @@ import androidx.annotation.RestrictTo
  * @param TResult
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun interface OnSuccessListener<TResult> {
-    fun onSuccess(result: TResult)
+public fun interface OnSuccessListener<TResult> {
+    public fun onSuccess(result: TResult)
 }

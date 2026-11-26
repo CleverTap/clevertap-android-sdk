@@ -7,8 +7,8 @@ import androidx.core.app.NotificationCompat
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun interface AudibleNotification {
-    fun setSound(
+public fun interface AudibleNotification {
+    public fun setSound(
         context: Context,
         extras: Bundle,
         nb: NotificationCompat.Builder,

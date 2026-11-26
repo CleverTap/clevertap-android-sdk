@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.validation
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 
 /**
  * Builder for configuring validation rules.
  * Use this to specify which validations should be performed and their limits.
  */
-class ValidationConfig private constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class ValidationConfig private constructor(
     val maxKeyLength: Int?,
     val maxValueLength: Int?,
     val maxDepth: Int?,

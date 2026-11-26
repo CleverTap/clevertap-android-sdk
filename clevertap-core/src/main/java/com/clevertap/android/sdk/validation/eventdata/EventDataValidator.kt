@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationOutcome
@@ -16,7 +17,8 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Checks structural limits and reports all modifications/removals.
  * Note: Event data validation never drops events, only warns.
  */
-class EventDataValidator : Validator<EventDataNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventDataValidator : Validator<EventDataNormalizationResult> {
 
     override fun validate(input: EventDataNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()

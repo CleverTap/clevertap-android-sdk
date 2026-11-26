@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.db.dao
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 
-interface PushNotificationDAO {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface PushNotificationDAO {
     @WorkerThread
     fun storePushNotificationId(id: String, ttlInSeconds: Long)
     

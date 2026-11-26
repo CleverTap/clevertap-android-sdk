@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.network.api
 
+import androidx.annotation.RestrictTo
 import org.json.JSONObject
 
-data class EncryptedSendQueueRequestBody(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EncryptedSendQueueRequestBody(
     val encryptedPayload: String,
     val key: String,
     val iv: String

@@ -11,12 +11,12 @@ import androidx.annotation.RestrictTo
  * @param T Type of notification message
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-fun interface IPushAmpHandler<T : Any> {
+public fun interface IPushAmpHandler<T : Any> {
 
     /**
      * Processes notification message for Pull Notifications
      * @param context application context
      * @param message notification message received from cloud messaging provider like firebase.
      */
-    fun processPushAmp(context: Context?, message: T)
+    public fun processPushAmp(context: Context?, message: T)
 }

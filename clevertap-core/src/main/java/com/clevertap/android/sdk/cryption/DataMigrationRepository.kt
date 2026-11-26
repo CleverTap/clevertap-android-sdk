@@ -13,7 +13,8 @@ import java.io.File
 import androidx.core.content.edit
 import androidx.annotation.RestrictTo
 
-interface IDataMigrationRepository {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
     fun cachedGuidString(): String?
     fun saveCachedGuidJson(json: String?)

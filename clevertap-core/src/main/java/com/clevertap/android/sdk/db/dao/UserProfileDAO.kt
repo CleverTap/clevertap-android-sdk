@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.db.dao
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import org.json.JSONObject
 
-interface UserProfileDAO {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface UserProfileDAO {
     @WorkerThread
     fun storeUserProfile(accountId: String, deviceId: String, profile: JSONObject): Long
     

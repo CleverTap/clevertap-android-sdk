@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.validation
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-open class ValidationResultStack {
+internal open class ValidationResultStack {
 
     /**
      * The pending results, oldest first. Returned as the live list outside the lock (as before).

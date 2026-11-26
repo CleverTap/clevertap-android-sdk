@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @Suppress("DEPRECATION")
 @Deprecated("This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-open class CTProductConfigController @Deprecated(
+public open class CTProductConfigController @Deprecated(
     "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
 ) internal constructor(
     private val context: Context,
@@ -71,7 +71,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun activate() {
+    public open fun activate() {
         if (settingsValue.getGuid().isNullOrEmpty()) {
             return
         }
@@ -109,7 +109,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun fetch() {
+    public open fun fetch() {
         fetch(settingsValue.nextFetchIntervalInSeconds)
     }
 
@@ -121,7 +121,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun fetch(minimumFetchIntervalInSeconds: Long) {
+    public open fun fetch(minimumFetchIntervalInSeconds: Long) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
             fetchProductConfig()
         }
@@ -133,7 +133,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun fetchAndActivate() {
+    public open fun fetchAndActivate() {
         fetch()
         isFetchAndActivatingFlag.set(true)
     }
@@ -145,7 +145,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun fetchProductConfig() {
+    public open fun fetchProductConfig() {
         val event = JSONObject()
         try {
             val notif = JSONObject().put("t", Constants.FETCH_TYPE_PC)
@@ -169,7 +169,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getBoolean(Key: String?): Boolean? =
+    public open fun getBoolean(Key: String?): Boolean? =
         activatedValue(Key)?.toBoolean() ?: DEFAULT_VALUE_FOR_BOOLEAN
 
     /**
@@ -182,7 +182,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getDouble(Key: String?): Double? =
+    public open fun getDouble(Key: String?): Double? =
         parseActivatedValue(Key, "Double") { it.toDouble() } ?: DEFAULT_VALUE_FOR_DOUBLE
 
     /**
@@ -193,11 +193,11 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getLastFetchTimeStampInMillis(): Long = settingsValue.lastFetchTimeStampInMillis
+    public open fun getLastFetchTimeStampInMillis(): Long = settingsValue.lastFetchTimeStampInMillis
 
     /** Kotlin property syntax, equivalent to [getLastFetchTimeStampInMillis]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    val lastFetchTimeStampInMillis: Long
+    public val lastFetchTimeStampInMillis: Long
         @JvmSynthetic @JvmName("ktGetLastFetchTimeStampInMillis") inline get() = getLastFetchTimeStampInMillis()
 
     /**
@@ -210,7 +210,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getLong(Key: String?): Long? =
+    public open fun getLong(Key: String?): Long? =
         parseActivatedValue(Key, "Long") { it.toLong() } ?: DEFAULT_VALUE_FOR_LONG
 
     // -----------------------------------------------------------------------//
@@ -227,17 +227,17 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getString(Key: String?): String = activatedValue(Key) ?: DEFAULT_VALUE_FOR_STRING
+    public open fun getString(Key: String?): String = activatedValue(Key) ?: DEFAULT_VALUE_FOR_STRING
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun isInitialized(): Boolean = initializedFlag.get()
+    public open fun isInitialized(): Boolean = initializedFlag.get()
 
     /** Kotlin property syntax, equivalent to [isInitialized]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    val isInitialized: Boolean
+    public val isInitialized: Boolean
         @JvmSynthetic @JvmName("ktIsInitialized") inline get() = isInitialized()
 
     /**
@@ -247,7 +247,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun onFetchFailed() {
+    public open fun onFetchFailed() {
         isFetchAndActivatingFlag.compareAndSet(true, false)
         config.logger.verbose(logTag, "Fetch Failed")
     }
@@ -259,7 +259,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun onFetchSuccess(kvResponse: JSONObject?) {
+    public open fun onFetchSuccess(kvResponse: JSONObject?) {
         if (settingsValue.getGuid().isNullOrEmpty()) {
             return
         }
@@ -302,7 +302,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun reset() {
+    public open fun reset() {
         defaultConfigs.clear()
         activatedConfigs.clear()
         settingsValue.initDefaults()
@@ -313,7 +313,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun resetSettings() {
+    public open fun resetSettings() {
         settingsValue.reset(fileUtils)
     }
 
@@ -324,7 +324,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setArpValue(arp: JSONObject?) {
+    public open fun setArpValue(arp: JSONObject?) {
         settingsValue.setARPValue(arp)
     }
 
@@ -336,7 +336,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setDefaults(resourceID: Int) {
+    public open fun setDefaults(resourceID: Int) {
         setDefaultsWithXmlParser(resourceID, DefaultXmlParser())
     }
 
@@ -348,7 +348,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setDefaults(map: HashMap<String, Any>?) {
+    public open fun setDefaults(map: HashMap<String, Any>?) {
         val task = CTExecutorFactory.executors(config).ioTask<Void?>()
         task.addOnSuccessListener { initAsync() }
             .execute("ProductConfig#setDefaultsUsingHashMap", object : Callable<Void?> {
@@ -378,7 +378,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setGuidAndInit(cleverTapID: String?) {
+    public open fun setGuidAndInit(cleverTapID: String?) {
         if (isInitialized() || cleverTapID.isNullOrEmpty()) {
             return
         }
@@ -394,7 +394,7 @@ open class CTProductConfigController @Deprecated(
      */
     @Suppress("MemberVisibilityCanBePrivate")
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds: Long) {
+    public open fun setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds: Long) {
         settingsValue.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds)
     }
 
@@ -435,11 +435,11 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getSettings(): ProductConfigSettings = settingsValue
+    public open fun getSettings(): ProductConfigSettings = settingsValue
 
     /** Kotlin property syntax, equivalent to [getSettings]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    val settings: ProductConfigSettings
+    public val settings: ProductConfigSettings
         @JvmSynthetic @JvmName("ktGetSettings") inline get() = getSettings()
 
     internal fun initAsync() {

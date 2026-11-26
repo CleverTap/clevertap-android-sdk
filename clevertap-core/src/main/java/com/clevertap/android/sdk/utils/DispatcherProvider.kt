@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import kotlinx.coroutines.CoroutineDispatcher
 
-interface DispatcherProvider {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface DispatcherProvider {
 
     fun io() : CoroutineDispatcher
 

@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
  */
 @Suppress("DEPRECATION")
 @Deprecated("This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-open class ProductConfigSettings @Deprecated(
+public open class ProductConfigSettings @Deprecated(
     "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
 ) internal constructor(
     private var guidValue: String?,
@@ -68,7 +68,7 @@ open class ProductConfigSettings @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getGuid(): String? = guidValue
+    public open fun getGuid(): String? = guidValue
 
     internal fun setGuid(guid: String?) {
         guidValue = guid
@@ -76,7 +76,7 @@ open class ProductConfigSettings @Deprecated(
 
     /** Kotlin property syntax, equivalent to [getGuid]; the setter stays SDK-internal as in Java. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    var guid: String?
+    public var guid: String?
         @JvmSynthetic @JvmName("ktGetGuid") inline get() = getGuid()
         @JvmSynthetic @JvmName("ktSetGuid") internal inline set(value) = setGuid(value)
 

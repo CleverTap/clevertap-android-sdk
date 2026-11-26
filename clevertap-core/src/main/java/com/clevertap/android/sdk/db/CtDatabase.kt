@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.db
 
+import androidx.annotation.RestrictTo
 import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -22,7 +23,8 @@ import org.json.JSONObject
 import java.io.File
 import kotlin.math.max
 
-class DatabaseHelper internal constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class DatabaseHelper internal constructor(
     val context: Context,
     val accountId: String,
     dbName: String?,
@@ -217,7 +219,7 @@ class DatabaseHelper internal constructor(
     }
 }
 
- enum class Table(val tableName: String) {
+ public enum class Table(public val tableName: String) {
     EVENTS("events"),
     PROFILE_EVENTS("profileEvents"),
     USER_PROFILES("userProfiles"),
@@ -233,7 +235,8 @@ class DatabaseHelper internal constructor(
     PUSH_PREVIEWS("pushPreviews")
 }
 
-object Column {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object Column {
 
     const val ID = "_id"
     const val DATA = "data"

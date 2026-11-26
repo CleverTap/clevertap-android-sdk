@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * Public + RestrictTo (not internal): exposed through the public `CTExecutors.IO_EXECUTOR` field.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class IOExecutor internal constructor(
+public class IOExecutor internal constructor(
     internal val executorService: ExecutorService = threadPool(
         corePoolSize = Runtime.getRuntime().availableProcessors() * 2,
         maximumPoolSize = Runtime.getRuntime().availableProcessors() * 2

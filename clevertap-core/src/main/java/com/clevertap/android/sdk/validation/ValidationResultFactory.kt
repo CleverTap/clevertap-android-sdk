@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
  * Factory for creating validation results with proper error codes and messages.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-object ValidationResultFactory {
+internal object ValidationResultFactory {
 
     /**
      * Creates a ValidationResult for the given error type.
@@ -23,7 +23,8 @@ object ValidationResultFactory {
 /**
  * Enum representing all validation errors with their codes and message templates.
  */
-enum class ValidationError(val code: Int, private val messageTemplate: String) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class ValidationError(val code: Int, private val messageTemplate: String) {
     
     // Event name validation errors (510)
     EVENT_NAME_NULL(510, "Event Name is null/empty"),

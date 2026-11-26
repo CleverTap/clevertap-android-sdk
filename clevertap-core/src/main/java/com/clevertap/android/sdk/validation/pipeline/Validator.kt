@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationOutcome
 
@@ -9,7 +10,8 @@ import com.clevertap.android.sdk.validation.ValidationOutcome
  *
  * @param I Input type to validate (typically a normalization result)
  */
-interface Validator<I> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface Validator<I> {
     /**
      * Validates the input data.
      *

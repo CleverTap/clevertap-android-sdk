@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.Constants
 
@@ -14,7 +15,8 @@ import com.clevertap.android.sdk.Constants
  * @param fallback The fallback color string if this is invalid.
  * @return A valid color string (guaranteed non-null).
  */
-fun String?.toValidColorOrFallback(fallback: String): String {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun String?.toValidColorOrFallback(fallback: String): String {
 
     // Validate fallback using toColorInt()
     val safeFallback = fallback

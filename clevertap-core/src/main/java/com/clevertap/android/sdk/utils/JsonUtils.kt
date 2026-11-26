@@ -1,17 +1,20 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import android.os.Parcel
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-fun JSONObject.putObject(name: String, init: JSONObject.() -> Unit) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.putObject(name: String, init: JSONObject.() -> Unit) {
     val obj = JSONObject()
     init(obj)
     put(name, obj)
 }
 
-fun JSONObject.getStringOrNull(name: String): String? {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject.getStringOrNull(name: String): String? {
     return if (has(name)) {
         getString(name)
     } else {
@@ -19,7 +22,8 @@ fun JSONObject.getStringOrNull(name: String): String? {
     }
 }
 
-fun JSONArray.prepend(value: Any) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONArray.prepend(value: Any) {
     var index = 0
     var shiftItem: Any = value
     while (index < length()) {
@@ -31,7 +35,8 @@ fun JSONArray.prepend(value: Any) {
     put(shiftItem)
 }
 
-fun Parcel.readJson(): JSONObject? {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Parcel.readJson(): JSONObject? {
     return try {
         readString()?.let { JSONObject(it) }
     } catch (je: JSONException) {
@@ -39,11 +44,13 @@ fun Parcel.readJson(): JSONObject? {
     }
 }
 
-fun Parcel.writeJson(json: JSONObject?) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Parcel.writeJson(json: JSONObject?) {
     writeString(json?.toString())
 }
 
-fun JSONArray.filterObjects(predicate: (element: JSONObject) -> Boolean): JSONArray {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONArray.filterObjects(predicate: (element: JSONObject) -> Boolean): JSONArray {
     val filteredArray = JSONArray()
     for (i in 0 until length()) {
         val element = optJSONObject(i)

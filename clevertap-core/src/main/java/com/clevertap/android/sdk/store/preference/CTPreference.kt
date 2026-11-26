@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
  * @param prefName The name of the shared preferences file.
  */
 @RestrictTo(LIBRARY_GROUP)
-class CTPreference(context: Context, private var prefName: String? = null) : ICTPreference {
+internal class CTPreference(context: Context, private var prefName: String? = null) : ICTPreference {
 
     private val contextRef = WeakReference(context)
 
