@@ -6,21 +6,13 @@ import android.content.res.XmlResourceParser
 import android.util.Log
 import com.clevertap.android.sdk.Constants.LOG_TAG_PRODUCT_CONFIG
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.io.IOException
 
 internal open class DefaultXmlParser {
 
-    open fun getDefaultsFromXml(context: Context, resourceId: Int): HashMap<String, String> {
-        val hashMap = HashMap<String, String>()
-        getDefaultsFromXml(context.resources, resourceId, hashMap)
-        return hashMap
-    }
+    open fun getDefaultsFromXml(context: Context, resourceId: Int): Map<String, String> =
+        HashMap<String, String>().also { getDefaultsFromXml(context.resources, resourceId, it) }
 
-    open fun getDefaultsFromXml(
-        resources: Resources?, resourceId: Int,
-        hashMap: HashMap<String, String>
-    ) {
+    open fun getDefaultsFromXml(resources: Resources?, resourceId: Int, hashMap: MutableMap<String, String>) {
         if (resources == null) {
             Log.e(
                 "ProductConfig",
@@ -29,18 +21,13 @@ internal open class DefaultXmlParser {
             return
         }
         try {
-            val xmlParser = resources.getXml(resourceId)
-            getDefaultsFromXmlParser(xmlParser, hashMap)
+            getDefaultsFromXmlParser(resources.getXml(resourceId), hashMap)
         } catch (e: Exception) {
             Log.e("ProductConfig", "Encountered an error while parsing the defaults XML file.", e)
         }
     }
 
-    @Throws(XmlPullParserException::class, IOException::class)
-    open fun getDefaultsFromXmlParser(
-        xmlParser: XmlResourceParser,
-        defaultsMap: HashMap<String, String>
-    ) {
+    open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap<String, String>) {
         var curTag: String? = null
         var key: String? = null
         var value: String? = null
@@ -51,15 +38,9 @@ internal open class DefaultXmlParser {
                 curTag = xmlParser.name
             } else if (eventType != XmlPullParser.END_TAG) {
                 if (eventType == XmlPullParser.TEXT && curTag != null) {
-                    var tagType: Byte = -1
                     when (curTag) {
-                        XML_TAG_KEY -> tagType = XML_TAG_TYPE_KEY.toByte()
-                        XML_TAG_VALUE -> tagType = XML_TAG_TYPE_VALUE.toByte()
-                    }
-
-                    when (tagType.toInt()) {
-                        XML_TAG_TYPE_KEY -> key = xmlParser.text
-                        XML_TAG_TYPE_VALUE -> value = xmlParser.text
+                        XML_TAG_KEY -> key = xmlParser.text
+                        XML_TAG_VALUE -> value = xmlParser.text
                         else -> Log.w(
                             LOG_TAG_PRODUCT_CONFIG,
                             "Encountered an unexpected tag while parsing the defaults XML."
@@ -93,9 +74,5 @@ internal open class DefaultXmlParser {
         private const val XML_TAG_KEY = "key"
 
         private const val XML_TAG_VALUE = "value"
-
-        private const val XML_TAG_TYPE_KEY = 0
-
-        private const val XML_TAG_TYPE_VALUE = 1
     }
 }

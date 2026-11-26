@@ -15,9 +15,9 @@ import java.util.concurrent.TimeoutException
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 open class Task<TResult> internal constructor(
-    @JvmField protected val config: CleverTapInstanceConfig?,
-    @JvmField protected val executor: Executor,
-    @JvmField protected val defaultCallbackExecutor: Executor,
+    protected val config: CleverTapInstanceConfig?,
+    protected val executor: Executor,
+    protected val defaultCallbackExecutor: Executor,
     private val taskName: String?
 ) {
 
@@ -25,12 +25,10 @@ open class Task<TResult> internal constructor(
 
     private val failureExecutables: MutableList<FailureExecutable<Exception>> = ArrayList()
 
-    @JvmField
     protected var result: TResult? = null
 
     private val successExecutables: MutableList<SuccessExecutable<TResult>> = ArrayList()
 
-    @JvmField
     protected var taskState: STATE = STATE.READY_TO_RUN
 
     /**

@@ -22,7 +22,7 @@ internal object UriHelper {
                 parseUrl(url)
             }
             for (key in sanitizer.parameterSet) {
-                val value = getValueForKey(key, sanitizer, false) ?: continue
+                val value = valueForKey(key, sanitizer, false) ?: continue
                 // Don't encode wzrk_c2a - as the URL must be preserved
                 if (encodeValues || key == "wzrk_c2a") {
                     // Already encoded
@@ -47,11 +47,11 @@ internal object UriHelper {
             }
 
             // Don't care for null values - they won't be added anyway
-            referrer.put("us", getUtmOrWzrkValue("source", sanitizer))
-            referrer.put("um", getUtmOrWzrkValue("medium", sanitizer))
-            referrer.put("uc", getUtmOrWzrkValue("campaign", sanitizer))
+            referrer.put("us", utmOrWzrkValue("source", sanitizer))
+            referrer.put("um", utmOrWzrkValue("medium", sanitizer))
+            referrer.put("uc", utmOrWzrkValue("campaign", sanitizer))
 
-            val wm = getWzrkValueForKey("medium", sanitizer)
+            val wm = wzrkValue("medium", sanitizer)
             if (wm != null && wm.matches("^email$|^social$|^search$".toRegex())) {
                 referrer.put("wm", wm)
             }
@@ -64,16 +64,16 @@ internal object UriHelper {
     }
 
     // Give preference to utm_*, else, try to look for wzrk_*
-    private fun getUtmOrWzrkValue(utmKey: String, sanitizer: UrlQuerySanitizer): String? =
-        getUtmValueForKey(utmKey, sanitizer) ?: getWzrkValueForKey(utmKey, sanitizer)
+    private fun utmOrWzrkValue(utmKey: String, sanitizer: UrlQuerySanitizer): String? =
+        utmValue(utmKey, sanitizer) ?: wzrkValue(utmKey, sanitizer)
 
-    private fun getUtmValueForKey(key: String, sanitizer: UrlQuerySanitizer): String? =
-        getValueForKey("utm_$key", sanitizer, true)
+    private fun utmValue(key: String, sanitizer: UrlQuerySanitizer): String? =
+        valueForKey("utm_$key", sanitizer, true)
 
-    private fun getWzrkValueForKey(key: String, sanitizer: UrlQuerySanitizer): String? =
-        getValueForKey("wzrk_$key", sanitizer, true)
+    private fun wzrkValue(key: String, sanitizer: UrlQuerySanitizer): String? =
+        valueForKey("wzrk_$key", sanitizer, true)
 
-    private fun getValueForKey(key: String, sanitizer: UrlQuerySanitizer, truncate: Boolean): String? = try {
+    private fun valueForKey(key: String, sanitizer: UrlQuerySanitizer, truncate: Boolean): String? = try {
         val value = sanitizer.getValue(key)
         if (value != null && truncate) value.take(Constants.MAX_KEY_LENGTH) else value
     } catch (t: Throwable) {
