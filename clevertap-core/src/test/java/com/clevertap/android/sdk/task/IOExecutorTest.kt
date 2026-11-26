@@ -23,8 +23,7 @@ class IOExecutorTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         mExecutorService = mockk(relaxed = true)
-        executor = IOExecutor()
-        executor.executorService = mExecutorService
+        executor = IOExecutor(mExecutorService)
     }
 
     @Test

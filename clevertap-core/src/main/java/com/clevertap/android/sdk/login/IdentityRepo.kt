@@ -10,8 +10,8 @@ internal interface IdentityRepo {
     /**
      * checks if a given key is an identity or not
      *
-     * @param Key - String value of key
+     * @param key - String value of key
      * @return - true , if the given key is an identity key else false.
      */
-    fun hasIdentity(Key: String): Boolean
+    fun hasIdentity(key: String): Boolean
 }

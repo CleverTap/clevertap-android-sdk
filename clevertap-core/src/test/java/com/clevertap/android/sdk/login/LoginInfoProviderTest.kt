@@ -59,7 +59,7 @@ class LoginInfoProviderTest : BaseTestCase() {
 
         // Setup for NONE level
         initWithEncryptionLevel(level = EncryptionLevel.NONE, doSpy = true)
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         // Perform and Verify for NONE encryption level
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -80,7 +80,7 @@ class LoginInfoProviderTest : BaseTestCase() {
 
         // Setup for MEDIUM level
         initWithEncryptionLevel(level = EncryptionLevel.MEDIUM, doSpy = true)
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         // Perform and Verify for MEDIUM encryption level
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -101,7 +101,7 @@ class LoginInfoProviderTest : BaseTestCase() {
 
         // Setup for FULL_DATA level
         initWithEncryptionLevel(level = EncryptionLevel.FULL_DATA, doSpy = true)
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         // Perform and Verify for FULL_DATA encryption level
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -119,7 +119,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         // Perform
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -136,7 +136,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
@@ -151,7 +151,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = ""
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
@@ -167,7 +167,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
         every { cryptHandler.encryptSafe(any()) } returns "dummy_encrypted"
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
@@ -187,7 +187,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         }
 
         every { cryptHandler.encryptSafe(any()) } returns null
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
@@ -207,7 +207,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         }
 
         every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
 
@@ -223,7 +223,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val initialGuids = JSONObject().apply { put(cryptedKey, guid) }
 
         every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, "not_cached@gmail.com")
 
@@ -240,7 +240,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         }
         val resultGuids = JSONObject().apply { put("Identity_00002", "__1234567") }
 
-        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+        every { loginInfoProvider.decryptedCachedGUIDs } returns initialGuids
 
         loginInfoProvider.removeValueFromCachedGUIDForIdentifier(guid, key)
 
@@ -267,7 +267,7 @@ class LoginInfoProviderTest : BaseTestCase() {
 
         every { loginInfoProvider.cachedIdentityKeysForAccount } returns "dummy"
 
-        assertFalse{ loginInfoProvider.isLegacyProfileLoggedIn() }
+        assertFalse{ loginInfoProvider.isLegacyProfileLoggedIn }
     }
 
     @Test
@@ -276,27 +276,27 @@ class LoginInfoProviderTest : BaseTestCase() {
 
         every { loginInfoProvider.cachedIdentityKeysForAccount } returns ""
 
-        assertTrue{ loginInfoProvider.isLegacyProfileLoggedIn() }
+        assertTrue{ loginInfoProvider.isLegacyProfileLoggedIn }
     }
 
     @Test
     fun `isLegacyProfileLoggedIn returns false when no guids in the prefs`() {
         loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
 
-        assertFalse { loginInfoProvider.isLegacyProfileLoggedIn() }
+        assertFalse { loginInfoProvider.isLegacyProfileLoggedIn }
     }
 
     @Test
     fun `isAnonymousDevice returns true when no guids in the prefs`() {
         loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
 
-        assertTrue { loginInfoProvider.isAnonymousDevice() }
+        assertTrue { loginInfoProvider.isAnonymousDevice }
     }
 
     @Test
     fun `isAnonymousDevice returns false when guids in the prefs`() {
         loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
 
-        assertFalse{ loginInfoProvider.isAnonymousDevice() }
+        assertFalse{ loginInfoProvider.isAnonymousDevice }
     }
 }

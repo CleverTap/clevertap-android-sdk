@@ -59,7 +59,6 @@ internal class GifHeader {
     // Full image width.
     var width = 0
 
-    fun getNumFrames(): Int {
-        return frameCount
-    }
+    val numFrames: Int
+        get() = frameCount
 }

@@ -14,39 +14,32 @@ internal open class FetchVariablesResponse(
     private val callbackMgr: BaseCallbackManager
 ) : CleverTapResponseDecorator() {
 
-    private fun logD(m: String) {
-        Logger.d("variables", m)
-    }
+    private fun logD(m: String) = Logger.d("variables", m)
 
-    private fun logI(m: String) {
-        Logger.d("variables", m)
-    }
+    // logs at debug level, as it always has
+    private fun logI(m: String) = Logger.d("variables", m)
 
-    private fun logI(m: String, t: Throwable) {
-        Logger.i("variables", m, t)
-    }
+    private fun logI(m: String, t: Throwable) = Logger.i("variables", m, t)
 
-    override fun runsDuringUserSwitch(): Boolean {
-        return false // variables are re-fetched for the new user after the switch
-    }
+    // variables are re-fetched for the new user after the switch
+    override fun runsDuringUserSwitch(): Boolean = false
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         logI("Processing Variable response...")
-        logD("processResponse() called with: response = [$response], stringBody = [$stringBody], context = [$context]")
+        logD("processResponse() called with: response = [$jsonBody], stringBody = [$stringBody], context = [$context]")
 
         if (config.isAnalyticsOnly) {
             logI("CleverTap instance is configured to analytics only, not processing Variable response")
             return
         }
 
-        if (response == null) {
+        if (jsonBody == null) {
             logI("Can't parse Variable Response, JSON response object is null")
             return
         }
 
-        extractAbVariantsFromServer(response)
-        extractVarsFromServer(response)
+        extractAbVariantsFromServer(jsonBody)
+        extractVarsFromServer(jsonBody)
     }
 
     private fun extractVarsFromServer(response: JSONObject) {
@@ -62,9 +55,9 @@ internal open class FetchVariablesResponse(
 
             val kvJson = response.getJSONObject(varsKey)
 
-            if (controllerManager.ctVariables != null) {
-                val callback = callbackMgr.fetchVariablesCallback
-                controllerManager.ctVariables!!.handleVariableResponse(kvJson, callback)
+            val ctVariables = controllerManager.ctVariables
+            if (ctVariables != null) {
+                ctVariables.handleVariableResponse(kvJson, callbackMgr.fetchVariablesCallback)
                 callbackMgr.fetchVariablesCallback = null
             } else {
                 logI("Can't parse Variable Response, CTVariables is null")
@@ -86,7 +79,6 @@ internal open class FetchVariablesResponse(
             logI("Processing Variants response")
 
             val abVariantsJson = response.optJSONArray(variantsKey)
-
             if (abVariantsJson == null) {
                 logI("Not handling AB variants cache as response is null")
                 return

@@ -18,21 +18,31 @@ import com.clevertap.android.sdk.utils.FileUtils
 internal object CTProductConfigFactory {
 
     /**
+     * The nullable parameters mirror the (still nullable) SDK call sites; every caller passes real
+     * instances, which the controller requires.
+     *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    @JvmStatic
     fun getInstance(
-        context: Context?, deviceInfo: DeviceInfo,
-        config: CleverTapInstanceConfig, baseAnalyticsManager: BaseAnalyticsManager?, coreMetaData: CoreMetaData?,
+        context: Context?,
+        deviceInfo: DeviceInfo,
+        config: CleverTapInstanceConfig,
+        baseAnalyticsManager: BaseAnalyticsManager?,
+        coreMetaData: CoreMetaData?,
         callbackManager: BaseCallbackManager?
     ): CTProductConfigController {
-        val guid = deviceInfo.deviceID
-        val fileUtils = FileUtils(context, config)
-        val configSettings = ProductConfigSettings(guid, config, fileUtils)
+        val requiredContext = requireNotNull(context) { "context is required" }
+        val fileUtils = FileUtils(requiredContext, config)
+        val configSettings = ProductConfigSettings(deviceInfo.deviceID, config, fileUtils)
         return CTProductConfigController(
-            context, config, baseAnalyticsManager, coreMetaData, callbackManager,
-            configSettings, fileUtils
+            requiredContext,
+            config,
+            requireNotNull(baseAnalyticsManager) { "analyticsManager is required" },
+            requireNotNull(coreMetaData) { "coreMetaData is required" },
+            requireNotNull(callbackManager) { "callbackManager is required" },
+            configSettings,
+            fileUtils
         )
     }
 }

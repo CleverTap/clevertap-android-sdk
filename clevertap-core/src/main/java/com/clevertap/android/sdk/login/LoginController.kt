@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.SessionManager
-import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
@@ -24,21 +23,20 @@ import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import java.util.concurrent.Callable
 
 internal open class LoginController(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo,
     private val validationResultStack: ValidationResultStack,
-    eventQueueManager: BaseEventQueueManager,
+    private val baseEventQueueManager: BaseEventQueueManager,
     private val analyticsManager: AnalyticsManager,
     private val coreMetaData: CoreMetaData,
     private val controllerManager: ControllerManager,
     private val sessionManager: SessionManager,
     private val localDataStore: LocalDataStore,
     private val callbackManager: BaseCallbackManager,
-    dbManager: DBManager,
+    private val dbManager: DBManager,
     private val ctLockManager: CTLockManager,
     private val loginInfoProvider: LoginInfoProvider,
     private val contentFetchManager: ContentFetchManager,
@@ -47,28 +45,22 @@ internal open class LoginController(
 
     private var cachedGUID: String? = null
 
-    private val baseEventQueueManager: BaseEventQueueManager = eventQueueManager
-
-    private val dbManager: BaseDatabaseManager = dbManager
-
     private val pushProviders: PushProviders? = controllerManager.pushProviders
 
-    open fun asyncProfileSwitchUser(
-        profile: Map<String, Any?>?, cacheGuid: String?,
-        cleverTapID: String?
-    ) {
+    open fun asyncProfileSwitchUser(profile: Map<String, Any?>?, cacheGuid: String?, cleverTapID: String?) {
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.execute("resetProfile", Callable<Void?> {
+        task.execute("resetProfile") {
             try {
+                // Logs the cachedGUID field rather than the cacheGuid param, as the Java original did.
+                val cachedGuidLog = if (cacheGuid != null) cachedGUID else "NULL and cleverTapID $cleverTapID"
                 config.logger.verbose(
-                    config.accountId, "asyncProfileSwitchUser:[profile " + profile
-                            + " with Cached GUID " + (if (cacheGuid != null) cachedGUID
-                    else "NULL and cleverTapID $cleverTapID")
+                    config.accountId,
+                    "asyncProfileSwitchUser:[profile $profile with Cached GUID $cachedGuidLog"
                 )
                 //set optOut to false on the current user to unregister the device token
                 coreMetaData.isCurrentUserOptedOut = false
                 // unregister the device token on the current user
-                pushProviders!!.forcePushDeviceToken(false)
+                checkNotNull(pushProviders).forcePushDeviceToken(false)
 
                 // try and flush and then reset the queues
                 baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
@@ -77,10 +69,7 @@ internal open class LoginController(
                 // in-app is never shown to the new user. Must run BEFORE cancelAllResponseJobs():
                 // cancelling the fetch coroutine fires its completion signal, which would otherwise
                 // display that buffered in-app.
-                val inAppController = controllerManager.inAppController
-                if (inAppController != null) {
-                    inAppController.abandonAppLaunchArbitration()
-                }
+                controllerManager.inAppController?.abandonAppLaunchArbitration()
                 contentFetchManager.cancelAllResponseJobs()
                 cancelScheduledInApps()
                 dbManager.clearQueues(context)
@@ -90,13 +79,14 @@ internal open class LoginController(
                 sessionManager.destroySession()
 
                 // either force restore the cached GUID or generate a new one
-                if (cacheGuid != null) {
-                    deviceInfo.forceUpdateDeviceId(cacheGuid)
-                    callbackManager.notifyUserProfileInitialized(cacheGuid)
-                } else if (config.enableCustomCleverTapId) {
-                    deviceInfo.forceUpdateCustomCleverTapID(cleverTapID)
-                } else {
-                    deviceInfo.forceNewDeviceID()
+                when {
+                    cacheGuid != null -> {
+                        deviceInfo.forceUpdateDeviceId(cacheGuid)
+                        callbackManager.notifyUserProfileInitialized(cacheGuid)
+                    }
+
+                    config.enableCustomCleverTapId -> deviceInfo.forceUpdateCustomCleverTapID(cleverTapID)
+                    else -> deviceInfo.forceNewDeviceID()
                 }
 
                 localDataStore.changeUser()
@@ -112,7 +102,7 @@ internal open class LoginController(
                 if (profile != null) {
                     analyticsManager.pushProfile(profile)
                 }
-                pushProviders!!.forcePushDeviceToken(true)
+                checkNotNull(pushProviders).forcePushDeviceToken(true)
                 resetInbox()
                 schedulePostSwitchInboxFetch()
                 resetFeatureFlags()
@@ -122,48 +112,42 @@ internal open class LoginController(
 
                 notifyChangeUserCallback()
 
-                controllerManager.inAppFCManager!!.changeUser(deviceInfo.deviceID)
+                checkNotNull(controllerManager.inAppFCManager).changeUser(deviceInfo.deviceID)
                 // Native Display (ND) frequency caps (SDK-6055): repoint ND counters to the new
                 // user too. Null-guarded — ndFCManager can still be null on the async device-id path.
-                if (controllerManager.ndFCManager != null) {
-                    controllerManager.ndFCManager!!.changeUser()
-                }
+                controllerManager.ndFCManager?.changeUser()
             } catch (t: Throwable) {
                 config.logger.verbose(config.accountId, "Reset Profile error", t)
             }
             null
-        })
+        }
     }
 
     open fun notifyChangeUserCallback() {
         val changeUserCallbackList = callbackManager.changeUserCallbackList
         synchronized(changeUserCallbackList) {
             for (callback in changeUserCallbackList) {
-                callback?.onChangeUser(deviceInfo.deviceID!!, config.accountId)
+                callback?.onChangeUser(checkNotNull(deviceInfo.deviceID), config.accountId)
             }
         }
     }
 
     @Suppress("unused", "MemberVisibilityCanBePrivate")
     open fun onUserLogin(profile: Map<String, Any?>?, cleverTapID: String?) {
-        if (config.enableCustomCleverTapId) {
-            if (cleverTapID == null) {
-                Logger.i(
-                    "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID"
-                )
-            }
-        } else {
-            if (cleverTapID != null) {
-                Logger.i(
-                    "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"
-                )
-            }
+        if (config.enableCustomCleverTapId && cleverTapID == null) {
+            Logger.i(
+                "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID"
+            )
+        } else if (!config.enableCustomCleverTapId && cleverTapID != null) {
+            Logger.i(
+                "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"
+            )
         }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.execute("_onUserLogin", Callable<Void?> {
-            _onUserLogin(profile, cleverTapID)
+        task.execute("_onUserLogin") {
+            onUserLoginInternal(profile, cleverTapID)
             null
-        })
+        }
     }
 
     open fun recordDeviceIDErrors() {
@@ -172,7 +156,7 @@ internal open class LoginController(
         }
     }
 
-    private fun _onUserLogin(profile: Map<String, Any?>?, cleverTapID: String?) {
+    private fun onUserLoginInternal(profile: Map<String, Any?>?, cleverTapID: String?) {
         if (profile == null) {
             return
         }
@@ -184,64 +168,56 @@ internal open class LoginController(
 
             // check for valid identifier keys
             // use the first one we find
-            val iProfileHandler = IdentityRepoFactory
-                .getRepo(context, config, validationResultStack)
-            for (key in profile.keys) {
-                val value = profile[key]
-                val isProfileKey = iProfileHandler.hasIdentity(key)
-                if (isProfileKey) {
-                    try {
-                        val identifier: String
-                        if (value is Number || value is String || value is Boolean) {
-                            identifier = value.toString()
-                        } else {
-                            config.logger.debug(
-                                config.accountId,
-                                "onUserLogin: Aborting the operation. Non-primitive value for the identifier key = $key"
-                            )
-                            return
-                        }
-                        if (identifier.isNotEmpty()) {
-                            haveIdentifier = true
-                            cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier)
-                            if (cachedGUID != null) {
-                                break
-                            }
-                        }
-                    } catch (t: Throwable) {
-                        // no-op
+            val iProfileHandler = IdentityRepoFactory.getRepo(context, config, validationResultStack)
+            for ((key, value) in profile) {
+                if (!iProfileHandler.hasIdentity(key)) {
+                    continue
+                }
+                try {
+                    if (value !is Number && value !is String && value !is Boolean) {
+                        config.logger.debug(
+                            config.accountId,
+                            "onUserLogin: Aborting the operation. Non-primitive value for the identifier key = $key"
+                        )
+                        return
                     }
+                    val identifier = value.toString()
+                    if (identifier.isNotEmpty()) {
+                        haveIdentifier = true
+                        cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier)
+                        if (cachedGUID != null) {
+                            break
+                        }
+                    }
+                } catch (t: Throwable) {
+                    // no-op
                 }
             }
 
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
-            if (!deviceInfo.isErrorDeviceId) {
-                if (!haveIdentifier || loginInfoProvider.isAnonymousDevice()) {
-                    config.logger.debug(
-                        config.accountId,
-                        "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile"
-                    )
-                    analyticsManager.pushProfile(profile)
-                    return
-                }
+            if (!deviceInfo.isErrorDeviceId && (!haveIdentifier || loginInfoProvider.isAnonymousDevice)) {
+                config.logger.debug(
+                    config.accountId,
+                    "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile"
+                )
+                analyticsManager.pushProfile(profile)
+                return
             }
 
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID == currentGUID) {
                 config.logger.debug(
                     config.accountId,
-                    "onUserLogin: " + profile + " maps to current device id " + currentGUID
-                            + " pushing on current profile"
+                    "onUserLogin: $profile maps to current device id $currentGUID pushing on current profile"
                 )
                 analyticsManager.pushProfile(profile)
                 return
             }
 
-            config.logger
-                .verbose(
-                    config.accountId, "onUserLogin: queuing reset profile for " + profile
-                            + " with Cached GUID " + (cachedGUID ?: "NULL")
-                )
+            config.logger.verbose(
+                config.accountId,
+                "onUserLogin: queuing reset profile for $profile with Cached GUID ${cachedGUID ?: "NULL"}"
+            )
 
             asyncProfileSwitchUser(profile, cachedGUID, cleverTapID)
         } catch (t: Throwable) {
@@ -259,7 +235,7 @@ internal open class LoginController(
         } else {
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null"
+                "${Constants.FEATURE_DISPLAY_UNIT}Can't reset Display Units, DisplayUnitcontroller is null"
             )
         }
     }
@@ -272,7 +248,7 @@ internal open class LoginController(
         } else {
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, CTFeatureFlagsController is null"
+                "${Constants.FEATURE_DISPLAY_UNIT}Can't reset Display Units, CTFeatureFlagsController is null"
             )
         }
     }
@@ -301,13 +277,11 @@ internal open class LoginController(
      */
     private fun schedulePostSwitchInboxFetch() {
         CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-            .execute("postSwitchInboxFetch", Callable<Void?> {
-                baseEventQueueManager.flushQueueSync(
-                    context, EventGroup.REGULAR
-                )
+            .execute("postSwitchInboxFetch") {
+                baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
                 inboxV2Bridge.submit(FetchTrigger.SYSTEM, null)
                 null
-            })
+            }
     }
 
     //Session
@@ -316,21 +290,15 @@ internal open class LoginController(
             config.logger.debug(config.accountId, "Product Config is not enabled for this instance")
             return
         }
-        if (controllerManager.ctProductConfigController != null) {
-            controllerManager.ctProductConfigController!!.resetSettings()
-        }
-        val ctProductConfigController = CTProductConfigFactory.getInstance(
-            context, deviceInfo, config, analyticsManager, coreMetaData,
-            callbackManager
+        controllerManager.ctProductConfigController?.resetSettings()
+        controllerManager.ctProductConfigController = CTProductConfigFactory.getInstance(
+            context, deviceInfo, config, analyticsManager, coreMetaData, callbackManager
         )
-        controllerManager.ctProductConfigController = ctProductConfigController
         config.logger.verbose(config.accountId, "Product Config reset")
     }
 
     private fun resetVariables() {
-        if (controllerManager.ctVariables != null) {
-            controllerManager.ctVariables!!.clearUserContent()
-        }
+        controllerManager.ctVariables?.clearUserContent()
     }
 
     /**
@@ -339,9 +307,8 @@ internal open class LoginController(
      */
     @WorkerThread
     private fun cancelScheduledInApps() {
-        val inAppController = controllerManager.inAppController
-        if (inAppController != null) {
-            inAppController.cancelAllScheduledInApps()
+        controllerManager.inAppController?.let {
+            it.cancelAllScheduledInApps()
             config.logger.verbose(config.accountId, "Cancelled all scheduled in-apps for user change")
         }
     }

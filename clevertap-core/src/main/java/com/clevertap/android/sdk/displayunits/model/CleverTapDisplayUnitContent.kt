@@ -6,84 +6,36 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Collections
 
 /**
  * Content class for holding Display Unit Content Data
  */
-open class CleverTapDisplayUnitContent : Parcelable {
-
-    private var actionUrlValue: String?
-
-    private var contentTypeValue: String?
-
-    private var errorValue: String?
-
-    private var iconValue: String?
-
-    private var mediaValue: String?
-
+open class CleverTapDisplayUnitContent private constructor(
+    private val titleValue: String?,
+    private val titleColorValue: String?,
+    private val messageValue: String?,
+    private val messageColorValue: String?,
+    private val iconValue: String?,
+    private val mediaValue: String?,
+    private var contentTypeValue: String?,
+    private val posterUrlValue: String?,
+    private val actionUrlValue: String?,
     /**
      * Per-item `wzrk_*` attribution from BE metadata and SDK-derived
      * Android action/data. `null` if no metadata was provided.
      */
-    private var metaDataValue: HashMap<String, Any?>?
+    private val metaDataValue: HashMap<String, Any?>?,
+    private val errorValue: String?
+) : Parcelable {
 
-    private var messageValue: String?
-
-    private var messageColorValue: String?
-
-    private var posterUrlValue: String?
-
-    private var titleValue: String?
-
-    private var titleColorValue: String?
-
-    private constructor(
-        title: String?, titleColor: String?, message: String?, messageColor: String?,
-        icon: String?, media: String?, contentType: String?, posterUrl: String?,
-        actionUrl: String?, metaData: HashMap<String, Any?>?, error: String?
-    ) {
-        this.titleValue = title
-        this.titleColorValue = titleColor
-        this.messageValue = message
-        this.messageColorValue = messageColor
-        this.iconValue = icon
-        this.mediaValue = media
-        this.contentTypeValue = contentType
-        this.posterUrlValue = posterUrl
-        this.actionUrlValue = actionUrl
-        this.metaDataValue = metaData
-        this.errorValue = error
-    }
-
-    @Suppress("UNCHECKED_CAST", "DEPRECATION")
-    private constructor(`in`: Parcel) {
-        titleValue = `in`.readString()
-        titleColorValue = `in`.readString()
-        messageValue = `in`.readString()
-        messageColorValue = `in`.readString()
-        iconValue = `in`.readString()
-        mediaValue = `in`.readString()
-        contentTypeValue = `in`.readString()
-        posterUrlValue = `in`.readString()
-        actionUrlValue = `in`.readString()
-        metaDataValue = if (`in`.readByte().toInt() == 0x00) null else `in`.readHashMap(null) as HashMap<String, Any?>?
-        errorValue = `in`.readString()
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     /**
      * Getter for the action URL of the body of the Display Unit Content
      *
      * @return String
      */
-    open fun getActionUrl(): String? {
-        return actionUrlValue
-    }
+    open fun getActionUrl(): String? = actionUrlValue
 
     /** Kotlin property syntax, equivalent to [getActionUrl]. */
     val actionUrl: String?
@@ -96,12 +48,10 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getContentType(): String? {
-        return contentTypeValue
-    }
+    open fun getContentType(): String? = contentTypeValue
 
     internal fun setContentType(contentType: String?) {
-        this.contentTypeValue = contentType
+        contentTypeValue = contentType
     }
 
     /** Kotlin property syntax, equivalent to [getContentType]. */
@@ -109,9 +59,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
         @JvmSynthetic @JvmName("ktGetContentType") inline get() = getContentType()
         @JvmSynthetic @JvmName("ktSetContentType") internal inline set(value) = setContentType(value)
 
-    open fun getError(): String? {
-        return errorValue
-    }
+    open fun getError(): String? = errorValue
 
     /** Kotlin property syntax, equivalent to [getError]. */
     val error: String?
@@ -122,9 +70,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getIcon(): String? {
-        return iconValue
-    }
+    open fun getIcon(): String? = iconValue
 
     /** Kotlin property syntax, equivalent to [getIcon]. */
     val icon: String?
@@ -135,9 +81,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getMedia(): String? {
-        return mediaValue
-    }
+    open fun getMedia(): String? = mediaValue
 
     /** Kotlin property syntax, equivalent to [getMedia]. */
     val media: String?
@@ -148,10 +92,8 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return attribution map, or `null`
      */
-    open fun getMetaData(): HashMap<String, Any?>? {
-        // Defensive copy, same reason as CleverTapDisplayUnit#getMetaDataForContent(int).
-        return if (metaDataValue != null) HashMap(metaDataValue!!) else null
-    }
+    // Defensive copy, same reason as CleverTapDisplayUnit#getMetaDataForContent(int).
+    open fun getMetaData(): HashMap<String, Any?>? = metaDataValue?.let { HashMap(it) }
 
     /** Kotlin property syntax, equivalent to [getMetaData]. */
     val metaData: HashMap<String, Any?>?
@@ -162,9 +104,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getMessage(): String? {
-        return messageValue
-    }
+    open fun getMessage(): String? = messageValue
 
     /** Kotlin property syntax, equivalent to [getMessage]. */
     val message: String?
@@ -175,9 +115,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getMessageColor(): String? {
-        return messageColorValue
-    }
+    open fun getMessageColor(): String? = messageColorValue
 
     /** Kotlin property syntax, equivalent to [getMessageColor]. */
     val messageColor: String?
@@ -188,9 +126,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getPosterUrl(): String? {
-        return posterUrlValue
-    }
+    open fun getPosterUrl(): String? = posterUrlValue
 
     /** Kotlin property syntax, equivalent to [getPosterUrl]. */
     val posterUrl: String?
@@ -201,9 +137,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getTitle(): String? {
-        return titleValue
-    }
+    open fun getTitle(): String? = titleValue
 
     /** Kotlin property syntax, equivalent to [getTitle]. */
     val title: String?
@@ -214,9 +148,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      *
      * @return String
      */
-    open fun getTitleColor(): String? {
-        return titleColorValue
-    }
+    open fun getTitleColor(): String? = titleColorValue
 
     /** Kotlin property syntax, equivalent to [getTitleColor]. */
     val titleColor: String?
@@ -228,10 +160,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      * @return boolean - | true, if the media type is audio
      * | false, if the media type is not an audio
      */
-    open fun mediaIsAudio(): Boolean {
-        val contentType = contentTypeValue
-        return contentType != null && this.mediaValue != null && contentType.startsWith("audio")
-    }
+    open fun mediaIsAudio(): Boolean = mediaContentType?.startsWith("audio") == true
 
     /**
      * Method to check whether media in the [CleverTapDisplayUnitContent] object is a GIF.
@@ -239,10 +168,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
      * @return boolean - | true, if the media type is GIF
      * | false, if the media type is not a GIF
      */
-    open fun mediaIsGIF(): Boolean {
-        val contentType = contentTypeValue
-        return contentType != null && this.mediaValue != null && contentType == "image/gif"
-    }
+    open fun mediaIsGIF(): Boolean = mediaContentType == "image/gif"
 
     /**
      * Method to check whether media in the [CleverTapDisplayUnitContent] object is an image.
@@ -251,9 +177,8 @@ open class CleverTapDisplayUnitContent : Parcelable {
      * | false, if the media type is not an image
      */
     open fun mediaIsImage(): Boolean {
-        val contentType = contentTypeValue
-        return contentType != null && this.mediaValue != null && contentType.startsWith("image") &&
-                contentType != "image/gif"
+        val contentType = mediaContentType
+        return contentType != null && contentType.startsWith("image") && contentType != "image/gif"
     }
 
     /**
@@ -262,17 +187,16 @@ open class CleverTapDisplayUnitContent : Parcelable {
      * @return boolean - | true, if the media type is video
      * | false, if the media type is not a video
      */
-    open fun mediaIsVideo(): Boolean {
-        val contentType = contentTypeValue
-        return contentType != null && this.mediaValue != null && contentType.startsWith("video")
-    }
+    open fun mediaIsVideo(): Boolean = mediaContentType?.startsWith("video") == true
 
-    override fun toString(): String {
-        return ("[" + " title:" + titleValue + ", titleColor:" + titleColorValue + " message:" + messageValue +
-                ", messageColor:" + messageColorValue + ", media:" + mediaValue + ", contentType:" +
-                contentTypeValue + ", posterUrl:" + posterUrlValue + ", actionUrl:" + actionUrlValue +
-                ", icon:" + iconValue + ", metaData:" + metaDataValue + ", error:" + errorValue + " ]")
-    }
+    /** The content type, or null when there is no media. */
+    private val mediaContentType: String?
+        get() = if (mediaValue != null) contentTypeValue else null
+
+    override fun toString(): String =
+        "[ title:$titleValue, titleColor:$titleColorValue message:$messageValue, messageColor:$messageColorValue, " +
+            "media:$mediaValue, contentType:$contentTypeValue, posterUrl:$posterUrlValue, actionUrl:$actionUrlValue, " +
+            "icon:$iconValue, metaData:$metaDataValue, error:$errorValue ]"
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(titleValue)
@@ -298,13 +222,27 @@ open class CleverTapDisplayUnitContent : Parcelable {
         @JvmField
         val CREATOR: Parcelable.Creator<CleverTapDisplayUnitContent> =
             object : Parcelable.Creator<CleverTapDisplayUnitContent> {
-                override fun createFromParcel(`in`: Parcel): CleverTapDisplayUnitContent {
-                    return CleverTapDisplayUnitContent(`in`)
-                }
+                // Arguments are evaluated left to right, i.e. in the order writeToParcel wrote them.
+                @Suppress("UNCHECKED_CAST", "DEPRECATION")
+                override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnitContent = CleverTapDisplayUnitContent(
+                    titleValue = parcel.readString(),
+                    titleColorValue = parcel.readString(),
+                    messageValue = parcel.readString(),
+                    messageColorValue = parcel.readString(),
+                    iconValue = parcel.readString(),
+                    mediaValue = parcel.readString(),
+                    contentTypeValue = parcel.readString(),
+                    posterUrlValue = parcel.readString(),
+                    actionUrlValue = parcel.readString(),
+                    metaDataValue = if (parcel.readByte().toInt() == 0x00) {
+                        null
+                    } else {
+                        parcel.readHashMap(null) as HashMap<String, Any?>?
+                    },
+                    errorValue = parcel.readString()
+                )
 
-                override fun newArray(size: Int): Array<CleverTapDisplayUnitContent?> {
-                    return arrayOfNulls(size)
-                }
+                override fun newArray(size: Int): Array<CleverTapDisplayUnitContent?> = arrayOfNulls(size)
             }
 
         /**
@@ -314,83 +252,55 @@ open class CleverTapDisplayUnitContent : Parcelable {
          * @return - CleverTapDisplayUnitContent - can have empty fields with an error message in case of parsing error
          */
         internal fun toContent(contentObject: JSONObject?): CleverTapDisplayUnitContent {
-            try {
-                contentObject!!
-                var title = ""
-                var titleColor = ""
-                var message = ""
-                var messageColor = ""
-                var icon = ""
-                var media = ""
-                var contentType = ""
-                var posterUrl = ""
-                var actionUrl = ""
+            if (contentObject == null) {
+                // what the Java original reported for its NPE (null message)
+                return errorContent(null)
+            }
+            return try {
+                val titleObject = contentObject.objectOrNull(Constants.KEY_TITLE)
+                val msgObject = contentObject.objectOrNull(Constants.KEY_MESSAGE)
+                val iconObject = contentObject.objectOrNull(Constants.KEY_ICON)
+                val mediaObject = contentObject.objectOrNull(Constants.KEY_MEDIA)
+                val androidObject = contentObject.objectOrNull(Constants.KEY_ACTION)
+                    ?.objectOrNull(Constants.KEY_URL)
+                    ?.objectOrNull(Constants.KEY_ANDROID)
+                // opt + instanceof, not getString: getString coerces a number to
+                // its digits and a JSON null to the literal "null", either of
+                // which would then be reported as the tapped url.
+                val actionUrl = androidObject?.opt(Constants.KEY_TEXT) as? String ?: ""
 
-                val titleObject = if (contentObject.has(Constants.KEY_TITLE)) contentObject
-                    .getJSONObject(Constants.KEY_TITLE) else null
-                if (titleObject != null) {
-                    title = if (titleObject.has(Constants.KEY_TEXT)) titleObject.getString(Constants.KEY_TEXT) else ""
-                    titleColor =
-                        if (titleObject.has(Constants.KEY_COLOR)) titleObject.getString(Constants.KEY_COLOR) else ""
-                }
-                val msgObject = if (contentObject.has(Constants.KEY_MESSAGE)) contentObject
-                    .getJSONObject(Constants.KEY_MESSAGE) else null
-                if (msgObject != null) {
-                    message = if (msgObject.has(Constants.KEY_TEXT)) msgObject.getString(Constants.KEY_TEXT) else ""
-                    messageColor =
-                        if (msgObject.has(Constants.KEY_COLOR)) msgObject.getString(Constants.KEY_COLOR) else ""
-                }
-                val iconObject = if (contentObject.has(Constants.KEY_ICON)) contentObject
-                    .getJSONObject(Constants.KEY_ICON) else null
-                if (iconObject != null) {
-                    icon = if (iconObject.has(Constants.KEY_URL)) iconObject.getString(Constants.KEY_URL) else ""
-                }
-                val mediaObject = if (contentObject.has(Constants.KEY_MEDIA)) contentObject
-                    .getJSONObject(Constants.KEY_MEDIA) else null
-                if (mediaObject != null) {
-                    media = if (mediaObject.has(Constants.KEY_URL)) mediaObject.getString(Constants.KEY_URL) else ""
-                    contentType = if (mediaObject.has(Constants.KEY_CONTENT_TYPE)) mediaObject
-                        .getString(Constants.KEY_CONTENT_TYPE) else ""
-                    posterUrl = if (mediaObject.has(Constants.KEY_POSTER_URL)) mediaObject
-                        .getString(Constants.KEY_POSTER_URL) else ""
-                }
-
-                val actionObject = if (contentObject.has(Constants.KEY_ACTION)) contentObject
-                    .getJSONObject(Constants.KEY_ACTION) else null
-                if (actionObject != null) {
-                    val urlObject = if (actionObject.has(Constants.KEY_URL)) actionObject
-                        .getJSONObject(Constants.KEY_URL) else null
-                    if (urlObject != null) {
-                        val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) urlObject
-                            .getJSONObject(Constants.KEY_ANDROID) else null
-                        if (androidObject != null) {
-                            // opt + instanceof, not getString: getString coerces a number to
-                            // its digits and a JSON null to the literal "null", either of
-                            // which would then be reported as the tapped url.
-                            val textValue = androidObject.opt(Constants.KEY_TEXT)
-                            actionUrl = if (textValue is String) textValue else ""
-                        }
-                    }
-                }
-
-                val metaData = parseMetaData(contentObject, actionUrl)
-
-                return CleverTapDisplayUnitContent(
-                    title, titleColor, message, messageColor,
-                    icon, media, contentType, posterUrl,
-                    actionUrl, metaData, null
+                CleverTapDisplayUnitContent(
+                    titleValue = titleObject.stringOrEmpty(Constants.KEY_TEXT),
+                    titleColorValue = titleObject.stringOrEmpty(Constants.KEY_COLOR),
+                    messageValue = msgObject.stringOrEmpty(Constants.KEY_TEXT),
+                    messageColorValue = msgObject.stringOrEmpty(Constants.KEY_COLOR),
+                    iconValue = iconObject.stringOrEmpty(Constants.KEY_URL),
+                    mediaValue = mediaObject.stringOrEmpty(Constants.KEY_URL),
+                    contentTypeValue = mediaObject.stringOrEmpty(Constants.KEY_CONTENT_TYPE),
+                    posterUrlValue = mediaObject.stringOrEmpty(Constants.KEY_POSTER_URL),
+                    actionUrlValue = actionUrl,
+                    metaDataValue = parseMetaData(contentObject, actionUrl),
+                    errorValue = null
                 )
             } catch (e: Exception) {
-                Logger.d(
-                    Constants.FEATURE_DISPLAY_UNIT,
-                    "Unable to init CleverTapDisplayUnitContent with JSON - " + e.localizedMessage
-                )
-                return CleverTapDisplayUnitContent(
-                    "", "", "", "", "", "", "", "", "", null,
-                    "Error Creating DisplayUnit Content from JSON : " + e.localizedMessage
-                )
+                errorContent(e.localizedMessage)
             }
         }
+
+        private fun errorContent(reason: String?): CleverTapDisplayUnitContent {
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Unable to init CleverTapDisplayUnitContent with JSON - $reason")
+            return CleverTapDisplayUnitContent(
+                "", "", "", "", "", "", "", "", "", null,
+                "Error Creating DisplayUnit Content from JSON : $reason"
+            )
+        }
+
+        /** The nested object at [key] (throws if present but not an object), or null when absent. */
+        private fun JSONObject.objectOrNull(key: String): JSONObject? = if (has(key)) getJSONObject(key) else null
+
+        /** getString(key) when present, "" when absent or when this object is null. */
+        private fun JSONObject?.stringOrEmpty(key: String): String =
+            if (this != null && has(key)) getString(key) else ""
 
         /**
          * Builds per-item `wzrk_*` attribution by merging BE metadata with
@@ -406,10 +316,9 @@ open class CleverTapDisplayUnitContent : Parcelable {
             val metaDataObject = if (contentObject.has(Constants.KEY_METADATA))
                 contentObject.optJSONObject(Constants.KEY_METADATA) else null
             val metaData = HashMap<String, Any?>()
-            val keys: Iterator<String> = metaDataObject?.keys() ?: Collections.emptyIterator()
-            while (keys.hasNext()) {
-                val key = keys.next()
-                val value = metaDataObject!!.opt(key)
+            for (key in metaDataObject?.keys() ?: emptyList<String>().iterator()) {
+                // keys only come from a non-null metaDataObject
+                val value = metaDataObject?.opt(key)
                 // Nested objects, arrays and JSON nulls (opt returns the JSONObject.NULL
                 // sentinel, not null) cannot be written to a Parcel, and the unit is
                 // Parcelable, so keeping one would crash the host app on the next parcel.
@@ -431,7 +340,7 @@ open class CleverTapDisplayUnitContent : Parcelable {
                 metaData[Constants.KEY_WZRK_ACTION] = Constants.KEY_URL
                 metaData[Constants.KEY_WZRK_DATA] = trimmedUrl
             }
-            return if (metaData.isEmpty()) null else metaData
+            return metaData.ifEmpty { null }
         }
     }
 }

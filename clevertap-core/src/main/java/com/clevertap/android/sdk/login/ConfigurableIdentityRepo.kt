@@ -12,24 +12,14 @@ internal open class ConfigurableIdentityRepo(
     private val validationResultStack: ValidationResultStack
 ) : IdentityRepo {
 
-    private lateinit var _identitySet: IdentitySet
-
-    init {
-        loadIdentitySet()
-    }
-
     /**
-     * Returns the loaded identity set. checkout the loadIdentitySet() for implementation
+     * The loaded identity set. checkout the loadIdentitySet() for implementation
      */
-    override val identitySet: IdentitySet
-        get() = _identitySet
+    override val identitySet: IdentitySet = loadIdentitySet()
 
-    override fun hasIdentity(Key: String): Boolean {
-        val hasIdentity = _identitySet.contains(Key)
-        config.log(
-            LOG_TAG_ON_USER_LOGIN,
-            "${TAG}isIdentity [Key: $Key , Value: $hasIdentity]"
-        )
+    override fun hasIdentity(key: String): Boolean {
+        val hasIdentity = identitySet.contains(key)
+        config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}isIdentity [Key: $key , Value: $hasIdentity]")
         return hasIdentity
     }
 
@@ -66,9 +56,9 @@ internal open class ConfigurableIdentityRepo(
      *   5.1 if prefKeySet was not valid, loginInfoProvider.saveIdentityKeysForAccount(identitySet)
      *       is also called on the newly initialised identitySet
      */
-    fun loadIdentitySet() {
+    private fun loadIdentitySet(): IdentitySet {
         // Read from Pref
-        val prefKeySet = IdentitySet.from(infoProvider.cachedIdentityKeysForAccount!!)
+        val prefKeySet = IdentitySet.from(infoProvider.cachedIdentityKeysForAccount)
 
         config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}PrefIdentitySet [$prefKeySet]")
 
@@ -91,25 +81,28 @@ internal open class ConfigurableIdentityRepo(
          *      else data is available via from config use
          *      else use legacy key set
          * --------------------------------------------------- */
-        if (prefKeySet.isValid) {
-            _identitySet = prefKeySet
-            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Pref[$_identitySet]")
-        } else if (configKeySet.isValid) {
-            _identitySet = configKeySet
-            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Config[$_identitySet]")
-        } else {
-            _identitySet = IdentitySet.getDefault()
-            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Default[$_identitySet]")
+        val identitySet = when {
+            prefKeySet.isValid -> prefKeySet.also {
+                config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Pref[$it]")
+            }
+
+            configKeySet.isValid -> configKeySet.also {
+                config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Config[$it]")
+            }
+
+            else -> IdentitySet.default().also {
+                config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Default[$it]")
+            }
         }
-        val isSavedInPref = prefKeySet.isValid
-        if (!isSavedInPref) {
+        if (!prefKeySet.isValid) {
             /* -------------------------------------------------------------------------
              *  If Config data is available, save in the preference if not saved already.
              * ------------------------------------------------------------------------ */
-            val storedValue = _identitySet.toString()
+            val storedValue = identitySet.toString()
             infoProvider.saveIdentityKeysForAccount(storedValue)
             config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Saving Identity Keys in Pref[$storedValue]")
         }
+        return identitySet
     }
 
     /**

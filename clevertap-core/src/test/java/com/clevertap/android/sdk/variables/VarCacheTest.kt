@@ -241,7 +241,7 @@ class VarCacheTest : BaseTestCase() {
         Var.define("var1", 1, ctVariables)
         Var.define("var2", 2, ctVariables)
 
-        assertEquals(2, varCache.getVariablesCount())
+        assertEquals(2, varCache.variablesCount)
         assertEquals(1, varCache.getVariable<Int>("var1")!!.value())
         assertEquals(2, varCache.getVariable<Int>("var2")!!.value())
     }
@@ -254,7 +254,7 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group.var2", 2, ctVariables)
         Var.define("group", mutableMapOf("var3" to 3), ctVariables)
 
-        assertEquals(3, varCache.getVariablesCount())
+        assertEquals(3, varCache.variablesCount)
         assertEquals(1, varCache.getVariable<Int>("group.var1")!!.value())
         assertEquals(2, varCache.getVariable<Int>("group.var2")!!.value())
         assertEquals(mapOf("var1" to 1, "var2" to 2, "var3" to 3), varCache.getVariable<Map<*, *>>("group")!!.value())
@@ -269,7 +269,7 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group1", mapOf("var2" to 2), ctVariables)
         Var.define("group1.group2", mapOf("var4" to 4), ctVariables)
 
-        assertEquals(4, varCache.getVariablesCount())
+        assertEquals(4, varCache.variablesCount)
         assertEquals(3, varCache.getVariable<Int>("group1.group2.var3")!!.value())
         assertEquals(1, varCache.getVariable<Int>("group1.var1")!!.value())
 
@@ -289,7 +289,7 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group.var1", 1, ctVariables)
         Var.define("group", mapOf("var2" to 2), ctVariables)
 
-        assertEquals(2, varCache.getVariablesCount())
+        assertEquals(2, varCache.variablesCount)
         assertEquals(1, varCache.getVariable<Int>("group.var1")!!.value())
         assertEquals(1, varCache.getVariable<Int>("group.var1")!!.defaultValue())
         assertEquals(mapOf("var1" to 1, "var2" to 2), varCache.getVariable<Map<*, *>>("group")!!.value())
@@ -304,7 +304,7 @@ class VarCacheTest : BaseTestCase() {
         Var.define("group1.group2.var3", 3, ctVariables)
         Var.define("group1", mapOf("var2" to 2, "group2" to mapOf("var4" to 4)), ctVariables)
 
-        assertEquals(3, varCache.getVariablesCount())
+        assertEquals(3, varCache.variablesCount)
         assertEquals(1, varCache.getVariable<Int>("group1.var1")!!.value())
         assertEquals(3, varCache.getVariable<Int>("group1.group2.var3")!!.value())
 
@@ -369,7 +369,7 @@ class VarCacheTest : BaseTestCase() {
 
         parser.parseVariablesForClasses(VariableDefinitions.Groups::class.java)
 
-        assertEquals(3, varCache.getVariablesCount())
+        assertEquals(3, varCache.variablesCount)
         assertEquals(1, varCache.getMergedValue("group1.var_int1"))
         assertEquals(2, varCache.getMergedValue("group1.group2.var_int2"))
         assertEquals(3, varCache.getMergedValue("var_int3"))
@@ -530,7 +530,7 @@ class VarCacheTest : BaseTestCase() {
 
         // update var1 to a value
         val fileUrl = "http://example.com/file2"
-        ctVariables.setHasVarsRequestCompleted(true)
+        ctVariables.hasVarsRequestCompleted = true
         varCache.updateDiffsAndTriggerHandlers(
             mapOf(
                 "var1" to fileUrl,
@@ -545,7 +545,7 @@ class VarCacheTest : BaseTestCase() {
         verify(exactly = 1) { handler.run() }
 
         // update var1 to null
-        ctVariables.setHasVarsRequestCompleted(true)
+        ctVariables.hasVarsRequestCompleted = true
         varCache.updateDiffsAndTriggerHandlers(
             mapOf(
                 "var1" to null,

@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.login
 
 import android.content.Context
-import android.text.TextUtils
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
@@ -13,26 +12,19 @@ import java.util.Locale
 
 /**
  * Handles saving and/or providing login related information.
+ *
+ * [cryptHandler] is only needed by the cached-GUID read/write paths; callers that only query login
+ * state (e.g. [isLegacyProfileLoggedIn], [deviceIsMultiUser]) may omit it.
  */
-internal open class LoginInfoProvider {
+internal open class LoginInfoProvider(
+    private val context: Context,
+    private val config: CleverTapInstanceConfig,
+    private val cryptHandler: ICryptHandler? = null
+) {
 
-    private val config: CleverTapInstanceConfig
+    private val requiredCryptHandler: ICryptHandler
+        get() = checkNotNull(cryptHandler) { "LoginInfoProvider was created without an ICryptHandler" }
 
-    private val context: Context
-
-    private var cryptHandler: ICryptHandler? = null
-
-    constructor(context: Context, config: CleverTapInstanceConfig, cryptHandler: ICryptHandler?) {
-        this.context = context
-        this.config = config
-        this.cryptHandler = cryptHandler
-    }
-
-    constructor(context: Context, config: CleverTapInstanceConfig) {
-        // todo Check if this constructor is needed at all or is it better to have static methods in a different class
-        this.context = context
-        this.config = config
-    }
     //Profile
 
     /**
@@ -48,8 +40,8 @@ internal open class LoginInfoProvider {
         if (guid == null || key == null || identifier == null) {
             return
         }
-        val cacheKey = key + "_" + identifier
-        val cache = getDecryptedCachedGUIDs()
+        val cacheKey = "${key}_$identifier"
+        val cache = decryptedCachedGUIDs
         if (cache.optString(cacheKey) == guid) {
             return
         }
@@ -72,14 +64,15 @@ internal open class LoginInfoProvider {
             return
         }
 
-        val cachedGuidJsonObj = getDecryptedCachedGUIDs()
+        val cachedGuidJsonObj = decryptedCachedGUIDs
         try {
-            val i = cachedGuidJsonObj.keys()
-            while (i.hasNext()) {
-                val nextJSONObjKey = i.next()
+            val keyInLowerCase = key.lowercase(Locale.getDefault())
+            val iterator = cachedGuidJsonObj.keys()
+            while (iterator.hasNext()) {
+                val nextJSONObjKey = iterator.next()
                 val actualKeyInLowerCase = nextJSONObjKey.lowercase(Locale.getDefault())
 
-                if (actualKeyInLowerCase.contains(key.lowercase(Locale.getDefault())) && cachedGuidJsonObj.getString(nextJSONObjKey) == guid) {
+                if (keyInLowerCase in actualKeyInLowerCase && cachedGuidJsonObj.getString(nextJSONObjKey) == guid) {
                     cachedGuidJsonObj.remove(nextJSONObjKey)
                     setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length())
                 }
@@ -90,38 +83,30 @@ internal open class LoginInfoProvider {
     }
 
     open fun deviceIsMultiUser(): Boolean {
-        val cgkLength = getCachedGuidsLength()
-        val deviceIsMultiUser = cgkLength > 1
-        config.log(
-            LoginConstants.LOG_TAG_ON_USER_LOGIN,
-            "deviceIsMultiUser:[$deviceIsMultiUser]"
-        )
+        val deviceIsMultiUser = cachedGuidsLength > 1
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "deviceIsMultiUser:[$deviceIsMultiUser]")
         return deviceIsMultiUser
     }
 
     /**
-     * @return - All pairs of cached <Identity_Value, Guid> for this account in String format.
+     * All pairs of cached <Identity_Value, Guid> for this account in String format.
      */
-    private fun getCachedGUIDStringFromPrefs(): String? {
-        val json = StorageHelper.getStringFromPrefs(context, config.accountId, Constants.CACHED_GUIDS_KEY, null)
-        config.log(
-            LoginConstants.LOG_TAG_ON_USER_LOGIN,
-            "getCachedGUIDs:[$json]"
-        )
-        return json
-    }
+    private val cachedGUIDStringFromPrefs: String?
+        get() {
+            val json = StorageHelper.getStringFromPrefs(context, config.accountId, Constants.CACHED_GUIDS_KEY, null)
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getCachedGUIDs:[$json]")
+            return json
+        }
 
     /**
-     * @return - All pairs of cached <Identity_Value, Guid> for this account in json format after decryption
+     * All pairs of cached <Identity_Value, Guid> for this account in json format after decryption.
      * If decryption fails, an empty JSONObject is returned
      */
-    open fun getDecryptedCachedGUIDs(): JSONObject {
-        var json = getCachedGUIDStringFromPrefs()
-        if (json != null) {
-            json = cryptHandler!!.decryptSafe(json)
+    open val decryptedCachedGUIDs: JSONObject
+        get() {
+            val json = cachedGUIDStringFromPrefs?.let { requiredCryptHandler.decryptSafe(it) }
+            return CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         }
-        return CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
-    }
 
     /**
      * Caches or removes the <Identity_Value, Guid> pairs for this account
@@ -133,16 +118,16 @@ internal open class LoginInfoProvider {
         if (cachedGUIDs == null) {
             return
         }
-        var saveString: String? = null
-        if (EncryptionLevel.fromInt(config.encryptionLevel) != EncryptionLevel.NONE) {
-            saveString = cryptHandler!!.encryptSafe(cachedGUIDs)
-            if (saveString == null) {
-                cryptHandler!!.updateMigrationFailureCount(false)
+        val encrypted = if (EncryptionLevel.fromInt(config.encryptionLevel) != EncryptionLevel.NONE) {
+            requiredCryptHandler.encryptSafe(cachedGUIDs).also {
+                if (it == null) {
+                    requiredCryptHandler.updateMigrationFailureCount(false)
+                }
             }
+        } else {
+            null
         }
-        if (saveString == null) {
-            saveString = cachedGUIDs
-        }
+        val saveString = encrypted ?: cachedGUIDs
         StorageHelper.putInt(context, config.accountId, Constants.CACHED_GUIDS_LENGTH_KEY, cgkLength)
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Storing size of cachedGUIDs: $cgkLength")
         if (cgkLength == 0) {
@@ -153,14 +138,13 @@ internal open class LoginInfoProvider {
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "setCachedGUIDs:[$cachedGUIDs]")
     }
 
-    private fun getCachedGuidsLength(): Int {
-        val cgkLength = StorageHelper.getIntFromPrefs(context, config.accountId, Constants.CACHED_GUIDS_LENGTH_KEY, 0)
-        config.log(
-            LoginConstants.LOG_TAG_ON_USER_LOGIN,
-            "Retrieved size of cachedGUIDs: $cgkLength"
-        )
-        return cgkLength
-    }
+    private val cachedGuidsLength: Int
+        get() {
+            val cgkLength =
+                StorageHelper.getIntFromPrefs(context, config.accountId, Constants.CACHED_GUIDS_LENGTH_KEY, 0)
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Retrieved size of cachedGUIDs: $cgkLength")
+            return cgkLength
+        }
 
     open fun removeCachedGuidFromSharedPrefs() {
         try {
@@ -172,12 +156,14 @@ internal open class LoginInfoProvider {
     }
 
     /**
-     * @return - Cached Identity Keys for the account
+     * Cached Identity Keys for the account ("" when none are saved; SharedPreferences never stores null,
+     * so the default is what an absent key reads as)
      */
-    open val cachedIdentityKeysForAccount: String?
+    open val cachedIdentityKeysForAccount: String
         get() {
-            val cachedKeys =
-                StorageHelper.getStringFromPrefs(context, config.accountId, Constants.SP_KEY_PROFILE_IDENTITIES, "")
+            val cachedKeys = StorageHelper.getStringFromPrefs(
+                context, config.accountId, Constants.SP_KEY_PROFILE_IDENTITIES, ""
+            ).orEmpty()
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:$cachedKeys")
             return cachedKeys
         }
@@ -193,14 +179,11 @@ internal open class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null
         }
-        val cacheKey = key + "_" + identifier
-        val cache = getDecryptedCachedGUIDs()
+        val cacheKey = "${key}_$identifier"
+        val cache = decryptedCachedGUIDs
         return try {
             val cachedGuid = cache.getString(cacheKey)
-            config.log(
-                LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "getGUIDForIdentifier:[Key:$key, value:$cachedGuid]"
-            )
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getGUIDForIdentifier:[Key:$key, value:$cachedGuid]")
             cachedGuid
         } catch (t: Throwable) {
             config.logger.verbose(config.accountId, "Error reading guid cache: $t")
@@ -208,26 +191,23 @@ internal open class LoginInfoProvider {
         }
     }
 
-    open fun isAnonymousDevice(): Boolean {
-        val cgkLength = getCachedGuidsLength()
-        val isAnonymousDevice = cgkLength == 0
-        config.log(
-            LoginConstants.LOG_TAG_ON_USER_LOGIN,
-            "isAnonymousDevice:[$isAnonymousDevice]"
-        )
-        return isAnonymousDevice
-    }
+    open val isAnonymousDevice: Boolean
+        get() {
+            val isAnonymousDevice = cachedGuidsLength == 0
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "isAnonymousDevice:[$isAnonymousDevice]")
+            return isAnonymousDevice
+        }
 
     /**
      * Checks if any user was previously logged in using the legacy identity set[Constants.LEGACY_IDENTITY_KEYS]
      * for the account.
      */
-    open fun isLegacyProfileLoggedIn(): Boolean {
-        val cgkLength = getCachedGuidsLength()
-        val isLoggedIn = cgkLength > 0 && TextUtils.isEmpty(cachedIdentityKeysForAccount)
-        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "isLegacyProfileLoggedIn:$isLoggedIn")
-        return isLoggedIn
-    }
+    open val isLegacyProfileLoggedIn: Boolean
+        get() {
+            val isLoggedIn = cachedGuidsLength > 0 && cachedIdentityKeysForAccount.isEmpty()
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "isLegacyProfileLoggedIn:$isLoggedIn")
+            return isLoggedIn
+        }
 
     /**
      * Saves cached identity keys in the preference
@@ -235,10 +215,7 @@ internal open class LoginInfoProvider {
      * @param valueCommaSeparated - identity keys in comma separated format e.g. (Email,Phone)
      */
     open fun saveIdentityKeysForAccount(valueCommaSeparated: String?) {
-        StorageHelper.putString(
-            context, config.accountId, Constants.SP_KEY_PROFILE_IDENTITIES,
-            valueCommaSeparated
-        )
+        StorageHelper.putString(context, config.accountId, Constants.SP_KEY_PROFILE_IDENTITIES, valueCommaSeparated)
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:$valueCommaSeparated")
     }
 }

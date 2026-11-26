@@ -41,7 +41,7 @@ open class CTExecutors {
 
     internal constructor(ioPoolSize: Int) {
         this.config = null
-        IO_EXECUTOR = IOExecutor(ioPoolSize)
+        IO_EXECUTOR = IOExecutor(IOExecutor.threadPool(corePoolSize = 4, maximumPoolSize = ioPoolSize))
         singleThreadExecutorTag = UrlHashGenerator.hashWithTsSeed()
     }
 
@@ -56,36 +56,32 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTask(): Task<TResult> {
-        return taskOnExecutorWithName(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "ioTask")
-    }
+    open fun <TResult> ioTask(): Task<TResult> =
+        taskOnExecutorWithName(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "ioTask")
 
     /**
      * Use this task when you want to offload some background task
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTaskNonUi(): Task<TResult> {
-        return taskOnExecutorWithName(IO_EXECUTOR, IO_EXECUTOR, "ioTaskNonUi")
-    }
+    open fun <TResult> ioTaskNonUi(): Task<TResult> =
+        taskOnExecutorWithName(IO_EXECUTOR, IO_EXECUTOR, "ioTaskNonUi")
 
     /**
      * Use this task when you want to offload some background task and receive callback on current thread
      * @param TResult
      * @return
      */
-    open fun <TResult> ioTaskWithCallbackOnCurrentThread(): Task<TResult> {
-        return taskOnExecutorWithName(IO_EXECUTOR, CURRENT_THREAD_EXECUTOR, "ioTaskWithCallbackOnCurrentThread")
-    }
+    open fun <TResult> ioTaskWithCallbackOnCurrentThread(): Task<TResult> =
+        taskOnExecutorWithName(IO_EXECUTOR, CURRENT_THREAD_EXECUTOR, "ioTaskWithCallbackOnCurrentThread")
 
     /**
      * Use this task to execute a runnable to main thread
      * @param TResult
      * @return
      */
-    open fun <TResult> mainTask(): Task<TResult> {
-        return taskOnExecutorWithName(MAIN_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "Main")
-    }
+    open fun <TResult> mainTask(): Task<TResult> =
+        taskOnExecutorWithName(MAIN_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "Main")
 
     /**
      * Use this task to execute a job in a sequential fashion for a particular feature
@@ -94,15 +90,8 @@ open class CTExecutors {
      * @return
      */
     open fun <TResult> postAsyncSafelyTask(featureTag: String?): Task<TResult> {
-        if (featureTag == null) {
-            throw IllegalArgumentException("Tag can't be null")
-        }
-        var postAsyncSafelyExecutor = postAsyncSafelyTasks[featureTag]
-
-        if (postAsyncSafelyExecutor == null) {
-            postAsyncSafelyExecutor = PostAsyncSafelyExecutor()
-            postAsyncSafelyTasks[featureTag] = postAsyncSafelyExecutor
-        }
+        requireNotNull(featureTag) { "Tag can't be null" }
+        val postAsyncSafelyExecutor = postAsyncSafelyTasks.getOrPut(featureTag) { PostAsyncSafelyExecutor() }
         return taskOnExecutorWithName(postAsyncSafelyExecutor, DEFAULT_CALLBACK_EXECUTOR, "PostAsyncSafely")
     }
 
@@ -112,14 +101,8 @@ open class CTExecutors {
      * @param TResult
      * @return
      */
-    open fun <TResult> postAsyncSafelyTask(): Task<TResult> {
-        val key: String? = if (config != null) {
-            config.accountId
-        } else {
-            singleThreadExecutorTag
-        }
-        return postAsyncSafelyTask(key)
-    }
+    open fun <TResult> postAsyncSafelyTask(): Task<TResult> =
+        postAsyncSafelyTask(if (config != null) config.accountId else singleThreadExecutorTag)
 
     /**
      * Use this task to use your own custom executor for executing jobs & getting callbacks on default executors
@@ -128,9 +111,8 @@ open class CTExecutors {
      * @param TResult
      * @return - task
      */
-    open fun <TResult> taskOnExecutor(taskExecutor: Executor?, taskName: String?): Task<TResult> {
-        return taskOnExecutorWithName(taskExecutor, DEFAULT_CALLBACK_EXECUTOR, taskName)
-    }
+    open fun <TResult> taskOnExecutor(taskExecutor: Executor?, taskName: String?): Task<TResult> =
+        taskOnExecutorWithName(taskExecutor, DEFAULT_CALLBACK_EXECUTOR, taskName)
 
     /**
      * Use this task to use your own custom executor for executing jobs & getting callbacks on the provided callback executors
@@ -142,13 +124,11 @@ open class CTExecutors {
      */
     open fun <TResult> taskOnExecutorWithName(
         taskExecutor: Executor?,
-        callbackExecutor: Executor?, taskName: String?
+        callbackExecutor: Executor?,
+        taskName: String?
     ): Task<TResult> {
-        if (taskExecutor == null || callbackExecutor == null) {
-            throw IllegalArgumentException(
-                "Can't create task "
-                        + taskName + " with null executors"
-            )
+        require(taskExecutor != null && callbackExecutor != null) {
+            "Can't create task $taskName with null executors"
         }
         return Task(config, taskExecutor, callbackExecutor, taskName)
     }

@@ -4,8 +4,8 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 enum class EventGroup(
-    @JvmField val httpResource: String,
-    @JvmField val additionalPath: String
+    val httpResource: String,
+    val additionalPath: String
 ) {
 
     REGULAR("", ""),

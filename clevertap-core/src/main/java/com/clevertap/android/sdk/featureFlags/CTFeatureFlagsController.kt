@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.featureFlags
 
-import android.text.TextUtils
 import com.clevertap.android.sdk.BaseAnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -9,7 +8,6 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY
 import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE
 import com.clevertap.android.sdk.task.CTExecutorFactory
-import com.clevertap.android.sdk.task.OnSuccessListener
 import com.clevertap.android.sdk.utils.FileUtils
 import org.json.JSONException
 import org.json.JSONObject
@@ -23,22 +21,14 @@ import java.util.concurrent.Callable
 open class CTFeatureFlagsController @Deprecated(
     "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
 ) internal constructor(
-    guid: String?,
+    private var guidValue: String?,
     internal val config: CleverTapInstanceConfig,
-    callbackManager: BaseCallbackManager?,
-    analyticsManager: BaseAnalyticsManager?,
-    fileUtils: FileUtils
+    internal val callbackManager: BaseCallbackManager,
+    internal val analyticsManager: BaseAnalyticsManager,
+    internal val fileUtils: FileUtils
 ) {
 
-    internal var guidValue: String? = guid
-
     internal var initialized = false
-
-    internal val mAnalyticsManager: BaseAnalyticsManager? = analyticsManager
-
-    internal val mCallbackManager: BaseCallbackManager? = callbackManager
-
-    internal var mFileUtils: FileUtils = fileUtils
 
     private val store: MutableMap<String, Boolean> = Collections.synchronizedMap(HashMap())
 
@@ -50,9 +40,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getGuid(): String? {
-        return guidValue
-    }
+    open fun getGuid(): String? = guidValue
 
     /** Kotlin property syntax, equivalent to [getGuid]. */
     @Suppress("DEPRECATION")
@@ -73,14 +61,14 @@ open class CTFeatureFlagsController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun fetchFeatureFlags() {
         val task = CTExecutorFactory.executors(config).mainTask<Void?>()
-        task.execute("fetchFeatureFlags", Callable<Void?> {
+        task.execute("fetchFeatureFlags") {
             try {
-                mAnalyticsManager!!.fetchFeatureFlags()
+                analyticsManager.fetchFeatureFlags()
             } catch (e: Exception) {
-                getConfigLogger().verbose(getLogTag(), e.localizedMessage)
+                logger.verbose(logTag, e.localizedMessage)
             }
             null
-        })
+        }
     }
 
     /**
@@ -95,21 +83,12 @@ open class CTFeatureFlagsController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun get(key: String?, defaultValue: Boolean): Boolean? {
         if (!initialized) {
-            getConfigLogger()
-                .verbose(getLogTag(), "Controller not initialized, returning default value - $defaultValue")
+            logger.verbose(logTag, "Controller not initialized, returning default value - $defaultValue")
             return defaultValue
         }
-        getConfigLogger().verbose(
-            getLogTag(),
-            "Getting feature flag with key - $key and default value - $defaultValue"
-        )
-        val value = store[key]
-        return if (value != null) {
-            value
-        } else {
-            getConfigLogger()
-                .verbose(getLogTag(), "Feature flag not found, returning default value - $defaultValue")
-            defaultValue
+        logger.verbose(logTag, "Getting feature flag with key - $key and default value - $defaultValue")
+        return store[key] ?: defaultValue.also {
+            logger.verbose(logTag, "Feature flag not found, returning default value - $defaultValue")
         }
     }
 
@@ -125,9 +104,7 @@ open class CTFeatureFlagsController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun isInitialized(): Boolean {
-        return initialized
-    }
+    open fun isInitialized(): Boolean = initialized
 
     /** Kotlin property syntax, equivalent to [isInitialized]. */
     @Suppress("DEPRECATION")
@@ -143,7 +120,7 @@ open class CTFeatureFlagsController @Deprecated(
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun resetWithGuid(guid: String?) {
-        this.guidValue = guid
+        guidValue = guid
         init()
     }
 
@@ -158,7 +135,7 @@ open class CTFeatureFlagsController @Deprecated(
         if (initialized) {
             return
         }
-        this.guidValue = cleverTapID
+        guidValue = cleverTapID
         init()
     }
 
@@ -178,66 +155,54 @@ open class CTFeatureFlagsController @Deprecated(
                 val ff = featureFlagList.getJSONObject(i)
                 store[ff.getString("n")] = ff.getBoolean("v")
             }
-            getConfigLogger().verbose(getLogTag(), "Updating feature flags...$store")
+            logger.verbose(logTag, "Updating feature flags...$store")
         } catch (e: JSONException) {
-            getConfigLogger().verbose(getLogTag(), "Error parsing Feature Flag array " + e.localizedMessage)
+            logger.verbose(logTag, "Error parsing Feature Flag array ${e.localizedMessage}")
         }
         archiveData(jsonObject)
         notifyFeatureFlagUpdate()
     }
 
-    internal fun getCachedDirName(): String {
-        return CTFeatureFlagConstants.DIR_FEATURE_FLAG + "_" + config.accountId + "_" + guidValue
-    }
+    internal val cachedDirName: String
+        get() = "${CTFeatureFlagConstants.DIR_FEATURE_FLAG}_${config.accountId}_$guidValue"
 
-    internal fun getCachedFileName(): String {
-        return CTFeatureFlagConstants.CACHED_FILE_NAME
-    }
+    internal val cachedFileName: String
+        get() = CTFeatureFlagConstants.CACHED_FILE_NAME
 
-    internal fun getCachedFullPath(): String {
-        return getCachedDirName() + "/" + getCachedFileName()
-    }
+    internal val cachedFullPath: String
+        get() = "$cachedDirName/$cachedFileName"
 
     internal fun init() {
-        if (TextUtils.isEmpty(guidValue)) {
+        if (guidValue.isNullOrEmpty()) {
             return
         }
         val task = CTExecutorFactory.executors(config).ioTask<Boolean>()
-        task.addOnSuccessListener(OnSuccessListener { init -> initialized = init })
+        task.addOnSuccessListener { init -> initialized = init }
         task.execute("initFeatureFlags", object : Callable<Boolean> {
             override fun call(): Boolean {
                 // Locks on this Callable instance, exactly like the Java original's synchronized (this).
                 synchronized(this) {
-                    getConfigLogger().verbose(getLogTag(), "Feature flags init is called")
-                    val fileName = getCachedFullPath()
+                    logger.verbose(logTag, "Feature flags init is called")
+                    val fileName = cachedFullPath
                     try {
                         store.clear()
-                        val content = mFileUtils.readFromFile(fileName)
-                        if (!TextUtils.isEmpty(content)) {
-                            val jsonObject = JSONObject(content)
-                            val kvArray = jsonObject.getJSONArray(Constants.KEY_KV)
-
-                            if (kvArray != null && kvArray.length() > 0) {
-                                for (i in 0 until kvArray.length()) {
-                                    val `object` = kvArray.get(i) as JSONObject?
-                                    if (`object` != null) {
-                                        val Key = `object`.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY)
-                                        val Value = `object`.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE)
-                                        if (!TextUtils.isEmpty(Key)) {
-                                            store[Key] = java.lang.Boolean.parseBoolean(Value)
-                                        }
-                                    }
-                                }
-                            }
-                            getConfigLogger().verbose(
-                                getLogTag(), "Feature flags initialized from file " + fileName +
-                                        " with configs  " + store
-                            )
-                        } else {
-                            getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-$fileName")
+                        val content = fileUtils.readFromFile(fileName)
+                        if (content.isEmpty()) {
+                            logger.verbose(logTag, "Feature flags file is empty-$fileName")
+                            return true
                         }
+                        val kvArray = JSONObject(content).getJSONArray(Constants.KEY_KV)
+                        for (i in 0 until kvArray.length()) {
+                            val kv = kvArray.get(i) as JSONObject? ?: continue
+                            val key = kv.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY)
+                            val value = kv.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE)
+                            if (!key.isNullOrEmpty()) {
+                                store[key] = value.toBoolean()
+                            }
+                        }
+                        logger.verbose(logTag, "Feature flags initialized from file $fileName with configs  $store")
                     } catch (e: Exception) {
-                        getConfigLogger().verbose(getLogTag(), "UnArchiveData failed file- $fileName", e)
+                        logger.verbose(logTag, "UnArchiveData failed file- $fileName", e)
                         return false
                     }
                     return true
@@ -248,42 +213,35 @@ open class CTFeatureFlagsController @Deprecated(
 
     @Synchronized
     private fun archiveData(featureFlagRespObj: JSONObject?) {
-        if (featureFlagRespObj != null) {
-            try {
-                mFileUtils.writeJsonToFile(
-                    getCachedDirName(), getCachedFileName(),
-                    featureFlagRespObj
-                )
-                getConfigLogger()
-                    .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store)
-            } catch (e: Exception) {
-                getConfigLogger().verbose(getLogTag(), "ArchiveData failed", e)
-            }
+        if (featureFlagRespObj == null) {
+            return
+        }
+        try {
+            fileUtils.writeJsonToFile(cachedDirName, cachedFileName, featureFlagRespObj)
+            logger.verbose(logTag, "Feature flags saved into file-[$cachedFullPath]$store")
+        } catch (e: Exception) {
+            logger.verbose(logTag, "ArchiveData failed", e)
         }
     }
 
-    private fun getConfigLogger(): Logger {
-        return config.logger
-    }
+    private val logger: Logger
+        get() = config.logger
 
-    private fun getLogTag(): String {
-        return config.accountId + "[Feature Flag]"
-    }
+    private val logTag: String
+        get() = "${config.accountId}[Feature Flag]"
 
     private fun notifyFeatureFlagUpdate() {
-        if (mCallbackManager!!.featureFlagListener != null) {
-            val task = CTExecutorFactory.executors(config).mainTask<Void?>()
-            task.execute("notifyFeatureFlagUpdate", Callable<Void?> {
-                try {
-                    val featureFlagListener = mCallbackManager.featureFlagListener
-                    if (featureFlagListener != null) {
-                        featureFlagListener.featureFlagsUpdated()
-                    }
-                } catch (e: Exception) {
-                    getConfigLogger().verbose(getLogTag(), e.localizedMessage)
-                }
-                null
-            })
+        if (callbackManager.featureFlagListener == null) {
+            return
+        }
+        val task = CTExecutorFactory.executors(config).mainTask<Void?>()
+        task.execute("notifyFeatureFlagUpdate") {
+            try {
+                callbackManager.featureFlagListener?.featureFlagsUpdated()
+            } catch (e: Exception) {
+                logger.verbose(logTag, e.localizedMessage)
+            }
+            null
         }
     }
 }

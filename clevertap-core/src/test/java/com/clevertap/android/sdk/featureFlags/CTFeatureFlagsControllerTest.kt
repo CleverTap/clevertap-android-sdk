@@ -77,7 +77,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } returns
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } returns
                     MockFFResponse().getResponseJSON().toString()
 
             val controller = CTFeatureFlagsController(
@@ -96,7 +96,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } throws
                     RuntimeException("Something Went Wrong")
 
             val controller = CTFeatureFlagsController(
@@ -115,7 +115,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.cachedFullPath) } throws
                     RuntimeException("Something Went Wrong")
 
             val jsonObject = MockFFResponse().getResponseJSON()
@@ -123,8 +123,8 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             verify { featureFlagsListener.featureFlagsUpdated() }
             verify {
                 fileUtils.writeJsonToFile(
-                    mCTFeatureFlagsController.getCachedDirName(),
-                    mCTFeatureFlagsController.getCachedFileName(),
+                    mCTFeatureFlagsController.cachedDirName,
+                    mCTFeatureFlagsController.cachedFileName,
                     jsonObject
                 )
             }

@@ -15,9 +15,9 @@ import java.util.concurrent.TimeoutException
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 open class Task<TResult> internal constructor(
-    @JvmField protected val config: CleverTapInstanceConfig?,
-    @JvmField protected val executor: Executor,
-    @JvmField protected val defaultCallbackExecutor: Executor,
+    protected val config: CleverTapInstanceConfig?,
+    protected val executor: Executor,
+    protected val defaultCallbackExecutor: Executor,
     private val taskName: String?
 ) {
 
@@ -25,12 +25,10 @@ open class Task<TResult> internal constructor(
 
     private val failureExecutables: MutableList<FailureExecutable<Exception>> = ArrayList()
 
-    @JvmField
     protected var result: TResult? = null
 
     private val successExecutables: MutableList<SuccessExecutable<TResult>> = ArrayList()
 
-    @JvmField
     protected var taskState: STATE = STATE.READY_TO_RUN
 
     /**
@@ -57,9 +55,8 @@ open class Task<TResult> internal constructor(
      * @param listener  - failure listener
      * @return task
      */
-    open fun addOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> {
-        return addOnFailureListener(defaultCallbackExecutor, listener)
-    }
+    open fun addOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> =
+        addOnFailureListener(defaultCallbackExecutor, listener)
 
     /**
      * Register listener to get success callbacks on the provided executor
@@ -84,9 +81,8 @@ open class Task<TResult> internal constructor(
      * @param listener  - success listener
      * @return task
      */
-    open fun addOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> {
-        return addOnSuccessListener(defaultCallbackExecutor, listener)
-    }
+    open fun addOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> =
+        addOnSuccessListener(defaultCallbackExecutor, listener)
 
     /**
      * Simple method to execute the task
@@ -112,13 +108,7 @@ open class Task<TResult> internal constructor(
      */
     @Suppress("unused")
     open fun removeOnFailureListener(listener: OnFailureListener<Exception>): Task<TResult> {
-        val iterator = failureExecutables.iterator()
-        while (iterator.hasNext()) {
-            val item = iterator.next()
-            if (item.failureListener === listener) {
-                iterator.remove()
-            }
-        }
+        failureExecutables.removeAll { it.failureListener === listener }
         return this
     }
 
@@ -129,13 +119,7 @@ open class Task<TResult> internal constructor(
      */
     @Suppress("unused")
     open fun removeOnSuccessListener(listener: OnSuccessListener<TResult>): Task<TResult> {
-        val iterator = successExecutables.iterator()
-        while (iterator.hasNext()) {
-            val item = iterator.next()
-            if (item.successListener === listener) {
-                iterator.remove()
-            }
-        }
+        successExecutables.removeAll { it.successListener === listener }
         return this
     }
 
@@ -169,47 +153,37 @@ open class Task<TResult> internal constructor(
                 "Can't use this method without ExecutorService, Use Execute alternatively "
             )
         }
-        var tResultFuture: Future<TResult>? = null
+        var resultFuture: Future<TResult>? = null
         try {
-            tResultFuture = executor.submit(callable)
-            return tResultFuture!!.get(timeoutMillis, TimeUnit.MILLISECONDS)
+            val future = executor.submit(callable)
+            resultFuture = future
+            return future.get(timeoutMillis, TimeUnit.MILLISECONDS)
         } catch (e: TimeoutException) {
             logProperly("submitAndGetResult :: $logTag task timed out", e)
-            if (tResultFuture != null && !tResultFuture.isCancelled) {
-                tResultFuture.cancel(true)
-            }
+            resultFuture.cancelIfRunning()
         } catch (e: Exception) {
             logProperly("submitAndGetResult :: $logTag task failed", e)
-            if (tResultFuture != null && !tResultFuture.isCancelled) {
-                tResultFuture.cancel(true)
-            }
+            resultFuture.cancelIfRunning()
         }
 
         return null
     }
 
-    internal fun onFailure(e: Exception) {
-        setState(STATE.FAILED)
-        for (failureExecutable in failureExecutables) {
-            failureExecutable.execute(e)
+    private fun Future<*>?.cancelIfRunning() {
+        if (this != null && !isCancelled) {
+            cancel(true)
         }
+    }
+
+    internal fun onFailure(e: Exception) {
+        taskState = STATE.FAILED
+        failureExecutables.forEach { it.execute(e) }
     }
 
     internal fun onSuccess(result: TResult) {
-        setState(STATE.SUCCESS)
-        setResult(result)
-        for (successExecutable in successExecutables) {
-            @Suppress("UNCHECKED_CAST")
-            successExecutable.execute(this.result as TResult)
-        }
-    }
-
-    private fun setResult(result: TResult) {
+        taskState = STATE.SUCCESS
         this.result = result
-    }
-
-    private fun setState(taskState: STATE) {
-        this.taskState = taskState
+        successExecutables.forEach { it.execute(result) }
     }
 
     /**
@@ -219,27 +193,17 @@ open class Task<TResult> internal constructor(
      * @param callable - piece of code to run.
      * @return Runnable
      */
-    private fun newRunnableForTask(logTag: String?, callable: Callable<TResult>?): Runnable {
-        return Runnable {
-            try {
-                setState(STATE.RUNNING)
-                logProperly(
-                    taskName + " Task: " + logTag + " starting on..." + Thread.currentThread().name,
-                    null
-                )
-                val result = callable!!.call()
-                logProperly(
-                    taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread().name,
-                    null
-                )
-                onSuccess(result)
-            } catch (e: Exception) {
-                onFailure(e)
-                logProperly(
-                    taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread().name,
-                    e
-                )
-            }
+    private fun newRunnableForTask(logTag: String?, callable: Callable<TResult>?): Runnable = Runnable {
+        try {
+            taskState = STATE.RUNNING
+            logProperly("$taskName Task: $logTag starting on...${Thread.currentThread().name}", null)
+            // a null callable fails the task (Exception path), as the Java NPE did
+            val result = checkNotNull(callable) { "callable is null" }.call()
+            logProperly("$taskName Task: $logTag executed successfully on...${Thread.currentThread().name}", null)
+            onSuccess(result)
+        } catch (e: Exception) {
+            onFailure(e)
+            logProperly("$taskName Task: $logTag failed to execute on...${Thread.currentThread().name}", e)
         }
     }
 

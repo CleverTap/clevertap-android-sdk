@@ -25,7 +25,6 @@ internal open class PushAmpResponse(
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         //Handle Pull Notifications response
         if (config.isAnalyticsOnly) {
             logger.verbose(
@@ -35,38 +34,33 @@ internal open class PushAmpResponse(
             return
         }
         try {
-            if (response!!.has("pushamp_notifs")) {
-                logger.verbose(config.accountId, "Processing pushamp messages...")
-                val pushAmpObject = response.getJSONObject("pushamp_notifs")
-                val pushNotifications = pushAmpObject.getJSONArray("list")
-                if (pushNotifications.length() > 0) {
-                    logger.verbose(config.accountId, "Handling Push payload locally")
-                    handlePushNotificationsInResponse(pushNotifications)
+            if (jsonBody?.has("pushamp_notifs") != true) {
+                return
+            }
+            logger.verbose(config.accountId, "Processing pushamp messages...")
+            val pushAmpObject = jsonBody.getJSONObject("pushamp_notifs")
+            val pushNotifications = pushAmpObject.getJSONArray("list")
+            if (pushNotifications.length() > 0) {
+                logger.verbose(config.accountId, "Handling Push payload locally")
+                handlePushNotificationsInResponse(pushNotifications)
+            }
+            if (pushAmpObject.has("pf")) {
+                try {
+                    val frequency = pushAmpObject.getInt("pf")
+                    checkNotNull(controllerManager.pushProviders).updatePingFrequencyIfNeeded(context, frequency)
+                } catch (t: Throwable) {
+                    logger.verbose("Error handling ping frequency in response : ${t.message}")
                 }
-                if (pushAmpObject.has("pf")) {
-                    try {
-                        val frequency = pushAmpObject.getInt("pf")
-                        controllerManager.pushProviders!!.updatePingFrequencyIfNeeded(context, frequency)
-                    } catch (t: Throwable) {
-                        logger
-                            .verbose("Error handling ping frequency in response : " + t.message)
-                    }
-                }
-                if (pushAmpObject.optBoolean("ack", false)) {
-                    logger.verbose("Received ACK - true")
-                    val pushIds = baseDatabaseManager.loadDBAdapter(context).fetchPushNotificationIds()
-                    val rtlArray = pushIdsToJSONArray(pushIds)
-                    val rtlStringArray = arrayOfNulls<String>(rtlArray.length())
-                    for (i in rtlStringArray.indices) {
-                        rtlStringArray[i] = rtlArray.getString(i)
-                    }
-                    logger.verbose("Updating RTL values...")
-                    @Suppress("UNCHECKED_CAST")
-                    baseDatabaseManager.loadDBAdapter(context)
-                        .updatePushNotificationIds(rtlStringArray as Array<String>)
-                } else {
-                    logger.verbose("Received ACK - false")
-                }
+            }
+            if (pushAmpObject.optBoolean("ack", false)) {
+                logger.verbose("Received ACK - true")
+                val pushIds = baseDatabaseManager.loadDBAdapter(context).fetchPushNotificationIds()
+                val rtlArray = pushIdsToJSONArray(pushIds)
+                val rtlStringArray = Array(rtlArray.length()) { rtlArray.getString(it) }
+                logger.verbose("Updating RTL values...")
+                baseDatabaseManager.loadDBAdapter(context).updatePushNotificationIds(rtlStringArray)
+            } else {
+                logger.verbose("Received ACK - false")
             }
         } catch (t: Throwable) {
             //Ignore
@@ -83,17 +77,16 @@ internal open class PushAmpResponse(
                     pushBundle.putLong("wzrk_ttl", pushObject.getLong("wzrk_ttl"))
                 }
 
-                val iterator: Iterator<*> = pushObject.keys()
-                while (iterator.hasNext()) {
-                    val key = iterator.next().toString()
+                for (key in pushObject.keys()) {
                     pushBundle.putString(key, pushObject.getString(key))
                 }
                 if (!pushBundle.isEmpty && !baseDatabaseManager.loadDBAdapter(context)
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))
                 ) {
                     logger.verbose("Creating Push Notification locally")
-                    if (callbackManager.pushAmpListener != null) {
-                        callbackManager.pushAmpListener!!.onPushAmpPayloadReceived(pushBundle)
+                    val pushAmpListener = callbackManager.pushAmpListener
+                    if (pushAmpListener != null) {
+                        pushAmpListener.onPushAmpPayloadReceived(pushBundle)
                     } else {
                         PushNotificationHandler.getPushNotificationHandler()
                             .onMessageReceived(context, pushBundle, PushConstants.FCM.toString())
@@ -101,8 +94,7 @@ internal open class PushAmpResponse(
                 } else {
                     logger.verbose(
                         config.accountId,
-                        "Push Notification already shown, ignoring local notification :" + pushObject
-                            .getString("wzrk_pid")
+                        "Push Notification already shown, ignoring local notification :${pushObject.getString("wzrk_pid")}"
                     )
                 }
             }

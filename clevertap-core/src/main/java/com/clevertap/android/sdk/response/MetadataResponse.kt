@@ -16,10 +16,11 @@ internal open class MetadataResponse(
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        val response = jsonBody
         // Always look for a GUID in the response, and if present, then perform a force update
         try {
-            if (response!!.has("g")) {
+            // A null body is reported here; the i/j sections below then skip it silently.
+            val response = checkNotNull(jsonBody) { "response JSON is null" }
+            if (response.has("g")) {
                 val deviceID = response.getString("g")
                 deviceInfo.forceUpdateDeviceId(deviceID)
                 logger.verbose(config.accountId, "Got a new device ID: $deviceID")
@@ -27,12 +28,12 @@ internal open class MetadataResponse(
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "Failed to update device ID!", t)
         }
+        val response = jsonBody ?: return
 
         // Handle i
         try {
-            if (response!!.has("_i")) {
-                val i = response.getLong("_i")
-                ijRepo.setI(context, i)
+            if (response.has("_i")) {
+                ijRepo.setI(context, response.getLong("_i"))
             }
         } catch (t: Throwable) {
             // Ignore
@@ -40,9 +41,8 @@ internal open class MetadataResponse(
 
         // Handle j
         try {
-            if (response!!.has("_j")) {
-                val j = response.getLong("_j")
-                ijRepo.setJ(context, j)
+            if (response.has("_j")) {
+                ijRepo.setJ(context, response.getLong("_j"))
             }
         } catch (t: Throwable) {
             // Ignore

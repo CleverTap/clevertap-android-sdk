@@ -54,9 +54,9 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
             callbackManager,
             analyticsManager
         )
-        assertNotNull(controller.mFileUtils)
+        assertNotNull(controller.fileUtils)
         assertEquals(controller.config, cleverTapInstanceConfig)
-        assertEquals(controller.mCallbackManager, callbackManager)
-        assertEquals(controller.mAnalyticsManager, analyticsManager)
+        assertEquals(controller.callbackManager, callbackManager)
+        assertEquals(controller.analyticsManager, analyticsManager)
     }
 }

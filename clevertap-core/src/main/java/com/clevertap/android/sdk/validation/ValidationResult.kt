@@ -7,11 +7,9 @@ import androidx.annotation.RestrictTo
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ValidationResult(
-    var errorCode: Int,
-    var errorDesc: String?
+    var errorCode: Int = 0,
+    var errorDesc: String? = null
 ) {
 
     var `object`: Any? = null
-
-    constructor() : this(0, null)
 }

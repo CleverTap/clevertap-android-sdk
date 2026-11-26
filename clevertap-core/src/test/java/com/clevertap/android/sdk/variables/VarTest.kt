@@ -18,7 +18,7 @@ class VarTest : BaseTestCase() {
         MockKAnnotations.init(this)
         ctVariables = mockk(relaxed = true)
         varCache = mockk(relaxed = true)
-        every { ctVariables.getVarCache() } returns varCache
+        every { ctVariables.varCache } returns varCache
         mockkObject(Logger.Companion)
         mockkStatic(Utils::class)
     }
@@ -83,7 +83,7 @@ class VarTest : BaseTestCase() {
     @Test
     fun `define() should create a new variable if not already defined`() {
         every { varCache.getVariable<String>("newVar") } returns null
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val result = Var.define("newVar", "default", ctVariables)
         assertEquals("newVar", result?.name())
         assertEquals("default", result?.defaultValue())
@@ -105,7 +105,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "newValue"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -125,7 +125,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "https://dummy.pdf"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -140,7 +140,7 @@ class VarTest : BaseTestCase() {
         // Define a variable
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         val callback: VariableCallback<String> = mockk(relaxed = true)
@@ -148,7 +148,7 @@ class VarTest : BaseTestCase() {
 
         // Update the variable
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
 
         varObj?.update()
 
@@ -161,7 +161,7 @@ class VarTest : BaseTestCase() {
     fun `value() should return correct value`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         assertEquals("default", varObj?.value())
@@ -193,7 +193,7 @@ class VarTest : BaseTestCase() {
     fun `stringValue() should return correct string representation`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
 
         assertEquals("default", varObj?.stringValue())
@@ -213,7 +213,7 @@ class VarTest : BaseTestCase() {
     fun `rawFileValue() should return null for non file kind`() {
         every { varCache.getVariable<String>("testVar") } returns null
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "default"
-        every { ctVariables.hasVarsRequestCompleted() } returns true
+        every { ctVariables.hasVarsRequestCompleted } returns true
         val varObj = Var.define("testVar", "default", ctVariables)
         assertNull(varObj?.rawFileValue())
     }

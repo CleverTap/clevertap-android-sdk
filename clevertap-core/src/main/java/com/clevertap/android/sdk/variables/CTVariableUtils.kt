@@ -26,9 +26,7 @@ class CTVariableUtils {
         const val NUMBER = "number"
         const val FILE = "file"
 
-        private fun log(msg: String) {
-            Logger.d(TAG, msg)
-        }
+        private fun log(msg: String) = Logger.d(TAG, msg)
 
         @JvmStatic
         fun updateValuesAndKinds(
@@ -39,30 +37,24 @@ class CTVariableUtils {
             values: MutableMap<String, *>?,
             kinds: MutableMap<String, *>?
         ) {
-            var value = value
-            var valuesPtr: Any? = values
-            if (nameComponents != null && nameComponents.isNotEmpty()) {
-                for (i in 0 until nameComponents.size - 1) {
-                    valuesPtr = traverse(valuesPtr, nameComponents[i], true) // can be either the actual value, or empty hashmap
+            if (!nameComponents.isNullOrEmpty()) {
+                var valuesPtr: Any? = values
+                for (component in nameComponents.dropLast(1)) {
+                    valuesPtr = traverse(valuesPtr, component, true) // can be either the actual value, or empty hashmap
                 }
                 if (valuesPtr is Map<*, *>) {
                     val map: MutableMap<String, Any?> = JsonUtil.uncheckedCast(valuesPtr)
-                    val currentValue = map[nameComponents[nameComponents.size - 1]]
+                    val lastComponent = nameComponents.last()
+                    val currentValue = map[lastComponent]
 
+                    var newValue = value
                     if (currentValue is Map<*, *> && value is Map<*, *>) {
-                        value = mergeHelper(value, currentValue)
+                        newValue = mergeHelper(value, currentValue)
                     } else if (currentValue != null && currentValue == value) {
-                        log(
-                            String.format(
-                                "Variable with name %s will override value: %s, with new value: %s.",
-                                name,
-                                currentValue,
-                                value
-                            )
-                        )
+                        log("Variable with name $name will override value: $currentValue, with new value: $value.")
                     }
 
-                    map[nameComponents[nameComponents.size - 1]] = value
+                    map[lastComponent] = newValue
                 }
             }
             if (kinds != null) {
@@ -100,8 +92,7 @@ class CTVariableUtils {
                     val components = getNameComponents(key)
                     val namePosition = components.size - 1
                     var currentMap = result
-                    for (i in components.indices) {
-                        val component = components[i]
+                    for ((i, component) in components.withIndex()) {
                         if (i == namePosition) {
                             currentMap[component] = entryValue
                         } else {
@@ -160,21 +151,18 @@ class CTVariableUtils {
             if (vars is Map<*, *> || diff is Map<*, *>) {
                 val merged = HashMap<Any?, Any?>()
                 if (varsKeys != null) {
-                    for (`var` in varsKeys) {
+                    for (key in varsKeys) {
                         if (diffMap != null && varsMap != null) {
-                            val diffVar = diffMap[`var`]
-                            val value = varsMap[`var`]
+                            val diffVar = diffMap[key]
+                            val value = varsMap[key]
                             if (diffVar == null && value != null) {
-                                merged[`var`] = value
+                                merged[key] = value
                             }
                         }
                     }
                 }
-                for (`var` in diffKeys) {
-                    val diffsValue = diffMap?.get(`var`)
-                    val varsValue = varsMap?.get(`var`)
-                    val mergedValues = mergeHelper(varsValue, diffsValue)
-                    merged[`var`] = mergedValues
+                for (key in diffKeys) {
+                    merged[key] = mergeHelper(varsMap?.get(key), diffMap?.get(key))
                 }
                 return merged
             }
@@ -205,28 +193,14 @@ class CTVariableUtils {
          */
         @JvmStatic
         fun <T> kindFromValue(defaultValue: T): String? {
-            var kind: String? = null
-            if (defaultValue is Int ||
-                defaultValue is Long ||
-                defaultValue is Short ||
-                defaultValue is Char ||
-                defaultValue is Byte ||
-                defaultValue is BigInteger
-            ) {
-                kind = NUMBER
-            } else if (defaultValue is Float ||
-                defaultValue is Double ||
-                defaultValue is BigDecimal
-            ) {
-                kind = NUMBER
-            } else if (defaultValue is String) {
-                kind = STRING
-            } else if (defaultValue is Map<*, *>) {
-                kind = DICTIONARY
-            } else if (defaultValue is Boolean) {
-                kind = BOOLEAN
+            return when (defaultValue) {
+                is Int, is Long, is Short, is Char, is Byte, is BigInteger -> NUMBER
+                is Float, is Double, is BigDecimal -> NUMBER
+                is String -> STRING
+                is Map<*, *> -> DICTIONARY
+                is Boolean -> BOOLEAN
+                else -> null
             }
-            return kind
         }
 
         /**
@@ -274,7 +248,7 @@ class CTVariableUtils {
                 if (value is Map<*, *>) {
                     convertNestedMapsToFlatMap("$prefix$key.", JsonUtil.uncheckedCast(value), resultMap)
                 } else {
-                    resultMap[prefix + key] = value
+                    resultMap["$prefix$key"] = value
                 }
             }
         }
@@ -293,10 +267,8 @@ class CTVariableUtils {
                     val kind = kinds[valueKey] as String?
                     val value = values[valueKey]
                     if (value is Map<*, *>) {
-                        val valueMap: MutableMap<String, Any?> = HashMap()
-                        valueMap[valueKey] = value
                         val flattenedValueMap: MutableMap<String, Any?> = HashMap()
-                        convertNestedMapsToFlatMap("", valueMap, flattenedValueMap)
+                        convertNestedMapsToFlatMap("", hashMapOf(valueKey to value), flattenedValueMap)
                         for ((flattenedKey, flattenedValue) in flattenedValueMap) {
                             // check if it is file type, in this case we cannot deduce the type from value
                             val flattenedValueKind: String? = if (FILE == kinds[flattenedKey]) {
@@ -328,15 +300,9 @@ class CTVariableUtils {
         @JvmStatic
         fun deepCopyMap(originalMap: Map<*, *>): MutableMap<Any?, Any?> {
             val copiedMap: MutableMap<Any?, Any?> = HashMap()
-
             for ((key, value) in originalMap) {
-                if (value is Map<*, *>) {
-                    copiedMap[key] = deepCopyMap(JsonUtil.uncheckedCast(value))
-                } else {
-                    copiedMap[key] = value
-                }
+                copiedMap[key] = if (value is Map<*, *>) deepCopyMap(value) else value
             }
-
             return copiedMap
         }
     }

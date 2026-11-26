@@ -12,12 +12,21 @@ import com.clevertap.android.sdk.utils.FileUtils
 @Suppress("DEPRECATION")
 internal object CTFeatureFlagsFactory {
 
-    @JvmStatic
+    /**
+     * The nullable parameters mirror the (still nullable) SDK call sites; every caller passes real
+     * instances, which the controller requires.
+     */
     fun getInstance(
-        context: Context?, guid: String?, config: CleverTapInstanceConfig,
-        callbackManager: BaseCallbackManager?, analyticsManager: BaseAnalyticsManager?
-    ): CTFeatureFlagsController {
-        val fileUtils = FileUtils(context, config)
-        return CTFeatureFlagsController(guid, config, callbackManager, analyticsManager, fileUtils)
-    }
+        context: Context?,
+        guid: String?,
+        config: CleverTapInstanceConfig,
+        callbackManager: BaseCallbackManager?,
+        analyticsManager: BaseAnalyticsManager?
+    ): CTFeatureFlagsController = CTFeatureFlagsController(
+        guid,
+        config,
+        requireNotNull(callbackManager) { "callbackManager is required" },
+        requireNotNull(analyticsManager) { "analyticsManager is required" },
+        FileUtils(requireNotNull(context) { "context is required" }, config)
+    )
 }

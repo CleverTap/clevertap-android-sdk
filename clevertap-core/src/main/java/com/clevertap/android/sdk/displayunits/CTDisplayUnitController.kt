@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.displayunits
 
-import android.text.TextUtils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -20,12 +19,11 @@ internal open class CTDisplayUnitController : DisplayUnitCache {
      */
     @Synchronized
     override fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>? {
-        return if (items.isNotEmpty()) {
-            ArrayList(items.values)
-        } else {
+        if (items.isEmpty()) {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Failed to return Display Units, nothing found in the cache")
-            null
+            return null
         }
+        return ArrayList(items.values)
     }
 
     /**
@@ -36,12 +34,11 @@ internal open class CTDisplayUnitController : DisplayUnitCache {
      */
     @Synchronized
     override fun getDisplayUnitForID(unitID: String?): CleverTapDisplayUnit? {
-        return if (!TextUtils.isEmpty(unitID)) {
-            items[unitID!!]
-        } else {
+        if (unitID.isNullOrEmpty()) {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Can't return Display Unit, id was null")
-            null
+            return null
         }
+        return items[unitID]
     }
 
     /**
@@ -61,14 +58,15 @@ internal open class CTDisplayUnitController : DisplayUnitCache {
     @Synchronized
     override fun updateDisplayUnits(displayUnits: List<CleverTapDisplayUnit>?) {
         reset()
-        if (displayUnits == null || displayUnits.isEmpty()) {
+        if (displayUnits.isNullOrEmpty()) {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, cache cleared")
             return
         }
-        for (unit in displayUnits) {
-            @Suppress("SENSELESS_COMPARISON")
-            if (unit != null && !TextUtils.isEmpty(unit.getUnitID())) {
-                items[unit.getUnitID()!!] = unit
+        // filterNotNull: Java implementors/callers may hand over null elements
+        for (unit in displayUnits.filterNotNull()) {
+            val unitID = unit.getUnitID()
+            if (!unitID.isNullOrEmpty()) {
+                items[unitID] = unit
             }
         }
     }

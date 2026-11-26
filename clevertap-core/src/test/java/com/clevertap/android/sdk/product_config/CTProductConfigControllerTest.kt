@@ -20,7 +20,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -279,7 +278,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
                 cleverTapInstanceConfig
             )
             val controller = spyk(mProductConfigController)
-            controller.initializedFlag = AtomicBoolean(true)
+            controller.initializedFlag.set(true)
             val newGuid = "333333333"
             controller.setGuidAndInit(newGuid)
             assertEquals(controller.settings.guid, guid)

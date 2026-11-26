@@ -16,10 +16,7 @@ internal open class EventMediator(
 ) {
 
     open fun shouldDeferProcessingEvent(event: JSONObject, eventType: Int): Boolean {
-        if (eventType == Constants.DEFINE_VARS_EVENT) {
-            return false
-        }
-        if (config.isCreatedPostAppLaunch) {
+        if (eventType == Constants.DEFINE_VARS_EVENT || config.isCreatedPostAppLaunch) {
             return false
         }
         if (event.has("evtName")) {
@@ -31,7 +28,7 @@ internal open class EventMediator(
                 //no-op
             }
         }
-        return (eventType == Constants.RAISED_EVENT && !cleverTapMetaData.isAppLaunchPushed)
+        return eventType == Constants.RAISED_EVENT && !cleverTapMetaData.isAppLaunchPushed
     }
 
     open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean {
@@ -40,8 +37,8 @@ internal open class EventMediator(
         }
 
         if (networkRepo.isMuted()) {
-            config.logger
-                .verbose(config.accountId, "CleverTap is muted, dropping event - " + event!!.toString())
+            // a null event throws here, as it did in Java
+            config.logger.verbose(config.accountId, "CleverTap is muted, dropping event - ${checkNotNull(event)}")
             return true
         }
 
@@ -66,9 +63,8 @@ internal open class EventMediator(
 
         // opted-out and system events enabled
         // check for Constants.RAISED_EVENT and Constants.NV_EVENT event special cases
-        val eName = if (event != null) getEventName(event) else null
-        val isSystemEvent = ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES.contains(eName)
-        val dropEvent = !isSystemEvent
+        val eName = event?.let { getEventName(it) }
+        val dropEvent = eName !in ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES
         if (dropEvent) {
             config.logger.debug(config.accountId, "Current user is opted out dropping event: $event")
         } else {
@@ -77,56 +73,37 @@ internal open class EventMediator(
         return dropEvent
     }
 
-    open fun isAppLaunchedEvent(event: JSONObject): Boolean {
-        return try {
-            event.has(Constants.KEY_EVT_NAME) &&
-                    event.getString(Constants.KEY_EVT_NAME) == Constants.APP_LAUNCHED_EVENT
-        } catch (e: JSONException) {
-            false
-        }
+    open fun isAppLaunchedEvent(event: JSONObject): Boolean = hasEventName(event, Constants.APP_LAUNCHED_EVENT)
+
+    open fun isEvent(event: JSONObject): Boolean = event.has(Constants.KEY_EVT_NAME)
+
+    open fun getEventName(event: JSONObject): String? = try {
+        event.getString(Constants.KEY_EVT_NAME)
+    } catch (e: JSONException) {
+        null
     }
 
-    open fun isEvent(event: JSONObject): Boolean {
-        return event.has(Constants.KEY_EVT_NAME)
+    open fun isChargedEvent(event: JSONObject): Boolean = hasEventName(event, Constants.CHARGED_EVENT)
+
+    private fun hasEventName(event: JSONObject, name: String): Boolean = try {
+        event.has(Constants.KEY_EVT_NAME) && event.getString(Constants.KEY_EVT_NAME) == name
+    } catch (e: JSONException) {
+        false
     }
 
-    open fun getEventName(event: JSONObject): String? {
-        return try {
-            event.getString(Constants.KEY_EVT_NAME)
-        } catch (e: JSONException) {
-            null
-        }
+    open fun getChargedEventItemDetails(event: JSONObject): List<Map<String, Any>> = try {
+        JsonUtil.listFromJsonSafe(event.getJSONObject(Constants.KEY_EVT_DATA).getJSONArray(Constants.KEY_ITEMS))
+    } catch (e: JSONException) {
+        emptyList()
     }
 
-    open fun isChargedEvent(event: JSONObject): Boolean {
-        return try {
-            event.has(Constants.KEY_EVT_NAME) &&
-                    event.getString(Constants.KEY_EVT_NAME) == Constants.CHARGED_EVENT
-        } catch (e: JSONException) {
-            false
-        }
-    }
-
-    open fun getChargedEventItemDetails(event: JSONObject): List<Map<String, Any>> {
-        return try {
-            JsonUtil.listFromJson<Map<String, Any>>(
-                event.getJSONObject(Constants.KEY_EVT_DATA).getJSONArray(Constants.KEY_ITEMS)
-            )!!
-        } catch (e: JSONException) {
-            ArrayList()
-        }
-    }
-
-    open fun getChargedEventDetails(event: JSONObject): Map<String, Any> {
-        return try {
-            val items = event.getJSONObject(Constants.KEY_EVT_DATA).remove(Constants.KEY_ITEMS)
-            val chargedDetails: Map<String, Any> = JsonUtil.mapFromJson<Any>(
-                event.getJSONObject(Constants.KEY_EVT_DATA)
-            )
-            event.getJSONObject(Constants.KEY_EVT_DATA).put(Constants.KEY_ITEMS, items)
-            chargedDetails
-        } catch (e: JSONException) {
-            HashMap()
-        }
+    open fun getChargedEventDetails(event: JSONObject): Map<String, Any> = try {
+        val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+        val items = evtData.remove(Constants.KEY_ITEMS)
+        val chargedDetails = JsonUtil.mapFromJson<Any>(evtData)
+        evtData.put(Constants.KEY_ITEMS, items)
+        chargedDetails
+    } catch (e: JSONException) {
+        emptyMap()
     }
 }

@@ -9,30 +9,14 @@ import com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN
  */
 internal open class LegacyIdentityRepo(private val config: CleverTapInstanceConfig) : IdentityRepo {
 
-    private lateinit var identities: IdentitySet
-
-    init {
-        loadIdentitySet()
+    override val identitySet: IdentitySet = IdentitySet.default().also {
+        config.log(LOG_TAG_ON_USER_LOGIN, "$TAG Setting the default IdentitySet[$it]")
     }
 
-    override val identitySet: IdentitySet
-        get() = identities
-
-    override fun hasIdentity(Key: String): Boolean {
-        val hasIdentity = identities.contains(Key)
-        config.log(
-            LOG_TAG_ON_USER_LOGIN,
-            "isIdentity [Key: $Key , Value: $hasIdentity]"
-        )
+    override fun hasIdentity(key: String): Boolean {
+        val hasIdentity = identitySet.contains(key)
+        config.log(LOG_TAG_ON_USER_LOGIN, "isIdentity [Key: $key , Value: $hasIdentity]")
         return hasIdentity
-    }
-
-    private fun loadIdentitySet() {
-        this.identities = IdentitySet.getDefault()
-        config.log(
-            LOG_TAG_ON_USER_LOGIN,
-            "$TAG Setting the default IdentitySet[$identities]"
-        )
     }
 
     private companion object {

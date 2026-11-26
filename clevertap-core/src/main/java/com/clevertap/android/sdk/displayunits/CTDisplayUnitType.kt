@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.displayunits
 
-import android.text.TextUtils
 import android.util.Log
 import com.clevertap.android.sdk.Constants
 
@@ -16,9 +15,7 @@ enum class CTDisplayUnitType(@JvmField val type: String) {
     MESSAGE_WITH_ICON("message-icon"),
     CUSTOM_KEY_VALUE("custom-key-value");
 
-    override fun toString(): String {
-        return type
-    }
+    override fun toString(): String = type
 
     companion object {
 
@@ -30,18 +27,11 @@ enum class CTDisplayUnitType(@JvmField val type: String) {
          */
         @JvmStatic
         fun type(type: String): CTDisplayUnitType? {
-            if (!TextUtils.isEmpty(type)) {
-                when (type) {
-                    "simple" -> return SIMPLE
-                    "simple-image" -> return SIMPLE_WITH_IMAGE
-                    "carousel" -> return CAROUSEL
-                    "carousel-image" -> return CAROUSEL_WITH_IMAGE
-                    "message-icon" -> return MESSAGE_WITH_ICON
-                    "custom-key-value" -> return CUSTOM_KEY_VALUE
-                }
+            val displayUnitType = entries.firstOrNull { it.type == type }
+            if (displayUnitType == null) {
+                Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")
             }
-            Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")
-            return null
+            return displayUnitType
         }
     }
 }
