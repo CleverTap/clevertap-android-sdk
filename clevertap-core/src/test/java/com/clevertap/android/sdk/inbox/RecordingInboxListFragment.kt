@@ -10,14 +10,20 @@ import android.view.ViewGroup
  * that records [refreshList] and [onPageSettled] invocations instead of
  * executing them.
  */
-internal class RecordingInboxListFragment : CTInboxListViewFragment() {
+internal open class RecordingInboxListFragment : CTInboxListViewFragment() {
 
     var refreshListCalls = 0
 
     var onPageSettledCalls = 0
 
+    var onPageHiddenCalls = 0
+
     override fun refreshList() {
         refreshListCalls++
+    }
+
+    override fun onPageHidden() {
+        onPageHiddenCalls++
     }
 
     override fun onPageSettled() {

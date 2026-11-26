@@ -23,6 +23,13 @@ internal open class CTInboxTabAdapter(fm: FragmentManager, size: Int) :
     override fun getItem(position: Int): Fragment =
         checkNotNull(fragmentList[position]) { "Every slot is filled through addFragment() before the adapter is attached" }
 
+    /**
+     * The fragment in [position], or null while that slot is still empty. The page-change listener
+     * uses this instead of [getItem] (which must be non-null for FragmentPagerAdapter): like the
+     * original Java adapter, a not-yet-filled tab is simply skipped.
+     */
+    fun fragmentAt(position: Int): Fragment? = fragmentList[position]
+
     override fun getPageTitle(position: Int): CharSequence? = fragmentTitleList[position]
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {

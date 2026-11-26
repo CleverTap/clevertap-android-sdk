@@ -283,15 +283,15 @@ public open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.
 
         internal const val VIDEO_STATES_KEY = "videoStates"
 
-        /**
-         * Tells the tab that just came to rest it is fully on screen, so its video can start.
-         * onPageSelected() fires while the page is still animating, when rows still measure zero
-         * visible height - only SCROLL_STATE_IDLE means settled.
-         */
+        /** Hides the other tabs when a tab is chosen, and starts the current tab's video once the pager rests. */
         internal fun createPageSettledListener(
             pager: ViewPager,
             adapter: CTInboxTabAdapter
         ): ViewPager.OnPageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
+            override fun onPageSelected(position: Int) {
+                hideOtherTabs(adapter, position)
+            }
+
             override fun onPageScrollStateChanged(state: Int) {
                 if (state != ViewPager.SCROLL_STATE_IDLE) {
                     return
@@ -300,7 +300,18 @@ public open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.
                 if (position !in 0 until adapter.count) {
                     return
                 }
-                (adapter.getItem(position) as? CTInboxListViewFragment)?.onPageSettled()
+                // The other tabs release first, so only one player is alive when the video starts
+                hideOtherTabs(adapter, position)
+                (adapter.fragmentAt(position) as? CTInboxListViewFragment)?.onPageSettled()
+            }
+        }
+
+        /** Hides every tab except [position], so their players are released. Empty slots are skipped. */
+        private fun hideOtherTabs(adapter: CTInboxTabAdapter, position: Int) {
+            for (i in 0 until adapter.count) {
+                if (i != position) {
+                    (adapter.fragmentAt(i) as? CTInboxListViewFragment)?.onPageHidden()
+                }
             }
         }
 

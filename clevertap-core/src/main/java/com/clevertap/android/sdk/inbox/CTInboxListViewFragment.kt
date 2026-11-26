@@ -245,9 +245,11 @@ internal open class CTInboxListViewFragment : Fragment() {
         mediaRecyclerView?.playVideo()
     }
 
-    override fun onPause() {
-        super.onPause()
-        // A tab that is not the current one must not keep a player and its decoder
+    /**
+     * Releases this tab's player when another tab is chosen. A dialog or split-screen pause does
+     * not; onStop() does.
+     */
+    open fun onPageHidden() {
         mediaRecyclerView?.releasePlayer()
     }
 
