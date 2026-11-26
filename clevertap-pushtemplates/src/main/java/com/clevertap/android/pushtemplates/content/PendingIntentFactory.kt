@@ -6,14 +6,17 @@ import android.content.Intent
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
-import com.clevertap.android.pushtemplates.*
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
+import com.clevertap.android.pushtemplates.PushTemplateReceiver
 import com.clevertap.android.pushtemplates.PTConstants.KEY_CLICKED_STAR
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
-import java.util.*
+import java.util.Random
 
 const val BASIC_CONTENT_PENDING_INTENT = 1
 const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2

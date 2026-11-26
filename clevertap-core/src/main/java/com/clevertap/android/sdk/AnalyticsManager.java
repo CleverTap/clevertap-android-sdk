@@ -512,8 +512,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * Raises the Notification Clicked event, if {@param clicked} is true,
-     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     * Raises the Notification Clicked event, if {@code clicked} is true,
+     * otherwise the Notification Viewed event, if {@code clicked} is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data
@@ -853,11 +853,21 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     @Override
     public void pushProfile(final Map<String, Object> profile) {
         config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);
-        if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
+        if (profile == null || profile.isEmpty()) {
             return;
         }
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("profilePush", () -> {
+            // SDK-6254: check the device id on the serial queue, not on the caller's thread. The
+            // device-id barrier resolves the id as the first job on this same per-account queue, so
+            // by the time this job runs the id is present. Checking on the caller's thread instead
+            // would silently drop a profile pushed right after start-up on a first launch — before
+            // the id had resolved — which is exactly when the first profile data arrives.
+            if (deviceInfo.getDeviceID() == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "pushProfile: device id not available, dropping profile");
+                return null;
+            }
             _push(profile);
             return null;
         });
@@ -1248,8 +1258,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * Raises the Notification Clicked event, if {@param clicked} is true,
-     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     * Raises the Notification Clicked event, if {@code clicked} is true,
+     * otherwise the Notification Viewed event, if {@code clicked} is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data

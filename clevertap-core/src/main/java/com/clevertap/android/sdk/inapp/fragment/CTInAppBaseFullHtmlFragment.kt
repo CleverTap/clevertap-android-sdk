@@ -85,13 +85,15 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             webView.setWebViewClient(webViewClient)
 
             if (inAppNotification.isJsEnabled) {
-                val instance = CleverTapAPI.instanceWithConfig(activity, config)
+                // Application context, not the Fragment's Activity: instanceWithConfig may retain
+                // the Context for the instance's lifetime, which would leak the Activity.
+                val instance = CleverTapAPI.instanceWithConfig(activity?.applicationContext, config)
                 val ctWebInterface = CTWebInterface(instance, this)
                 webView.setJavaScriptInterface(ctWebInterface)
             }
 
             if (isDarkenEnabled()) {
-                rl.background = ColorDrawable(-0x45000000)
+                rl.background = ColorDrawable(0xBB000000.toInt())
             } else {
                 rl.background = ColorDrawable(0x00000000)
             }

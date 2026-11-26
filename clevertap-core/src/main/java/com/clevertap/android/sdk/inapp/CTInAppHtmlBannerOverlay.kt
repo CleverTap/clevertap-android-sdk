@@ -92,7 +92,8 @@ internal class CTInAppHtmlBannerOverlay(
         mainHandler.post(this::build)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    // The touch listener only detects a swipe to dismiss, it is not a click, so performClick is not needed
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     private fun build() {
         // This is partially based on CTInAppBasePartialHtmlFragment.displayHTMLView().
         val activity = activityWeakRef.get()
@@ -131,7 +132,9 @@ internal class CTInAppHtmlBannerOverlay(
             webView.setOnLongClickListener(this)
 
             if (isJsEnabled) {
-                val instance = CleverTapAPI.instanceWithConfig(activity, config)
+                // Application context, not the Activity: instanceWithConfig may retain the Context
+                // for the instance's lifetime, which would leak the Activity.
+                val instance = CleverTapAPI.instanceWithConfig(activity.applicationContext, config)
                 webView.setJavaScriptInterface(CTWebInterface(instance, host))
             }
 

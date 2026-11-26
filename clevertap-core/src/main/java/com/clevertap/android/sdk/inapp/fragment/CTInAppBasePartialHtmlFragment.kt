@@ -81,7 +81,8 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    // The touch listener only detects a swipe to dismiss, it is not a click, so performClick is not needed
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     private fun displayHTMLView(inflater: LayoutInflater, container: ViewGroup?): View? {
         try {
             val inAppView = getView(inflater, container)
@@ -105,7 +106,9 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
             webView.setOnLongClickListener(this)
 
             if (inAppNotification.isJsEnabled) {
-                val instance = CleverTapAPI.instanceWithConfig(activity, config)
+                // Application context, not the Fragment's Activity: instanceWithConfig may retain
+                // the Context for the instance's lifetime, which would leak the Activity.
+                val instance = CleverTapAPI.instanceWithConfig(activity?.applicationContext, config)
                 val ctWebInterface = CTWebInterface(instance, this)
                 webView.setJavaScriptInterface(ctWebInterface)
             }

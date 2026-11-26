@@ -154,7 +154,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 throw new IllegalArgumentException();
             }
 
-            CoreState ctState = CleverTapAPI.instanceWithConfig(this, config).getCoreState();
+            // Pass the application context: instanceWithConfig may construct a CleverTapAPI that
+            // retains the Context for the instance's (long) lifetime, so handing it an Activity
+            // context would leak this Activity.
+            CoreState ctState = CleverTapAPI.instanceWithConfig(getApplicationContext(), config).getCoreState();
 
             pushPermissionHandler = new PushPermissionHandler(
                     config,
@@ -256,7 +259,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (inAppId == null || restoreConfig == null) {
                 return false;
             }
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, restoreConfig);
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), restoreConfig);
             if (cleverTapAPI == null) {
                 return false;
             }
@@ -604,7 +607,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         restoreTimeoutHandler.removeCallbacksAndMessages(null);
 
         if (config != null) {
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 CoreState ctState = cleverTapAPI.getCoreState();
                 if (ctState != null) {

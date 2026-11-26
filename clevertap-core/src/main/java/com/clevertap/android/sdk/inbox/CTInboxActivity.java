@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionHandler;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import com.google.android.material.tabs.TabLayout;
 
 import java.lang.ref.WeakReference;
@@ -65,9 +66,30 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     private PushPermissionHandler pushPermissionHandler;
 
+    static final String VIDEO_STATES_KEY = "videoStates";
+
+    private final InboxVideoStates videoStates = new InboxVideoStates();
+
+    /** Where the videos were left, shared by the lists of all tabs of this screen. */
+    InboxVideoStates getVideoStates() {
+        return videoStates;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState); // the lists save the video that is playing now first
+        Bundle saved = videoStates.save();
+        if (!saved.isEmpty()) {
+            outState.putBundle(VIDEO_STATES_KEY, saved);
+        }
+    }
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            videoStates.restore(savedInstanceState.getBundle(VIDEO_STATES_KEY));
+        }
         try {
             Bundle extras = getIntent().getExtras();
             if (extras == null) {
@@ -177,14 +199,15 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
     }
 
-    /**
-     * Tells the tab that just came to rest it is fully on screen, so its video can start.
-     * onPageSelected() fires while the page is still animating, when rows still measure zero
-     * visible height - only SCROLL_STATE_IDLE means settled.
-     */
+    /** Hides the other tabs when a tab is chosen, and starts the current tab's video once the pager rests. */
     static ViewPager.OnPageChangeListener createPageSettledListener(final ViewPager pager,
             final CTInboxTabAdapter adapter) {
         return new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                hideOtherTabs(adapter, position);
+            }
+
             @Override
             public void onPageScrollStateChanged(int state) {
                 if (state != ViewPager.SCROLL_STATE_IDLE) {
@@ -194,12 +217,23 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 if (position < 0 || position >= adapter.getCount()) {
                     return;
                 }
+                // The other tabs release first, so only one player is alive when the video starts
+                hideOtherTabs(adapter, position);
                 Fragment fragment = adapter.getItem(position);
                 if (fragment instanceof CTInboxListViewFragment) {
                     ((CTInboxListViewFragment) fragment).onPageSettled();
                 }
             }
         };
+    }
+
+    private static void hideOtherTabs(CTInboxTabAdapter adapter, int position) {
+        for (int i = 0; i < adapter.getCount(); i++) {
+            Fragment other = adapter.getItem(i);
+            if (i != position && other instanceof CTInboxListViewFragment) {
+                ((CTInboxListViewFragment) other).onPageHidden();
+            }
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -424,6 +425,42 @@ class EventQueueManagerTest : BaseTestCase() {
 
             runnableSlot.captured.run()
 
+            verify { eventQueueManager.flushQueueSync(application, REGULAR) }
+            verify { eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED) }
+        }
+    }
+
+    @Test
+    fun test_flushOnAppBackground_cancelsPendingFlushAndFlushesImmediately() {
+        withMockExecutors {
+
+            // Arrange
+            val pendingRunnable = slot<Runnable>()
+            every { eventQueueManager.flushQueueSync(any(), any()) } just runs
+            eventQueueManager.scheduleQueueFlush(application)
+            verify { corestate.mainLooperHandler.postDelayed(capture(pendingRunnable), any()) }
+            clearMocks(corestate.networkManager, answers = false)
+
+            // Act
+            eventQueueManager.flushOnAppBackground(application)
+
+            // Assert
+            verify(exactly = 2) { corestate.mainLooperHandler.removeCallbacks(pendingRunnable.captured) }
+            verify { eventQueueManager.flushQueueSync(application, REGULAR) }
+            verify { eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED) }
+            verify(exactly = 0) { corestate.networkManager.getDelayFrequency() }
+        }
+    }
+
+    @Test
+    fun test_flushOnAppBackground_withoutPendingFlush_flushesImmediately() {
+        withMockExecutors {
+
+            every { eventQueueManager.flushQueueSync(any(), any()) } just runs
+
+            eventQueueManager.flushOnAppBackground(application)
+
+            verify(exactly = 0) { corestate.mainLooperHandler.removeCallbacks(any()) }
             verify { eventQueueManager.flushQueueSync(application, REGULAR) }
             verify { eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED) }
         }

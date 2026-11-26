@@ -19,6 +19,10 @@ One can define variables using the following three methods:
 - Using the `@Variable` annotation on a static field of a class
 - Using the `@Variable` annotation on an instance field of a class
 
+> ❗️ Final fields
+> 
+> Do not declare `@Variable` fields as `final`. The SDK cannot update them: `final` primitive and `String` values are copied into your code when it is compiled, and apps that target Android 17 (API 37) cannot change `static final` fields at all.
+
 ## Using `defineVariable(...)` Method
 
 You can provide the name and default value of the variable when calling  `defineVariable(...)` method. 

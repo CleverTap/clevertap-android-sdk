@@ -18,9 +18,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,6 +36,7 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView;
 import com.clevertap.android.sdk.customviews.VerticalSpaceItemDecoration;
 import com.clevertap.android.sdk.video.VideoLibChecker;
@@ -46,6 +50,7 @@ import java.util.List;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
+@OptIn(markerClass = UnstableApi.class)
 public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
@@ -65,6 +70,8 @@ public class CTInboxListViewFragment extends Fragment {
     LinearLayout linearLayout;
 
     MediaPlayerRecyclerView mediaRecyclerView;
+
+    private InboxVideoStates ownVideoStates;
 
     RecyclerView recyclerView;
 
@@ -114,7 +121,9 @@ public class CTInboxListViewFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle == null) return null;
         final String filter = bundle.getString("filter", null);
-        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
+        // Application context, not the Activity: instanceWithConfig may retain the Context for the
+        // instance's lifetime, which would leak the Activity.
+        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
         if (cleverTapAPI == null) return null;
         Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
         ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
@@ -148,11 +157,23 @@ public class CTInboxListViewFragment extends Fragment {
         noMessageView.setVisibility(View.VISIBLE);
     }
 
+    /** In the inbox screen the tabs share the screen's states; a fragment outside it keeps its own. */
+    @VisibleForTesting
+    InboxVideoStates videoStates() {
+        if (getActivity() instanceof CTInboxActivity) {
+            return ((CTInboxActivity) getActivity()).getVideoStates();
+        }
+        if (ownVideoStates == null) {
+            ownVideoStates = new InboxVideoStates();
+        }
+        return ownVideoStates;
+    }
+
     private void buildListView() {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
         if (haveVideoPlayerSupport) {
-            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
+            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity(), videoStates());
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -193,6 +214,10 @@ public class CTInboxListViewFragment extends Fragment {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
             }
+            if (!(getActivity() instanceof CTInboxActivity)) {
+                // Outside the inbox screen the fragment keeps its own states, even before its list is built
+                videoStates().restore(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY));
+            }
 
             if (recyclerView != null) {
                 if (recyclerView.getLayoutManager() != null) {
@@ -224,11 +249,10 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    /** Releases this tab's player when another tab is chosen. A dialog or split-screen pause does not; onStop() does. */
+    void onPageHidden() {
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.onPausePlayer();
+            mediaRecyclerView.releasePlayer();
         }
     }
 
@@ -240,6 +264,10 @@ public class CTInboxListViewFragment extends Fragment {
                 outState.putParcelable("recyclerLayoutState",
                         mediaRecyclerView.getLayoutManager().onSaveInstanceState());
             }
+            mediaRecyclerView.rememberPlayingVideo(); // into the states the activity or this fragment keeps
+            if (ownVideoStates != null) {
+                outState.putBundle(CTInboxActivity.VIDEO_STATES_KEY, ownVideoStates.save());
+            }
         }
 
         if (recyclerView != null) {
@@ -250,10 +278,19 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        // Free the player while the inbox is not visible; each video resumes from where it was.
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.releasePlayer();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.stop();
+            mediaRecyclerView.releasePlayer();
         }
     }
 

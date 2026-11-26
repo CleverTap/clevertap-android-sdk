@@ -50,6 +50,8 @@ internal class EventQueueManager(
     private val controllerManager: ControllerManager,
     private val loginInfoProvider: LoginInfoProvider, private val networkMonitor: NetworkMonitor
 ) : BaseEventQueueManager(), FailureFlushListener {
+    // Written on the serial executor, read on the main thread in flushOnAppBackground
+    @Volatile
     private var commsRunnable: Runnable? = null
 
     private val logger: Logger = config.logger
@@ -94,6 +96,14 @@ internal class EventQueueManager(
 
     override fun flush() {
         flushQueueAsync(context, EventGroup.REGULAR)
+    }
+
+    override fun flushOnAppBackground(context: Context) {
+        logger.verbose(config.accountId, "App backgrounded, flushing queued events")
+        // Cancel the pending delayed flush; we flush right away instead of waiting for it
+        commsRunnable?.let { mainLooperHandler.removeCallbacks(it) }
+        flushQueueAsync(context, EventGroup.REGULAR)
+        flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
     }
 
     override fun flushQueueAsync(context: Context, eventGroup: EventGroup) {
