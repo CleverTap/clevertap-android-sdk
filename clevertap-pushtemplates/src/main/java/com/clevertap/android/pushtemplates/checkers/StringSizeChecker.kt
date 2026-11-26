@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class StringSizeChecker(var entity: String?, var size: Int, var errorMsg: String) :
-    SizeChecker<String>(entity, size, errorMsg) {
+    Checker<String> {
 
     override fun check(): Boolean {
         val b = entity?.trim()?.length ?: -1 <= size

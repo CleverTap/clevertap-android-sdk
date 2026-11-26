@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class JsonArraySizeChecker(val entity: JSONArray?, var size: Int, var errorMsg: String) :
-    SizeChecker<JSONArray>(entity, size, errorMsg) {
+    Checker<JSONArray> {
 
     override fun check(): Boolean {
         val b = entity == null

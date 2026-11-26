@@ -26,9 +26,9 @@ internal open class ProductDisplayLinearBigContentView(
     ContentView(context, layoutId, renderer.templateMediaManager) {
 
     protected var productName: String = data.bigTextList[0]
-    private var productPrice: String = data.priceList[0]
+    private val productPrice: String = data.priceList[0]
     protected var productMessage: String = data.smallTextList[0]
-    private var productDL: String = data.baseContent.deepLinkList[0]
+    private val productDL: String = data.baseContent.deepLinkList[0]
 
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)

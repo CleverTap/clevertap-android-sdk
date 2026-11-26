@@ -151,68 +151,67 @@ public class TemplateRenderer @JvmOverloads constructor(
             }
 
             is FiveIconsTemplateData -> {
-                val validator = ValidatorFactory.getValidator(templateData)
-                if (validator == null) {
-                    null
-                } else if (validator.validate()) {
-                    val fiveIconStyle = FiveIconStyle(templateData, this, extras)
-                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
-                        context,
-                        extras,
-                        notificationId,
-                        nb
-                    )
-
-                    /**
-                     * If most icon bitmaps fail to load, gracefully fall back to a basic
-                     * title/message notification instead of suppressing the notification.
-                     */
-                    if (
-                        (fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView)
-                            .getUnloadedFiveIconsCount() > 2 ||
-                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView)
-                            .getUnloadedFiveIconsCount() > 2
-                    ) {
-                        PTLog.debug(
-                            "More than 2 images were not retrieved in 5CTA Notification, reverting to basic template."
+                ValidatorFactory.getValidator(templateData)?.let { validator ->
+                    if (validator.validate()) {
+                        val fiveIconStyle = FiveIconStyle(templateData, this, extras)
+                        val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                            context,
+                            extras,
+                            notificationId,
+                            nb
                         )
-                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+
+                        /**
+                         * If most icon bitmaps fail to load, gracefully fall back to a basic
+                         * title/message notification instead of suppressing the notification.
+                         */
+                        if (
+                            (fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView)
+                                .getUnloadedFiveIconsCount() > 2 ||
+                            (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView)
+                                .getUnloadedFiveIconsCount() > 2
+                        ) {
+                            PTLog.debug(
+                                "More than 2 images were not retrieved in 5CTA Notification, " +
+                                    "reverting to basic template."
+                            )
+                            buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                        } else {
+                            fiveIconNotificationBuilder
+                        }
                     } else {
-                        fiveIconNotificationBuilder
+                        PTLog.debug("Five Icons template validation failed, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                     }
-                } else {
-                    PTLog.debug("Five Icons template validation failed, reverting to basic template.")
-                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                 }
             }
 
             is IconsTemplateData -> {
-                val validator = ValidatorFactory.getValidator(templateData)
-                if (validator == null) {
-                    null
-                } else if (validator.validate()) {
-                    val iconsStyle = IconsStyle(templateData, this, extras)
-                    val iconsNotificationBuilder = iconsStyle.builderFromStyle(
-                        context,
-                        extras,
-                        notificationId,
-                        nb
-                    )
+                ValidatorFactory.getValidator(templateData)?.let { validator ->
+                    if (validator.validate()) {
+                        val iconsStyle = IconsStyle(templateData, this, extras)
+                        val iconsNotificationBuilder = iconsStyle.builderFromStyle(
+                            context,
+                            extras,
+                            notificationId,
+                            nb
+                        )
 
-                    /**
-                     * If most icon bitmaps fail to load, gracefully fall back to a basic
-                     * title/message notification instead of suppressing the notification.
-                     */
-                    if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
-                        iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
-                        PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
-                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                        /**
+                         * If most icon bitmaps fail to load, gracefully fall back to a basic
+                         * title/message notification instead of suppressing the notification.
+                         */
+                        if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
+                            iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
+                            PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
+                            buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                        } else {
+                            iconsNotificationBuilder
+                        }
                     } else {
-                        iconsNotificationBuilder
+                        PTLog.debug("Icons template validation failed, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                     }
-                } else {
-                    PTLog.debug("Icons template validation failed, reverting to basic template.")
-                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                 }
             }
 
