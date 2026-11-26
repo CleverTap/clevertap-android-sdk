@@ -13,17 +13,11 @@ internal object ProductConfigUtil {
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    @JvmStatic
-    fun getLogTag(config: CleverTapInstanceConfig?): String {
-        return (config?.accountId ?: "") + TAG_PRODUCT_CONFIG
-    }
+    fun getLogTag(config: CleverTapInstanceConfig?): String = "${config?.accountId ?: ""}$TAG_PRODUCT_CONFIG"
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    @JvmStatic
-    fun isSupportedDataType(`object`: Any?): Boolean {
-        return `object` is String || `object` is Number || `object` is Boolean
-    }
+    fun isSupportedDataType(value: Any?): Boolean = value is String || value is Number || value is Boolean
 }

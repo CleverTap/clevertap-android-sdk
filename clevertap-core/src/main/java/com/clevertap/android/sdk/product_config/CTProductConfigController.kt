@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.product_config
 
 import android.content.Context
-import android.text.TextUtils
 import com.clevertap.android.sdk.BaseAnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -14,7 +13,6 @@ import com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT
 import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY
 import com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE
 import com.clevertap.android.sdk.task.CTExecutorFactory
-import com.clevertap.android.sdk.task.OnSuccessListener
 import com.clevertap.android.sdk.utils.FileUtils
 import org.json.JSONException
 import org.json.JSONObject
@@ -32,16 +30,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class CTProductConfigController @Deprecated(
     "This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
 ) internal constructor(
-    private val context: Context?,
+    private val context: Context,
     internal val config: CleverTapInstanceConfig,
-    internal val analyticsManager: BaseAnalyticsManager?,
-    internal val coreMetaData: CoreMetaData?,
-    internal val callbackManager: BaseCallbackManager?,
-    productConfigSettings: ProductConfigSettings,
+    internal val analyticsManager: BaseAnalyticsManager,
+    internal val coreMetaData: CoreMetaData,
+    internal val callbackManager: BaseCallbackManager,
+    private val settingsValue: ProductConfigSettings,
     internal val fileUtils: FileUtils
 ) {
 
-    private enum class PROCESSING_STATE {
+    private enum class ProcessingState {
         INIT,
         FETCHED,
         ACTIVATED
@@ -53,15 +51,15 @@ open class CTProductConfigController @Deprecated(
     //use lock for synchronization for read write
     internal val defaultConfigs: MutableMap<String, String> = Collections.synchronizedMap(HashMap())
 
-    internal var initializedFlag = AtomicBoolean(false)
+    internal val initializedFlag = AtomicBoolean(false)
 
     private val isFetchAndActivatingFlag = AtomicBoolean(false)
 
-    private val settingsValue: ProductConfigSettings = productConfigSettings
-
     //use lock for synchronization for read write
-    private val waitingTobeActivatedConfig: MutableMap<String, String> = Collections
-        .synchronizedMap(HashMap())
+    private val waitingTobeActivatedConfig: MutableMap<String, String> = Collections.synchronizedMap(HashMap())
+
+    private val logTag: String
+        get() = ProductConfigUtil.getLogTag(config)
 
     init {
         initAsync()
@@ -74,40 +72,30 @@ open class CTProductConfigController @Deprecated(
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun activate() {
-        if (TextUtils.isEmpty(settingsValue.getGuid())) {
+        if (settingsValue.getGuid().isNullOrEmpty()) {
             return
         }
         val task = CTExecutorFactory.executors(config).ioTask<Void?>()
-        task.addOnSuccessListener(OnSuccessListener { sendCallback(PROCESSING_STATE.ACTIVATED) })
+        task.addOnSuccessListener { sendCallback(ProcessingState.ACTIVATED) }
             .execute("activateProductConfigs", object : Callable<Void?> {
                 override fun call(): Void? {
                     // Locks on this Callable instance, exactly like the Java original's synchronized (this).
                     synchronized(this) {
                         try {
                             //read fetched info
-                            var toWriteValues = HashMap<String, String>()
-                            if (waitingTobeActivatedConfig.isNotEmpty()) {
-                                toWriteValues.putAll(waitingTobeActivatedConfig)
-                                waitingTobeActivatedConfig.clear()
+                            val toWriteValues = if (waitingTobeActivatedConfig.isNotEmpty()) {
+                                HashMap(waitingTobeActivatedConfig).also { waitingTobeActivatedConfig.clear() }
                             } else {
-                                toWriteValues = getStoredValues(activatedFullPath)
+                                getStoredValues(activatedFullPath)
                             }
 
                             activatedConfigs.clear()
                             //apply default config first
-                            if (defaultConfigs.isNotEmpty()) {
-                                activatedConfigs.putAll(defaultConfigs)
-                            }
+                            activatedConfigs.putAll(defaultConfigs)
                             activatedConfigs.putAll(toWriteValues)
-                            config.logger.verbose(
-                                ProductConfigUtil.getLogTag(config),
-                                "Activated successfully with configs: $activatedConfigs"
-                            )
+                            config.logger.verbose(logTag, "Activated successfully with configs: $activatedConfigs")
                         } catch (e: Exception) {
-                            config.logger.verbose(
-                                ProductConfigUtil.getLogTag(config),
-                                "Activate failed", e
-                            )
+                            config.logger.verbose(logTag, "Activate failed", e)
                         }
                         return null
                     }
@@ -159,21 +147,16 @@ open class CTProductConfigController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun fetchProductConfig() {
         val event = JSONObject()
-        val notif = JSONObject()
         try {
-            notif.put("t", Constants.FETCH_TYPE_PC)
+            val notif = JSONObject().put("t", Constants.FETCH_TYPE_PC)
             event.put("evtName", Constants.WZRK_FETCH)
             event.put("evtData", notif)
         } catch (e: JSONException) {
-            config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "Error creating fetch event JSON", e
-            )
+            config.logger.verbose(logTag, "Error creating fetch event JSON", e)
         }
-        analyticsManager!!.sendFetchEvent(event)
-        coreMetaData!!.isProductConfigRequested = true
-        config.logger
-            .verbose(config.accountId, Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config")
+        analyticsManager.sendFetchEvent(event)
+        coreMetaData.isProductConfigRequested = true
+        config.logger.verbose(config.accountId, "${Constants.LOG_TAG_PRODUCT_CONFIG}Fetching product config")
     }
 
     /**
@@ -186,15 +169,8 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getBoolean(Key: String?): Boolean? {
-        if (initializedFlag.get() && !TextUtils.isEmpty(Key)) {
-            val value: String? = activatedConfigs[Key]
-            if (!TextUtils.isEmpty(value)) {
-                return java.lang.Boolean.parseBoolean(value)
-            }
-        }
-        return DEFAULT_VALUE_FOR_BOOLEAN
-    }
+    open fun getBoolean(Key: String?): Boolean? =
+        activatedValue(Key)?.toBoolean() ?: DEFAULT_VALUE_FOR_BOOLEAN
 
     /**
      * Returns the parameter value for the given key as a double.
@@ -206,22 +182,8 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getDouble(Key: String?): Double? {
-        if (initializedFlag.get() && !TextUtils.isEmpty(Key)) {
-            try {
-                val value: String? = activatedConfigs[Key]
-                if (!TextUtils.isEmpty(value)) {
-                    return java.lang.Double.parseDouble(value!!)
-                }
-            } catch (e: Exception) {
-                config.logger.verbose(
-                    ProductConfigUtil.getLogTag(config),
-                    "Error getting Double for Key-$Key", e
-                )
-            }
-        }
-        return DEFAULT_VALUE_FOR_DOUBLE
-    }
+    open fun getDouble(Key: String?): Double? =
+        parseActivatedValue(Key, "Double") { it.toDouble() } ?: DEFAULT_VALUE_FOR_DOUBLE
 
     /**
      * Returns the last fetched timestamp in millis.
@@ -231,9 +193,7 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getLastFetchTimeStampInMillis(): Long {
-        return settingsValue.lastFetchTimeStampInMillis
-    }
+    open fun getLastFetchTimeStampInMillis(): Long = settingsValue.lastFetchTimeStampInMillis
 
     /** Kotlin property syntax, equivalent to [getLastFetchTimeStampInMillis]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
@@ -250,22 +210,8 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getLong(Key: String?): Long? {
-        if (initializedFlag.get() && !TextUtils.isEmpty(Key)) {
-            try {
-                val value: String? = activatedConfigs[Key]
-                if (!TextUtils.isEmpty(value)) {
-                    return java.lang.Long.parseLong(value!!)
-                }
-            } catch (e: Exception) {
-                config.logger.verbose(
-                    ProductConfigUtil.getLogTag(config),
-                    "Error getting Long for Key-$Key", e
-                )
-            }
-        }
-        return DEFAULT_VALUE_FOR_LONG
-    }
+    open fun getLong(Key: String?): Long? =
+        parseActivatedValue(Key, "Long") { it.toLong() } ?: DEFAULT_VALUE_FOR_LONG
 
     // -----------------------------------------------------------------------//
     // ********                        Public API                        *****//
@@ -281,23 +227,13 @@ open class CTProductConfigController @Deprecated(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getString(Key: String?): String {
-        if (initializedFlag.get() && !TextUtils.isEmpty(Key)) {
-            val value: String? = activatedConfigs[Key]
-            if (!TextUtils.isEmpty(value)) {
-                return value!!
-            }
-        }
-        return DEFAULT_VALUE_FOR_STRING
-    }
+    open fun getString(Key: String?): String = activatedValue(Key) ?: DEFAULT_VALUE_FOR_STRING
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun isInitialized(): Boolean {
-        return initializedFlag.get()
-    }
+    open fun isInitialized(): Boolean = initializedFlag.get()
 
     /** Kotlin property syntax, equivalent to [isInitialized]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
@@ -313,7 +249,7 @@ open class CTProductConfigController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun onFetchFailed() {
         isFetchAndActivatingFlag.compareAndSet(true, false)
-        config.logger.verbose(ProductConfigUtil.getLogTag(config), "Fetch Failed")
+        config.logger.verbose(logTag, "Fetch Failed")
     }
 
     /**
@@ -324,39 +260,38 @@ open class CTProductConfigController @Deprecated(
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun onFetchSuccess(kvResponse: JSONObject?) {
-        if (TextUtils.isEmpty(settingsValue.getGuid())) {
+        if (settingsValue.getGuid().isNullOrEmpty()) {
             return
         }
         synchronized(this) {
-            if (kvResponse != null) {
-                try {
-                    parseFetchedResponse(kvResponse)
-                    fileUtils.writeJsonToFile(
-                        productConfigDirName,
-                        CTProductConfigConstants.FILE_NAME_ACTIVATED,
-                        JSONObject(waitingTobeActivatedConfig as Map<*, *>)
-                    )
-                    config.logger
-                        .verbose(
-                            ProductConfigUtil.getLogTag(config), "Fetch file-[" + activatedFullPath +
-                                    "] write success: " + waitingTobeActivatedConfig
-                        )
-                    val task = CTExecutorFactory.executors(config).mainTask<Void?>()
-                    task.execute("sendPCFetchSuccessCallback", Callable<Void?> {
-                        config.logger
-                            .verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Success")
-                        sendCallback(PROCESSING_STATE.FETCHED)
-                        null
-                    })
-                    if (isFetchAndActivatingFlag.getAndSet(false)) {
-                        activate()
-                    }
-                } catch (e: Exception) {
-                    config.logger.verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed", e)
-                    sendCallback(PROCESSING_STATE.FETCHED)
-                    // set fetchAndActivating flag to false if fetch fails.
-                    isFetchAndActivatingFlag.compareAndSet(true, false)
+            if (kvResponse == null) {
+                return
+            }
+            try {
+                parseFetchedResponse(kvResponse)
+                fileUtils.writeJsonToFile(
+                    productConfigDirName,
+                    CTProductConfigConstants.FILE_NAME_ACTIVATED,
+                    JSONObject(waitingTobeActivatedConfig as Map<*, *>)
+                )
+                config.logger.verbose(
+                    logTag,
+                    "Fetch file-[$activatedFullPath] write success: $waitingTobeActivatedConfig"
+                )
+                val task = CTExecutorFactory.executors(config).mainTask<Void?>()
+                task.execute("sendPCFetchSuccessCallback") {
+                    config.logger.verbose(logTag, "Product Config: fetch Success")
+                    sendCallback(ProcessingState.FETCHED)
+                    null
                 }
+                if (isFetchAndActivatingFlag.getAndSet(false)) {
+                    activate()
+                }
+            } catch (e: Exception) {
+                config.logger.verbose(logTag, "Product Config: fetch Failed", e)
+                sendCallback(ProcessingState.FETCHED)
+                // set fetchAndActivating flag to false if fetch fails.
+                isFetchAndActivatingFlag.compareAndSet(true, false)
             }
         }
     }
@@ -415,34 +350,21 @@ open class CTProductConfigController @Deprecated(
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun setDefaults(map: HashMap<String, Any>?) {
         val task = CTExecutorFactory.executors(config).ioTask<Void?>()
-        task.addOnSuccessListener(OnSuccessListener { initAsync() })
+        task.addOnSuccessListener { initAsync() }
             .execute("ProductConfig#setDefaultsUsingHashMap", object : Callable<Void?> {
                 override fun call(): Void? {
                     // Locks on this Callable instance, exactly like the Java original's synchronized (this).
                     synchronized(this) {
-                        if (map != null && map.isNotEmpty()) {
-                            for (entry in map.entries) {
-                                @Suppress("SENSELESS_COMPARISON")
-                                if (entry != null) {
-                                    val key = entry.key
-                                    val value = entry.value
-                                    try {
-                                        if (!TextUtils.isEmpty(key) && ProductConfigUtil.isSupportedDataType(value)) {
-                                            defaultConfigs[key] = value.toString()
-                                        }
-                                    } catch (e: Exception) {
-                                        config.logger.verbose(
-                                            ProductConfigUtil.getLogTag(config),
-                                            "Product Config: setDefaults Failed for Key: $key", e
-                                        )
-                                    }
+                        map?.forEach { (key, value) ->
+                            try {
+                                if (!key.isNullOrEmpty() && ProductConfigUtil.isSupportedDataType(value)) {
+                                    defaultConfigs[key] = value.toString()
                                 }
+                            } catch (e: Exception) {
+                                config.logger.verbose(logTag, "Product Config: setDefaults Failed for Key: $key", e)
                             }
                         }
-                        config.logger.verbose(
-                            ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: $defaultConfigs"
-                        )
+                        config.logger.verbose(logTag, "Product Config: setDefaults Completed with: $defaultConfigs")
                         return null
                     }
                 }
@@ -457,7 +379,7 @@ open class CTProductConfigController @Deprecated(
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun setGuidAndInit(cleverTapID: String?) {
-        if (isInitialized() || TextUtils.isEmpty(cleverTapID)) {
+        if (isInitialized() || cleverTapID.isNullOrEmpty()) {
             return
         }
         settingsValue.setGuid(cleverTapID)
@@ -489,15 +411,10 @@ open class CTProductConfigController @Deprecated(
                     try {
                         val dirName = productConfigDirName
                         fileUtils.deleteDirectory(dirName)
-                        config.logger
-                            .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: $dirName")
+                        config.logger.verbose(logTag, "Reset Deleted Dir: $dirName")
                     } catch (e: Exception) {
-                        config.logger.verbose(
-                            ProductConfigUtil.getLogTag(config),
-                            "Reset failed", e
-                        )
+                        config.logger.verbose(logTag, "Reset failed", e)
                     }
-
                     return null
                 }
             }
@@ -505,22 +422,20 @@ open class CTProductConfigController @Deprecated(
     }
 
     internal val activatedFullPath: String
-        get() = productConfigDirName + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED
+        get() = "$productConfigDirName/${CTProductConfigConstants.FILE_NAME_ACTIVATED}"
 
     // -----------------------------------------------------------------------//
     // ********                        Internal API                      *****//
     // -----------------------------------------------------------------------//
 
     internal val productConfigDirName: String
-        get() = CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.accountId + "_" + settingsValue.getGuid()
+        get() = "${CTProductConfigConstants.DIR_PRODUCT_CONFIG}_${config.accountId}_${settingsValue.getGuid()}"
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    open fun getSettings(): ProductConfigSettings {
-        return settingsValue
-    }
+    open fun getSettings(): ProductConfigSettings = settingsValue
 
     /** Kotlin property syntax, equivalent to [getSettings]. */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
@@ -528,35 +443,24 @@ open class CTProductConfigController @Deprecated(
         @JvmSynthetic @JvmName("ktGetSettings") inline get() = getSettings()
 
     internal fun initAsync() {
-        if (TextUtils.isEmpty(settingsValue.getGuid())) {
+        if (settingsValue.getGuid().isNullOrEmpty()) {
             return
         }
         val task = CTExecutorFactory.executors(config).ioTask<Boolean>()
-        task.addOnSuccessListener(OnSuccessListener { sendCallback(PROCESSING_STATE.INIT) })
+        task.addOnSuccessListener { sendCallback(ProcessingState.INIT) }
             .execute("ProductConfig#initAsync", object : Callable<Boolean> {
                 override fun call(): Boolean {
                     // Locks on this Callable instance, exactly like the Java original's synchronized (this).
                     synchronized(this) {
                         try {
                             //apply defaults
-                            if (defaultConfigs.isNotEmpty()) {
-                                activatedConfigs.putAll(defaultConfigs)
-                            }
-                            val storedConfig = getStoredValues(activatedFullPath)
-                            if (storedConfig.isNotEmpty()) {
-                                waitingTobeActivatedConfig.putAll(storedConfig)
-                            }
-                            config.logger.verbose(
-                                ProductConfigUtil.getLogTag(config),
-                                "Loaded configs ready to be applied: $waitingTobeActivatedConfig"
-                            )
+                            activatedConfigs.putAll(defaultConfigs)
+                            waitingTobeActivatedConfig.putAll(getStoredValues(activatedFullPath))
+                            config.logger.verbose(logTag, "Loaded configs ready to be applied: $waitingTobeActivatedConfig")
                             settingsValue.loadSettings(fileUtils)
                             initializedFlag.set(true)
                         } catch (e: Exception) {
-                            config.logger.verbose(
-                                ProductConfigUtil.getLogTag(config),
-                                "InitAsync failed", e
-                            )
+                            config.logger.verbose(logTag, "InitAsync failed", e)
                             return false
                         }
                         return true
@@ -570,42 +474,53 @@ open class CTProductConfigController @Deprecated(
 
     internal fun setDefaultsWithXmlParser(resourceID: Int, xmlParser: DefaultXmlParser) {
         val task = CTExecutorFactory.executors(config).ioTask<Void?>()
-        task.addOnSuccessListener(OnSuccessListener { initAsync() })
+        task.addOnSuccessListener { initAsync() }
             .execute("PCController#setDefaultsWithXmlParser", object : Callable<Void?> {
                 override fun call(): Void? {
                     // Locks on this Callable instance, exactly like the Java original's synchronized (this).
                     synchronized(this) {
-                        defaultConfigs.putAll(xmlParser.getDefaultsFromXml(context!!, resourceID))
-                        config.logger.verbose(
-                            ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: $defaultConfigs"
-                        )
+                        defaultConfigs.putAll(xmlParser.getDefaultsFromXml(context, resourceID))
+                        config.logger.verbose(logTag, "Product Config: setDefaults Completed with: $defaultConfigs")
                         return null
                     }
                 }
             })
     }
 
-    private fun canRequest(minimumFetchIntervalInSeconds: Long): Boolean {
-        val validGuid = !TextUtils.isEmpty(settingsValue.getGuid())
+    /**
+     * The activated value for [key], or null when not initialised, the key is empty or the value is
+     * missing/empty.
+     */
+    private fun activatedValue(key: String?): String? {
+        if (!initializedFlag.get() || key.isNullOrEmpty()) {
+            return null
+        }
+        return activatedConfigs[key]?.takeIf { it.isNotEmpty() }
+    }
 
-        if (!validGuid) {
-            config.logger
-                .verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled due to empty Guid")
+    /** [activatedValue] parsed with [parse]; a parse failure is logged and yields null. */
+    private inline fun <T> parseActivatedValue(key: String?, typeName: String, parse: (String) -> T): T? = try {
+        activatedValue(key)?.let(parse)
+    } catch (e: Exception) {
+        config.logger.verbose(logTag, "Error getting $typeName for Key-$key", e)
+        null
+    }
+
+    private fun canRequest(minimumFetchIntervalInSeconds: Long): Boolean {
+        if (settingsValue.getGuid().isNullOrEmpty()) {
+            config.logger.verbose(logTag, "Product Config: Throttled due to empty Guid")
             return false
         }
 
         val lastRequestTime = settingsValue.lastFetchTimeStampInMillis
 
-        val timeDifference = (System.currentTimeMillis() - lastRequestTime) - TimeUnit.SECONDS
-            .toMillis(minimumFetchIntervalInSeconds)
-        val isTimeExpired = timeDifference > 0
-        if (!isTimeExpired) {
+        val timeDifference =
+            (System.currentTimeMillis() - lastRequestTime) - TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds)
+        if (timeDifference <= 0) {
             config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "Throttled since you made frequent request- [Last Request Time-" +
-                        Date(lastRequestTime) + "], " +
-                        "Try again in " + (-timeDifference / 1000L) + " seconds"
+                logTag,
+                "Throttled since you made frequent request- [Last Request Time-${Date(lastRequestTime)}], " +
+                    "Try again in ${-timeDifference / 1000L} seconds"
             )
             return false
         }
@@ -617,30 +532,20 @@ open class CTProductConfigController @Deprecated(
         val kvArray = try {
             jsonObject.getJSONArray(Constants.KEY_KV)
         } catch (e: JSONException) {
-            config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "ConvertServerJsonToMap failed", e
-            )
+            config.logger.verbose(logTag, "ConvertServerJsonToMap failed", e)
             return map
         }
 
-        if (kvArray != null && kvArray.length() > 0) {
-            for (i in 0 until kvArray.length()) {
-                try {
-                    val `object` = kvArray.get(i) as JSONObject?
-                    if (`object` != null) {
-                        val Key = `object`.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY)
-                        val Value = `object`.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE)
-                        if (!TextUtils.isEmpty(Key)) {
-                            map[Key] = Value
-                        }
-                    }
-                } catch (e: Exception) {
-                    config.logger.verbose(
-                        ProductConfigUtil.getLogTag(config),
-                        "ConvertServerJsonToMap failed", e
-                    )
+        for (i in 0 until kvArray.length()) {
+            try {
+                val kv = kvArray.get(i) as JSONObject? ?: continue
+                val key = kv.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY)
+                val value = kv.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE)
+                if (!key.isNullOrEmpty()) {
+                    map[key] = value
                 }
+            } catch (e: Exception) {
+                config.logger.verbose(logTag, "ConvertServerJsonToMap failed", e)
             }
         }
         return map
@@ -648,76 +553,53 @@ open class CTProductConfigController @Deprecated(
 
     private fun getStoredValues(fullFilePath: String): HashMap<String, String> {
         val map = HashMap<String, String>()
-        val content: String?
-        try {
-            content = fileUtils.readFromFile(fullFilePath)
-            config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "GetStoredValues reading file success:[ $fullFilePath]--[Content]$content"
-            )
+        val content = try {
+            fileUtils.readFromFile(fullFilePath).also {
+                config.logger.verbose(logTag, "GetStoredValues reading file success:[ $fullFilePath]--[Content]$it")
+            }
         } catch (e: Exception) {
-            config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "GetStoredValues reading file failed", e
-            )
+            config.logger.verbose(logTag, "GetStoredValues reading file failed", e)
             return map
         }
-        if (!TextUtils.isEmpty(content)) {
-            val jsonObject: JSONObject
-            try {
-                jsonObject = JSONObject(content!!)
-            } catch (e: Exception) {
-                config.logger.verbose(
-                    ProductConfigUtil.getLogTag(config),
-                    "GetStoredValues failed due to malformed json", e
-                )
-                return map
+        if (content.isEmpty()) {
+            return map
+        }
+        val jsonObject = try {
+            JSONObject(content)
+        } catch (e: Exception) {
+            config.logger.verbose(logTag, "GetStoredValues failed due to malformed json", e)
+            return map
+        }
+        for (key in jsonObject.keys()) {
+            if (key.isNullOrEmpty()) {
+                continue
             }
-            val iterator = jsonObject.keys()
-            while (iterator.hasNext()) {
-                val key = iterator.next()
-                if (!TextUtils.isEmpty(key)) {
-                    val value: String
-                    try {
-                        value = jsonObject.get(key).toString()
-                    } catch (e: Exception) {
-                        config.logger.verbose(
-                            ProductConfigUtil.getLogTag(config),
-                            "GetStoredValues failed for key $key while parsing json",
-                            e
-                        )
-                        continue
-                    }
-                    if (!TextUtils.isEmpty(value)) {
-                        map[key] = value
-                    }
-                }
+            val value = try {
+                jsonObject.get(key).toString()
+            } catch (e: Exception) {
+                config.logger.verbose(logTag, "GetStoredValues failed for key $key while parsing json", e)
+                continue
+            }
+            if (value.isNotEmpty()) {
+                map[key] = value
             }
         }
         return map
     }
 
     private fun onActivated() {
-        val productConfigListener = callbackManager!!.productConfigListener
-        if (productConfigListener != null) {
-            productConfigListener.onActivated()
-        }
+        callbackManager.productConfigListener?.onActivated()
     }
 
     //Event
     private fun onFetched() {
-        val productConfigListener = callbackManager!!.productConfigListener
-        if (productConfigListener != null) {
-            productConfigListener.onFetched()
-        }
+        callbackManager.productConfigListener?.onFetched()
     }
 
     private fun onInit() {
-        val productConfigListener = callbackManager!!.productConfigListener
-        if (productConfigListener != null) {
-            config.logger.verbose(config.accountId, "Product Config initialized")
-            productConfigListener.onInit()
-        }
+        val productConfigListener = callbackManager.productConfigListener ?: return
+        config.logger.verbose(config.accountId, "Product Config initialized")
+        productConfigListener.onInit()
     }
 
     @Synchronized
@@ -725,29 +607,23 @@ open class CTProductConfigController @Deprecated(
         val map = convertServerJsonToMap(jsonObject)
         waitingTobeActivatedConfig.clear()
         waitingTobeActivatedConfig.putAll(map)
-        config.logger
-            .verbose(ProductConfigUtil.getLogTag(config), "Product Config: Fetched response:$jsonObject")
-        var timestamp: Int? = null
-        try {
-            timestamp = jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP) as Int?
+        config.logger.verbose(logTag, "Product Config: Fetched response:$jsonObject")
+        val timestamp = try {
+            jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP) as Int?
         } catch (e: Exception) {
-            config.logger.verbose(
-                ProductConfigUtil.getLogTag(config),
-                "ParseFetchedResponse failed", e
-            )
+            config.logger.verbose(logTag, "ParseFetchedResponse failed", e)
+            null
         }
         if (timestamp != null) {
             settingsValue.lastFetchTimeStampInMillis = timestamp * 1000L
         }
     }
 
-    private fun sendCallback(state: PROCESSING_STATE?) {
-        if (state != null) {
-            when (state) {
-                PROCESSING_STATE.INIT -> onInit()
-                PROCESSING_STATE.FETCHED -> onFetched()
-                PROCESSING_STATE.ACTIVATED -> onActivated()
-            }
+    private fun sendCallback(state: ProcessingState) {
+        when (state) {
+            ProcessingState.INIT -> onInit()
+            ProcessingState.FETCHED -> onFetched()
+            ProcessingState.ACTIVATED -> onActivated()
         }
     }
 }
