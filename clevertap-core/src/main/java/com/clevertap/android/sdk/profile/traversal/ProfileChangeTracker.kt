@@ -154,6 +154,7 @@ internal class ProfileChangeTracker {
  * @property oldValue The previous value (null if newly added)
  * @property newValue The new value (null if deleted)
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 data class ProfileChange(
     val oldValue: Any?,
     val newValue: Any?

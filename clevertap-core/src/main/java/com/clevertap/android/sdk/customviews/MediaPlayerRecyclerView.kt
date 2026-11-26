@@ -24,7 +24,7 @@ import com.clevertap.android.sdk.video.inbox.Media3Handle
 /** Inbox list that plays the most visible video row with one shared player. */
 @UnstableApi
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-class MediaPlayerRecyclerView : RecyclerView {
+internal class MediaPlayerRecyclerView : RecyclerView {
 
     /** The message and media the player was started for. The row may show another one later. */
     private class PlayingVideo(val messageId: String?, val mediaUrl: String?)

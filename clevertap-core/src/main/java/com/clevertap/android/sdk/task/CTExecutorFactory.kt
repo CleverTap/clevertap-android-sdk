@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.task
 
+import androidx.annotation.RestrictTo
 import android.os.Build
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import java.util.concurrent.ConcurrentHashMap
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Every account has its dedicated Executor
  * Uses API-level optimized approaches with lifecycle management
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object CTExecutorFactory {
 
     private const val TAG_RESOURCE_DOWNLOADER = "Resource Downloader"

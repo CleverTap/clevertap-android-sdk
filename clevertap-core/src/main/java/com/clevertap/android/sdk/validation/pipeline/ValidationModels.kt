@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationOutcome
 import org.json.JSONObject
 /**
  * Sealed interface representing any validation result from a pipeline.
  * All validation results share a common outcome and drop logic.
  */
-sealed interface ValidationResult {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed interface ValidationResult {
     val outcome: ValidationOutcome
     
     fun shouldDrop(): Boolean = outcome is ValidationOutcome.Drop
@@ -16,12 +18,14 @@ sealed interface ValidationResult {
  * Sealed interface representing any normalization result.
  * Normalization results are internal to pipelines.
  */
-sealed interface NormalizationResult
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed interface NormalizationResult
 
 /**
  * Result of event name validation.
  */
-data class EventNameValidationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EventNameValidationResult(
     val cleanedName: String,
     override val outcome: ValidationOutcome
 ) : ValidationResult
@@ -29,7 +33,8 @@ data class EventNameValidationResult(
 /**
  * Result of event name normalization.
  */
-data class EventNameNormalizationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EventNameNormalizationResult(
     val originalName: String?,
     val cleanedName: String,
     val modifications: Set<ModificationReason>
@@ -41,7 +46,8 @@ data class EventNameNormalizationResult(
 /**
  * Result of event data validation.
  */
-data class EventDataValidationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EventDataValidationResult(
     val cleanedData: JSONObject,
     override val outcome: ValidationOutcome,
 ) : ValidationResult
@@ -49,7 +55,8 @@ data class EventDataValidationResult(
 /**
  * Result of event data normalization.
  */
-data class EventDataNormalizationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EventDataNormalizationResult(
     val cleanedData: JSONObject,
     val metrics: EventDataMetrics
 ) : NormalizationResult
@@ -57,7 +64,8 @@ data class EventDataNormalizationResult(
 /**
  * Metrics collected during event data normalization.
  */
-data class EventDataMetrics(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EventDataMetrics(
     // Structural metrics
     val maxDepth: Int,
     val maxArrayKeyCount: Int,
@@ -78,7 +86,8 @@ data class EventDataMetrics(
 /**
  * Result of property key validation.
  */
-data class PropertyKeyValidationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class PropertyKeyValidationResult(
     val cleanedKey: String,
     override val outcome: ValidationOutcome
 ) : ValidationResult
@@ -86,7 +95,8 @@ data class PropertyKeyValidationResult(
 /**
  * Result of property key normalization.
  */
-data class PropertyKeyNormalizationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class PropertyKeyNormalizationResult(
     val originalKey: String,
     val cleanedKey: String,
     val modifications: Set<KeyModification>,
@@ -100,7 +110,8 @@ data class PropertyKeyNormalizationResult(
 /**
  * Details about a key that was modified during normalization.
  */
-data class KeyModification(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class KeyModification(
     val originalKey: String,
     val cleanedKey: String,
     val reasons: List<ModificationReason>
@@ -109,7 +120,8 @@ data class KeyModification(
 /**
  * Details about a value that was modified during normalization.
  */
-data class ValueModification(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class ValueModification(
     val key: String,
     val originalValue: String,
     val cleanedValue: String,
@@ -119,7 +131,8 @@ data class ValueModification(
 /**
  * Details about an item that was removed during normalization.
  */
-data class RemovedItem(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class RemovedItem(
     val key: String,
     val reason: RemovalReason,
     val originalValue: Any?
@@ -132,7 +145,8 @@ data class RemovedItem(
 /**
  * Result of charged event items validation.
  */
-data class ChargedEventItemsValidationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class ChargedEventItemsValidationResult(
     val itemsCount: Int,
     override val outcome: ValidationOutcome
 ) : ValidationResult
@@ -140,7 +154,8 @@ data class ChargedEventItemsValidationResult(
 /**
  * Result of charged event items normalization.
  */
-data class ChargedEventItemsNormalizationResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class ChargedEventItemsNormalizationResult(
     val itemsCount: Int
 ) : NormalizationResult
 
@@ -151,7 +166,8 @@ data class ChargedEventItemsNormalizationResult(
 /**
  * Common modification reason enum used across all normalizers.
  */
-enum class ModificationReason {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class ModificationReason {
     INVALID_CHARACTERS_REMOVED,
     TRUNCATED_TO_MAX_LENGTH
 }
@@ -159,7 +175,8 @@ enum class ModificationReason {
 /**
  * Reasons why data was removed during normalization.
  */
-enum class RemovalReason {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class RemovalReason {
     NULL_VALUE,
     EMPTY_VALUE,
     EMPTY_KEY,

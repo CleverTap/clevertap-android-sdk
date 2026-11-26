@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP
@@ -9,6 +10,7 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOW
 import com.clevertap.android.sdk.network.DownloadedBitmap
 
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object HttpBitmapLoader {
 
     private const val RESOURCE_CONNECTION_TIMEOUT = 5000

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.cryption
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import java.nio.charset.StandardCharsets
@@ -14,7 +15,8 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * This class implements the AES Cryption algorithm
  */
-class AESCrypt(accountID: String) : Crypt() {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class AESCrypt(accountID: String) : Crypt() {
     /**
      * This method returns the key-password to be used for encryption/decryption
      *

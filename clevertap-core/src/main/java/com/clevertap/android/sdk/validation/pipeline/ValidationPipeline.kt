@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationOutcome
@@ -11,7 +12,8 @@ import com.clevertap.android.sdk.validation.ValidationOutcome
  * @param I Input type to validate
  * @param O Output type containing validation results
  */
-interface ValidationPipeline<I, O> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface ValidationPipeline<I, O> {
     /**
      * Executes the validation pipeline for the given input.
      *

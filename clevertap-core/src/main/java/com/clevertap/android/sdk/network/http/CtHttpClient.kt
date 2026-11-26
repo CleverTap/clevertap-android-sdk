@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.network.http
 
-fun interface CtHttpClient {
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun interface CtHttpClient {
 
     fun execute(request: Request): Response
 }

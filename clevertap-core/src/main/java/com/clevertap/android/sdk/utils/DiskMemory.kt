@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import java.io.File
@@ -15,6 +16,7 @@ import kotlin.Exception
  * @param logger An optional [ILogger] instance for debugging or tracking purposes.
  * @param hashFunction A function to generate a unique hash from the provided key. By default, it uses a [UrlHashGenerator].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class DiskMemory(
     private val directory: File,
     private val maxFileSizeKb: Int,

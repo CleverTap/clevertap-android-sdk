@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
@@ -8,6 +9,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.Task
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class BitmapDownloadRequestHandlerWithTimeLimit(
     private val iBitmapDownloadRequestHandler: IBitmapDownloadRequestHandler
 ) : IBitmapDownloadRequestHandler {

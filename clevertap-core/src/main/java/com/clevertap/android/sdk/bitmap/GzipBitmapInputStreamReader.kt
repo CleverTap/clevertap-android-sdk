@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -10,7 +11,8 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 
-class GzipBitmapInputStreamReader(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class GzipBitmapInputStreamReader(
     saveBytes: Boolean = false,
     logger: Logger? = null
 ) : BitmapInputStreamDecoder(saveBytes = saveBytes, logger = logger) {

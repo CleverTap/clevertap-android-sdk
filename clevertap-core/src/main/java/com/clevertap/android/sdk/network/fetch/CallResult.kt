@@ -12,7 +12,7 @@ import androidx.annotation.RestrictTo
  * from coroutines; don't swallow it.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-sealed class CallResult<out T> {
+internal sealed class CallResult<out T> {
 
     /** HTTP 200 + a parseable payload (or `Unit` for action-only calls). */
     data class Success<T>(val data: T) : CallResult<T>()

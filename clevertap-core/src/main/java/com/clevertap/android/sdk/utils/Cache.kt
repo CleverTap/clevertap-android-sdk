@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.core.util.lruCache
@@ -13,6 +14,7 @@ import androidx.core.util.lruCache
  * @param maxSize The maximum size of the cache in kilobytes.
  * @param memoryCache An optional implementation of [CacheMethods] for customizing the caching behavior.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class InMemoryLruCache<T : Any>(
     private val maxSize: Int,
     private val memoryCache: CacheMethods<T> = object : CacheMethods<T> {
@@ -99,7 +101,8 @@ class InMemoryLruCache<T : Any>(
  *
  * @return The size of the object in kilobytes.
  */
-fun Any?.sizeInKb() : Int = when (this) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun Any?.sizeInKb() : Int = when (this) {
     is Bitmap -> {
         byteCount / 1024
     }
@@ -114,7 +117,8 @@ fun Any?.sizeInKb() : Int = when (this) {
 /**
  * Object providing a utility function to create an [LruCache] instance.
  */
-object LruCacheProvider {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object LruCacheProvider {
     /**
      * Creates and returns an [LruCache] instance with the specified maximum size.
      *
@@ -138,6 +142,7 @@ object LruCacheProvider {
  *
  * @param <T> The type of objects stored in the cache.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 interface CacheMethods<T> {
     /**
      * Adds an object to the cache.

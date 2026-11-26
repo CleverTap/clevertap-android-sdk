@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.utils
 
+import androidx.annotation.RestrictTo
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -9,6 +10,7 @@ import java.util.concurrent.TimeUnit
  * Use SYSTEM instance to delegate functionality to System.currentTimeMillis() and default Date
  * constructor.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 interface Clock {
 
   /**

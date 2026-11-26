@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.propertykey
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.KeyModification
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
@@ -17,7 +18,8 @@ import com.clevertap.android.sdk.validation.pipeline.RemovalReason
  * - Trimming whitespace
  * - Detecting if key becomes empty after cleaning
  */
-class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNormalizationResult> {
 
     override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult {
         val original = input?: ""

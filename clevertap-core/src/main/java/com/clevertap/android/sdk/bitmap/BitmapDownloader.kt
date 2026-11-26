@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import android.net.TrafficStats
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -10,6 +11,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import java.net.HttpURLConnection
 import java.net.URL
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class BitmapDownloader(
     private val httpUrlConnectionParams: HttpUrlConnectionParams,
     private val bitmapInputStreamReader: IBitmapInputStreamReader,

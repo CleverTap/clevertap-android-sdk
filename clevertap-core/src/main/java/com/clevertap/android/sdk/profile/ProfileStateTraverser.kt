@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.profile.traversal.ArrayOperationHandler
@@ -24,7 +25,8 @@ import org.json.JSONObject
  * @see ProfileOperation for available operations
  * @see ProfileChange for tracking changes
  */
-class ProfileStateTraverser(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class ProfileStateTraverser(
     private val logger: ILogger
 ) {
 

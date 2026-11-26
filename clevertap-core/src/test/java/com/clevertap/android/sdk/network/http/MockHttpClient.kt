@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.network.http
 
 import java.net.HttpURLConnection
 
-class MockHttpClient(
+internal class MockHttpClient(
     var responseCode: Int = HttpURLConnection.HTTP_OK,
     var responseHeaders: Map<String, List<String>> = mapOf(),
     var responseBody: String? = ""

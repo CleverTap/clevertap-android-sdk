@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk.profile.traversal
 
+import androidx.annotation.RestrictTo
+
 /**
  * Defines the type of operation to perform on profile data.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 enum class ProfileOperation {
     /**
      * Replace old values with new values. Creates keys if they don't exist.

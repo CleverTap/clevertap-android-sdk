@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.network.http
 
+import androidx.annotation.RestrictTo
 import java.io.Closeable
 import java.io.InputStream
 import java.io.Reader
 import java.net.HttpURLConnection
 
-class Response(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class Response(
     val request: Request,
     val code: Int,
     val headers: Map<String, List<String>>,

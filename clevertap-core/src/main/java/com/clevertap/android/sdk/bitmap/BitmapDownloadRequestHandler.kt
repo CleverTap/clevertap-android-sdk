@@ -1,10 +1,12 @@
 package com.clevertap.android.sdk.bitmap
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_IMAGE
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 open class BitmapDownloadRequestHandler(
     private val bitmapDownloader: BitmapDownloader
 ) : IBitmapDownloadRequestHandler {

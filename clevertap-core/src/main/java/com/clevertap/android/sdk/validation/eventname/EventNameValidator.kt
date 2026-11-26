@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventname
 
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.validation.DropReason
 import com.clevertap.android.sdk.validation.ValidationConfig
@@ -15,7 +16,8 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event names after normalization.
  * Checks for null names, truncation, character modifications, and restrictions.
  */
-class EventNameValidator : Validator<EventNameNormalizationResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventNameValidator : Validator<EventNameNormalizationResult> {
 
     override fun validate(input: EventNameNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()

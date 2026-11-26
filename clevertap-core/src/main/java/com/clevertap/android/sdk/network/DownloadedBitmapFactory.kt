@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network
 
+import androidx.annotation.RestrictTo
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.SUCCESS
@@ -7,6 +8,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmap.Status.SUCCESS
 /**
  * Factory class for creating instances of DownloadedBitmap.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object DownloadedBitmapFactory {
 
     /**

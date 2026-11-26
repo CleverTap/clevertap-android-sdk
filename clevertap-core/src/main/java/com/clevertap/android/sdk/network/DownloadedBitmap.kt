@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network
 
+import androidx.annotation.RestrictTo
 import android.graphics.Bitmap
 
 /**
@@ -9,6 +10,7 @@ import android.graphics.Bitmap
  * @property status The status of the downloaded bitmap.
  * @property downloadTime The time taken to download the bitmap, in milliseconds.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 data class DownloadedBitmap constructor(
     val bitmap: Bitmap?,
     val status: Status,
