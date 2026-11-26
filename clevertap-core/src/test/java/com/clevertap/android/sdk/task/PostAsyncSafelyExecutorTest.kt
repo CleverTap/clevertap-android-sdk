@@ -22,8 +22,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         mExecutorService = mockk(relaxed = true)
-        executor = PostAsyncSafelyExecutor()
-        executor.executor = mExecutorService
+        executor = PostAsyncSafelyExecutor(mExecutorService)
     }
 
     @Test

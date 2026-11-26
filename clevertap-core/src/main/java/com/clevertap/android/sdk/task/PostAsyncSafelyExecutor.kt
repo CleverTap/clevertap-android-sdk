@@ -11,93 +11,75 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Post async safely executor is nothing but a single thread pool executor
- * It's a single pipeline to execute task sequentially
+ * It's a single pipeline to execute task sequentially.
+ *
+ * A task submitted from the executor's own thread runs synchronously (re-entrancy without deadlock).
  */
-internal class PostAsyncSafelyExecutor : ExecutorService {
+internal class PostAsyncSafelyExecutor(
+    internal val executor: ExecutorService = Executors.newSingleThreadExecutor()
+) : ExecutorService {
 
-    private var EXECUTOR_THREAD_ID: Long = 0
+    private var executorThreadId: Long = 0
 
-    var executor: ExecutorService = Executors.newSingleThreadExecutor()
+    private val isOnExecutorThread: Boolean
+        get() = Thread.currentThread().id == executorThreadId
 
-    @Throws(InterruptedException::class)
-    override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
-        return executor.awaitTermination(timeout, unit)
-    }
+    override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean = executor.awaitTermination(timeout, unit)
 
     override fun execute(task: Runnable?) {
         if (task == null) {
             throw NullPointerException("PostAsyncSafelyExecutor#execute: task can't ne null")
         }
-        val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
-        if (executeSync) {
+        if (isOnExecutorThread) {
             task.run()
         } else {
             executor.execute {
-                EXECUTOR_THREAD_ID = Thread.currentThread().id
+                executorThreadId = Thread.currentThread().id
                 task.run()
             }
         }
     }
 
-    @Throws(UnsupportedOperationException::class)
-    override fun <T> invokeAll(tasks: MutableCollection<out Callable<T>>?): MutableList<Future<T>> {
+    override fun <T> invokeAll(tasks: MutableCollection<out Callable<T>>?): MutableList<Future<T>> =
         throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported")
-    }
 
-    @Throws(UnsupportedOperationException::class)
     override fun <T> invokeAll(
         tasks: MutableCollection<out Callable<T>>?,
         timeout: Long,
         unit: TimeUnit?
-    ): MutableList<Future<T>> {
+    ): MutableList<Future<T>> =
         throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported")
-    }
 
-    @Throws(UnsupportedOperationException::class)
-    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?): T {
+    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?): T =
         throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported")
-    }
 
-    @Throws(UnsupportedOperationException::class)
-    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?, timeout: Long, unit: TimeUnit?): T {
+    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?, timeout: Long, unit: TimeUnit?): T =
         throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported")
-    }
 
-    override fun isShutdown(): Boolean {
-        return executor.isShutdown
-    }
+    override fun isShutdown(): Boolean = executor.isShutdown
 
-    override fun isTerminated(): Boolean {
-        return executor.isTerminated
-    }
+    override fun isTerminated(): Boolean = executor.isTerminated
 
-    override fun shutdown() {
-        executor.shutdown()
-    }
+    override fun shutdown() = executor.shutdown()
 
-    override fun shutdownNow(): MutableList<Runnable> {
-        return executor.shutdownNow()
-    }
+    override fun shutdownNow(): MutableList<Runnable> = executor.shutdownNow()
 
     override fun <T> submit(task: Callable<T>?): Future<T>? {
         if (task == null) {
             throw NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null")
         }
-        var future: Future<T>? = null
-        val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
-        if (executeSync) {
+        if (isOnExecutorThread) {
             try {
                 task.call()
             } catch (e: Exception) {
                 Logger.d(TAG, "Error executing task synchronously", e)
             }
-        } else {
-            future = executor.submit(Callable {
-                EXECUTOR_THREAD_ID = Thread.currentThread().id
-                task.call()
-            })
+            return null
         }
-        return future
+        return executor.submit(Callable {
+            executorThreadId = Thread.currentThread().id
+            task.call()
+        })
     }
 
     override fun <T> submit(task: Runnable?, result: T): Future<T> {
