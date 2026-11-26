@@ -50,55 +50,47 @@ open class PushType(
     val type: String
         @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
-    override fun toString(): String {
-        return " [PushType:$_type] "
-    }
+    override fun toString(): String = " [PushType:$_type] "
 
     // Method to convert PushType to JSONObject
-    open fun toJSONObject(): JSONObject? {
-        val jsonObject = JSONObject()
-        try {
-            jsonObject.put("ctProviderClassName", _ctProviderClassName)
-            jsonObject.put("messagingSDKClassName", _messagingSDKClassName)
-            jsonObject.put("tokenPrefKey", _tokenPrefKey)
-            jsonObject.put("type", _type)
-        } catch (e: JSONException) {
-            return null
+    open fun toJSONObject(): JSONObject? = try {
+        JSONObject().apply {
+            put("ctProviderClassName", _ctProviderClassName)
+            put("messagingSDKClassName", _messagingSDKClassName)
+            put("tokenPrefKey", _tokenPrefKey)
+            put("type", _type)
         }
-        return jsonObject
+    } catch (e: JSONException) {
+        null
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true
         }
-        if (other !is PushType) {
-            return false
-        }
-        return _ctProviderClassName == other._ctProviderClassName &&
+        return other is PushType &&
+                _ctProviderClassName == other._ctProviderClassName &&
                 _messagingSDKClassName == other._messagingSDKClassName &&
                 _tokenPrefKey == other._tokenPrefKey &&
                 _type == other._type
     }
 
-    override fun hashCode(): Int {
-        return Objects.hash(_ctProviderClassName, _messagingSDKClassName, _tokenPrefKey, _type)
-    }
+    override fun hashCode(): Int =
+        Objects.hash(_ctProviderClassName, _messagingSDKClassName, _tokenPrefKey, _type)
 
     companion object {
 
         // Static method to convert JSONObject to PushType
         @JvmStatic
         fun fromJSONObject(jsonObject: JSONObject?): PushType? {
-            if (jsonObject == null) {
-                return null
-            }
+            jsonObject ?: return null
             return try {
-                val ctProviderClassName = jsonObject.getString("ctProviderClassName")
-                val messagingSDKClassName = jsonObject.getString("messagingSDKClassName")
-                val tokenPrefKey = jsonObject.getString("tokenPrefKey")
-                val type = jsonObject.getString("type")
-                PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName)
+                PushType(
+                    type = jsonObject.getString("type"),
+                    prefKey = jsonObject.getString("tokenPrefKey"),
+                    className = jsonObject.getString("ctProviderClassName"),
+                    messagingSDKClassName = jsonObject.getString("messagingSDKClassName")
+                )
             } catch (e: JSONException) {
                 null
             }

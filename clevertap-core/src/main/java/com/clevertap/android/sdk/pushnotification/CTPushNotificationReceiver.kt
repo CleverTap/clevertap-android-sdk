@@ -29,18 +29,14 @@ open class CTPushNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
 
         try {
-            val launchIntent: Intent
-
             val extras = intent.extras ?: return
 
-            if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
-                launchIntent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY))
-                )
-                Utils.setPackageNameFromResolveInfoList(context, launchIntent)
+            val launchIntent = if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
+                Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY))).also {
+                    Utils.setPackageNameFromResolveInfoList(context, it)
+                }
             } else {
-                launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
+                context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
             }
 
             CleverTapAPI.handleNotificationClicked(context, extras)
@@ -53,12 +49,10 @@ open class CTPushNotificationReceiver : BroadcastReceiver() {
             //to prevent calling of pushNotificationClickedEvent(extras) in ActivityLifecycleCallback
             launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM)
 
-            if ( /*VERSION.SDK_INT < VERSION_CODES.S && */extras.containsKey(Constants.CLOSE_SYSTEM_DIALOGS)) {
-                val closeNotificationDrawer = extras.getBoolean(Constants.CLOSE_SYSTEM_DIALOGS)
-                if (closeNotificationDrawer) {
-                    context.sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-                }
-
+            if ( /*VERSION.SDK_INT < VERSION_CODES.S && */extras.containsKey(Constants.CLOSE_SYSTEM_DIALOGS) &&
+                extras.getBoolean(Constants.CLOSE_SYSTEM_DIALOGS)
+            ) {
+                context.sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
             }
 
             context.startActivity(launchIntent)

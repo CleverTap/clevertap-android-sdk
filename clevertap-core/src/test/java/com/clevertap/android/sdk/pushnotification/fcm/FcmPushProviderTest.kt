@@ -21,7 +21,7 @@ class FcmPushProviderTest : BaseTestCase() {
         ctPushProviderListener = mockk(relaxed = true)
         provider = FcmPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
         sdkHandler = mockk<FcmSdkHandlerImpl>(relaxed = true)
-        provider.setHandler(sdkHandler)
+        provider.handler = sdkHandler
     }
 
     @Test

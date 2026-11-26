@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.pushnotification.fcm
 
 import android.content.Context
-import android.text.TextUtils
+import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
@@ -11,8 +11,6 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
 import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable
 import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -26,7 +24,8 @@ internal open class FcmSdkHandlerImpl(
 ) : IFcmSdkHandler {
 
     @Suppress("unused")
-    private var manifestInfo: ManifestInfo? = ManifestInfo.getInstance(context)
+    @VisibleForTesting
+    internal var manifestInfo: ManifestInfo? = ManifestInfo.getInstance(context)
 
     override val pushType: PushType
         get() = FCM
@@ -35,18 +34,16 @@ internal open class FcmSdkHandlerImpl(
         get() {
             try {
                 if (!isGooglePlayServicesAvailable(context)) {
-                    config.log(LOG_TAG, FCM_LOG_TAG + "Google Play services is currently unavailable.")
+                    config.log(LOG_TAG, "${FCM_LOG_TAG}Google Play services is currently unavailable.")
                     return false
                 }
 
-                val senderId = senderId
-                if (TextUtils.isEmpty(senderId)) {
-                    config
-                        .log(LOG_TAG, FCM_LOG_TAG + "The FCM sender ID is not set. Unable to register for FCM.")
+                if (senderId.isNullOrEmpty()) {
+                    config.log(LOG_TAG, "${FCM_LOG_TAG}The FCM sender ID is not set. Unable to register for FCM.")
                     return false
                 }
             } catch (t: Throwable) {
-                config.log(LOG_TAG, FCM_LOG_TAG + "Unable to register with FCM.", t)
+                config.log(LOG_TAG, "${FCM_LOG_TAG}Unable to register with FCM.", t)
                 return false
             }
             return true
@@ -57,42 +54,30 @@ internal open class FcmSdkHandlerImpl(
 
     override fun requestToken() {
         try {
-            config.log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json")
+            config.log(LOG_TAG, "${FCM_LOG_TAG}Requesting FCM token using googleservices.json")
             FirebaseMessaging
                 .getInstance()
                 .token
-                .addOnCompleteListener(object : OnCompleteListener<String> {
-                    override fun onComplete(task: Task<String>) {
-                        if (!task.isSuccessful) {
-                            config.log(
-                                LOG_TAG,
-                                FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                                task.exception
-                            )
-                            listener.onNewToken(null, pushType)
-                            return
-                        }
-                        val token: String? = if (task.result != null) task.result else null
+                .addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
                         config.log(
                             LOG_TAG,
-                            FCM_LOG_TAG + "FCM token using googleservices.json - " + token
+                            "${FCM_LOG_TAG}FCM token using googleservices.json failed",
+                            task.exception
                         )
-                        listener.onNewToken(token, pushType)
+                        listener.onNewToken(null, pushType)
+                        return@addOnCompleteListener
                     }
-                })
+                    val token: String? = task.result
+                    config.log(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token")
+                    listener.onNewToken(token, pushType)
+                }
         } catch (t: Throwable) {
-            config.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t)
+            config.log(LOG_TAG, "${FCM_LOG_TAG}Error requesting FCM token", t)
             listener.onNewToken(null, pushType)
         }
     }
 
     open val senderId: String?
-        get() {
-            val app = FirebaseApp.getInstance()
-            return app.options.gcmSenderId
-        }
-
-    fun setManifestInfo(manifestInfo: ManifestInfo?) {
-        this.manifestInfo = manifestInfo
-    }
+        get() = FirebaseApp.getInstance().options.gcmSenderId
 }

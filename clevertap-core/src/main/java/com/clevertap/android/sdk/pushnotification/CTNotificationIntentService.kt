@@ -30,30 +30,30 @@ import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
 @Suppress("DEPRECATION")
 open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
 
-    private var mActionButtonClickHandler: ActionButtonClickHandler? = null
-
     @Deprecated("Deprecated in Java")
     override fun onHandleIntent(intent: Intent?) {
+        // A null intent threw a NullPointerException in Java; `!!` keeps that.
         val extras = intent!!.extras ?: return
 
         val notificationHandler = CleverTapAPI.getNotificationHandler()
-        mActionButtonClickHandler = if (PushNotificationHandler.isForPushTemplates(extras) && notificationHandler != null) {
-            notificationHandler as ActionButtonClickHandler
-        } else {
-            PushNotificationHandler.getPushNotificationHandler() as ActionButtonClickHandler
-        }
+        val actionButtonClickHandler =
+            if (PushNotificationHandler.isForPushTemplates(extras) && notificationHandler != null) {
+                notificationHandler as ActionButtonClickHandler
+            } else {
+                PushNotificationHandler.getPushNotificationHandler() as ActionButtonClickHandler
+            }
 
-        val type = extras.getString(Constants.KEY_CT_TYPE) //mActionButtonClickHandler.getType(extras);
+        val type = extras.getString(Constants.KEY_CT_TYPE) //actionButtonClickHandler.getType(extras);
         if (TYPE_BUTTON_CLICK == type) {
             Logger.v("CTNotificationIntentService handling $TYPE_BUTTON_CLICK")
-            handleActionButtonClick(extras)
+            handleActionButtonClick(extras, actionButtonClickHandler)
         } else {
-            Logger.v("CTNotificationIntentService: unhandled intent " + intent.action)
+            Logger.v("CTNotificationIntentService: unhandled intent ${intent.action}")
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun handleActionButtonClick(extras: Bundle) {
+    private fun handleActionButtonClick(extras: Bundle, actionButtonClickHandler: ActionButtonClickHandler) {
         try {
             val autoCancel = extras.getBoolean("autoCancel", false)
             val notificationId = extras.getInt("notificationId", -1)
@@ -61,8 +61,8 @@ open class CTNotificationIntentService : IntentService("CTNotificationIntentServ
 
             val context = applicationContext
 
-            val isActionButtonClickHandled = mActionButtonClickHandler!!
-                .onActionButtonClick(context, extras, notificationId)
+            val isActionButtonClickHandled =
+                actionButtonClickHandler.onActionButtonClick(context, extras, notificationId)
             if (isActionButtonClickHandled) {
                 return
             }
@@ -72,12 +72,12 @@ open class CTNotificationIntentService : IntentService("CTNotificationIntentServ
                 return
             }
 
-            val launchIntent: Intent?
-            if (dl != null) {
-                launchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
-                Utils.setPackageNameFromResolveInfoList(context, launchIntent)
+            val launchIntent = if (dl != null) {
+                Intent(Intent.ACTION_VIEW, Uri.parse(dl)).also {
+                    Utils.setPackageNameFromResolveInfoList(context, it)
+                }
             } else {
-                launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                context.packageManager.getLaunchIntentForPackage(context.packageName)
             }
 
             if (launchIntent == null) {
@@ -99,12 +99,11 @@ open class CTNotificationIntentService : IntentService("CTNotificationIntentServ
                 val notificationManager =
                     applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
                 notificationManager?.cancel(notificationId)
-
             }
             sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) // close the notification drawer
             startActivity(launchIntent)
         } catch (t: Throwable) {
-            Logger.v("CTNotificationService: unable to process action button click:  " + t.localizedMessage)
+            Logger.v("CTNotificationService: unable to process action button click:  ${t.localizedMessage}")
         }
     }
 

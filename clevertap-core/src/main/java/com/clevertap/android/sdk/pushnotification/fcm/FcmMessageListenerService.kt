@@ -8,14 +8,14 @@ import com.google.firebase.messaging.RemoteMessage
  */
 open class FcmMessageListenerService : FirebaseMessagingService() {
 
-    private val mHandler: IFcmMessageHandler = CTFcmMessageHandler()
+    private val handler: IFcmMessageHandler = CTFcmMessageHandler()
 
     override fun onMessageReceived(message: RemoteMessage) {
-        mHandler.createNotification(applicationContext, message)
+        handler.createNotification(applicationContext, message)
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        mHandler.onNewToken(applicationContext, token)
+        handler.onNewToken(applicationContext, token)
     }
 }
