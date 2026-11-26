@@ -38,7 +38,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.inbox.InboxV2Fetcher
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.db.DisplayedInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStoreProvider

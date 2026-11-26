@@ -42,7 +42,7 @@ internal class NetworkEncryptionManager(
         return sessionKeyForEncryption().encoded
     }
 
-    fun sessionEncryptionKey() = Base64.encodeToString(sessionKeyBytes(), Base64.NO_WRAP)
+    fun sessionEncryptionKey(): String = Base64.encodeToString(sessionKeyBytes(), Base64.NO_WRAP)
 
     /**
      * Returns EncryptionResult which contains encrypted response, iv

@@ -13,7 +13,7 @@ import java.util.regex.Pattern
  * Message Data Access Object class interfacing with Database
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal open class CTMessageDAO() {
+internal open class CTMessageDAO {
 
     var campaignId: String? = null
 
