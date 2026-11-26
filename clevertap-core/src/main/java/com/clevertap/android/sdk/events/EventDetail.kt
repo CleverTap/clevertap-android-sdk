@@ -1,5 +1,11 @@
 package com.clevertap.android.sdk.events
 
+/**
+ * Count and first/last occurrence times of one event, as returned by the deprecated
+ * [com.clevertap.android.sdk.CleverTapAPI.getDetails]. Times are Unix epoch seconds.
+ *
+ * @see com.clevertap.android.sdk.CleverTapAPI.getUserEventLog
+ */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 public open class EventDetail(
     count: Int,
@@ -16,12 +22,32 @@ public open class EventDetail(
 
     private val nameValue: String? = name
 
+    /**
+     * Returns how many times the event was recorded.
+     *
+     * @return the event count
+     */
     public open fun getCount(): Int = countValue
 
+    /**
+     * Returns when the event was first recorded.
+     *
+     * @return the first occurrence, in Unix epoch seconds
+     */
     public open fun getFirstTime(): Int = firstTimeValue
 
+    /**
+     * Returns when the event was last recorded.
+     *
+     * @return the last occurrence, in Unix epoch seconds
+     */
     public open fun getLastTime(): Int = lastTimeValue
 
+    /**
+     * Returns the event name.
+     *
+     * @return the event name
+     */
     public open fun getName(): String? = nameValue
 
     /** Kotlin property syntax, equivalent to [getCount]. */

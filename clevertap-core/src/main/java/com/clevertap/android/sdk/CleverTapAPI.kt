@@ -113,12 +113,21 @@ public open class CleverTapAPI internal constructor(
         public fun onDevicePushToken(token: String?, type: PushType?)
     }
 
+    /**
+     * SDK log levels, from least to most verbose. Set the global level with
+     * `CleverTapAPI.setDebugLevel` or an instance's level with [CleverTapInstanceConfig.setDebugLevel].
+     */
     public enum class LogLevel(private val value: Int) {
         OFF(-1),
         INFO(0),
         DEBUG(2),
         VERBOSE(3);
 
+        /**
+         * Returns the integer value of this level: -1 ([OFF]), 0 ([INFO]), 2 ([DEBUG]) or 3 ([VERBOSE]).
+         *
+         * @return the integer value
+         */
         public fun intValue(): Int = value
     }
 
@@ -427,6 +436,11 @@ public open class CleverTapAPI internal constructor(
         scDomainListener!!.onSCDomainAvailable(getSCDomain(domain))
     }
 
+    /**
+     * Returns the CleverTap account ID of this instance.
+     *
+     * @return the account ID
+     */
     public open fun getAccountId(): String = coreState.config.accountId
 
     /** Kotlin property syntax, equivalent to [getAccountId]. */
@@ -479,6 +493,12 @@ public open class CleverTapAPI internal constructor(
      */
     public open fun getCTNotificationInboxListener(): CTInboxListener? = coreState.callbackManager.inboxListener
 
+    /**
+     * Sets the listener for App Inbox initialisation and updates.
+     *
+     * @param notificationInboxListener the listener, or `null` to remove it
+     * @see CTInboxListener
+     */
     public open fun setCTNotificationInboxListener(notificationInboxListener: CTInboxListener?) {
         coreState.callbackManager.inboxListener = notificationInboxListener
     }
@@ -498,6 +518,12 @@ public open class CleverTapAPI internal constructor(
      */
     public open fun getCTPushAmpListener(): CTPushAmpListener? = coreState.callbackManager.pushAmpListener
 
+    /**
+     * Sets the listener that receives Push Amplification payloads. It is called on a CleverTap
+     * background thread while the server response is processed.
+     *
+     * @param pushAmpListener the listener, or `null` to remove it
+     */
     public open fun setCTPushAmpListener(pushAmpListener: CTPushAmpListener?) {
         coreState.callbackManager.pushAmpListener = pushAmpListener
     }
@@ -515,6 +541,13 @@ public open class CleverTapAPI internal constructor(
     public open fun getCTPushNotificationListener(): CTPushNotificationListener? =
         coreState.callbackManager.pushNotificationListener
 
+    /**
+     * Sets the listener that receives the payload of clicked CleverTap push notifications. It is called
+     * synchronously on the thread that reports the click, for example the main thread when the
+     * launched activity is created.
+     *
+     * @param pushNotificationListener the listener, or `null` to remove it
+     */
     public open fun setCTPushNotificationListener(pushNotificationListener: CTPushNotificationListener?) {
         coreState.callbackManager.pushNotificationListener = pushNotificationListener
     }
@@ -674,6 +707,12 @@ public open class CleverTapAPI internal constructor(
     public open fun getDevicePushTokenRefreshListener(): DevicePushTokenRefreshListener? =
         coreState.pushProviders.getDevicePushTokenRefreshListener()
 
+    /**
+     * Sets the listener notified when a push token is refreshed. It is called on the thread that
+     * delivers the new token, for example the FCM service thread.
+     *
+     * @param tokenRefreshListener the listener, or `null` to remove it
+     */
     public open fun setDevicePushTokenRefreshListener(tokenRefreshListener: DevicePushTokenRefreshListener?) {
         coreState.pushProviders.setDevicePushTokenRefreshListener(tokenRefreshListener)
     }
@@ -816,6 +855,12 @@ public open class CleverTapAPI internal constructor(
     public open fun getInAppNotificationListener(): InAppNotificationListener? =
         coreState.callbackManager.inAppNotificationListener
 
+    /**
+     * Sets the listener for in-app notification lifecycle callbacks.
+     *
+     * @param inAppNotificationListener the listener, or `null` to remove it
+     * @see InAppNotificationListener
+     */
     public open fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?) {
         coreState.callbackManager.inAppNotificationListener = inAppNotificationListener
     }
@@ -917,6 +962,13 @@ public open class CleverTapAPI internal constructor(
      */
     public open fun getLocation(): Location? = coreState.locationManager.findBestLocation()
 
+    /**
+     * Sets the user's location in CleverTap, for example for geo-segmentation. A `null` location is
+     * ignored. The location is sent to CleverTap while the app is in the foreground (or when it comes
+     * from the Geofence SDK), at most once every 10 seconds.
+     *
+     * @param location the location
+     */
     public open fun setLocation(location: Location?) {
         coreState.locationManager.updateLocation(location)
     }
@@ -1041,6 +1093,11 @@ public open class CleverTapAPI internal constructor(
     @Suppress("DEPRECATION")
     public open fun getSyncListener(): SyncListener? = coreState.callbackManager.syncListener
 
+    /**
+     * Sets the deprecated [SyncListener].
+     *
+     * @param syncListener the listener, or `null` to remove it
+     */
     @Suppress("DEPRECATION")
     public open fun setSyncListener(syncListener: SyncListener?) {
         coreState.callbackManager.syncListener = syncListener
@@ -1771,14 +1828,34 @@ public open class CleverTapAPI internal constructor(
 
     //Listener
 
+    /**
+     * Sets the listener that receives the key-value pairs of clicked in-app buttons.
+     *
+     * @param listener the listener, or `null` to remove it
+     * @see InAppNotificationButtonListener
+     */
     public open fun setInAppNotificationButtonListener(listener: InAppNotificationButtonListener?) {
         coreState.callbackManager.inAppNotificationButtonListener = listener
     }
 
+    /**
+     * Sets the listener that receives the key-value pairs of clicked App Inbox buttons. The SDK only
+     * keeps a weak reference to it, so keep a strong reference yourself.
+     *
+     * @param listener the listener, or `null` to remove it
+     * @see InboxMessageButtonListener
+     */
     public open fun setInboxMessageButtonListener(listener: InboxMessageButtonListener?) {
         inboxMessageButtonListener = WeakReference(listener)
     }
 
+    /**
+     * Sets the listener notified of App Inbox item and CTA clicks. The SDK only keeps a weak reference
+     * to it, so keep a strong reference yourself.
+     *
+     * @param listener the listener, or `null` to remove it
+     * @see InboxMessageListener
+     */
     public open fun setCTInboxMessageListener(listener: InboxMessageListener?) {
         inboxMessageListener = WeakReference(listener)
     }
@@ -2074,6 +2151,15 @@ public open class CleverTapAPI internal constructor(
         coreState.callbackManager.removeOnInitCleverTapIDListener(onInitCleverTapIDListener)
     }
 
+    /**
+     * Renders a push notification with the given renderer, asynchronously on a CleverTap background
+     * thread (serialised with other push rendering).
+     *
+     * @param iNotificationRenderer the renderer that builds the notification
+     * @param context a context; must not be `null`
+     * @param extras the push payload
+     * @return a [Future] for the rendering task, or `null` if it could not be scheduled
+     */
     //TODO: start synchronizing entire flow from here
     public open fun renderPushNotification(
         iNotificationRenderer: INotificationRenderer,
@@ -2377,6 +2463,11 @@ public open class CleverTapAPI internal constructor(
      */
     public open fun getLocale(): String? = coreState.deviceInfo.customLocale
 
+    /**
+     * Sets a custom locale for this instance. A `null` or empty locale is ignored.
+     *
+     * @param locale the locale, for example `en_US`
+     */
     public open fun setLocale(locale: String?) {
         if (locale.isNullOrEmpty()) {
             Logger.i("Empty Locale provided for setLocale, not setting it")
@@ -2437,6 +2528,7 @@ public open class CleverTapAPI internal constructor(
 
     public companion object {
 
+        /** The push payload key that marks a notification as sent by CleverTap. */
         public const val NOTIFICATION_TAG: String = "wzrk_pn"
 
         /** An instance created this long after the app entered the foreground is "created post app launch". */
@@ -2603,6 +2695,14 @@ public open class CleverTapAPI internal constructor(
             }
         }
 
+        /**
+         * Returns the instance for an account. When no instance exists yet, it is created from the
+         * default config (for a `null` account ID) or from the config stored for that account.
+         *
+         * @param context a context, needed to create an instance
+         * @param _accountId the account ID, or `null` for the default instance
+         * @return the instance, or `null` if there is none and it cannot be created
+         */
         @JvmStatic
         public fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =
             fromAccountId(context, _accountId)
@@ -3017,9 +3117,19 @@ public open class CleverTapAPI internal constructor(
             }
         }
 
+        /**
+         * Returns a copy of all CleverTap instances created so far, keyed by account ID.
+         *
+         * @return the instances; changing the map does not affect the SDK
+         */
         @JvmStatic
         public fun getInstances(): HashMap<String, CleverTapAPI> = CleverTapInstanceStore.snapshot()
 
+        /**
+         * Replaces the SDK's registry of instances.
+         *
+         * @param instances the instances keyed by account ID, or `null` to clear the registry
+         */
         @JvmStatic
         public fun setInstances(instances: HashMap<String, CleverTapAPI>?) {
             CleverTapInstanceStore.replaceAll(instances)
@@ -3147,6 +3257,11 @@ public open class CleverTapAPI internal constructor(
             CoreMetaData.setAppForeground(appForeground)
         }
 
+        /**
+         * Notifies all instances that the current activity was paused. Called by
+         * [ActivityLifecycleCallback]; call it from your activities' `onPause` only if you don't
+         * register the lifecycle callback.
+         */
         @JvmStatic
         public fun onActivityPaused() {
             for (instance in CleverTapInstanceStore.all()) {
@@ -3158,11 +3273,26 @@ public open class CleverTapAPI internal constructor(
             }
         }
 
+        /**
+         * Notifies the SDK that an activity was resumed. Same as `onActivityResumed(activity, null)`.
+         *
+         * @param activity the resumed activity
+         * @see onActivityPaused
+         */
         @JvmStatic
         public fun onActivityResumed(activity: Activity?) {
             onActivityResumed(activity, null)
         }
 
+        /**
+         * Notifies the SDK that an activity was resumed: marks the app as in the foreground, creates the
+         * default instance if none exists yet, and lets every instance handle the resume. Called by
+         * [ActivityLifecycleCallback]; call it from your activities' `onResume` only if you don't
+         * register the lifecycle callback.
+         *
+         * @param activity the resumed activity
+         * @param cleverTapID a custom CleverTap ID used if the default instance is created here
+         */
         @JvmStatic
         public fun onActivityResumed(activity: Activity?, cleverTapID: String?) {
             if (CleverTapInstanceStore.isEmpty()) {
@@ -3315,9 +3445,19 @@ public open class CleverTapAPI internal constructor(
             }
         }
 
+        /**
+         * Returns the handler set with [setNotificationHandler].
+         *
+         * @return the handler, or `null` if none is set
+         */
         @JvmStatic
         public fun getNotificationHandler(): NotificationHandler? = registeredNotificationHandler
 
+        /**
+         * Returns the handler set with [setSignedCallNotificationHandler].
+         *
+         * @return the handler, or `null` if none is set
+         */
         @JvmStatic
         public fun getSignedCallNotificationHandler(): NotificationHandler? = registeredSignedCallNotificationHandler
 
@@ -3509,6 +3649,12 @@ public open class CleverTapAPI internal constructor(
         private fun getDefaultInstanceOrFirstOther(context: Context?): CleverTapAPI? =
             getDefaultInstance(context) ?: CleverTapInstanceStore.all().firstOrNull()
 
+        /**
+         * Sets the handler that receives Push Template payloads (those with a `pt_id`), for example
+         * `PushTemplateNotificationHandler`.
+         *
+         * @param notificationHandler the handler, or `null` to remove it
+         */
         @JvmStatic
         public fun setNotificationHandler(notificationHandler: NotificationHandler?) {
             registeredNotificationHandler = notificationHandler
@@ -3534,10 +3680,20 @@ public open class CleverTapAPI internal constructor(
             liveUpdateNotificationFactory = factory
         }
 
+        /**
+         * Returns the factory set with [setLiveUpdateNotificationFactory].
+         *
+         * @return the factory, or `null` if none is set
+         */
         @JvmStatic
         public fun getLiveUpdateNotificationFactory(): ICleverTapLiveUpdateNotificationFactory? =
             liveUpdateNotificationFactory
 
+        /**
+         * Sets the handler that receives Signed Call push payloads. Used by the Signed Call SDK.
+         *
+         * @param notificationHandler the handler, or `null` to remove it
+         */
         @JvmStatic
         public fun setSignedCallNotificationHandler(notificationHandler: NotificationHandler?) {
             registeredSignedCallNotificationHandler = notificationHandler

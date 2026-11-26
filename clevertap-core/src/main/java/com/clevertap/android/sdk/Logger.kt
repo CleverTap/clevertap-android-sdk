@@ -2,6 +2,16 @@ package com.clevertap.android.sdk
 
 import android.util.Log
 
+/**
+ * The SDK's logcat logger. Messages are logged under the tag `CleverTap`, or `CleverTap:<suffix>` for
+ * the overloads that take a suffix.
+ *
+ * The static methods ([d], [i], [v]) follow the global level set with `CleverTapAPI.setDebugLevel`;
+ * an instance (see [CleverTapInstanceConfig.getLogger]) follows its own level, set with [setDebugLevel].
+ * Info messages are logged at [CleverTapAPI.LogLevel.INFO] and above, debug messages above INFO and
+ * verbose messages above [CleverTapAPI.LogLevel.DEBUG]. Overloads without a [Throwable] throw a
+ * [NullPointerException] for a `null` message when the level is enabled.
+ */
 public class Logger internal constructor(private var debugLevel: Int) : ILogger {
 
     override fun debug(message: String?) {
@@ -76,6 +86,11 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
         }
     }
 
+    /**
+     * Sets the level of this logger instance.
+     *
+     * @param level the [CleverTapAPI.LogLevel.intValue] of a [CleverTapAPI.LogLevel]
+     */
     public fun setDebugLevel(level: Int) {
         debugLevel = level
     }
@@ -98,6 +113,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a debug message under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         */
         @JvmStatic
         public fun d(suffix: String?, message: String?) {
             if (isDebugEnabled) {
@@ -105,6 +126,13 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a debug message and a throwable under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun d(suffix: String?, message: String?, t: Throwable?) {
             if (isDebugEnabled) {
@@ -112,6 +140,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a debug message and a throwable under the tag `CleverTap`.
+         *
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun d(message: String?, t: Throwable?) {
             if (isDebugEnabled) {
@@ -129,6 +163,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a info message under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         */
         @JvmStatic
         public fun i(suffix: String?, message: String?) {
             if (isInfoEnabled) {
@@ -136,6 +176,13 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a info message and a throwable under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun i(suffix: String?, message: String?, t: Throwable?) {
             if (isInfoEnabled) {
@@ -143,6 +190,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a info message and a throwable under the tag `CleverTap`.
+         *
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun i(message: String?, t: Throwable?) {
             if (isInfoEnabled) {
@@ -160,6 +213,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a verbose message under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         */
         @JvmStatic
         public fun v(suffix: String?, message: String?) {
             if (isVerboseEnabled) {
@@ -167,6 +226,13 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a verbose message and a throwable under the tag `CleverTap:<suffix>`.
+         *
+         * @param suffix appended to the log tag
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun v(suffix: String?, message: String?, t: Throwable?) {
             if (isVerboseEnabled) {
@@ -174,6 +240,12 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
             }
         }
 
+        /**
+         * Logs a verbose message and a throwable under the tag `CleverTap`.
+         *
+         * @param message the message
+         * @param t the throwable whose stack trace is logged
+         */
         @JvmStatic
         public fun v(message: String?, t: Throwable?) {
             if (isVerboseEnabled) {
