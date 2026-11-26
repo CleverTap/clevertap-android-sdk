@@ -44,7 +44,7 @@ public class CTInAppNotification : Parcelable {
     public var maxPerSession: Int = 0
         private set
 
-    private var _buttons = ArrayList<CTInAppNotificationButton>()
+    private val _buttons = ArrayList<CTInAppNotificationButton>()
 
     public val buttons: List<CTInAppNotificationButton>
         get() = _buttons
@@ -138,7 +138,7 @@ public class CTInAppNotification : Parcelable {
     internal var isJsEnabled: Boolean = false
         private set
 
-    private var _mediaList = ArrayList<CTInAppNotificationMedia>()
+    private val _mediaList = ArrayList<CTInAppNotificationMedia>()
 
     internal val mediaList: List<CTInAppNotificationMedia>
         get() = _mediaList
@@ -217,16 +217,14 @@ public class CTInAppNotification : Parcelable {
         message = parcel.readString()
         messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK)
         try {
-            _buttons =
-                parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
-                    ?: ArrayList()
+            parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
+                ?.let { _buttons.addAll(it) }
         } catch (_: Throwable) {
             // no-op
         }
         try {
-            _mediaList =
-                parcel.createTypedArrayList<CTInAppNotificationMedia>(CTInAppNotificationMedia.CREATOR)
-                    ?: ArrayList()
+            parcel.createTypedArrayList<CTInAppNotificationMedia>(CTInAppNotificationMedia.CREATOR)
+                ?.let { _mediaList.addAll(it) }
         } catch (_: Throwable) {
             // no-op
         }

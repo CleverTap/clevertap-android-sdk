@@ -62,7 +62,7 @@ internal open class CTInboxListViewFragment : Fragment() {
 
     internal var haveVideoPlayerSupport: Boolean = VideoLibChecker.haveVideoPlayerSupport
 
-    internal var inboxMessages: MutableList<CTInboxMessage> = ArrayList()
+    internal val inboxMessages: MutableList<CTInboxMessage> = ArrayList()
 
     internal var linearLayout: LinearLayout? = null
 
@@ -121,7 +121,7 @@ internal open class CTInboxListViewFragment : Fragment() {
     }
 
     private fun updateInboxMessages() {
-        fetchFreshMessages()?.let { inboxMessages = it }
+        fetchFreshMessages()?.let { replaceMessagesInPlace(it) }
     }
 
     internal fun fetchFreshMessages(): MutableList<CTInboxMessage>? {

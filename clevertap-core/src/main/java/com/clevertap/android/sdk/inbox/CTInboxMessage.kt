@@ -90,7 +90,7 @@ public open class CTInboxMessage : Parcelable {
     public val imageUrl: String?
         @JvmSynthetic @JvmName("ktGetImageUrl") inline get() = getImageUrl()
 
-    private var _inboxMessageContents: ArrayList<CTInboxMessageContent> = ArrayList()
+    private val _inboxMessageContents: ArrayList<CTInboxMessageContent> = ArrayList()
 
     /**
      * Returns an ArrayList of the contents of [CTInboxMessage]
@@ -132,7 +132,7 @@ public open class CTInboxMessage : Parcelable {
     public val orientation: String?
         @JvmSynthetic @JvmName("ktGetOrientation") inline get() = getOrientation()
 
-    private var _tags: MutableList<String> = ArrayList()
+    private val _tags: MutableList<String> = ArrayList()
 
     /**
      * Returns a List of tags as set on the CleverTap dashboard
@@ -262,12 +262,10 @@ public open class CTInboxMessage : Parcelable {
             read = `in`.readByte().toInt() != 0x00
             _type = `in`.readValue(CTInboxMessageType::class.java.classLoader) as CTInboxMessageType?
             if (`in`.readByte().toInt() == 0x01) {
-                _tags = ArrayList()
                 `in`.readList(_tags, String::class.java.classLoader)
             }
             _bgColor = `in`.readString()
             if (`in`.readByte().toInt() == 0x01) {
-                _inboxMessageContents = ArrayList()
                 `in`.readList(_inboxMessageContents, CTInboxMessageContent::class.java.classLoader)
             }
             _orientation = `in`.readString()

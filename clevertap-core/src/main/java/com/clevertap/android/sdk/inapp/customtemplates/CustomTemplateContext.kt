@@ -168,19 +168,13 @@ public sealed class CustomTemplateContext private constructor(
                 value
             }
 
-            var currentMap: MutableMap<String, Any> = map
-            for ((index, keyPart) in keyParts.withIndex()) {
-                if (index == keyParts.lastIndex) {
-                    currentMap[keyPart] = keyValue
-                } else {
-                    @Suppress("UNCHECKED_CAST") var innerMap = currentMap[keyPart] as? MutableMap<String, Any>
-                    if (innerMap == null) {
-                        innerMap = mutableMapOf()
-                        currentMap[keyPart] = innerMap
-                    }
-                    currentMap = innerMap
-                }
+            // Walk (and create where missing or not a map) the nested maps down to the last key part.
+            val parentMap = keyParts.dropLast(1).fold(map) { currentMap, keyPart ->
+                @Suppress("UNCHECKED_CAST")
+                currentMap[keyPart] as? MutableMap<String, Any>
+                    ?: mutableMapOf<String, Any>().also { currentMap[keyPart] = it }
             }
+            parentMap[keyParts.last()] = keyValue
         }
 
         return map

@@ -37,7 +37,7 @@ internal open class CTMessageDAO() {
 
     private var read = false
 
-    private var tagsList: MutableList<String> = ArrayList()
+    private val tagsList: MutableList<String> = ArrayList()
 
     var userId: String? = null
 
@@ -139,7 +139,7 @@ internal open class CTMessageDAO() {
                     it.date = date
                     it.expires = expires
                     it.userId = userId
-                    it.tagsList = tagsList
+                    it.tagsList.addAll(tagsList)
                     it.campaignId = campaignId
                     it.wzrkParams = wzrkParams
                     it.source = source
