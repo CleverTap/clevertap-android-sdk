@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.validation.ValidationConfig
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class SessionManager(
     private val config: CleverTapInstanceConfig,
-    coreMetaData: CoreMetaData,
+    private val coreMetaData: CoreMetaData,
     private val validationConfig: ValidationConfig?,
     private val localDataStore: LocalDataStore
 ) : BaseSessionManager() {
@@ -20,8 +20,6 @@ internal open class SessionManager(
 
     var userLastVisitTs: Long = 0
         private set
-
-    private val cleverTapMetaData: CoreMetaData = coreMetaData
 
     // SessionManager/session management
     fun checkTimeoutSession() {
@@ -36,67 +34,58 @@ internal open class SessionManager(
     }
 
     override fun destroySession() {
-        cleverTapMetaData.currentSessionId = 0
-        cleverTapMetaData.isRelaxNetwork = false
-        cleverTapMetaData.isAppLaunchPushed = false
-        if (cleverTapMetaData.isFirstSession) {
-            cleverTapMetaData.isFirstSession = false
+        coreMetaData.currentSessionId = 0
+        coreMetaData.isRelaxNetwork = false
+        coreMetaData.isAppLaunchPushed = false
+        if (coreMetaData.isFirstSession) {
+            coreMetaData.isFirstSession = false
         }
         config.logger.verbose(config.accountId, "Session destroyed; Session ID is now 0")
-        cleverTapMetaData.clearSource()
-        cleverTapMetaData.clearMedium()
-        cleverTapMetaData.clearCampaign()
-        cleverTapMetaData.clearWzrkParams()
+        coreMetaData.clearSource()
+        coreMetaData.clearMedium()
+        coreMetaData.clearCampaign()
+        coreMetaData.clearWzrkParams()
     }
 
     override fun lazyCreateSession(context: Context) {
-        if (!cleverTapMetaData.inCurrentSession()) {
-            cleverTapMetaData.isFirstRequestInSession = true
+        if (!coreMetaData.inCurrentSession()) {
+            coreMetaData.isFirstRequestInSession = true
             validationConfig?.updateDiscardedEventNames(null)
             createSession(context)
         }
     }
 
     //Session
-    fun setLastVisitTime() {
-        val ed = localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)
-        lastVisitTime = ed?.lastTime ?: -1
+    fun updateLastVisitTime() {
+        lastVisitTime = localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.lastTime ?: -1
     }
 
     @WorkerThread
-    fun setUserLastVisitTs() {
-        val appLaunchedEventLog = localDataStore.readUserEventLog(Constants.APP_LAUNCHED_EVENT)
-        userLastVisitTs = appLaunchedEventLog?.lastTs ?: -1
+    fun updateUserLastVisitTs() {
+        userLastVisitTs = localDataStore.readUserEventLog(Constants.APP_LAUNCHED_EVENT)?.lastTs ?: -1
     }
 
     private fun createSession(context: Context) {
-        val sessionId = now
-        cleverTapMetaData.currentSessionId = sessionId
+        coreMetaData.currentSessionId = now
 
-        config.logger.verbose(
-            config.accountId,
-            "Session created with ID: " + cleverTapMetaData.currentSessionId
-        )
+        config.logger.verbose(config.accountId, "Session created with ID: ${coreMetaData.currentSessionId}")
 
         val lastSessionID = StorageHelper.getIntFromPrefs(context, config.accountId, Constants.SESSION_ID_LAST, 0)
         val lastSessionTime = StorageHelper.getIntFromPrefs(context, config.accountId, Constants.LAST_SESSION_EPOCH, 0)
         if (lastSessionTime > 0) {
-            cleverTapMetaData.lastSessionLength = lastSessionTime - lastSessionID
+            coreMetaData.lastSessionLength = lastSessionTime - lastSessionID
         }
 
-        config.logger.verbose(
-            config.accountId,
-            "Last session length: " + cleverTapMetaData.lastSessionLength + " seconds"
-        )
+        config.logger.verbose(config.accountId, "Last session length: ${coreMetaData.lastSessionLength} seconds")
 
         if (lastSessionID == 0) {
-            cleverTapMetaData.isFirstSession = true
+            coreMetaData.isFirstSession = true
         }
         StorageHelper.putInt(
             context,
             config.accountId,
             Constants.SESSION_ID_LAST,
-            cleverTapMetaData.currentSessionId
+            coreMetaData.currentSessionId
         )
     }
 

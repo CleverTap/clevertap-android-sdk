@@ -99,14 +99,14 @@ class SessionManagerTest : BaseTestCase() {
 
         // when local data store returns null for app launched event, it sets last visit time as -1
         every { localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT) } returns null
-        sessionManagerDef.setLastVisitTime()
+        sessionManagerDef.updateLastVisitTime()
         assertEquals(-1,sessionManagerDef.lastVisitTime)
 
         // when local data store returns eventDetails for app launched event, it sets last visit time as eventDetails.lastVisitTime
 
         every { localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT) } returns
                 EventDetail(1, 10, 20, "hi")
-        sessionManagerDef.setLastVisitTime()
+        sessionManagerDef.updateLastVisitTime()
         assertEquals(20,sessionManagerDef.lastVisitTime)
     }
 
@@ -178,7 +178,7 @@ class SessionManagerTest : BaseTestCase() {
             deviceInfo.deviceID!!
         )
         every { localDataStoreMockk.readUserEventLog(Constants.APP_LAUNCHED_EVENT) } returns appLaunchedEventLog
-        sessionManagerDef.setUserLastVisitTs()
+        sessionManagerDef.updateUserLastVisitTs()
         assertEquals(appLaunchedEventLog.lastTs, sessionManagerDef.userLastVisitTs)
     }
 

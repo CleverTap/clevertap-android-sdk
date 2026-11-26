@@ -2,13 +2,9 @@ package com.clevertap.android.sdk
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.StringDef
-import java.util.Arrays
-import java.util.HashSet
 
-// Bucket D: pushtemplates (and wrapper SDKs) read these as `Constants.X` from Java. Converted from a
-// constants-only Java interface to an `object`: its `const val` / `@JvmField` members compile to
-// static fields on Constants, and Kotlin callers keep `import com.clevertap.android.sdk.Constants.X`.
-// (An interface companion cannot mix `const val` with `@JvmField`.)
+// Bucket D: shared with the other SDK modules. `const val` members compile to static fields on
+// Constants; the few non-constant values are read-only collections.
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object Constants {
 
@@ -188,8 +184,12 @@ object Constants {
     const val KEY_ND_TRIGGERS_PER_TARGET: String = "nd_triggers_per_target" // onEvery/onExactly trigger counts
     const val INAPP_ID_IN_PAYLOAD: String = "ti"
     const val LOCATION_PING_INTERVAL_IN_SECONDS: Int = 10
-    @JvmField
-    val SYSTEM_EVENTS: Array<String> = arrayOf(NOTIFICATION_CLICKED_EVENT_NAME, NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME, GEOFENCE_EXITED_EVENT_NAME)
+    val SYSTEM_EVENTS: List<String> = listOf(
+        NOTIFICATION_CLICKED_EVENT_NAME,
+        NOTIFICATION_VIEWED_EVENT_NAME,
+        GEOFENCE_ENTERED_EVENT_NAME,
+        GEOFENCE_EXITED_EVENT_NAME
+    )
     const val DEFAULT_PUSH_TTL_SECONDS: Long = 60 * 60 * 24 * 4// 4 days
     const val ONE_MIN_IN_MILLIS: Long = 60 * 1000L
     const val ONE_DAY_IN_MILLIS: Long = 24 * 60 * 60 * 1000L
@@ -457,13 +457,11 @@ object Constants {
     const val AUTH: String = "auth"
     const val SP_KEY_PROFILE_IDENTITIES: String = "SP_KEY_PROFILE_IDENTITIES"
 
-    // valid profile identifier keys
-    @JvmField
-    val LEGACY_IDENTITY_KEYS: HashSet<String> = HashSet(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL))
-    @JvmField
-    val ALL_IDENTITY_KEYS: HashSet<String> = HashSet(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE))
-    @JvmField
-    val piiDBKeys: HashSet<String> = HashSet(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE))
+    // valid profile identifier keys (hash sets: callers iterate them in the former HashSet order)
+    val LEGACY_IDENTITY_KEYS: Set<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL)
+    val ALL_IDENTITY_KEYS: Set<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE)
+    val piiDBKeys: Set<String> =
+        hashSetOf(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE)
 
     /**
      * Valid indexes for the App Inbox item and buttons.
@@ -474,7 +472,6 @@ object Constants {
     const val APP_INBOX_CTA2_INDEX: Int = 1
     const val APP_INBOX_CTA3_INDEX: Int = 2
 
-    @JvmField
     val NULL_STRING_ARRAY: Array<String> = arrayOf()
     const val PT_NOTIF_ID: String = "notificationId"
     const val CLOSE_SYSTEM_DIALOGS: String = "close_system_dialogs"

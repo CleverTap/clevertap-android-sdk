@@ -2,16 +2,11 @@ package com.clevertap.android.sdk
 
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.CTInAppNotification
-import java.util.ArrayList
-import java.util.HashMap
 import org.json.JSONObject
 
-// @JvmSuppressWildcards keeps the Java-facing generic signatures (e.g. Map<String, Object>)
-// identical to the former Java declarations.
-@JvmSuppressWildcards
 internal abstract class BaseAnalyticsManager {
 
-    abstract fun addMultiValuesForKey(key: String?, values: ArrayList<String?>?)
+    abstract fun addMultiValuesForKey(key: String?, values: List<String?>?)
 
     abstract fun incrementValue(key: String?, value: Number?)
 
@@ -24,16 +19,16 @@ internal abstract class BaseAnalyticsManager {
 
     abstract fun pushAppLaunchedEvent()
 
-    abstract fun pushDefineVarsEvent(data: JSONObject?)
+    abstract fun pushDefineVarsEvent(data: JSONObject)
 
     abstract fun pushDisplayUnitClickedEventForID(unitID: String?)
 
     abstract fun pushDisplayUnitElementClickedEventForID(
-        unitID: String?, additionalProperties: HashMap<String, Any>?
+        unitID: String?, additionalProperties: Map<String, Any>?
     )
 
     abstract fun pushDisplayUnitElementViewedEventForID(
-        unitID: String?, additionalProperties: HashMap<String, Any>?
+        unitID: String?, additionalProperties: Map<String, Any>?
     )
 
     abstract fun pushDisplayUnitViewedEventForID(unitID: String?)
@@ -57,11 +52,11 @@ internal abstract class BaseAnalyticsManager {
 
     abstract fun pushProfile(profile: Map<String, Any?>?)
 
-    abstract fun removeMultiValuesForKey(key: String?, values: ArrayList<String?>?)
+    abstract fun removeMultiValuesForKey(key: String?, values: List<String?>?)
 
     abstract fun removeValueForKey(key: String?)
 
-    abstract fun sendDataEvent(event: JSONObject?)
+    abstract fun sendDataEvent(event: JSONObject)
 
-    abstract fun sendFetchEvent(eventObject: JSONObject?)
+    abstract fun sendFetchEvent(eventObject: JSONObject)
 }

@@ -39,7 +39,7 @@ class CTInAppNativeHalfInterstitialFragmentTest {
     private var savedDeviceType = 0
 
     // DeviceInfo keeps the device type in a static field for the whole app run.
-    private val deviceTypeField = DeviceInfo::class.java.getDeclaredField("sDeviceType")
+    private val deviceTypeField = DeviceInfo::class.java.getDeclaredField("cachedDeviceType")
         .apply { isAccessible = true }
 
     @Before

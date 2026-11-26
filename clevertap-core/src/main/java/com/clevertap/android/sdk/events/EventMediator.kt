@@ -24,7 +24,7 @@ internal open class EventMediator(
         }
         if (event.has("evtName")) {
             try {
-                if (listOf(*Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
+                if (event.getString("evtName") in Constants.SYSTEM_EVENTS) {
                     return false
                 }
             } catch (e: JSONException) {

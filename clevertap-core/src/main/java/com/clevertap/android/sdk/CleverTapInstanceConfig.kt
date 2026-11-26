@@ -633,7 +633,7 @@ open class CleverTapInstanceConfig : Parcelable {
                 info,
                 accountId,
                 accountToken,
-                info.getAccountRegion(),
+                info.accountRegion,
                 true
             )
         }
