@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.STORE_TYPE_IMPRESSION
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import androidx.annotation.RestrictTo
 
 /**
  * Responsible for storing impressions count for a given campaign ID.
@@ -13,7 +14,8 @@ import com.clevertap.android.sdk.store.preference.ICTPreference
  * The same implementation backs both in-app and Native Display; [storeType] selects which namespace
  * to reconstruct on user change (in-app counts_per_inapp vs ND nd_counts_per_target).
  */
-class ImpressionStore(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class ImpressionStore(
     private val ctPreference: ICTPreference,
     private val storeType: Int = STORE_TYPE_IMPRESSION,
 ) : ChangeUserCallback {

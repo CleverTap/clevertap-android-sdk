@@ -11,7 +11,8 @@ import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import com.clevertap.android.sdk.network.NetworkMonitor
 import androidx.annotation.RestrictTo
 
-interface FileFetchApiContract {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface FileFetchApiContract {
     fun makeApiCallForFile(urlMeta: Pair<String,CtCacheType>): DownloadedBitmap
 }
 

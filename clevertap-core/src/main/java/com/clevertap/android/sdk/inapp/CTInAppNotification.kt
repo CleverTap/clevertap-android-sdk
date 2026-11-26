@@ -646,6 +646,7 @@ class CTInAppNotification : Parcelable {
                 }
             }
 
+        @JvmStatic
         fun defaultTtl(): Long {
             return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000
         }

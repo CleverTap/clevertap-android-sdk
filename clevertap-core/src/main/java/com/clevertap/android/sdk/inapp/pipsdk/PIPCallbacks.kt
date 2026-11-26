@@ -1,11 +1,14 @@
 package com.clevertap.android.sdk.inapp.pipsdk
 
+import androidx.annotation.RestrictTo
+
 /**
  * Callback interface for PIP lifecycle and media events.
  *
  * All methods have empty default implementations — override only what you need.
  */
-interface PIPCallbacks {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface PIPCallbacks {
     fun onShow() {}
     fun onClose() {}
 

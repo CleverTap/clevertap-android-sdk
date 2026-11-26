@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.utils.DiskMemory
 import com.clevertap.android.sdk.utils.InMemoryLruCache
 import java.io.File
 import kotlin.math.max
+import androidx.annotation.RestrictTo
 /**
  * A memory management implementation for all type of files, providing both in-memory and disk-based storage.
  *
@@ -15,7 +16,8 @@ import kotlin.math.max
  * @param config The configuration object specifying parameters for memory management.
  * @param logger An optional logger for debugging and tracking purposes.
  */
-class FileMemoryV2(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class FileMemoryV2(
     internal val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {

@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.network.DownloadedBitmap
 
-class TestInAppFetchApi(
+internal class TestInAppFetchApi(
     private val bitmap: Bitmap?,
     private val status: DownloadedBitmap.Status,
     private val downloadTime: Long,

@@ -2,8 +2,10 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.BitmapFactory
 import java.io.File
+import androidx.annotation.RestrictTo
 
-fun File?.hasValidBitmap() : Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun File?.hasValidBitmap() : Boolean {
     if (this == null || this.exists().not()) {
         return false
     }

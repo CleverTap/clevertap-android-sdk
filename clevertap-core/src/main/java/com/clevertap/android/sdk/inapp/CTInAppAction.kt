@@ -150,6 +150,7 @@ enum class InAppActionType(private val stringValue: String) {
 
     companion object {
 
+        @JvmStatic
         fun fromString(string: String): InAppActionType? {
             return values().firstOrNull { it.stringValue == string }
         }

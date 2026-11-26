@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.isInvalidIndex
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Data class representing a trigger condition for in-app messages.
@@ -13,13 +14,15 @@ import org.json.JSONObject
  * @param op The operator used for comparison (e.g., GreaterThan, Equals, etc.).
  * @param value The value to compare against.
  */
-data class TriggerCondition(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class TriggerCondition(
     val propertyName: String,
     val op: TriggerOperator,
     val value: TriggerValue,
 )
 
-data class TriggerGeoRadius(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class TriggerGeoRadius(
     var latitude: Double,
     var longitude: Double,
     var radius: Double
@@ -30,7 +33,8 @@ data class TriggerGeoRadius(
  *
  * @param operatorValue The raw value associated with the operator.
  */
-enum class TriggerOperator(val operatorValue: Int) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class TriggerOperator(val operatorValue: Int) {
     GreaterThan(0),
     Equals(1),
     LessThan(2),
@@ -61,7 +65,8 @@ enum class TriggerOperator(val operatorValue: Int) {
  * @param key The key to look up in the JSONObject.
  * @return The TriggerOperator associated with the key or Equals if not found.
  */
-fun JSONObject?.optTriggerOperator(key: String): TriggerOperator {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal fun JSONObject?.optTriggerOperator(key: String): TriggerOperator {
     val optInt = this?.optInt(key, TriggerOperator.Equals.operatorValue)
         ?: TriggerOperator.Equals.operatorValue
     return TriggerOperator.fromOperatorValue(optInt)
@@ -72,7 +77,8 @@ fun JSONObject?.optTriggerOperator(key: String): TriggerOperator {
  *
  * @param triggerJSON The JSON object containing trigger conditions.
  */
-class TriggerAdapter(triggerJSON: JSONObject) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class TriggerAdapter(triggerJSON: JSONObject) {
 
     /**
      * The name of the event associated with the trigger conditions.

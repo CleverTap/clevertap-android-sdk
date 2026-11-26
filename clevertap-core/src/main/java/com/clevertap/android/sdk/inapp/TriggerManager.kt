@@ -6,13 +6,15 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
 /**
  * Responsible for storing triggers count for a given campaign ID.
  * It stores triggers in the shared preferences named "WizRocket_triggers_per_inapp:<<account_id>>:<<device_id>>"
  * with keys in the format "__triggers_<<campaign_id>>".
  */
-class TriggerManager(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class TriggerManager(
     context: Context,
     private val accountId: String,
     private val deviceInfo: DeviceInfo,

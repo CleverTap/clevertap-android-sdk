@@ -27,9 +27,11 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
+import androidx.annotation.RestrictTo
 
 @UnstableApi
-class Media3Handle : InAppVideoPlayerHandle {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class Media3Handle : InAppVideoPlayerHandle {
     private var player: ExoPlayer? = null
     private var playerView: PlayerView? = null
 

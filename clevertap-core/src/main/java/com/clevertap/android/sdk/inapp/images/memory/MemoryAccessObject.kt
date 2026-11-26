@@ -5,12 +5,14 @@ import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.inapp.images.hasValidBitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
+import androidx.annotation.RestrictTo
 /**
  * Represents the types of transformations that can be applied to stored data.
  *
  * @param <A> The type of the transformed data.
  */
-sealed class MemoryDataTransformationType<A> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed class MemoryDataTransformationType<A> {
     /**
      * Transforms data into a [Bitmap] object.
      */
@@ -30,7 +32,8 @@ sealed class MemoryDataTransformationType<A> {
  *
  * @return The converted [Bitmap], or null if the file is invalid or cannot be decoded.
  */
-val fileToBitmap: (file: File?) -> Bitmap? = { file ->
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal val fileToBitmap: (file: File?) -> Bitmap? = { file ->
     if (file != null && file.hasValidBitmap()) {
         BitmapFactory.decodeFile(file.absolutePath)
     } else {
@@ -42,7 +45,8 @@ val fileToBitmap: (file: File?) -> Bitmap? = { file ->
  *
  * @return The [ByteArray] containing the file's contents, or null if the file is null.
  */
-val fileToBytes: (file: File?) -> ByteArray? = { file ->
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal val fileToBytes: (file: File?) -> ByteArray? = { file ->
     file?.readBytes()
 }
 /**
@@ -50,7 +54,8 @@ val fileToBytes: (file: File?) -> ByteArray? = { file ->
  *
  * @return The decoded [Bitmap], or null if the byte array cannot be decoded.
  */
-val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
     BitmapFactory.decodeByteArray(
         it,
         0,
@@ -62,7 +67,8 @@ val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
  *
  * @return The compressed [ByteArray], or null if the bitmap is null.
  */
-val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
     it?.let {
         val stream = ByteArrayOutputStream()
         it.compress(Bitmap.CompressFormat.PNG, 100, stream)
@@ -74,7 +80,8 @@ val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
  *
  * @param <T> The type of data being stored.
  */
-interface MemoryAccessObject<T> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface MemoryAccessObject<T> {
 
     /**
      * Fetches a value from in-memory cache by key.

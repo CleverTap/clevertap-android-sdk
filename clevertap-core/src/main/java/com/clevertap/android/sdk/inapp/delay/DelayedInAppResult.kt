@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Sealed class representing the result of a delayed in-app callback
  */
-sealed interface DelayedInAppResult {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed interface DelayedInAppResult {
 
     /**
      * Success state - in-app was successfully retrieved and is ready for display
@@ -47,7 +49,8 @@ sealed interface DelayedInAppResult {
     data class Discarded(val id: String, val reason: String) : DelayedInAppResult
 }
 
-sealed interface InActionResult {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed interface InActionResult {
     data class ReadyToFetch(val targetId: Long, val metadata: JSONObject) : InActionResult
     data class Error(val targetId: Long, val message: String) : InActionResult
     data class Cancelled(val targetId: Long) : InActionResult

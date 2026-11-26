@@ -25,6 +25,7 @@ enum class CTInAppType(private val type: String) {
     }
 
     companion object {
+        @JvmStatic
         fun fromString(type: String?): CTInAppType {
             return when (type) {
                 "html" -> CTInAppTypeHTML
