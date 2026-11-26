@@ -171,16 +171,16 @@ internal open class ProductDisplayLinearBigContentView(
 
     private fun setCustomContentViewButtonLabel(
         resourceID: Int,
-        buttonLabel: String?
+        pt_product_display_action: String?
     ) {
-        if (buttonLabel != null && buttonLabel.isNotEmpty()) {
+        if (pt_product_display_action != null && pt_product_display_action.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     resourceID,
-                    Html.fromHtml(buttonLabel, Html.FROM_HTML_MODE_LEGACY)
+                    Html.fromHtml(pt_product_display_action, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                remoteView.setTextViewText(resourceID, Html.fromHtml(buttonLabel))
+                remoteView.setTextViewText(resourceID, Html.fromHtml(pt_product_display_action))
             }
         }
     }

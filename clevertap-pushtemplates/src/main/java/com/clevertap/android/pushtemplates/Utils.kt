@@ -46,9 +46,6 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object Utils {
 
-    /** Length of the "pt_img" key prefix; the image index digit follows it. */
-    private const val IMAGE_KEY_PREFIX_LENGTH = 6
-
     /** Length of the "pt_st" key prefix; the small-text index digit follows it. */
     private const val SMALL_TEXT_KEY_PREFIX_LENGTH = 5
 
@@ -91,7 +88,7 @@ internal object Utils {
     fun getImageDataListFromExtras(extras: Bundle, defaultAltText: String?): ArrayList<ImageData> {
         val imageList = ArrayList<ImageData>()
         for (key in extras.keySet()) {
-            if (key.startsWith("pt_img") && key.length > IMAGE_KEY_PREFIX_LENGTH && key[IMAGE_KEY_PREFIX_LENGTH].isDigit() && !key.endsWith(ALT_TEXT_SUFFIX)) {
+            if (key.startsWith("pt_img") && key.length > 6 && key[6].isDigit() && !key.endsWith(ALT_TEXT_SUFFIX)) {
                 val imageUrl = extras.getString(key)
                 val altText = extras.getString("$key$ALT_TEXT_SUFFIX", "$defaultAltText${imageList.size + 1}")
                 imageList.add(ImageData(imageUrl, altText))
@@ -134,7 +131,10 @@ internal object Utils {
     fun getSmallTextFromExtras(extras: Bundle): ArrayList<String> {
         val values = ArrayList<String?>()
         for (key in extras.keySet()) {
-            if (key.startsWith("pt_st") && key.length > SMALL_TEXT_KEY_PREFIX_LENGTH && key[SMALL_TEXT_KEY_PREFIX_LENGTH].isDigit()) {
+            if (
+                key.startsWith("pt_st") && key.length > SMALL_TEXT_KEY_PREFIX_LENGTH &&
+                key[SMALL_TEXT_KEY_PREFIX_LENGTH].isDigit()
+            ) {
                 values.add(extras.getString(key))
             }
         }

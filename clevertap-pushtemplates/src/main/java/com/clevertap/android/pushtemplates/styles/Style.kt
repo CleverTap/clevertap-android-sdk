@@ -20,7 +20,7 @@ internal abstract class Style(private val data: BaseContent, private val rendere
         notificationBuilder: NotificationCompat.Builder,
         contentViewSmall: RemoteViews?,
         contentViewBig: RemoteViews?,
-        contentTitle: String?,
+        pt_title: String?,
         pIntent: PendingIntent?,
         dIntent: PendingIntent? = null
     ): NotificationCompat.Builder {
@@ -47,7 +47,7 @@ internal abstract class Style(private val data: BaseContent, private val rendere
         }
 
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
-            .setContentTitle(Html.fromHtml(contentTitle))
+            .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())

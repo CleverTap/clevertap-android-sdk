@@ -35,7 +35,7 @@ internal class IconsStyle(
         notificationBuilder: NotificationCompat.Builder,
         contentViewSmall: RemoteViews?,
         contentViewBig: RemoteViews?,
-        contentTitle: String?,
+        pt_title: String?,
         pIntent: PendingIntent?,
         dIntent: PendingIntent?
     ): NotificationCompat.Builder {

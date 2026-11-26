@@ -259,7 +259,11 @@ internal class ValidatorFactory {
                     builder
                         .addBasicTextValidation(templateData.carouselData.baseContent.textData)
                         .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(templateData.carouselData.imageList, CAROUSEL_MIN_IMAGES, key = PT_THREE_IMAGE_LIST)
+                        .addImageListValidation(
+                            templateData.carouselData.imageList,
+                            CAROUSEL_MIN_IMAGES,
+                            key = PT_THREE_IMAGE_LIST
+                        )
                         .build()
                 }
 
@@ -267,7 +271,11 @@ internal class ValidatorFactory {
                     builder
                         .addBasicTextValidation(templateData.carouselData.baseContent.textData)
                         .addDeepLinkValidation(templateData.carouselData.baseContent.deepLinkList)
-                        .addImageListValidation(templateData.carouselData.imageList, CAROUSEL_MIN_IMAGES, key = PT_THREE_IMAGE_LIST)
+                        .addImageListValidation(
+                            templateData.carouselData.imageList,
+                            CAROUSEL_MIN_IMAGES,
+                            key = PT_THREE_IMAGE_LIST
+                        )
                         .build()
                 }
 
@@ -285,14 +293,22 @@ internal class ValidatorFactory {
 
                 is FiveIconsTemplateData -> {
                     builder
-                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, ICONS_MIN_ITEMS, PT_FIVE_DEEPLINK_LIST)
+                        .addDeepLinkValidation(
+                            templateData.baseContent.deepLinkList,
+                            ICONS_MIN_ITEMS,
+                            PT_FIVE_DEEPLINK_LIST
+                        )
                         .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
                         .build()
                 }
 
                 is IconsTemplateData -> {
                     builder
-                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, ICONS_MIN_ITEMS, PT_FIVE_DEEPLINK_LIST)
+                        .addDeepLinkValidation(
+                            templateData.baseContent.deepLinkList,
+                            ICONS_MIN_ITEMS,
+                            PT_FIVE_DEEPLINK_LIST
+                        )
                         .addImageListValidation(templateData.imageList, ICONS_MIN_ITEMS, key = PT_FIVE_IMAGE_LIST)
                         .build()
                 }
