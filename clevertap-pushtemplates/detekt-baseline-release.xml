@@ -16,12 +16,9 @@
     <ID>CanBeNonNullable:Utils.kt$Utils$ctx: Context?</ID>
     <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
     <ID>ComplexCondition:TemplateRenderer.kt$TemplateRenderer$!sendToCTIntentService &amp;&amp; PushNotificationHandler.isForPushTemplates(extras) &amp;&amp; id.contains("remind") &amp;&amp; dismissOnClick != null &amp;&amp; dismissOnClick.equals("true", ignoreCase = true) &amp;&amp; autoCancel &amp;&amp; isCTIntentServiceAvailable</ID>
-    <ID>ComplexCondition:Utils.kt$Utils$key.startsWith("pt_img") &amp;&amp; key.length &gt; 6 &amp;&amp; key[6].isDigit() &amp;&amp; !key.endsWith(ALT_TEXT_SUFFIX)</ID>
     <ID>CyclomaticComplexMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
-    <ID>CyclomaticComplexMethod:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
     <ID>CyclomaticComplexMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
     <ID>CyclomaticComplexMethod:ProgressStyle.kt$ProgressStyle$private fun buildNative( api: NativeProgressApi.Methods, context: Context, extras: Bundle, nb: NotificationCompat.Builder, segments: List&lt;SegmentData&gt;, points: List&lt;PointData&gt;, trackerIcon: Bitmap?, ended: Boolean ): NotificationCompat.Builder</ID>
-    <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun ensureContrast(color: Int, bg: Int): Int</ID>
     <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun layout( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint ): Layout</ID>
     <ID>CyclomaticComplexMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun titleSlots(centers: List&lt;Float&gt;, widths: List&lt;Float&gt;, canvasWidth: Float, gap: Float): List&lt;TitleSlot&gt;</ID>
     <ID>CyclomaticComplexMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
@@ -33,10 +30,8 @@
     <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
     <ID>CyclomaticComplexMethod:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
     <ID>CyclomaticComplexMethod:TemplateType.kt$TemplateType.Companion$@JvmStatic fun fromString(type: String?): TemplateType?</ID>
-    <ID>CyclomaticComplexMethod:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
     <ID>CyclomaticComplexMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun createValidatorFromKeys( templateType: TemplateType, keys: Map&lt;String, Checker&lt;out Any&gt;&gt; ): Validator?</ID>
-    <ID>CyclomaticComplexMethod:VerticalImageContentView.kt$VerticalImageContentView$protected fun setupButton( buttonData: VerticalImageButtonData?, notificationId: Int, isCollapsed: Boolean = false, )</ID>
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(1000)</ID>
     <ID>ForbiddenMethodCall:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$sleep(PTConstants.PT_INPUT_TIMEOUT.toLong())</ID>
     <ID>FunctionParameterNaming:ContentView.kt$ContentView$pt_bg: String?</ID>
@@ -48,19 +43,13 @@
     <ID>LargeClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
     <ID>LargeClass:Utils.kt$Utils</ID>
     <ID>LongMethod:ManualCarouselContentView.kt$ManualCarouselContentView$private fun setupCarouselNavigation( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
-    <ID>LongMethod:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
     <ID>LongMethod:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
-    <ID>LongMethod:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun layout( spec: Spec, segments: List&lt;ProgressPayloadParser.SegmentData&gt;, points: List&lt;ProgressPayloadParser.PointData&gt;, total: Int, progress: Int, styledByProgress: Boolean, hasTracker: Boolean, titlePaint: TextPaint ): Layout</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleProductDisplayNotification()</ID>
     <ID>LongMethod:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
-    <ID>LongMethod:TemplateDataFactory.kt$TemplateDataFactory$fun createTemplateData( templateType: TemplateType?, extras: Bundle, isDarkMode: Boolean, defaultAltText: String, notificationIdsProvider: () -&gt; ArrayList&lt;Int&gt; ): TemplateData?</ID>
     <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$override fun renderNotification( extras: Bundle, context: Context, nb: Builder, config: CleverTapInstanceConfig, notificationId: Int ): Builder?</ID>
     <ID>LongMethod:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
-    <ID>LongMethod:TimerTemplateHandler.kt$TimerTemplateHandler$@RequiresApi(Build.VERSION_CODES.M) internal fun scheduleTimer( context: Context, extras: Bundle, notificationId: Int, delay: Long?, data: TimerTemplateData, config: CleverTapInstanceConfig, handler: Handler = Handler(Looper.getMainLooper()) )</ID>
-    <ID>LongMethod:ValidatorFactory.kt$ValidatorFactory.Companion$private fun buildCheckersForTemplateData(templateData: TemplateData): Map&lt;String, Checker&lt;out Any&gt;&gt;</ID>
-    <ID>LongMethod:VerticalImageContentView.kt$VerticalImageContentView$protected fun setupButton( buttonData: VerticalImageButtonData?, notificationId: Int, isCollapsed: Boolean = false, )</ID>
     <ID>LongParameterList:ContentView.kt$ContentView$( layoutId: Int, gifUrl: String?, bigImageUrl: String?, scaleType: PTScaleType, altText: String, gifFrames: Int, imageBorderData: ImageBorderData? = null )</ID>
     <ID>LongParameterList:ManualCarouselContentView.kt$ManualCarouselContentView$( context: Context, data: ManualCarouselTemplateData, extras: Bundle, currentPosition: Int, tempImageList: ArrayList&lt;String&gt;, deepLinkList: ArrayList&lt;String&gt; )</ID>
     <ID>LongParameterList:NativeProgressApi.kt$NativeProgressApi.Methods$( val styleCtor: Constructor&lt;*&gt;, val setStyledByProgress: Method, val setProgress: Method, val setProgressIndeterminate: Method, val setProgressSegments: Method, val setProgressPoints: Method, val setProgressTrackerIcon: Method, val setProgressStartIcon: Method, val setProgressEndIcon: Method, val segmentCtor: Constructor&lt;*&gt;, val segmentSetColor: Method, val pointCtor: Constructor&lt;*&gt;, val pointSetColor: Method, val setRequestPromotedOngoing: Method, val setShortCriticalText: Method )</ID>
@@ -110,11 +99,7 @@
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")</ID>
     <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")</ID>
     <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
-    <ID>NestedBlockDepth:CancelTemplateHandler.kt$CancelTemplateHandler$internal fun renderCancelNotification(context: Context, templateData: CancelTemplateData)</ID>
-    <ID>NestedBlockDepth:InputBoxStyle.kt$InputBoxStyle$private fun setStandardViewBigImageStyle( context: Context, notificationBuilder: NotificationCompat.Builder ): NotificationCompat.Builder</ID>
-    <ID>NestedBlockDepth:NotificationBitmapUtils.kt$NotificationBitmapUtils$fun applyRoundedBorderToBitmap( source: Bitmap, border: ImageBorderData, maxHeightPx: Int = 0 ): Bitmap</ID>
     <ID>NestedBlockDepth:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
-    <ID>NestedBlockDepth:ProgressTrackRenderer.kt$ProgressTrackRenderer$fun ensureContrast(color: Int, bg: Int): Int</ID>
     <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun applyBigImageStyle( imgUrl: String?, notificationBuilder: NotificationCompat.Builder, altText: String?, config: CleverTapInstanceConfig? )</ID>
     <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleManualCarouselNotification()</ID>
     <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleRatingNotification(instanceConfig: CleverTapInstanceConfig)</ID>
@@ -122,9 +107,6 @@
     <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$override fun renderNotification( extras: Bundle, context: Context, nb: Builder, config: CleverTapInstanceConfig, notificationId: Int ): Builder?</ID>
     <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
     <ID>NestedBlockDepth:TemplateRenderer.kt$TemplateRenderer$private fun createActionButtonPendingIntent( context: Context, action: JSONObject, extras: Bundle, notificationId: Int ): PendingIntent?</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$fun convertRatingBundleObjectToHashMap(b: Bundle): HashMap&lt;String, Any?&gt;</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$fun getEventPropertiesFromExtras(extras: Bundle): HashMap&lt;String, Any?&gt;</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$fun getEventPropertiesFromExtras(extras: Bundle, pkey: String?, value: String?): HashMap&lt;String, Any?&gt;</ID>
     <ID>ReturnCount:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
     <ID>ReturnCount:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun handleInputBoxNotification()</ID>
     <ID>ReturnCount:TimerSmallContentView.kt$TimerSmallContentView$private fun setupChronometerBackground( style: ButtonStyle, bgColorStr: String?, borderColorStr: String?, gradientColor1: String?, gradientColor2: String?, gradientDirection: Double, cornerRadius: Float, borderWidth: Float? )</ID>

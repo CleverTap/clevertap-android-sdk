@@ -12,7 +12,6 @@
     <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.DeviceCachedInfo$if</ID>
     <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$else</ID>
     <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$if</ID>
-    <ID>BracesOnIfStatements:LiveUpdatePayloadSurfacer.kt$LiveUpdatePayloadSurfacer$if</ID>
     <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$else</ID>
     <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$if</ID>
     <ID>BracesOnIfStatements:VarCache.kt$VarCache$else</ID>
@@ -90,12 +89,9 @@
     <ID>CanBeNonNullable:UriHelper.kt$UriHelper$uri: Uri?</ID>
     <ID>CanBeNonNullable:Utils.kt$Utils$mainProcessName: String?</ID>
     <ID>CanBeNonNullable:Var.kt$Var$src: Number?</ID>
-    <ID>ComplexCondition:CTVariableUtils.kt$CTVariableUtils.Companion$diff is Number || diff is Boolean || diff is String || diff is Char || vars is Number || vars is Boolean || vars is String || vars is Char</ID>
     <ID>ComplexCondition:CleverTapAPI.kt$CleverTapAPI.Companion$!created &amp;&amp; instance.config.enableCustomCleverTapId &amp;&amp; Utils.validateCTID(cleverTapID) &amp;&amp; instance.isErrorDeviceId</ID>
     <ID>ComplexCondition:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$value == null || value === JSONObject.NULL || value is JSONObject || value is JSONArray</ID>
-    <ID>ComplexCondition:EventQueueManager.kt$EventQueueManager$(isOffline &amp;&amp; isRegularEvent) || (!isOffline &amp;&amp; !isAppLaunchedEvent)</ID>
     <ID>ComplexCondition:InAppResponse.kt$InAppResponse$impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null</ID>
-    <ID>CyclomaticComplexMethod:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$fun onActivityCreated(notification: Bundle?, deepLink: Uri?, accountId: String?)</ID>
     <ID>CyclomaticComplexMethod:AnalyticsManager.kt$AnalyticsManager$fun pushInboxMessageStateEvent(clicked: Boolean, data: CTInboxMessage, customData: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:AnalyticsManager.kt$AnalyticsManager$override fun pushNotificationClickedEvent(extras: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:AnalyticsManager.kt$AnalyticsManager$override fun pushNotificationViewedEvent(extras: Bundle?)</ID>
@@ -110,36 +106,17 @@
     <ID>CyclomaticComplexMethod:CTInAppType.kt$CTInAppType.Companion$@JvmStatic public fun fromString(type: String?): CTInAppType</ID>
     <ID>CyclomaticComplexMethod:CTInboxActivity.kt$CTInboxActivity$public override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$fun calculateDisplayTimestamp(time: Long): String</ID>
-    <ID>CyclomaticComplexMethod:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$open fun addMediaPlayer( currentVolume: Float, muteClick: Function0&lt;Float&gt;, playMedia: Function3&lt;String, Boolean, Boolean, Void?&gt;, videoSurfaceView: View ): Boolean</ID>
-    <ID>CyclomaticComplexMethod:CTInboxController.kt$CTInboxController$@WorkerThread fun processV2Response(incoming: List&lt;CTMessageDAO&gt;, source: InboxV2DeliverySource): Boolean</ID>
-    <ID>CyclomaticComplexMethod:CTInboxListViewFragment.kt$CTInboxListViewFragment$open fun refreshList()</ID>
     <ID>CyclomaticComplexMethod:CTInboxMessageContent.kt$CTInboxMessageContent$internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent</ID>
-    <ID>CyclomaticComplexMethod:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
-    <ID>CyclomaticComplexMethod:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>CyclomaticComplexMethod:CTNotificationIntentService.kt$CTNotificationIntentService$@SuppressLint("MissingPermission") private fun handleActionButtonClick(extras: Bundle, actionButtonClickHandler: ActionButtonClickHandler)</ID>
     <ID>CyclomaticComplexMethod:CTProductConfigController.kt$CTProductConfigController$private fun getStoredValues(fullFilePath: String): HashMap&lt;String, String&gt;</ID>
-    <ID>CyclomaticComplexMethod:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun mergeHelper(vars: Any?, diff: Any?): Any?</ID>
     <ID>CyclomaticComplexMethod:CleverTapAPI.kt$CleverTapAPI.Companion$@RestrictTo(Scope.LIBRARY) @JvmStatic @JvmName("onActivityCreated") internal fun onActivityCreated(activity: Activity, cleverTapID: String?)</ID>
     <ID>CyclomaticComplexMethod:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$@JvmStatic public fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit</ID>
     <ID>CyclomaticComplexMethod:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$private fun parseMetaData(contentObject: JSONObject, actionUrl: String?): HashMap&lt;String, Any?&gt;?</ID>
     <ID>CyclomaticComplexMethod:CoreNotificationRenderer.kt$CoreNotificationRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
     <ID>CyclomaticComplexMethod:CustomTemplate.kt$CustomTemplate.Builder$public fun mapArgument(name: String, value: Map&lt;String, Any&gt;): T</ID>
     <ID>CyclomaticComplexMethod:CustomTemplateContext.kt$CustomTemplateContext$private fun getOverrideValue(argument: TemplateArgument, overrides: JSONObject?): Any?</ID>
-    <ID>CyclomaticComplexMethod:CustomTemplateInAppData.kt$CustomTemplateInAppData$internal fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList&lt;String&gt;)</ID>
     <ID>CyclomaticComplexMethod:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
-    <ID>CyclomaticComplexMethod:DisplayUnitResponse.kt$DisplayUnitResponse$private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List&lt;JSONObject&gt;</ID>
-    <ID>CyclomaticComplexMethod:DisplayUnitResponse.kt$DisplayUnitResponse$private fun ingestNdMeta(response: JSONObject, isUserSwitching: Boolean)</ID>
-    <ID>CyclomaticComplexMethod:DisplayUnitResponse.kt$DisplayUnitResponse$private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?, source: CTResponseSource)</ID>
-    <ID>CyclomaticComplexMethod:EventDAOImpl.kt$EventDAOImpl$@Synchronized override fun fetchEvents(table: Table, limit: Int): QueueData</ID>
-    <ID>CyclomaticComplexMethod:EventDAOImpl.kt$EventDAOImpl$@WorkerThread @Synchronized override fun updateAllEvents(table: Table): Int</ID>
-    <ID>CyclomaticComplexMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanAnyValue( value: Any?, parentKey: String, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): Any?</ID>
-    <ID>CyclomaticComplexMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanJSONObject( json: JSONObject, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
     <ID>CyclomaticComplexMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
-    <ID>CyclomaticComplexMethod:EventDataValidator.kt$EventDataValidator$private fun checkItemRemovals(metrics: EventDataMetrics, errors: MutableList&lt;ValidationResult&gt;)</ID>
-    <ID>CyclomaticComplexMethod:EventDataValidator.kt$EventDataValidator$private fun checkStructuralLimits( metrics: EventDataMetrics, maxDepth: Int?, maxArrayKeyCount: Int?, maxObjectKeyCount: Int?, maxArrayLength: Int?, maxKVPairCount: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
-    <ID>CyclomaticComplexMethod:EventMediator.kt$EventMediator$open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean</ID>
-    <ID>CyclomaticComplexMethod:EventQueueManager.kt$EventQueueManager$fun processEvent( context: Context, event: JSONObject, eventType: Int, flattenedEventData: FlattenedEventData )</ID>
-    <ID>CyclomaticComplexMethod:EventQueueManager.kt$EventQueueManager$override fun pushBasicProfile( baseProfile: JSONObject?, removeFromSharedPrefs: Boolean, profileChanges: FlattenedEventData )</ID>
     <ID>CyclomaticComplexMethod:GifImageView.kt$GifImageView$override fun run()</ID>
     <ID>CyclomaticComplexMethod:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
     <ID>CyclomaticComplexMethod:InAppController.kt$InAppController$@MainThread private fun onRestoredInAppReady(inApp: CTInAppNotification, listener: RestoredInAppListener)</ID>
@@ -148,47 +125,17 @@
     <ID>CyclomaticComplexMethod:InAppController.kt$InAppController$private fun addActionDescriptors(data: Bundle, action: CTInAppAction, type: InAppActionType?)</ID>
     <ID>CyclomaticComplexMethod:InAppMediaHandler.kt$InAppMediaHandler.Companion$fun create( fragment: Fragment, inAppNotification: CTInAppNotification, currentOrientation: Int, isTablet: Boolean, resourceProvider: FileResourceProvider, supportsStreamMedia: Boolean = false, onActionClick: (() -&gt; Unit)? = null, lockedMediaUrl: String? = null ): InAppMediaHandler</ID>
     <ID>CyclomaticComplexMethod:InAppNotificationActivity.kt$InAppNotificationActivity$private fun createContentFragment( notification: CTInAppNotification, config: CleverTapInstanceConfig ): CTInAppBaseFullFragment?</ID>
-    <ID>CyclomaticComplexMethod:InAppNotificationActivity.kt$InAppNotificationActivity$private fun setUp(savedInstanceState: Bundle?)</ID>
-    <ID>CyclomaticComplexMethod:InAppNotificationInflater.kt$InAppNotificationInflater$private fun processInAppMedia(inApp: CTInAppNotification)</ID>
     <ID>CyclomaticComplexMethod:InAppResponse.kt$InAppResponse$override fun processResponse( jsonBody: JSONObject?, stringBody: String?, context: Context, responseContext: ResponseContext )</ID>
-    <ID>CyclomaticComplexMethod:InAppResponseAdapter.kt$InAppResponseAdapter$private fun fetchMediaUrls( imageList: MutableList&lt;String&gt;, gifList: MutableList&lt;String&gt; )</ID>
-    <ID>CyclomaticComplexMethod:InboxV2Fetcher.kt$InboxV2Fetcher$suspend fun fetch(trigger: FetchTrigger): CallResult&lt;Unit&gt;</ID>
-    <ID>CyclomaticComplexMethod:JsonComparisonUtils.kt$JsonComparisonUtils$fun areEqual(obj1: Any?, obj2: Any?): Boolean</ID>
-    <ID>CyclomaticComplexMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.FunctionBuilder, json: JSONObject )</ID>
-    <ID>CyclomaticComplexMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.TemplateBuilder, json: JSONObject )</ID>
-    <ID>CyclomaticComplexMethod:LimitsMatcher.kt$LimitsMatcher$private fun matchLimit( limit: LimitAdapter, campaignId: String ): Boolean</ID>
     <ID>CyclomaticComplexMethod:LocalDataStore.kt$LocalDataStore$private fun persistLocalProfileAsync()</ID>
     <ID>CyclomaticComplexMethod:LocalDataStore.kt$LocalDataStore$public fun inflateLocalProfileAsync(context: Context)</ID>
     <ID>CyclomaticComplexMethod:LoginController.kt$LoginController$private fun onUserLoginInternal(profile: Map&lt;String, Any?&gt;?, cleverTapID: String?)</ID>
-    <ID>CyclomaticComplexMethod:ManifestInfo.kt$ManifestInfo.Companion$private fun fromManifest(context: Context?): ManifestInfo</ID>
-    <ID>CyclomaticComplexMethod:ManifestInfo.kt$ManifestInfo.Companion$public fun registerModuleSdkVersions(metaData: Bundle)</ID>
-    <ID>CyclomaticComplexMethod:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$fun playVideo()</ID>
-    <ID>CyclomaticComplexMethod:NdEvaluationManager.kt$NdEvaluationManager$@WorkerThread @VisibleForTesting internal fun evaluate(events: List&lt;EventAdapter&gt;)</ID>
-    <ID>CyclomaticComplexMethod:NestedJsonBuilder.kt$NestedJsonBuilder$@Throws(JSONException::class) private fun setValueRecursive( current: Any, segments: List&lt;PathSegment&gt;, index: Int, value: Any? )</ID>
     <ID>CyclomaticComplexMethod:PIPAnimator.kt$PIPAnimator$private fun moveInStartOffset( anchor: PointF, pipW: Int, pipH: Int, containerW: Int, containerH: Int, direction: PIPAnimationConfig.MoveInDirection?, ): PointF</ID>
     <ID>CyclomaticComplexMethod:PIPCompactView.kt$PIPCompactView$private fun applyBorderStyle(cfg: PIPConfig)</ID>
-    <ID>CyclomaticComplexMethod:PIPConfigFactory.kt$PIPConfigFactory$fun create( inAppNotification: CTInAppNotification, callbacks: PIPCallbacks, logger: ILogger ): PIPConfig?</ID>
-    <ID>CyclomaticComplexMethod:PIPConfigFactory.kt$PIPConfigFactory$private fun mapAnimationConfig(animJson: org.json.JSONObject): PIPAnimationConfig?</ID>
-    <ID>CyclomaticComplexMethod:PIPConfigFactory.kt$PIPConfigFactory$private fun mapPosition(position: String): PIPPosition?</ID>
-    <ID>CyclomaticComplexMethod:Parser.kt$Parser$@VisibleForTesting internal fun parseVariablesHelper(instance: Any?, clazz: Class&lt;*&gt;)</ID>
-    <ID>CyclomaticComplexMethod:PushPreviewKey.kt$CanonicalJson$private fun quote(s: String): String</ID>
-    <ID>CyclomaticComplexMethod:PushPreviewKey.kt$CanonicalJson.Lexer$fun readString(): String?</ID>
-    <ID>CyclomaticComplexMethod:PushPreviewKey.kt$CanonicalJson.Lexer$private fun readEscape(sb: StringBuilder): Boolean</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun triggerLiveUpdateNotification( context: Context, extras: Bundle, customFactory: ICleverTapLiveUpdateNotificationFactory? )</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
-    <ID>CyclomaticComplexMethod:SharedPreferencesMigration.kt$SharedPreferencesMigration$@Suppress("UNCHECKED_CAST") fun migrate()</ID>
-    <ID>CyclomaticComplexMethod:StoreProvider.kt$StoreProvider$fun constructStorePreferenceName(storeType: Int, deviceId: String = "", accountId: String = ""): String</ID>
-    <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun actualContainsExpected(expected: TriggerValue, actual: TriggerValue): Boolean</ID>
     <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun evaluate( op: TriggerOperator, expected: TriggerValue, actual: TriggerValue ): Boolean</ID>
-    <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun expectedValueEqualsActual(expected: TriggerValue, actual: TriggerValue): Boolean</ID>
-    <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun expectedValueLessThanGreaterThanActual( expected: TriggerValue, actual: TriggerValue, isLessThan: Boolean ): Boolean</ID>
-    <ID>CyclomaticComplexMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean</ID>
-    <ID>CyclomaticComplexMethod:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$@VisibleForTesting internal fun createSslContext(): SSLContext?</ID>
-    <ID>CyclomaticComplexMethod:Utils.kt$Utils$@JvmStatic @SuppressLint("MissingPermission") @Suppress("DEPRECATION") public fun getDeviceNetworkType(context: Context): String</ID>
-    <ID>CyclomaticComplexMethod:Utils.kt$Utils$@JvmStatic internal fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock)</ID>
     <ID>CyclomaticComplexMethod:Var.kt$Var$@Suppress("UNCHECKED_CAST") private fun modifyValue(src: Number?)</ID>
-    <ID>CyclomaticComplexMethod:VarCache.kt$VarCache$private fun startFilesDownload(clientRegisteredVars: Map&lt;String, Var&lt;*&gt;&gt;, func: () -&gt; Unit)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:BitmapDownloadRequestHandlerWithTimeLimit.kt$BitmapDownloadRequestHandlerWithTimeLimit$val (_, fallbackToAppIcon, context, instanceConfig, downloadTimeLimitInMillis) = bitmapDownloadRequest</ID>
     <ID>DoubleMutabilityForCollection:CTInAppAction.kt$CTInAppAction$var keyValues: HashMap&lt;String, String&gt;? private set</ID>
     <ID>DoubleMutabilityForCollection:CTInboxController.kt$CTInboxController$private var messagesList: MutableList&lt;CTMessageDAO&gt; = dbAdapter.getMessages(userId)</ID>
@@ -241,7 +188,6 @@
     <ID>LargeClass:LocalDataStore.kt$LocalDataStore</ID>
     <ID>LargeClass:NetworkManager.kt$NetworkManager</ID>
     <ID>LargeClass:PushProviders.kt$PushProviders : CTPushProviderListener</ID>
-    <ID>LargeClass:UserEventLogDAOImpl.kt$UserEventLogDAOImpl : UserEventLogDAO</ID>
     <ID>LargeClass:Utils.kt$Utils</ID>
     <ID>LongMethod:AnalyticsManager.kt$AnalyticsManager$override fun pushNotificationClickedEvent(extras: Bundle?)</ID>
     <ID>LongMethod:CTInAppBaseFullNativeFragment.kt$CTInAppBaseFullNativeFragment$fun setupInAppButton( inAppButton: Button, inAppNotificationButton: CTInAppNotificationButton?, buttonIndex: Int )</ID>
@@ -254,31 +200,17 @@
     <ID>LongMethod:CTInAppNotification.kt$CTInAppNotification$private fun configureWithJson(jsonObject: JSONObject)</ID>
     <ID>LongMethod:CTInAppNotification.kt$CTInAppNotification$private fun legacyConfigureWithJson(jsonObject: JSONObject)</ID>
     <ID>LongMethod:CTInboxActivity.kt$CTInboxActivity$public override fun onCreate(savedInstanceState: Bundle?)</ID>
-    <ID>LongMethod:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$open fun addMediaPlayer( currentVolume: Float, muteClick: Function0&lt;Float&gt;, playMedia: Function3&lt;String, Boolean, Boolean, Void?&gt;, videoSurfaceView: View ): Boolean</ID>
-    <ID>LongMethod:CTInboxController.kt$CTInboxController$@WorkerThread fun processV2Response(incoming: List&lt;CTMessageDAO&gt;, source: InboxV2DeliverySource): Boolean</ID>
     <ID>LongMethod:CTInboxMessageContent.kt$CTInboxMessageContent$internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent</ID>
-    <ID>LongMethod:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
     <ID>LongMethod:CleverTapAPI.kt$CleverTapAPI.Companion$@RestrictTo(Scope.LIBRARY) @JvmStatic @JvmName("onActivityCreated") internal fun onActivityCreated(activity: Activity, cleverTapID: String?)</ID>
     <ID>LongMethod:CleverTapFactory.kt$CleverTapFactory$@JvmStatic fun getCoreState( context: Context?, cleverTapInstanceConfig: CleverTapInstanceConfig?, cleverTapID: String? ): CoreState</ID>
-    <ID>LongMethod:DisplayUnitResponse.kt$DisplayUnitResponse$private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List&lt;JSONObject&gt;</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanAnyValue( value: Any?, parentKey: String, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): Any?</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
-    <ID>LongMethod:EventDataValidator.kt$EventDataValidator$private fun checkStructuralLimits( metrics: EventDataMetrics, maxDepth: Int?, maxArrayKeyCount: Int?, maxObjectKeyCount: Int?, maxArrayLength: Int?, maxKVPairCount: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
-    <ID>LongMethod:EventNameValidator.kt$EventNameValidator$override fun validate(input: EventNameNormalizationResult, config: ValidationConfig): ValidationOutcome</ID>
-    <ID>LongMethod:EventPropertyKeyNormalizer.kt$EventPropertyKeyNormalizer$override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult</ID>
-    <ID>LongMethod:EventQueueManager.kt$EventQueueManager$fun processEvent( context: Context, event: JSONObject, eventType: Int, flattenedEventData: FlattenedEventData )</ID>
-    <ID>LongMethod:EventQueueManager.kt$EventQueueManager$override fun pushBasicProfile( baseProfile: JSONObject?, removeFromSharedPrefs: Boolean, profileChanges: FlattenedEventData )</ID>
     <ID>LongMethod:HttpBitmapLoader.kt$HttpBitmapLoader$@JvmStatic public fun getHttpBitmap( bitmapOperation: HttpBitmapOperation, bitmapDownloadRequest: BitmapDownloadRequest ): DownloadedBitmap</ID>
     <ID>LongMethod:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
     <ID>LongMethod:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>LongMethod:InAppController.kt$InAppController$override fun inAppNotificationActionTriggered( inAppNotification: CTInAppNotification, action: CTInAppAction, callToAction: String, additionalData: Bundle?, activityContext: Context? ): Bundle</ID>
-    <ID>LongMethod:InAppFCManager.kt$InAppFCManager$private fun migrateToNewPrefsKey(deviceId: String?)</ID>
-    <ID>LongMethod:InAppNotificationActivity.kt$InAppNotificationActivity$private fun setUp(savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:InAppResponse.kt$InAppResponse$override fun processResponse( jsonBody: JSONObject?, stringBody: String?, context: Context, responseContext: ResponseContext )</ID>
-    <ID>LongMethod:LoginController.kt$LoginController$open fun asyncProfileSwitchUser(profile: Map&lt;String, Any?&gt;?, cacheGuid: String?, cleverTapID: String?)</ID>
     <ID>LongMethod:LoginController.kt$LoginController$private fun onUserLoginInternal(profile: Map&lt;String, Any?&gt;?, cleverTapID: String?)</ID>
-    <ID>LongMethod:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$fun playVideo()</ID>
-    <ID>LongMethod:NestedJsonBuilder.kt$NestedJsonBuilder$@Throws(JSONException::class) private fun setValueRecursive( current: Any, segments: List&lt;PathSegment&gt;, index: Int, value: Any? )</ID>
     <ID>LongMethod:NetworkManager.kt$NetworkManager$fun flushDBQueue( context: Context, eventGroup: EventGroup, caller: String?, isUserSwitchFlush: Boolean )</ID>
     <ID>LongMethod:PIPConfigFactory.kt$PIPConfigFactory$fun create( inAppNotification: CTInAppNotification, callbacks: PIPCallbacks, logger: ILogger ): PIPConfig?</ID>
     <ID>LongMethod:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
@@ -343,26 +275,16 @@
     <ID>LongParameterList:QueueHeaderBuilder.kt$QueueHeaderBuilder$( private val context: Context, private val config: CleverTapInstanceConfig, private val coreMetaData: CoreMetaData, private val controllerManager: ControllerManager, private val deviceInfo: DeviceInfo, private val arpRepo: ArpRepo, private val ijRepo: IJRepo, private val databaseManager: BaseDatabaseManager, private val validationResultStack: ValidationResultStack, private val firstRequestTs: () -&gt; Int, private val lastRequestTs: () -&gt; Int, private val logger: ILogger )</ID>
     <ID>LongParameterList:Utils.kt$Utils$( icoPath: String?, fallbackToAppIcon: Boolean, context: Context?, config: CleverTapInstanceConfig?, timeoutMillis: Long, sizeBytes: Int )</ID>
     <ID>LongParameterList:ValidationConfig.kt$ValidationConfig$( val maxKeyLength: Int?, val maxValueLength: Int?, val maxDepth: Int?, val maxArrayKeyCount: Int?, val maxObjectKeyCount: Int?, val maxArrayLength: Int?, val maxKVPairCount: Int?, val keyCharsNotAllowed: Set&lt;Char&gt;?, val valueCharsNotAllowed: Set&lt;Char&gt;?, val maxEventNameLength: Int?, val eventNameCharsNotAllowed: Set&lt;Char&gt;?, val restrictedEventNames: Set&lt;String&gt;?, val restrictedMultiValueFields: Set&lt;String&gt;?, val maxChargedEventItemsCount: Int?, val deviceCountryCodeProvider: () -&gt; String? )</ID>
-    <ID>LoopWithTooManyJumpStatements:CTInboxController.kt$CTInboxController$for</ID>
     <ID>LoopWithTooManyJumpStatements:CTProductConfigController.kt$CTProductConfigController$for</ID>
     <ID>LoopWithTooManyJumpStatements:CleverTapAPI.kt$CleverTapAPI.Companion$for</ID>
-    <ID>LoopWithTooManyJumpStatements:EventDAOImpl.kt$EventDAOImpl$while</ID>
     <ID>LoopWithTooManyJumpStatements:EventDataNormalizer.kt$EventDataNormalizer$for</ID>
     <ID>LoopWithTooManyJumpStatements:EventDataNormalizer.kt$EventDataNormalizer$while</ID>
     <ID>LoopWithTooManyJumpStatements:GifImageView.kt$GifImageView$do</ID>
-    <ID>LoopWithTooManyJumpStatements:InAppNotificationInflater.kt$InAppNotificationInflater$for</ID>
-    <ID>LoopWithTooManyJumpStatements:InboxV2Response.kt$InboxV2Response$for</ID>
-    <ID>LoopWithTooManyJumpStatements:InboxVideoStates.kt$InboxVideoStates$for</ID>
-    <ID>LoopWithTooManyJumpStatements:LiveUpdatePayloadSurfacer.kt$LiveUpdatePayloadSurfacer$while</ID>
     <ID>LoopWithTooManyJumpStatements:LocalDataStore.kt$LocalDataStore$for</ID>
     <ID>LoopWithTooManyJumpStatements:LoginController.kt$LoginController$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ManifestInfo.kt$ManifestInfo.Companion$for</ID>
-    <ID>LoopWithTooManyJumpStatements:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$for</ID>
-    <ID>LoopWithTooManyJumpStatements:NdEvaluationManager.kt$NdEvaluationManager$for</ID>
     <ID>LoopWithTooManyJumpStatements:NetworkManager.kt$NetworkManager$while</ID>
     <ID>LoopWithTooManyJumpStatements:ProductConfigSettings.kt$ProductConfigSettings$for</ID>
     <ID>LoopWithTooManyJumpStatements:PushProviders.kt$PushProviders$for</ID>
-    <ID>LoopWithTooManyJumpStatements:VarCache.kt$VarCache$for</ID>
     <ID>MagicNumber:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$1000</ID>
     <ID>MagicNumber:AnalyticsManager.kt$AnalyticsManager$1000</ID>
     <ID>MagicNumber:CTInAppNotification.kt$CTInAppNotification.Companion$1000</ID>
@@ -447,7 +369,6 @@
     <ID>MaxLineLength:TriggersMatcher.kt$TriggersMatcher$Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."</ID>
-    <ID>MaxLineLength:Utils.kt$Utils$"READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user"</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_NOT_REGISTERED : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$USE_CUSTOM_ID_MISSING_IN_MANIFEST : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.USE_CUSTOM_ID_FALLBACK$USE_CUSTOM_ID_FALLBACK</ID>
@@ -459,20 +380,12 @@
     <ID>MemberNameEqualsClassName:CTCaches.kt$CTCaches.Companion$private var ctCaches: CTCaches? = null</ID>
     <ID>NestedBlockDepth:AESGCMCrypt.kt$AESGCMCrypt$fun performCryptOperation( mode: Int, data: ByteArray, iv: ByteArray? = null, secretKey: SecretKey? = ctKeyGenerator.generateOrGetKey() ): AESGCMCryptResult?</ID>
     <ID>NestedBlockDepth:ARPResponse.kt$ARPResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
-    <ID>NestedBlockDepth:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$fun onActivityCreated(notification: Bundle?, deepLink: Uri?, accountId: String?)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$@WorkerThread private fun pushChargedEventInternal(chargeDetails: Map&lt;String, Any&gt;?, items: List&lt;Map&lt;String, Any&gt;&gt;?)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$fun pushInboxMessageStateEvent(clicked: Boolean, data: CTInboxMessage, customData: Bundle?)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$override fun pushInAppNotificationStateEvent(clicked: Boolean, data: CTInAppNotification?, customData: Bundle?)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$private fun filterWzrkFields(merged: JSONObject): JSONObject</ID>
-    <ID>NestedBlockDepth:AnalyticsManagerBundler.kt$AnalyticsManagerBundler$@Throws(JSONException::class) @JvmStatic fun wzrkBundleToJson(root: Bundle): JSONObject</ID>
-    <ID>NestedBlockDepth:ArpRepo.kt$ArpRepo$fun getARP(context: Context): JSONObject?</ID>
-    <ID>NestedBlockDepth:ArpRepo.kt$ArpRepo$fun handleARPUpdate(context: Context, arp: JSONObject)</ID>
-    <ID>NestedBlockDepth:ArpRepo.kt$ArpRepo$private fun migrateARPToNewNameSpace( context: Context, newKey: String, oldKey: String? ): SharedPreferences</ID>
-    <ID>NestedBlockDepth:ArrayOperationHandler.kt$ArrayOperationHandler$private fun processArrayElements( oldArray: JSONArray, newArray: JSONArray, basePath: String, changes: MutableMap&lt;String, ProfileChange&gt;, operation: ProfileOperation, recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap&lt;String, ProfileChange&gt;) -&gt; Unit )</ID>
     <ID>NestedBlockDepth:BitmapDownloader.kt$BitmapDownloader$public fun downloadBitmap(srcUrl: String): DownloadedBitmap</ID>
     <ID>NestedBlockDepth:CTCarouselViewPagerAdapter.kt$CTCarouselViewPagerAdapter$override fun instantiateItem(container: ViewGroup, position: Int): Any</ID>
-    <ID>NestedBlockDepth:CTInAppAction.kt$CTInAppAction$private fun setFieldsFromJson(json: JSONObject)</ID>
-    <ID>NestedBlockDepth:CTInAppBaseFragment.kt$CTInAppBaseFragment$fun handleButtonClickAtIndex(index: Int)</ID>
     <ID>NestedBlockDepth:CTInAppBaseFullNativeFragment.kt$CTInAppBaseFullNativeFragment$fun setupInAppButton( inAppButton: Button, inAppNotificationButton: CTInAppNotificationButton?, buttonIndex: Int )</ID>
     <ID>NestedBlockDepth:CTInAppNativeCoverFragment.kt$CTInAppNativeCoverFragment$override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
     <ID>NestedBlockDepth:CTInAppNativeFooterFragment.kt$CTInAppNativeFooterFragment$override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
@@ -484,25 +397,14 @@
     <ID>NestedBlockDepth:CTInAppNotification.kt$CTInAppNotification$private fun validateNotifBundle(notif: Bundle): Boolean</ID>
     <ID>NestedBlockDepth:CTInAppNotification.kt$CTInAppNotification.Companion$private fun getBundleFromJsonObject(notif: JSONObject): Bundle</ID>
     <ID>NestedBlockDepth:CTInboxActivity.kt$CTInboxActivity$override fun onDestroy()</ID>
-    <ID>NestedBlockDepth:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$open fun addMediaPlayer( currentVolume: Float, muteClick: Function0&lt;Float&gt;, playMedia: Function3&lt;String, Boolean, Boolean, Void?&gt;, videoSurfaceView: View ): Boolean</ID>
     <ID>NestedBlockDepth:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$private fun showMedia( content: CTInboxMessageContent, mediaLayout: RelativeLayout, target: ImageView, imageScale: ImageView.ScaleType, posterScale: ImageView.ScaleType, audioScale: ImageView.ScaleType, posterLogsGlideNotice: Boolean = false, transparentPlaceholder: Boolean = false )</ID>
     <ID>NestedBlockDepth:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$protected fun bindMedia( inboxMessage: CTInboxMessage, content: CTInboxMessageContent, mediaLayout: RelativeLayout, mediaImage: ImageView, squareImage: ImageView, defaultImage: ImageView, progressBar: FrameLayout, squarePosterLogsGlideNotice: Boolean = false, transparentSquarePlaceholder: Boolean = false )</ID>
-    <ID>NestedBlockDepth:CTInboxController.kt$CTInboxController$@WorkerThread fun processV2Response(incoming: List&lt;CTMessageDAO&gt;, source: InboxV2DeliverySource): Boolean</ID>
-    <ID>NestedBlockDepth:CTInboxController.kt$CTInboxController$@WorkerThread fun updateMessages(inboxMessages: JSONArray): Boolean</ID>
-    <ID>NestedBlockDepth:CTInboxListViewFragment.kt$CTInboxListViewFragment$internal fun handleClick( position: Int, viewPagerPosition: Int, buttonText: String?, jsonObject: JSONObject?, keyValuePayload: HashMap&lt;String, String&gt;?, buttonIndex: Int )</ID>
-    <ID>NestedBlockDepth:CTInboxListViewFragment.kt$CTInboxListViewFragment$private fun wzrkParamsBundle(position: Int): Bundle</ID>
     <ID>NestedBlockDepth:CTInboxMessageContent.kt$CTInboxMessageContent$internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent</ID>
     <ID>NestedBlockDepth:CTInboxMessageContent.kt$CTInboxMessageContent$public open fun getLinkCopyText(jsonObject: JSONObject?): String</ID>
     <ID>NestedBlockDepth:CTInboxMessageContent.kt$CTInboxMessageContent$public open fun getLinkKeyValue(jsonObject: JSONObject?): HashMap&lt;String, String&gt;?</ID>
     <ID>NestedBlockDepth:CTInboxMessageContent.kt$CTInboxMessageContent$public open fun getLinkUrl(jsonObject: JSONObject?): String?</ID>
-    <ID>NestedBlockDepth:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
     <ID>NestedBlockDepth:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$public fun setImageUrl(imageUrl: String, contentDescription: String?): Builder6</ID>
-    <ID>NestedBlockDepth:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>NestedBlockDepth:CTProductConfigController.kt$CTProductConfigController$private fun convertServerJsonToMap(jsonObject: JSONObject): HashMap&lt;String, String&gt;</ID>
-    <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun getFlatVarsJson( values: Map&lt;String, *&gt;, kinds: Map&lt;String, *&gt; ): JSONObject</ID>
-    <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun mergeHelper(vars: Any?, diff: Any?): Any?</ID>
-    <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun updateValuesAndKinds( name: String?, nameComponents: Array&lt;String&gt;?, value: Any?, kind: String?, values: MutableMap&lt;String, *&gt;?, kinds: MutableMap&lt;String, *&gt;? )</ID>
-    <ID>NestedBlockDepth:CTXtensions.kt$@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal inline fun &lt;reified T&gt; JSONArray.partition( predicate: (T) -&gt; Boolean ): Pair&lt;JSONArray, JSONArray&gt;</ID>
     <ID>NestedBlockDepth:CleverTapAPI.kt$CleverTapAPI.Companion$@RestrictTo(Scope.LIBRARY) @JvmStatic @JvmName("onActivityCreated") internal fun onActivityCreated(activity: Activity, cleverTapID: String?)</ID>
     <ID>NestedBlockDepth:CleverTapAPI.kt$CleverTapAPI.Companion$@RestrictTo(Scope.LIBRARY_GROUP) @JvmStatic public fun getAvailableInstances(context: Context?): ArrayList&lt;CleverTapAPI&gt;</ID>
     <ID>NestedBlockDepth:CleverTapAPI.kt$CleverTapAPI.Companion$private fun createInstanceIfAvailable( context: Context?, accountId: String?, cleverTapID: String? ): CleverTapAPI?</ID>
@@ -510,111 +412,34 @@
     <ID>NestedBlockDepth:CleverTapDisplayUnit.kt$CleverTapDisplayUnit$public open fun getWZRKFields(): JSONObject?</ID>
     <ID>NestedBlockDepth:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$@JvmStatic public fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit</ID>
     <ID>NestedBlockDepth:ConsoleResponse.kt$ConsoleResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
-    <ID>NestedBlockDepth:ContentFetchItem.kt$ContentFetchItem$fun syntheticInAppPayload(): JSONObject?</ID>
-    <ID>NestedBlockDepth:ContentFetchManager.kt$ContentFetchManager$private fun getContentFetchPayload( contentFetchItems: JSONArray, packageName: String ): JSONArray</ID>
     <ID>NestedBlockDepth:CoreNotificationRenderer.kt$CoreNotificationRenderer$override fun setSound( context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig ): Builder</ID>
     <ID>NestedBlockDepth:CoreNotificationRenderer.kt$CoreNotificationRenderer$private fun generateStyle( extras: Bundle, context: Context, config: CleverTapInstanceConfig ): NotificationCompat.Style</ID>
-    <ID>NestedBlockDepth:CryptMigrator.kt$CryptMigrator$private fun convertCachedGuidsToPlainText(): JSONObject</ID>
-    <ID>NestedBlockDepth:CryptMigrator.kt$CryptMigrator$private fun migrateDBProfile(level: EncryptionLevel): Boolean</ID>
     <ID>NestedBlockDepth:CtDatabase.kt$DatabaseHelper$private fun migrateDataString(dataString: String): String</ID>
     <ID>NestedBlockDepth:CustomTemplateContext.kt$CustomTemplateContext$private fun getOverrideValue(argument: TemplateArgument, overrides: JSONObject?): Any?</ID>
-    <ID>NestedBlockDepth:CustomTemplateInAppData.kt$CustomTemplateInAppData$internal fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList&lt;String&gt;)</ID>
-    <ID>NestedBlockDepth:DataMigrationRepository.kt$DataMigrationRepository$override fun inAppDataFiles( keysToMigrate: List&lt;String&gt;, migrate: (String) -&gt; String? )</ID>
     <ID>NestedBlockDepth:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
-    <ID>NestedBlockDepth:DelayedLegacyInAppDAO.kt$DelayedLegacyInAppDAOImpl$@WorkerThread override fun fetchSingleInApp(inAppId: String): String?</ID>
-    <ID>NestedBlockDepth:DelayedLegacyInAppDAO.kt$DelayedLegacyInAppDAOImpl$@WorkerThread override fun insertBatch(delayedInApps: List&lt;DelayedLegacyInAppData&gt;): Boolean</ID>
-    <ID>NestedBlockDepth:DelayedLegacyInAppStore.kt$DelayedLegacyInAppStore$@WorkerThread fun getDelayedInApp(inAppId: String): JSONObject?</ID>
-    <ID>NestedBlockDepth:DeleteOperationHandler.kt$DeleteOperationHandler$private fun deleteFromArrayElements( oldArray: JSONArray, newArray: JSONArray, basePath: String, changes: MutableMap&lt;String, ProfileChange&gt; )</ID>
     <ID>NestedBlockDepth:DeviceInfo.kt$DeviceInfo$private fun getWindowManager(): WindowManager?</ID>
-    <ID>NestedBlockDepth:DisplayUnitResponse.kt$DisplayUnitResponse$private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List&lt;JSONObject&gt;</ID>
-    <ID>NestedBlockDepth:DisplayUnitResponse.kt$DisplayUnitResponse$private fun ingestNdMeta(response: JSONObject, isUserSwitching: Boolean)</ID>
-    <ID>NestedBlockDepth:DisplayUnitResponse.kt$DisplayUnitResponse$private fun parseDisplayUnitsFromJson(messages: JSONArray): List&lt;CleverTapDisplayUnit&gt;</ID>
-    <ID>NestedBlockDepth:DisplayedInAppDAOImpl.kt$DisplayedInAppDAOImpl$@WorkerThread override fun fetch(inAppId: String): DisplayedInAppData?</ID>
-    <ID>NestedBlockDepth:EvaluationManager.kt$EvaluationManager$@VisibleForTesting internal fun executeClientSideEvaluationFlow( events: List&lt;EventAdapter&gt;, strategy: InAppSelectionStrategy, readInAppsFromStore: (InAppStore) -&gt; List&lt;JSONObject&gt; ): List&lt;JSONObject&gt;</ID>
-    <ID>NestedBlockDepth:EvaluationManager.kt$EvaluationManager$private fun collectEligibleInApps( event: EventAdapter, inappNotifs: List&lt;JSONObject&gt;, clearResource: (url: String) -&gt; Unit, recordTrigger: (campaignId: String) -&gt; Unit, limits: LimitsMatcher ): List&lt;JSONObject&gt;</ID>
-    <ID>NestedBlockDepth:EventAdapter.kt$EventAdapter$@VisibleForTesting internal fun getActualPropertyValue(propertyName: String): Any?</ID>
-    <ID>NestedBlockDepth:EventDAOImpl.kt$EventDAOImpl$@Synchronized override fun fetchEvents(table: Table, limit: Int): QueueData</ID>
-    <ID>NestedBlockDepth:EventDAOImpl.kt$EventDAOImpl$@WorkerThread @Synchronized override fun updateAllEvents(table: Table): Int</ID>
-    <ID>NestedBlockDepth:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
-    <ID>NestedBlockDepth:EventDataValidator.kt$EventDataValidator$private fun checkKeyModifications( metrics: EventDataMetrics, maxKeyLength: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
-    <ID>NestedBlockDepth:EventDataValidator.kt$EventDataValidator$private fun checkValueModifications( metrics: EventDataMetrics, maxValueLength: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
-    <ID>NestedBlockDepth:EventMediator.kt$EventMediator$open fun shouldDeferProcessingEvent(event: JSONObject, eventType: Int): Boolean</ID>
-    <ID>NestedBlockDepth:EventPropertyKeyValidator.kt$EventPropertyKeyValidator$override fun validate(input: PropertyKeyNormalizationResult, config: ValidationConfig): ValidationOutcome</ID>
-    <ID>NestedBlockDepth:EventQueueManager.kt$EventQueueManager$override fun pushBasicProfile( baseProfile: JSONObject?, removeFromSharedPrefs: Boolean, profileChanges: FlattenedEventData )</ID>
-    <ID>NestedBlockDepth:FcmNotificationParser.kt$FcmNotificationParser$override fun toBundle(message: RemoteMessage): Bundle?</ID>
     <ID>NestedBlockDepth:GifImageView.kt$GifImageView$override fun run()</ID>
-    <ID>NestedBlockDepth:HeaderVoteLists.kt$HeaderVoteLists$fun removeSentEvalIds(sentHeader: JSONObject, evalMetaKey: String, evalIds: MutableList&lt;Long&gt;): Boolean</ID>
     <ID>NestedBlockDepth:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
-    <ID>NestedBlockDepth:InAppActionHandler.kt$InAppActionHandler$fun openUrl(url: String, launchContext: Context? = null): Boolean</ID>
-    <ID>NestedBlockDepth:InAppActionParser.kt$InAppActionParser$fun parse( action: CTInAppAction, callToAction: String?, additionalData: Bundle?, config: CleverTapInstanceConfig ): ParsedAction</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$override fun inAppNotificationActionTriggered( inAppNotification: CTInAppNotification, action: CTInAppAction, callToAction: String, additionalData: Bundle?, activityContext: Context? ): Bundle</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$override fun inAppNotificationDidDismiss( inAppNotification: CTInAppNotification, formData: Bundle? )</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$private fun getExcludedActivitiesSet(manifestInfo: ManifestInfo): Set&lt;String&gt;</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$private fun triggerCustomTemplateAction( notification: CTInAppNotification, templateInAppData: CustomTemplateInAppData? )</ID>
-    <ID>NestedBlockDepth:InAppFCManager.kt$InAppFCManager$fun getInAppsCount(context: Context): JSONArray?</ID>
-    <ID>NestedBlockDepth:InAppFCManager.kt$InAppFCManager$fun processResponse(context: Context, response: JSONObject)</ID>
-    <ID>NestedBlockDepth:InAppFCManager.kt$InAppFCManager$private fun init(deviceId: String?)</ID>
-    <ID>NestedBlockDepth:InAppNotificationInflater.kt$InAppNotificationInflater$private fun processInAppMedia(inApp: CTInAppNotification)</ID>
-    <ID>NestedBlockDepth:InAppResponseAdapter.kt$InAppResponseAdapter$private fun fetchMediaUrls( imageList: MutableList&lt;String&gt;, gifList: MutableList&lt;String&gt; )</ID>
-    <ID>NestedBlockDepth:InAppStore.kt$InAppStore$fun migrateEvaluatedServerSideInAppIds(evaluatedIds: String): JSONArray</ID>
-    <ID>NestedBlockDepth:InAppStore.kt$InAppStore$private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONArray</ID>
-    <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set&lt;String&gt;</ID>
-    <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun getMessages(userId: String): ArrayList&lt;CTMessageDAO&gt;</ID>
-    <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun upsertMessages(inboxMessages: List&lt;CTMessageDAO&gt;)</ID>
-    <ID>NestedBlockDepth:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun getPendingDeleteIds(userId: String): Set&lt;String&gt;</ID>
-    <ID>NestedBlockDepth:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun getPendingDeletes(userId: String): List&lt;PendingDelete&gt;</ID>
-    <ID>NestedBlockDepth:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun getPendingReads(userId: String): Set&lt;String&gt;</ID>
-    <ID>NestedBlockDepth:InboxV2Merger.kt$InboxV2Merger$fun postReadCleanup( full: List&lt;CTMessageDAO&gt;, pendingDeletes: Set&lt;String&gt;, pendingReads: Set&lt;String&gt;, videoSupported: Boolean, nowSec: Long ): CleanupResult</ID>
-    <ID>NestedBlockDepth:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.FunctionBuilder, json: JSONObject )</ID>
-    <ID>NestedBlockDepth:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.TemplateBuilder, json: JSONObject )</ID>
-    <ID>NestedBlockDepth:LiveUpdatePayloadSurfacer.kt$LiveUpdatePayloadSurfacer$@JvmStatic fun flatten(dataJson: String?, existingKeys: Set&lt;String&gt;): Map&lt;String, String&gt;</ID>
     <ID>NestedBlockDepth:LoginController.kt$LoginController$private fun onUserLoginInternal(profile: Map&lt;String, Any?&gt;?, cleverTapID: String?)</ID>
-    <ID>NestedBlockDepth:LoginInfoProvider.kt$LoginInfoProvider$open fun removeValueFromCachedGUIDForIdentifier(guid: String?, key: String?)</ID>
-    <ID>NestedBlockDepth:ManifestInfo.kt$ManifestInfo.Companion$public fun registerModuleSdkVersions(metaData: Bundle)</ID>
-    <ID>NestedBlockDepth:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$fun playVideo()</ID>
-    <ID>NestedBlockDepth:NdEvaluationManager.kt$NdEvaluationManager$@WorkerThread @VisibleForTesting internal fun evaluate(events: List&lt;EventAdapter&gt;)</ID>
-    <ID>NestedBlockDepth:NdEvaluationManager.kt$NdEvaluationManager$fun selectTopPriorityBand(content: List&lt;JSONObject&gt;, stubs: List&lt;JSONObject&gt;): AppLaunchedSelection</ID>
-    <ID>NestedBlockDepth:NestedJsonBuilder.kt$NestedJsonBuilder$@Throws(JSONException::class) private fun setValueRecursive( current: Any, segments: List&lt;PathSegment&gt;, index: Int, value: Any? )</ID>
-    <ID>NestedBlockDepth:NestedJsonBuilder.kt$NestedJsonBuilder$private fun parsePath(path: String): List&lt;PathSegment&gt;</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$@Throws(JSONException::class) private fun notifyListenersForPushImpressionSentToServer(queue: JSONArray)</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$@WorkerThread fun defineTemplates(templates: Collection&lt;CustomTemplate&gt;): Boolean</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$@WorkerThread fun fetchInAppPreviewPayloadFromUrl(url: String): JSONObject?</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$@WorkerThread fun performHandshakeForDomain( eventGroup: EventGroup, handshakeSuccessCallback: Runnable )</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$private fun applyQueueHeaderListeners( queueHeader: JSONObject?, endpointId: EndpointId )</ID>
     <ID>NestedBlockDepth:NetworkManager.kt$NetworkManager$private fun doesBodyContainAppLaunchedOrFetchEvents(body: SendQueueRequestBody): Boolean</ID>
-    <ID>NestedBlockDepth:Parser.kt$Parser$@VisibleForTesting internal fun parseVariablesHelper(instance: Any?, clazz: Class&lt;*&gt;)</ID>
     <ID>NestedBlockDepth:ProductConfigSettings.kt$ProductConfigSettings$internal fun setARPValue(arp: JSONObject?)</ID>
     <ID>NestedBlockDepth:ProfileStateTraverser.kt$ProfileStateTraverser$private fun traverseRecursive( target: JSONObject, source: JSONObject?, path: String, changes: MutableMap&lt;String, ProfileChange&gt;, operation: ProfileOperation )</ID>
     <ID>NestedBlockDepth:PushAmpResponse.kt$PushAmpResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
     <ID>NestedBlockDepth:PushAmpResponse.kt$PushAmpResponse$private fun handlePushNotificationsInResponse(pushNotifications: JSONArray)</ID>
-    <ID>NestedBlockDepth:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$@WorkerThread override fun fetchPushNotificationIds(): Array&lt;String&gt;</ID>
-    <ID>NestedBlockDepth:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$private fun fetchPushNotificationId(id: String): String</ID>
-    <ID>NestedBlockDepth:PushPreviewDAOImpl.kt$PushPreviewDAOImpl$@WorkerThread override fun find(previewKey: String): String?</ID>
-    <ID>NestedBlockDepth:PushPreviewKey.kt$CanonicalJson$private fun quote(s: String): String</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun createOrResetWorker(isPingFrequencyUpdated: Boolean)</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
-    <ID>NestedBlockDepth:QueueHeaderBuilder.kt$QueueHeaderBuilder$private fun addReferrerInfo(header: JSONObject)</ID>
-    <ID>NestedBlockDepth:SharedPreferencesMigration.kt$SharedPreferencesMigration$@Suppress("UNCHECKED_CAST") fun migrate()</ID>
-    <ID>NestedBlockDepth:TemplatesManager.kt$TemplatesManager.Companion$@JvmStatic fun createInstance( ctInstanceConfig: CleverTapInstanceConfig, systemTemplates: Set&lt;CustomTemplate&gt; ): TemplatesManager</ID>
-    <ID>NestedBlockDepth:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun matchGeoRadius(event: EventAdapter, trigger: TriggerAdapter): Boolean</ID>
-    <ID>NestedBlockDepth:UninstallTimestampDAOImpl.kt$UninstallTimestampDAOImpl$@WorkerThread override fun getLastUninstallTimestamp(): Long</ID>
     <ID>NestedBlockDepth:UriHelper.kt$UriHelper$fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle</ID>
-    <ID>NestedBlockDepth:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$@VisibleForTesting internal fun createSslContext(): SSLContext?</ID>
-    <ID>NestedBlockDepth:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$private fun openHttpsURLConnection(request: Request): HttpsURLConnection</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun allEvents(): List&lt;UserEventLog&gt;</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun allEventsByDeviceID(deviceID: String): List&lt;UserEventLog&gt;</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount( deviceID: String, normalizedEventName: String, count: Int ): Boolean</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun readEventByDeviceIdAndNormalizedEventName( deviceID: String, normalizedEventName: String ): UserEventLog?</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun upsertEventsByDeviceIdAndNormalizedEventName( deviceID: String, setOfActualAndNormalizedEventNamePair: Set&lt;Pair&lt;String, String&gt;&gt; ): Boolean</ID>
-    <ID>NestedBlockDepth:UserProfileDAOImpl.kt$UserProfileDAOImpl$@WorkerThread override fun fetchUserProfile(accountId: String, deviceId: String): JSONObject?</ID>
-    <ID>NestedBlockDepth:UserProfileDAOImpl.kt$UserProfileDAOImpl$@WorkerThread override fun fetchUserProfilesByAccountId(accountId: String): Map&lt;String, JSONObject&gt;</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic @SuppressLint("MissingPermission") @Suppress("DEPRECATION") public fun getDeviceNetworkType(context: Context): String</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic internal fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock)</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic public fun convertJSONObjectToHashMap(b: JSONObject): HashMap&lt;String, Any&gt;</ID>
     <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$message</ID>
     <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$messageIDs</ID>
     <ID>NoNameShadowing:MemoryAccessObject.kt${ val stream = ByteArrayOutputStream() it.compress(Bitmap.CompressFormat.PNG, 100, stream) stream.toByteArray() }</ID>
@@ -624,40 +449,23 @@
     <ID>ReturnCount:BitmapDownloader.kt$BitmapDownloader$public fun downloadBitmap(srcUrl: String): DownloadedBitmap</ID>
     <ID>ReturnCount:CTFirebaseMessagingReceiver.kt$CTFirebaseMessagingReceiver$@SuppressLint("RestrictedApi") override fun onReceive(context: Context?, intent: Intent?)</ID>
     <ID>ReturnCount:CTInAppNotification.kt$CTInAppNotification$private fun validateNotifBundle(notif: Bundle): Boolean</ID>
-    <ID>ReturnCount:CTInboxListViewFragment.kt$CTInboxListViewFragment$open fun refreshList()</ID>
     <ID>ReturnCount:CTProductConfigController.kt$CTProductConfigController$private fun getStoredValues(fullFilePath: String): HashMap&lt;String, String&gt;</ID>
     <ID>ReturnCount:CleverTapAPI.kt$CleverTapAPI.Companion$private fun soundUri(context: Context?, instance: CleverTapAPI, sound: String?): Uri?</ID>
-    <ID>ReturnCount:ContentFetchResponse.kt$ContentFetchResponse$override fun processResponse( jsonBody: JSONObject?, stringBody: String?, context: Context, responseContext: ResponseContext )</ID>
-    <ID>ReturnCount:CtApi.kt$CtApi$fun getHandshakeDomain(isViewedEvent: Boolean) : String</ID>
     <ID>ReturnCount:DeviceInfo.kt$DeviceInfo$fun initDeviceID(cleverTapID: String?): String?</ID>
-    <ID>ReturnCount:DisplayUnitResponse.kt$DisplayUnitResponse$private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?, source: CTResponseSource)</ID>
-    <ID>ReturnCount:EventNameValidator.kt$EventNameValidator$override fun validate(input: EventNameNormalizationResult, config: ValidationConfig): ValidationOutcome</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$private fun _showNotificationIfAvailable()</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$private fun tryAppLaunchFastPath( a1Winner: List&lt;JSONObject&gt;, contentFetchItems: List&lt;ContentFetchItem&gt;, appLaunchedProperties: Map&lt;String, Any&gt;, userLocation: Location? ): Boolean</ID>
-    <ID>ReturnCount:InAppFCManager.kt$InAppFCManager$fun canShow( inapp: CTInAppNotification?, hasInAppFrequencyLimitsMaxedOut: (JSONObject, String) -&gt; Boolean ): Boolean</ID>
-    <ID>ReturnCount:InAppNotificationActivity.kt$InAppNotificationActivity$private fun restoreInApp(): Boolean</ID>
-    <ID>ReturnCount:InAppNotificationActivity.kt$InAppNotificationActivity$private fun setUp(savedInstanceState: Bundle?)</ID>
     <ID>ReturnCount:InAppResponse.kt$InAppResponse$override fun processResponse( jsonBody: JSONObject?, stringBody: String?, context: Context, responseContext: ResponseContext )</ID>
-    <ID>ReturnCount:NdCountsStore.kt$NdCountsStore$private fun parseOrNull(raw: String?): Counts?</ID>
-    <ID>ReturnCount:NetworkMonitor.kt$NetworkMonitor$@SuppressLint("MissingPermission") private fun calculateCurrentNetworkState(): NetworkState</ID>
-    <ID>ReturnCount:NetworkRepo.kt$NetworkRepo$fun getMinDelayFrequency( currentDelay: Int, networkRetryCount: Int ) : Int</ID>
-    <ID>ReturnCount:PIPConfigFactory.kt$PIPConfigFactory$fun create( inAppNotification: CTInAppNotification, callbacks: PIPCallbacks, logger: ILogger ): PIPConfig?</ID>
     <ID>ReturnCount:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>ReturnCount:PushProviders.kt$PushProviders$private fun triggerLiveUpdateNotification( context: Context, extras: Bundle, customFactory: ICleverTapLiveUpdateNotificationFactory? )</ID>
     <ID>ReturnCount:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
-    <ID>ReturnCount:TriggersMatcher.kt$TriggersMatcher$private fun checkGivenElementEqualsAnyElementInList(list: List&lt;*&gt;, elementToCheckForEquality: Any?): Boolean</ID>
-    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (diff is Map&lt;*, *&gt;) { diff } else { null }</ID>
-    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (vars is Map&lt;*, *&gt;) { vars } else { null }</ID>
     <ID>SpreadOperator:DeviceInfo.kt$DeviceInfo$(error, *(varargs as Array&lt;String&gt;))</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:CTFcmMessageHandler.kt$CTFcmMessageHandler$NullPointerException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:CTInboxActivity.kt$CTInboxActivity$IllegalArgumentException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:InAppNotificationActivity.kt$InAppNotificationActivity$IllegalArgumentException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:PushProviders.kt$PushProviders$IllegalArgumentException()</ID>
     <ID>ThrowsCount:CustomTemplate.kt$CustomTemplate.Builder$internal fun addArgument(name: String, type: TemplateArgumentType, defaultValue: Any?)</ID>
-    <ID>ThrowsCount:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.TemplateBuilder, json: JSONObject )</ID>
     <ID>ThrowsCount:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun createTemplateFromJson(templateName: String, json: JSONObject): CustomTemplate</ID>
-    <ID>ThrowsCount:TemplatesManager.kt$TemplatesManager.Companion$@JvmStatic fun createInstance( ctInstanceConfig: CleverTapInstanceConfig, systemTemplates: Set&lt;CustomTemplate&gt; ): TemplatesManager</ID>
     <ID>TooGenericExceptionThrown:CleverTapFactory.kt$CleverTapFactory$throw RuntimeException("This is invalid case and will not happen. Context/Config is null")</ID>
     <ID>TooGenericExceptionThrown:Utils.kt$Utils$throw Exception("Logo is null")</ID>
     <ID>TooManyFunctions:BaseAnalyticsManager.kt$BaseAnalyticsManager</ID>

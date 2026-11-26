@@ -13,24 +13,12 @@
     <ID>CanBeNonNullable:Utils.kt$Utils$permission: String?</ID>
     <ID>CyclomaticComplexMethod:CTGeofenceSettings.kt$CTGeofenceSettings$override fun equals(other: Any?): Boolean</ID>
     <ID>CyclomaticComplexMethod:LocationUpdateTask.kt$LocationUpdateTask$private fun isRequestLocation(locationPendingIntent: PendingIntent?): Boolean</ID>
-    <ID>CyclomaticComplexMethod:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
     <ID>LargeClass:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
     <ID>LongMethod:BackgroundLocationWork.kt$BackgroundLocationWork$override fun startWork(): ListenableFuture&lt;Result&gt;</ID>
     <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$internal fun processTriggeredLocation(location: Location): Future&lt;*&gt;?</ID>
-    <ID>LongMethod:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver.&lt;no name provided&gt;$override fun run()</ID>
-    <ID>LongMethod:GeofenceUpdateTask.kt$GeofenceUpdateTask$@WorkerThread private fun addGeofences(geofenceObject: JSONObject?)</ID>
-    <ID>LongMethod:GoogleLocationAdapter.kt$GoogleLocationAdapter$@WorkerThread override fun requestLocationUpdates()</ID>
-    <ID>LongMethod:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
-    <ID>LongMethod:Utils.kt$Utils$@JvmStatic @WorkerThread fun writeSettingsToFile(context: Context, ctGeofenceSettings: CTGeofenceSettings)</ID>
     <ID>MagicNumber:Logger.kt$Logger$4000</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"Critical issue :: After calling CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"</ID>
     <ID>MemberNameEqualsClassName:CTGeofenceAPI.kt$CTGeofenceAPI.Companion$private var ctGeofenceAPI: CTGeofenceAPI? = null</ID>
-    <ID>NestedBlockDepth:CTGeofenceBootReceiver.kt$CTGeofenceBootReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
-    <ID>NestedBlockDepth:CTLocationUpdateReceiver.kt$CTLocationUpdateReceiver$@MainThread override fun onReceive(context: Context, intent: Intent?)</ID>
-    <ID>NestedBlockDepth:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun deleteDirectory(context: Context?, dirName: String?)</ID>
-    <ID>NestedBlockDepth:FileUtils.kt$FileUtils$@JvmStatic @WorkerThread fun writeJsonToFile( context: Context?, dirName: String?, fileName: String?, jsonObject: JSONObject? ): Boolean</ID>
-    <ID>NestedBlockDepth:PushGeofenceEventTask.kt$PushGeofenceEventTask$@WorkerThread private fun pushGeofenceEvents( triggeringGeofences: List&lt;Geofence&gt;?, triggeringLocation: Location?, geofenceTransition: Int )</ID>
-    <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic fun isFusedLocationApiDependencyAvailable(): Boolean</ID>
     <ID>NoNameShadowing:PendingIntentFactory.kt$PendingIntentFactory$flags</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
     <ID>UnsafeCallOnNullableType:CTGeofenceAPI.kt$CTGeofenceAPI$cleverTapAPI!!</ID>
