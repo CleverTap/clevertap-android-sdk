@@ -2,8 +2,10 @@ package com.clevertap.android.sdk.video
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.RestrictTo
 
-interface InAppVideoPlayerHandle {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface InAppVideoPlayerHandle {
     fun initExoplayer(
         context: Context,
         url: String

@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.NUMB
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.STRING
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * A [TemplateProducer] that creates templates based on a json definition. Invalid definitions will
@@ -56,7 +57,8 @@ import org.json.JSONObject
  * @param functionsPresenter A presenter for all functions in the json definitions. Required if there
  * is at least one template with type "function".
  */
-open class JsonTemplatesProducer(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class JsonTemplatesProducer(
     private val jsonTemplatesDefinition: String,
     private val templatesPresenter: TemplatePresenter?,
     private val functionsPresenter: FunctionPresenter?

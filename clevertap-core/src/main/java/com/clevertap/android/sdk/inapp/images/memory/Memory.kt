@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.images.memory
 import com.clevertap.android.sdk.utils.DiskMemory
 import com.clevertap.android.sdk.utils.InMemoryLruCache
 import java.io.File
+import androidx.annotation.RestrictTo
 /**
  * An interface for managing data storage, both in-memory and on disk.
  *
@@ -14,7 +15,8 @@ import java.io.File
  *
  * @param <T> The type of the key used for storing and retrieving data.
  */
-interface Memory<T> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal interface Memory<T> {
     /**
      *Creates and returns an in-memory LRU (Least Recently Used) cache.
      *

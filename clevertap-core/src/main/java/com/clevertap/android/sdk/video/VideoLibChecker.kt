@@ -90,7 +90,8 @@ internal object VideoLibChecker {
     }
 }
 
-enum class VideoLibraryIntegrated {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class VideoLibraryIntegrated {
     @Deprecated(
         message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3).",
         replaceWith = ReplaceWith("MEDIA3")

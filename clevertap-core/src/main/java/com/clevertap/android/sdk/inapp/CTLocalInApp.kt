@@ -8,26 +8,26 @@ import org.json.JSONObject
  * Builder class which creates an JSON object to display local in-app. Only supports half-interstitial
  * and alert local in-apps.
  */
-class CTLocalInApp private constructor() {
+public class CTLocalInApp private constructor() {
 
-    enum class InAppType(val type: String) {
+    public enum class InAppType(public val type: String) {
         ALERT(CTInAppType.CTInAppTypeAlert.toString()),
         HALF_INTERSTITIAL(CTInAppType.CTInAppTypeHalfInterstitial.toString())
     }
 
-    companion object {
+    public companion object {
 
         @JvmStatic
-        fun builder(): Builder = Builder()
-        const val IS_LOCAL_INAPP = "isLocalInApp"
-        const val FALLBACK_TO_NOTIFICATION_SETTINGS = "fallbackToNotificationSettings"
+        public fun builder(): Builder = Builder()
+        public const val IS_LOCAL_INAPP: String = "isLocalInApp"
+        public const val FALLBACK_TO_NOTIFICATION_SETTINGS: String = "fallbackToNotificationSettings"
     }
 
-    class Builder internal constructor() {
+    public class Builder internal constructor() {
 
         private var jsonObject = JSONObject()
 
-        fun setInAppType(inAppType: InAppType) =
+        public fun setInAppType(inAppType: InAppType): Builder1 =
             jsonObject.run {
                 put(Constants.KEY_TYPE, inAppType.type)
                 put(IS_LOCAL_INAPP, true)
@@ -35,27 +35,27 @@ class CTLocalInApp private constructor() {
                 Builder1(this)
             }
 
-        class Builder1(private var jsonObject: JSONObject) {
+        public class Builder1(private var jsonObject: JSONObject) {
 
-            fun setTitleText(titleText: String) =
+            public fun setTitleText(titleText: String): Builder2 =
                 jsonObject.run {
                     put(Constants.KEY_TITLE, JSONObject().put(Constants.KEY_TEXT, titleText))
                     Builder2(this)
                 }
         }
 
-        class Builder2(private var jsonObject: JSONObject) {
+        public class Builder2(private var jsonObject: JSONObject) {
 
-            fun setMessageText(messageText: String) =
+            public fun setMessageText(messageText: String): Builder3 =
                 jsonObject.run {
                     put(Constants.KEY_MESSAGE, JSONObject().put(Constants.KEY_TEXT, messageText))
                     Builder3(this)
                 }
         }
 
-        class Builder3(private var jsonObject: JSONObject) {
+        public class Builder3(private var jsonObject: JSONObject) {
 
-            fun followDeviceOrientation(deviceOrientation: Boolean) =
+            public fun followDeviceOrientation(deviceOrientation: Boolean): Builder4 =
                 jsonObject.run {
                     put(Constants.KEY_PORTRAIT, true)
                     put(Constants.KEY_LANDSCAPE, deviceOrientation)
@@ -63,9 +63,9 @@ class CTLocalInApp private constructor() {
                 }
         }
 
-        class Builder4(private var jsonObject: JSONObject) {
+        public class Builder4(private var jsonObject: JSONObject) {
 
-            fun setPositiveBtnText(positiveBtnText: String) =
+            public fun setPositiveBtnText(positiveBtnText: String): Builder5 =
                 jsonObject.run {
                     val positiveButtonObject = JSONObject().apply {
                         put(Constants.KEY_TEXT, positiveBtnText)
@@ -79,9 +79,9 @@ class CTLocalInApp private constructor() {
                 }
         }
 
-        class Builder5(private var jsonObject: JSONObject) {
+        public class Builder5(private var jsonObject: JSONObject) {
 
-            fun setNegativeBtnText(negativeBtnText: String) =
+            public fun setNegativeBtnText(negativeBtnText: String): Builder6 =
                 jsonObject.run {
                     val negativeButtonObject = JSONObject().apply {
                         put(Constants.KEY_TEXT, negativeBtnText)
@@ -95,17 +95,17 @@ class CTLocalInApp private constructor() {
                 }
         }
 
-        class Builder6(private var jsonObject: JSONObject) {
+        public class Builder6(private var jsonObject: JSONObject) {
 
-            fun setFallbackToSettings(fallbackToSettings: Boolean) =
+            public fun setFallbackToSettings(fallbackToSettings: Boolean): Builder6 =
                 apply { jsonObject.put(FALLBACK_TO_NOTIFICATION_SETTINGS, fallbackToSettings) }
 
-            fun setBackgroundColor(backgroundColor: String) =
+            public fun setBackgroundColor(backgroundColor: String): Builder6 =
                 apply { jsonObject.put(Constants.KEY_BG, backgroundColor) }
 
-            fun setImageUrl(imageUrl: String) = setImageUrl(imageUrl, null)
+            public fun setImageUrl(imageUrl: String): Builder6 = setImageUrl(imageUrl, null)
 
-            fun setImageUrl(imageUrl: String, contentDescription: String?) =
+            public fun setImageUrl(imageUrl: String, contentDescription: String?): Builder6 =
                 apply {
                     val mediaObject = JSONObject().apply {
                         put(Constants.KEY_URL, imageUrl)
@@ -122,22 +122,22 @@ class CTLocalInApp private constructor() {
                     }
                 }
 
-            fun setTitleTextColor(titleTextColor: String) =
+            public fun setTitleTextColor(titleTextColor: String): Builder6 =
                 apply { jsonObject.getJSONObject(Constants.KEY_TITLE).put(Constants.KEY_COLOR, titleTextColor) }
 
-            fun setMessageTextColor(messageTextColor: String) =
+            public fun setMessageTextColor(messageTextColor: String): Builder6 =
                 apply { jsonObject.getJSONObject(Constants.KEY_MESSAGE).put(Constants.KEY_COLOR, messageTextColor) }
 
-            fun setBtnTextColor(btnTextColor: String) =
+            public fun setBtnTextColor(btnTextColor: String): Builder6 =
                 apply { updateActionButtonArray(Constants.KEY_COLOR, btnTextColor) }
 
-            fun setBtnBackgroundColor(btnBackgroundColor: String) =
+            public fun setBtnBackgroundColor(btnBackgroundColor: String): Builder6 =
                 apply { updateActionButtonArray(Constants.KEY_BG, btnBackgroundColor) }
 
-            fun setBtnBorderColor(btnBorderColor: String) =
+            public fun setBtnBorderColor(btnBorderColor: String): Builder6 =
                 apply { updateActionButtonArray(Constants.KEY_BORDER, btnBorderColor) }
 
-            fun setBtnBorderRadius(btnBorderRadius: String) =
+            public fun setBtnBorderRadius(btnBorderRadius: String): Builder6 =
                 apply { updateActionButtonArray(Constants.KEY_RADIUS, btnBorderRadius) }
 
             private val updateActionButtonArray: (String, String) -> Unit = { key, value ->
@@ -146,7 +146,7 @@ class CTLocalInApp private constructor() {
                 }
             }
 
-            fun build() = jsonObject
+            public fun build(): JSONObject = jsonObject
         }
     }
 }

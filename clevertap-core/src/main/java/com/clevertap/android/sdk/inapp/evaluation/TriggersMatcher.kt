@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isValid
+import androidx.annotation.RestrictTo
 
 /**
  * The `TriggersMatcher` class provides methods for matching trigger conditions with event properties,
@@ -15,7 +16,8 @@ import com.clevertap.android.sdk.isValid
  *
  * @constructor Creates an instance of the `TriggersMatcher` class.
  */
-class TriggersMatcher(private val localDataStore: LocalDataStore) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
 
     /**
      * Matches a standard event against a set of trigger conditions.
