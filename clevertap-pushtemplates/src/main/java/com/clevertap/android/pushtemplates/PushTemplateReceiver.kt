@@ -223,6 +223,7 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
             }
         }
 
+        @Suppress("ForbiddenMethodCall") // intentional: keeps the reply feedback visible before auto-opening the app
         private fun handleInputBoxNotification() {
             //Fetch Remote Input
             val remoteInput = RemoteInput.getResultsFromIntent(intent)
@@ -334,7 +335,9 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
                 STAR_IDS.forEachIndexed { index, starId ->
                     val star = index + 1
                     if (clickedStar == star) {
-                        STAR_IDS.take(star).forEach { contentViewRating.setImageViewResource(it, R.drawable.pt_star_filled) }
+                        STAR_IDS.take(star).forEach {
+                            contentViewRating.setImageViewResource(it, R.drawable.pt_star_filled)
+                        }
                     } else {
                         contentViewRating.setImageViewResource(starId, R.drawable.pt_star_outline)
                     }
@@ -421,6 +424,7 @@ internal class PushTemplateReceiver : BroadcastReceiver() {
             }
         }
 
+        @Suppress("ForbiddenMethodCall") // intentional: lets the filled stars show before the cancel
         @SuppressLint("MissingPermission")
         private fun handleRatingDeepLink(
             notificationId: Int,

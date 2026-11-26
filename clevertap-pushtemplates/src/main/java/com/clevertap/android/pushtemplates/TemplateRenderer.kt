@@ -218,7 +218,10 @@ public class TemplateRenderer @JvmOverloads constructor(
                          */
                         if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
                             iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
-                            PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
+                            PTLog.debug(
+                                "More than 2 images were not retrieved in Icons Template Notification, " +
+                                    "reverting to basic template."
+                            )
                             buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                         } else {
                             iconsNotificationBuilder
@@ -240,7 +243,10 @@ public class TemplateRenderer @JvmOverloads constructor(
 
             is TimerTemplateData -> when {
                 VERSION.SDK_INT < VERSION_CODES.O -> {
-                    PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
+                    PTLog.debug(
+                        "Push Templates SDK supports Timer Notifications only on or above Android Oreo, " +
+                            "reverting to basic template"
+                    )
                     templateData.toBasicTemplateData().buildIfValid {
                         BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                     }
@@ -252,7 +258,10 @@ public class TemplateRenderer @JvmOverloads constructor(
                     null
                 }
                 templateData.baseContent.notificationBehavior.dismissAfter == null -> {
-                    PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")
+                    PTLog.debug(
+                        "Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), " +
+                            "rendering basic template with terminal content"
+                    )
                     templateData.toTerminalBasicTemplateData().buildIfValid {
                         BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                     }
