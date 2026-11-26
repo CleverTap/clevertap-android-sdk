@@ -16,7 +16,6 @@ import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.video.VideoLibChecker
-import java.util.concurrent.Callable
 import org.json.JSONArray
 
 internal open class ControllerManager(
@@ -47,20 +46,14 @@ internal open class ControllerManager(
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    @get:JvmName("getCTFeatureFlagsController")
-    @set:JvmName("setCTFeatureFlagsController")
     var ctFeatureFlagsController: CTFeatureFlagsController? = null
 
-    @get:JvmName("getCTInboxController")
-    @set:JvmName("setCTInboxController")
     var ctInboxController: CTInboxController? = null
 
     /**
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    @get:JvmName("getCTProductConfigController")
-    @set:JvmName("setCTProductConfigController")
     var ctProductConfigController: CTProductConfigController? = null
 
     var inAppController: InAppController? = null
@@ -80,20 +73,14 @@ internal open class ControllerManager(
      * code calling the [displayUnitCache] setter.
      */
     @Synchronized
-    fun getOrCreateDisplayUnitCache(): DisplayUnitCache? {
-        if (displayUnitCache == null) {
-            displayUnitCache = CTDisplayUnitController()
-        }
-        return displayUnitCache
-    }
+    fun getOrCreateDisplayUnitCache(): DisplayUnitCache =
+        displayUnitCache ?: CTDisplayUnitController().also { displayUnitCache = it }
 
     /**
      * Returns the active cache only when it is the default [CTDisplayUnitController];
      * returns `null` when a host has installed a custom [DisplayUnitCache].
      */
     @Deprecated("since 8.3.0. Use displayUnitCache instead.")
-    @get:JvmName("getCTDisplayUnitController")
-    @set:JvmName("setCTDisplayUnitController")
     var ctDisplayUnitController: CTDisplayUnitController?
         get() = displayUnitCache as? CTDisplayUnitController
         set(ctDisplayUnitController) {
@@ -107,11 +94,10 @@ internal open class ControllerManager(
                 .debug(config.accountId, "Instance is analytics only, not initializing Notification Inbox")
             return
         }
-        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.execute("initializeInbox", Callable<Void?> {
-            _initializeInbox()
+        CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>().execute("initializeInbox") {
+            initializeInboxLocked()
             null
-        })
+        }
     }
 
     @WorkerThread
@@ -121,44 +107,44 @@ internal open class ControllerManager(
                 .debug(config.accountId, "Instance is analytics only, not initializing Notification Inbox")
             return
         }
-        _initializeInbox()
+        initializeInboxLocked()
     }
 
     // always call async
     @WorkerThread
-    private fun _initializeInbox() {
+    private fun initializeInboxLocked() {
         synchronized(ctLockManager.inboxControllerLock) {
             if (ctInboxController != null) {
                 callbackManager._notifyInboxInitialized()
                 return
             }
-            if (deviceInfo.deviceID != null) {
-                ctInboxController = CTInboxController(
-                    config,
-                    deviceInfo.deviceID,
-                    baseDatabaseManager.loadDBAdapter(context),
-                    ctLockManager,
-                    callbackManager,
-                    VideoLibChecker.haveVideoPlayerSupport,
-                    inboxDeleteCoordinator
-                )
-                callbackManager._notifyInboxInitialized()
-                // Java passed the re-read id straight to the non-null Kotlin parameter.
-                inboxDeleteCoordinator?.retryPending(deviceInfo.deviceID!!)
-            } else {
+            // Read the id once: Java re-read the volatile three times while building the controller.
+            val deviceId = deviceInfo.deviceID
+            if (deviceId == null) {
                 config.logger.info("CRITICAL : No device ID found!")
+                return
             }
+            ctInboxController = CTInboxController(
+                config,
+                deviceId,
+                baseDatabaseManager.loadDBAdapter(context),
+                ctLockManager,
+                callbackManager,
+                VideoLibChecker.haveVideoPlayerSupport,
+                inboxDeleteCoordinator
+            )
+            callbackManager._notifyInboxInitialized()
+            inboxDeleteCoordinator?.retryPending(deviceId)
         }
     }
 
     fun invokeCallbacksForNetworkError() {
         // Variables
-        val ctVariables = ctVariables
-        if (ctVariables != null) {
+        ctVariables?.let { variables ->
             val fetchCallback = callbackManager.fetchVariablesCallback
             callbackManager.fetchVariablesCallback = null
 
-            ctVariables.handleVariableResponseError(fetchCallback)
+            variables.handleVariableResponseError(fetchCallback)
         }
 
         // Add more callbacks if necessary
@@ -172,7 +158,6 @@ internal open class ControllerManager(
      * instance is set to offline mode or request is failed.
      */
     fun invokeBatchListener(requestQueue: JSONArray, success: Boolean) {
-        val listener = callbackManager.batchListener
-        listener?.onBatchSent(requestQueue, success)
+        callbackManager.batchListener?.onBatchSent(requestQueue, success)
     }
 }

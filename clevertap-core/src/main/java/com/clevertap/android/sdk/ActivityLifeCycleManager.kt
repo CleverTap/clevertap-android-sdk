@@ -14,9 +14,7 @@ import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutors
-import com.clevertap.android.sdk.task.OnSuccessListener
 import com.clevertap.android.sdk.utils.Clock
-import java.util.concurrent.Callable
 
 internal open class ActivityLifeCycleManager(
     private val context: Context,
@@ -38,22 +36,18 @@ internal open class ActivityLifeCycleManager(
         CoreMetaData.setAppForeground(false)
         sessionManager.appLastSeen = System.currentTimeMillis()
         config.logger.verbose(config.accountId, "App in background")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute(
-            "activityPaused",
-            Callable<Void?> {
-                val now = (System.currentTimeMillis() / 1000).toInt()
-                if (coreMetaData.inCurrentSession()) {
-                    try {
-                        StorageHelper.putInt(context, config.accountId, Constants.LAST_SESSION_EPOCH, now)
-                        config.logger.verbose(config.accountId, "Updated session time: $now")
-                    } catch (t: Throwable) {
-                        config.logger.verbose(config.accountId, "Failed to update session time time: " + t.message)
-                    }
+        executors.postAsyncSafelyTask<Void?>().execute("activityPaused") {
+            val now = (System.currentTimeMillis() / 1000).toInt()
+            if (coreMetaData.inCurrentSession()) {
+                try {
+                    StorageHelper.putInt(context, config.accountId, Constants.LAST_SESSION_EPOCH, now)
+                    config.logger.verbose(config.accountId, "Updated session time: $now")
+                } catch (t: Throwable) {
+                    config.logger.verbose(config.accountId, "Failed to update session time time: ${t.message}")
                 }
-                null
             }
-        )
+            null
+        }
     }
 
     //Lifecycle
@@ -72,24 +66,20 @@ internal open class ActivityLifeCycleManager(
             analyticsManager.fetchFeatureFlags()
             inboxV2Bridge.submit(FetchTrigger.SYSTEM, null)
             pushProviders.onTokenRefresh()
-            val task = executors.postAsyncSafelyTask<Void?>()
-            task.execute("HandlingInstallReferrer", Callable<Void?> {
+            executors.postAsyncSafelyTask<Void?>().execute("HandlingInstallReferrer") {
                 if (!coreMetaData.isInstallReferrerDataSent && coreMetaData.isFirstSession) {
                     handleInstallReferrerOnFirstInstall()
                 }
                 null
-            })
+            }
 
-            val cleanUpTask = executors.ioTask<Void?>()
-            cleanUpTask.execute("CleanUpOldGIFs", Callable<Void?> {
+            executors.ioTask<Void?>().execute("CleanUpOldGIFs") {
                 Utils.cleanupOldGIFs(context, config, clock)
                 null
-            })
+            }
 
             try {
-                if (callbackManager.geofenceCallback != null) {
-                    callbackManager.geofenceCallback!!.triggerLocation()
-                }
+                callbackManager.geofenceCallback?.triggerLocation()
             } catch (e: IllegalStateException) {
                 config.logger.verbose(config.accountId, e.localizedMessage)
             } catch (e: Exception) {
@@ -103,24 +93,23 @@ internal open class ActivityLifeCycleManager(
     fun onActivityCreated(notification: Bundle?, deepLink: Uri?, accountId: String?) {
         try {
             val shouldProcess = (accountId == null && config.isDefaultInstance) || config.accountId == accountId
+            if (!shouldProcess) {
+                return
+            }
 
-            if (shouldProcess) {
-                if (notification != null && !notification.isEmpty && notification
-                        .containsKey(Constants.NOTIFICATION_TAG)
-                ) {
-                    analyticsManager.pushNotificationClickedEvent(notification)
-                }
+            if (notification != null && !notification.isEmpty && notification.containsKey(Constants.NOTIFICATION_TAG)) {
+                analyticsManager.pushNotificationClickedEvent(notification)
+            }
 
-                if (deepLink != null) {
-                    try {
-                        analyticsManager.pushDeepLink(deepLink, false)
-                    } catch (t: Throwable) {
-                        // no-op
-                    }
+            if (deepLink != null) {
+                try {
+                    analyticsManager.pushDeepLink(deepLink, false)
+                } catch (t: Throwable) {
+                    // no-op
                 }
             }
         } catch (t: Throwable) {
-            Logger.v("Throwable - " + t.localizedMessage)
+            Logger.v("Throwable - ${t.localizedMessage}")
         }
     }
 
@@ -131,11 +120,10 @@ internal open class ActivityLifeCycleManager(
             referrerClient.startConnection(object : InstallReferrerStateListener {
                 override fun onInstallReferrerServiceDisconnected() {
                     if (!coreMetaData.isInstallReferrerDataSent) {
-                        val retryTask = executors.postAsyncSafelyTask<Void?>()
-                        retryTask.execute("RetryInstallReferrer", Callable<Void?> {
+                        executors.postAsyncSafelyTask<Void?>().execute("RetryInstallReferrer") {
                             handleInstallReferrerOnFirstInstall()
                             null
-                        })
+                        }
                     }
                 }
 
@@ -145,10 +133,15 @@ internal open class ActivityLifeCycleManager(
                             // Connection established
                             val task = executors.postAsyncSafelyTask<ReferrerDetails?>()
 
-                            task.addOnSuccessListener(OnSuccessListener { response ->
+                            task.addOnSuccessListener { response ->
                                 try {
-                                    // Java dereferenced a possibly-null response here; the NPE is caught below.
-                                    val referrerUrl = response!!.installReferrer
+                                    // A null response takes the same path as an NPE from the library
+                                    // (Java dereferenced it; the NPE message was null).
+                                    if (response == null) {
+                                        onReferrerDetailsFailed(referrerClient, null)
+                                        return@addOnSuccessListener
+                                    }
+                                    val referrerUrl = response.installReferrer
                                     coreMetaData.referrerClickTime = response.referrerClickTimestampSeconds
                                     coreMetaData.appInstallTime = response.installBeginTimestampSeconds
                                     analyticsManager.pushInstallReferrer(referrerUrl)
@@ -158,34 +151,23 @@ internal open class ActivityLifeCycleManager(
                                         "Install Referrer data set [Referrer URL-$referrerUrl]"
                                     )
                                 } catch (npe: NullPointerException) {
-                                    config.logger.debug(
-                                        config.accountId,
-                                        "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
-                                                + npe.message
-                                    )
-                                    val endTask = executors.ioTaskNonUi<Void?>()
-                                    endTask.execute("EndReferrerConnection", Callable<Void?> {
-                                        referrerClient.endConnection()
-                                        null
-                                    })
-                                    coreMetaData.isInstallReferrerDataSent = false
+                                    onReferrerDetailsFailed(referrerClient, npe.message)
                                 }
-                            })
+                            }
 
-                            task.execute("ActivityLifeCycleManager#getInstallReferrer", Callable<ReferrerDetails?> {
-                                var response: ReferrerDetails? = null
+                            task.execute("ActivityLifeCycleManager#getInstallReferrer") {
                                 try {
-                                    response = referrerClient.installReferrer
+                                    referrerClient.installReferrer
                                 } catch (e: RemoteException) {
                                     config.logger.debug(
                                         config.accountId,
-                                        "Remote exception caused by Google Play Install Referrer library - " + e.message
+                                        "Remote exception caused by Google Play Install Referrer library - ${e.message}"
                                     )
                                     referrerClient.endConnection()
                                     coreMetaData.isInstallReferrerDataSent = false
+                                    null
                                 }
-                                response
-                            })
+                            }
                         }
 
                         InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED ->
@@ -207,10 +189,21 @@ internal open class ActivityLifeCycleManager(
         } catch (t: Throwable) {
             config.logger.verbose(
                 config.accountId,
-                "Google Play Install Referrer's InstallReferrerClient Class not found - " + t
-                    .localizedMessage
-                        + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle"
+                "Google Play Install Referrer's InstallReferrerClient Class not found - ${t.localizedMessage}" +
+                    " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle"
             )
         }
+    }
+
+    private fun onReferrerDetailsFailed(referrerClient: InstallReferrerClient, message: String?) {
+        config.logger.debug(
+            config.accountId,
+            "Install referrer client null pointer exception caused by Google Play Install Referrer library - $message"
+        )
+        executors.ioTaskNonUi<Void?>().execute("EndReferrerConnection") {
+            referrerClient.endConnection()
+            null
+        }
+        coreMetaData.isInstallReferrerDataSent = false
     }
 }

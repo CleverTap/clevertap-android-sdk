@@ -27,12 +27,7 @@ import com.clevertap.android.sdk.utils.JsonFlattener
 import com.clevertap.android.sdk.utils.UriHelper
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
-import java.util.ArrayList
-import java.util.Collections.emptyMap
-import java.util.Collections.emptySet
-import java.util.HashMap
 import java.util.Locale
-import java.util.concurrent.Callable
 import java.util.concurrent.Future
 import org.json.JSONArray
 import org.json.JSONException
@@ -64,31 +59,31 @@ internal open class AnalyticsManager(
     private val notificationIdTagMap = HashMap<String?, Long>()
     private val notificationViewedIdTagMap = HashMap<String?, Long>()
 
-    override fun addMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
-        config.logger.verbose(config.accountId, "addMultiValuesForKey: key=$key, values=$values")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("addMultiValuesForKey", Callable<Void?> {
-            _handleMultiValues(values, key, ProfileCommand.ADD)
+    /** Runs [block] on the serial post-async-safely queue. */
+    private inline fun postAsyncSafely(logTag: String, crossinline block: () -> Unit) {
+        executors.postAsyncSafelyTask<Void?>().execute(logTag) {
+            block()
             null
-        })
+        }
+    }
+
+    override fun addMultiValuesForKey(key: String?, values: List<String?>?) {
+        config.logger.verbose(config.accountId, "addMultiValuesForKey: key=$key, values=$values")
+        postAsyncSafely("addMultiValuesForKey") { handleMultiValues(values, key, ProfileCommand.ADD) }
     }
 
     override fun incrementValue(key: String?, value: Number?) {
         config.logger.verbose(config.accountId, "incrementValue: key=$key, value=$value")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("incrementValue", Callable<Void?> {
-            _constructIncrementDecrementValues(value, key, ProfileCommand.INCREMENT)
-            null
-        })
+        postAsyncSafely("incrementValue") {
+            constructIncrementDecrementValues(value, key, ProfileCommand.INCREMENT)
+        }
     }
 
     override fun decrementValue(key: String?, value: Number?) {
         config.logger.verbose(config.accountId, "decrementValue: key=$key, value=$value")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("decrementValue", Callable<Void?> {
-            _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT)
-            null
-        })
+        postAsyncSafely("decrementValue") {
+            constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT)
+        }
     }
 
     /**
@@ -100,11 +95,9 @@ internal open class AnalyticsManager(
             return
         }
         val event = JSONObject()
-        val notif = JSONObject()
         try {
-            notif.put("t", Constants.FETCH_TYPE_FF)
             event.put("evtName", Constants.WZRK_FETCH)
-            event.put("evtData", notif)
+            event.put("evtData", JSONObject().put("t", Constants.FETCH_TYPE_FF))
         } catch (e: JSONException) {
             // should not happen
         }
@@ -129,14 +122,12 @@ internal open class AnalyticsManager(
             config.logger
                 .verbose(config.accountId, "App Launched has already been triggered. Will not trigger it ")
             return
-        } else {
-            config.logger.verbose(config.accountId, "Firing App Launched event")
         }
+        config.logger.verbose(config.accountId, "Firing App Launched event")
         coreMetaData.isAppLaunchPushed = true
         val event = JSONObject()
         try {
             event.put("evtName", Constants.APP_LAUNCHED_EVENT)
-
             event.put("evtData", deviceInfo.appLaunchedFields)
         } catch (t: Throwable) {
             // We won't get here
@@ -149,8 +140,8 @@ internal open class AnalyticsManager(
         )
     }
 
-    override fun pushDefineVarsEvent(data: JSONObject?) {
-        baseEventQueueManager.queueEvent(context, data!!, Constants.DEFINE_VARS_EVENT)
+    override fun pushDefineVarsEvent(data: JSONObject) {
+        baseEventQueueManager.queueEvent(context, data, Constants.DEFINE_VARS_EVENT)
     }
 
     override fun pushDisplayUnitClickedEventForID(unitID: String?) {
@@ -160,30 +151,23 @@ internal open class AnalyticsManager(
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
             //wzrk fields
-            val cache = controllerManager.displayUnitCache
-            if (cache != null) {
-                val displayUnit = cache.getDisplayUnitForID(unitID)
-                if (displayUnit != null) {
-                    val eventExtraData = displayUnit.wzrkFields
-                    if (eventExtraData != null) {
-                        event.put("evtData", eventExtraData)
-                        try {
-                            coreMetaData.wzrkParams = eventExtraData
-                        } catch (t: Throwable) {
-                            // no-op
-                        }
-                        baseEventQueueManager.queueEvent(
-                            context, event, Constants.RAISED_EVENT,
-                            getFlattenedEventProperties(eventExtraData)
-                        )
-                    }
-                }
+            val displayUnit = controllerManager.displayUnitCache?.getDisplayUnitForID(unitID) ?: return
+            val eventExtraData = displayUnit.wzrkFields ?: return
+            event.put("evtData", eventExtraData)
+            try {
+                coreMetaData.wzrkParams = eventExtraData
+            } catch (t: Throwable) {
+                // no-op
             }
+            baseEventQueueManager.queueEvent(
+                context, event, Constants.RAISED_EVENT,
+                getFlattenedEventProperties(eventExtraData)
+            )
         } catch (t: Throwable) {
             // We won't get here
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to push Display Unit clicked event$t"
             )
         }
     }
@@ -202,7 +186,7 @@ internal open class AnalyticsManager(
      */
     override fun pushDisplayUnitElementClickedEventForID(
         unitID: String?,
-        additionalProperties: HashMap<String, Any>?
+        additionalProperties: Map<String, Any>?
     ) {
         val event = JSONObject()
         try {
@@ -212,7 +196,7 @@ internal open class AnalyticsManager(
             if (cache == null) {
                 config.logger.verbose(
                     config.accountId,
-                    Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no display-unit cache installed"
+                    "${Constants.FEATURE_DISPLAY_UNIT}Element click dropped — no display-unit cache installed"
                 )
                 return
             }
@@ -220,24 +204,14 @@ internal open class AnalyticsManager(
             if (displayUnit == null) {
                 config.logger.verbose(
                     config.accountId,
-                    Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no unit found for id: " + unitID
+                    "${Constants.FEATURE_DISPLAY_UNIT}Element click dropped — no unit found for id: $unitID"
                 )
                 return
             }
 
             val eventExtraData = JSONObject()
             mergeAdditionalProperties(eventExtraData, additionalProperties)
-            val cachedWzrkFields = displayUnit.wzrkFields
-            if (cachedWzrkFields != null) {
-                val it = cachedWzrkFields.keys()
-                while (it.hasNext()) {
-                    val k = it.next()
-                    try {
-                        eventExtraData.put(k, cachedWzrkFields.get(k))
-                    } catch (ignored: JSONException) {
-                    }
-                }
-            }
+            copyFields(from = displayUnit.wzrkFields, into = eventExtraData)
 
             event.put("evtData", eventExtraData)
             try {
@@ -252,8 +226,7 @@ internal open class AnalyticsManager(
         } catch (t: Throwable) {
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT
-                        + "Failed to push Display Unit element clicked event" + t
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to push Display Unit element clicked event$t"
             )
         }
     }
@@ -267,9 +240,9 @@ internal open class AnalyticsManager(
      */
     private fun mergeAdditionalProperties(
         eventData: JSONObject,
-        extras: HashMap<String, Any>?
+        extras: Map<String, Any>?
     ) {
-        if (extras == null || extras.isEmpty()) {
+        if (extras.isNullOrEmpty()) {
             return
         }
         // Keys/values may be null when the map came from Java.
@@ -293,9 +266,7 @@ internal open class AnalyticsManager(
      */
     private fun filterWzrkFields(merged: JSONObject): JSONObject {
         val out = JSONObject()
-        val it = merged.keys()
-        while (it.hasNext()) {
-            val k = it.next()
+        merged.keys().forEach { k ->
             if (k.startsWith(Constants.WZRK_PREFIX)) {
                 try {
                     out.put(k, merged.get(k))
@@ -304,6 +275,16 @@ internal open class AnalyticsManager(
             }
         }
         return out
+    }
+
+    /** Copies every key of [from] (when present) into [into], skipping values JSON rejects. */
+    private fun copyFields(from: JSONObject?, into: JSONObject) {
+        from?.keys()?.forEach { k ->
+            try {
+                into.put(k, from.get(k))
+            } catch (ignored: JSONException) {
+            }
+        }
     }
 
     /**
@@ -318,7 +299,7 @@ internal open class AnalyticsManager(
      */
     override fun pushDisplayUnitElementViewedEventForID(
         unitID: String?,
-        additionalProperties: HashMap<String, Any>?
+        additionalProperties: Map<String, Any>?
     ) {
         val event = JSONObject()
         try {
@@ -328,7 +309,7 @@ internal open class AnalyticsManager(
             if (cache == null) {
                 config.logger.verbose(
                     config.accountId,
-                    Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no display-unit cache installed"
+                    "${Constants.FEATURE_DISPLAY_UNIT}Element view dropped — no display-unit cache installed"
                 )
                 return
             }
@@ -336,24 +317,14 @@ internal open class AnalyticsManager(
             if (displayUnit == null) {
                 config.logger.verbose(
                     config.accountId,
-                    Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no unit found for id: " + unitID
+                    "${Constants.FEATURE_DISPLAY_UNIT}Element view dropped — no unit found for id: $unitID"
                 )
                 return
             }
 
             val eventExtraData = JSONObject()
             mergeAdditionalProperties(eventExtraData, additionalProperties)
-            val cachedWzrkFields = displayUnit.wzrkFields
-            if (cachedWzrkFields != null) {
-                val it = cachedWzrkFields.keys()
-                while (it.hasNext()) {
-                    val k = it.next()
-                    try {
-                        eventExtraData.put(k, cachedWzrkFields.get(k))
-                    } catch (ignored: JSONException) {
-                    }
-                }
-            }
+            copyFields(from = displayUnit.wzrkFields, into = eventExtraData)
 
             event.put("evtData", eventExtraData)
             baseEventQueueManager.queueEvent(
@@ -363,8 +334,7 @@ internal open class AnalyticsManager(
         } catch (t: Throwable) {
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT
-                        + "Failed to push Display Unit element viewed event" + t
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to push Display Unit element viewed event$t"
             )
         }
     }
@@ -376,77 +346,60 @@ internal open class AnalyticsManager(
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
 
             //wzrk fields
-            val cache = controllerManager.displayUnitCache
-            if (cache != null) {
-                val displayUnit = cache.getDisplayUnitForID(unitID)
-                if (displayUnit != null) {
-                    // The viewed event is the ND impression hook.
-                    val ndFCManager = controllerManager.ndFCManager
-                    if (ndFCManager != null) {
-                        val unitJson = displayUnit.jsonObject
-                        // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
-                        // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
-                        // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
-                        // (Java dereferenced unitJson without a null check; the NPE is caught below.)
-                        val ndCampaignId = unitJson!!.optString(Constants.INAPP_ID_IN_PAYLOAD)
-                        // Count toward the global ndmp/ndtlc budget only for units inside the ND fcap regime
-                        // and not globally excluded (shared predicate — the gate and App-Launched trim read the
-                        // same NdFCManager helpers, so the three can never disagree). Exempt units still record
-                        // a session impression inside didShow, but must not spend a global slot — the server
-                        // caps against these counts and would otherwise starve ceiling-bound campaigns.
-                        ndFCManager.didShow(ndCampaignId, NdFCManager.countsTowardCaps(unitJson))
-                    }
-
-                    val eventExtras = displayUnit.wzrkFields
-                    if (eventExtras != null) {
-                        event.put("evtData", eventExtras)
-                        baseEventQueueManager.queueEvent(
-                            context, event, Constants.RAISED_EVENT,
-                            getFlattenedEventProperties(eventExtras)
-                        )
-                    }
-                }
+            val displayUnit = controllerManager.displayUnitCache?.getDisplayUnitForID(unitID) ?: return
+            // The viewed event is the ND impression hook.
+            controllerManager.ndFCManager?.let { ndFCManager ->
+                // Java dereferenced the unit json without a null check; that failure is caught below.
+                val unitJson = checkNotNull(displayUnit.jsonObject) { "Display Unit $unitID has no json" }
+                // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
+                // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
+                // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
+                val ndCampaignId = unitJson.optString(Constants.INAPP_ID_IN_PAYLOAD)
+                // Count toward the global ndmp/ndtlc budget only for units inside the ND fcap regime
+                // and not globally excluded (shared predicate — the gate and App-Launched trim read the
+                // same NdFCManager helpers, so the three can never disagree). Exempt units still record
+                // a session impression inside didShow, but must not spend a global slot — the server
+                // caps against these counts and would otherwise starve ceiling-bound campaigns.
+                ndFCManager.didShow(ndCampaignId, NdFCManager.countsTowardCaps(unitJson))
             }
+
+            val eventExtras = displayUnit.wzrkFields ?: return
+            event.put("evtData", eventExtras)
+            baseEventQueueManager.queueEvent(
+                context, event, Constants.RAISED_EVENT,
+                getFlattenedEventProperties(eventExtras)
+            )
         } catch (t: Throwable) {
             // We won't get here
             config.logger.verbose(
                 config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to push Display Unit viewed event$t"
             )
         }
     }
 
     override fun pushError(errorMessage: String?, errorCode: Int) {
-        val props = HashMap<String, Any?>()
-        props["Error Message"] = errorMessage
-        props["Error Code"] = errorCode
-
-        try {
-            val activityName = CoreMetaData.getCurrentActivityName()
-            if (activityName != null) {
-                props["Location"] = activityName
-            } else {
-                props["Location"] = "Unknown"
-            }
+        val location = try {
+            CoreMetaData.getCurrentActivityName() ?: "Unknown"
         } catch (t: Throwable) {
             // Ignore
-            props["Location"] = "Unknown"
+            "Unknown"
         }
-
+        val props = hashMapOf<String, Any?>(
+            "Error Message" to errorMessage,
+            "Error Code" to errorCode,
+            "Location" to location
+        )
         pushEvent("Error Occurred", props)
     }
 
     override fun pushEvent(eventName: String?, eventActions: Map<String, Any?>?) {
         config.logger.verbose(config.accountId, "pushEvent: eventName=$eventName, eventActions=$eventActions")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("pushEvent", Callable<Void?> {
-            _pushEvent(eventName, eventActions)
-            null
-        })
+        postAsyncSafely("pushEvent") { pushEventInternal(eventName, eventActions) }
     }
 
     @WorkerThread
-    private fun _pushEvent(eventName: String?, eventActions: Map<String, Any?>?) {
+    private fun pushEventInternal(eventName: String?, eventActions: Map<String, Any?>?) {
         val event = JSONObject()
         try {
             // Validate event name with regular config
@@ -496,31 +449,18 @@ internal open class AnalyticsManager(
         try {
             val notif = getWzrkFields(data)
 
-            if (customData != null) {
-                for (x in customData.keySet()) {
-                    @Suppress("DEPRECATION")
-                    val value = customData.get(x)
-                    if (value is Map<*, *>) {
-                        // Nested payloads (e.g. wzrk_data for a key-values action) are carried as a
-                        // Map and emitted as a nested JSON object.
-                        notif.put(x, JSONObject(value))
-                    } else if (value != null) {
-                        notif.put(x, value)
-                    }
+            customData?.keySet()?.forEach { x ->
+                @Suppress("DEPRECATION")
+                when (val value = customData.get(x)) {
+                    // Nested payloads (e.g. wzrk_data for a key-values action) are carried as a
+                    // Map and emitted as a nested JSON object.
+                    is Map<*, *> -> notif.put(x, JSONObject(value))
+                    null -> Unit
+                    else -> notif.put(x, value)
                 }
             }
 
-            if (clicked) {
-                try {
-                    coreMetaData.wzrkParams = notif
-                } catch (t: Throwable) {
-                    // no-op
-                }
-                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
-            } else {
-                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-            }
-
+            putStateEventName(event, clicked, notif)
             event.put("evtData", notif)
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
         } catch (ignored: Throwable) {
@@ -537,7 +477,8 @@ internal open class AnalyticsManager(
             }
             val now = (System.currentTimeMillis() / 1000).toInt()
 
-            if (installReferrerMap.containsKey(url) && now - installReferrerMap[url]!! < 10) {
+            val lastSeen = installReferrerMap[url]
+            if (lastSeen != null && now - lastSeen < 10) {
                 config.logger
                     .verbose(
                         config.accountId,
@@ -558,9 +499,6 @@ internal open class AnalyticsManager(
 
     @Synchronized
     override fun pushInstallReferrer(source: String?, medium: String?, campaign: String?) {
-        var source = source
-        var medium = medium
-        var campaign = campaign
         if (source == null && medium == null && campaign == null) {
             return
         }
@@ -573,29 +511,13 @@ internal open class AnalyticsManager(
             }
             StorageHelper.putInt(context, "app_install_status", 1)
 
-            if (source != null) {
-                source = Uri.encode(source)
+            val uriStr = buildString {
+                append("wzrk://track?install=true")
+                source?.let { append("&utm_source=${Uri.encode(it)}") }
+                medium?.let { append("&utm_medium=${Uri.encode(it)}") }
+                campaign?.let { append("&utm_campaign=${Uri.encode(it)}") }
             }
-            if (medium != null) {
-                medium = Uri.encode(medium)
-            }
-            if (campaign != null) {
-                campaign = Uri.encode(campaign)
-            }
-
-            var uriStr = "wzrk://track?install=true"
-            if (source != null) {
-                uriStr += "&utm_source=$source"
-            }
-            if (medium != null) {
-                uriStr += "&utm_medium=$medium"
-            }
-            if (campaign != null) {
-                uriStr += "&utm_campaign=$campaign"
-            }
-
-            val uri = Uri.parse(uriStr)
-            pushDeepLink(uri, true)
+            pushDeepLink(Uri.parse(uriStr), true)
         } catch (t: Throwable) {
             Logger.v("Failed to push install referrer", t)
         }
@@ -620,11 +542,10 @@ internal open class AnalyticsManager(
             return
         }
 
-        var accountId: String? = null
-        try {
-            accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY)
+        val accountId = try {
+            extras.getString(Constants.WZRK_ACCT_ID_KEY)
         } catch (t: Throwable) {
-            // no-op
+            null
         }
 
         val shouldProcess = (accountId == null && config.isDefaultInstance) || config.accountId == accountId
@@ -661,8 +582,7 @@ internal open class AnalyticsManager(
         if (isDuplicate) {
             config.logger.debug(
                 config.accountId,
-                "Already processed Notification Clicked event for " + extras
-                        + ", dropping duplicate."
+                "Already processed Notification Clicked event for $extras, dropping duplicate."
             )
             return
         }
@@ -677,11 +597,11 @@ internal open class AnalyticsManager(
         } catch (t: Throwable) {
             // We won't get here
         }
-        if (callbackManager.pushNotificationListener != null) {
-            callbackManager.pushNotificationListener
-                ?.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras))
-        } else {
+        val pushNotificationListener = callbackManager.pushNotificationListener
+        if (pushNotificationListener == null) {
             Logger.d("CTPushNotificationListener is not set")
+        } else {
+            pushNotificationListener.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras))
         }
     }
 
@@ -694,41 +614,35 @@ internal open class AnalyticsManager(
      * as a push finds no stored copy and renders nothing.
      */
     private fun renderTrustedPushPreview(extras: Bundle) {
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("renderTrustedPushPreview", Callable<Void?> {
+        postAsyncSafely("renderTrustedPushPreview") {
             try {
                 val trusted = pushPreviewStore.find(extras)
-                    ?: return@Callable null // the store already logged why
-                if (trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
-                    inAppPreviewHandler.handleInAppPreview(trusted)
-                } else if (trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                    handleInboxPreview(trusted)
-                } else if (trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                    handleSendTestForDisplayUnits(trusted)
+                    ?: return@postAsyncSafely // the store already logged why
+                when {
+                    trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY) ->
+                        inAppPreviewHandler.handleInAppPreview(trusted)
+
+                    trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY) -> handleInboxPreview(trusted)
+
+                    trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY) ->
+                        handleSendTestForDisplayUnits(trusted)
                 }
             } catch (t: Throwable) {
                 // A tap must never crash the app, whatever the extras contain.
                 config.logger.verbose(config.accountId, "Failed to process push preview", t)
             }
-            null
-        })
+        }
     }
 
     private fun handleInboxPreview(extras: Bundle) {
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("testInboxNotification", Callable<Void?> {
+        postAsyncSafely("testInboxNotification") {
             try {
-                Logger.v(
-                    "Received inbox via push payload: " + extras
-                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)
-                )
-                val r = JSONObject()
+                val payload = extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)
+                Logger.v("Received inbox via push payload: $payload")
                 val inboxNotifs = JSONArray()
-                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs)
+                val r = JSONObject().put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs)
                 // A missing payload throws here (caught below), as in Java.
-                val testPushObject = JSONObject(
-                    extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)!!
-                )
+                val testPushObject = JSONObject(requireNotNull(payload))
                 testPushObject.put("_id", (System.currentTimeMillis() / 1000).toString())
                 inboxNotifs.put(testPushObject)
 
@@ -738,8 +652,7 @@ internal open class AnalyticsManager(
             } catch (t: Throwable) {
                 Logger.v("Failed to process inbox message from push notification payload", t)
             }
-            null
-        })
+        }
     }
 
     /**
@@ -753,8 +666,7 @@ internal open class AnalyticsManager(
         if (extras == null || extras.isEmpty || extras.get(Constants.NOTIFICATION_TAG) == null) {
             config.logger.debug(
                 config.accountId,
-                "Push notification: " + (extras?.toString() ?: "NULL")
-                        + " not from CleverTap - will not process Notification Viewed event."
+                "Push notification: ${extras ?: "NULL"} not from CleverTap - will not process Notification Viewed event."
             )
             return
         }
@@ -832,8 +744,7 @@ internal open class AnalyticsManager(
             // the bundle can carry title/message/deep-link PII that shouldn't hit Logcat (CWE-532).
             config.logger.debug(
                 config.accountId,
-                "Recorded Live Activity event (" + state + ") for activityId: "
-                        + extras.getString(Constants.WZRK_LIVE_UPDATE_ID)
+                "Recorded Live Activity event ($state) for activityId: ${extras.getString(Constants.WZRK_LIVE_UPDATE_ID)}"
             )
         } catch (e: JSONException) {
             config.logger.debug("Failed to record Live Activity event $e")
@@ -842,11 +753,10 @@ internal open class AnalyticsManager(
 
     override fun pushProfile(profile: Map<String, Any?>?) {
         config.logger.verbose(config.accountId, "pushProfile: profile=$profile")
-        if (profile == null || profile.isEmpty()) {
+        if (profile.isNullOrEmpty()) {
             return
         }
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("profilePush", Callable<Void?> {
+        postAsyncSafely("profilePush") {
             // SDK-6254: check the device id on the serial queue, not on the caller's thread. The
             // device-id barrier resolves the id as the first job on this same per-account queue, so
             // by the time this job runs the id is present. Checking on the caller's thread instead
@@ -857,46 +767,33 @@ internal open class AnalyticsManager(
                     config.accountId,
                     "pushProfile: device id not available, dropping profile"
                 )
-                return@Callable null
+                return@postAsyncSafely
             }
-            _push(profile)
-            null
-        })
+            pushProfileInternal(profile)
+        }
     }
 
-    override fun removeMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
+    override fun removeMultiValuesForKey(key: String?, values: List<String?>?) {
         config.logger.verbose(config.accountId, "removeMultiValuesForKey: key=$key, values=$values")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("removeMultiValuesForKey", Callable<Void?> {
-            _handleMultiValues(values, key, ProfileCommand.REMOVE)
-            null
-        })
+        postAsyncSafely("removeMultiValuesForKey") { handleMultiValues(values, key, ProfileCommand.REMOVE) }
     }
 
     override fun removeValueForKey(key: String?) {
         config.logger.verbose(config.accountId, "removeValueForKey: key=$key")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("removeValueForKey", Callable<Void?> {
-            _removeValueForKey(key)
-            null
-        })
+        postAsyncSafely("removeValueForKey") { removeValueForKeyInternal(key) }
     }
 
-    override fun sendDataEvent(event: JSONObject?) {
-        baseEventQueueManager.queueEvent(context, event!!, Constants.DATA_EVENT)
+    override fun sendDataEvent(event: JSONObject) {
+        baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT)
     }
 
-    fun pushChargedEvent(chargeDetails: HashMap<String, Any>?, items: ArrayList<HashMap<String, Any>>?) {
+    fun pushChargedEvent(chargeDetails: Map<String, Any>?, items: List<Map<String, Any>>?) {
         config.logger.verbose(config.accountId, "pushChargedEvent: chargeDetails=$chargeDetails, items=$items")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("pushChargedEvent", Callable<Void?> {
-            _pushChargedEvent(chargeDetails, items)
-            null
-        })
+        postAsyncSafely("pushChargedEvent") { pushChargedEventInternal(chargeDetails, items) }
     }
 
     @WorkerThread
-    private fun _pushChargedEvent(chargeDetails: HashMap<String, Any>?, items: ArrayList<HashMap<String, Any>>?) {
+    private fun pushChargedEventInternal(chargeDetails: Map<String, Any>?, items: List<Map<String, Any>>?) {
         if (chargeDetails == null || items == null) {
             config.logger.debug(config.accountId, "Invalid Charged event: details and or items is null")
             return
@@ -923,10 +820,8 @@ internal open class AnalyticsManager(
             val jsonItemsArray = JSONArray()
             for (map in items) {
                 val itemResult = validationPipelineProvider.eventDataPipeline.execute(map, validationConfig)
-
                 if (!itemResult.shouldDrop()) {
-                    val itemDetails = itemResult.cleanedData
-                    jsonItemsArray.put(itemDetails)
+                    jsonItemsArray.put(itemResult.cleanedData)
                 }
             }
             evtData.put("Items", jsonItemsArray)
@@ -970,95 +865,67 @@ internal open class AnalyticsManager(
     }
 
     @Deprecated("Signed Call events are raised through CleverTapAPI#pushSignedCallEvent, which is deprecated.")
-    fun raiseEventForSignedCall(eventName: String?, dcEventProperties: JSONObject?): Future<*>? {
-        var future: Future<*>? = null
-
+    fun raiseEventForSignedCall(eventName: String?, dcEventProperties: JSONObject?): Future<*>? = try {
         val event = JSONObject()
-        try {
-            event.put("evtName", eventName)
-            event.put("evtData", dcEventProperties)
-
-            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT)
-        } catch (e: JSONException) {
-            config.logger.debug(
-                config.accountId, Constants.LOG_TAG_SIGNED_CALL +
-                        "JSON Exception when raising Signed Call event "
-                        + eventName + " - " + e.localizedMessage
-            )
-        }
-
-        return future
+            .put("evtName", eventName)
+            .put("evtData", dcEventProperties)
+        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT)
+    } catch (e: JSONException) {
+        config.logger.debug(
+            config.accountId,
+            "${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - ${e.localizedMessage}"
+        )
+        null
     }
 
-    fun raiseEventForGeofences(eventName: String?, geofenceProperties: JSONObject): Future<*>? {
-        var future: Future<*>? = null
-
+    fun raiseEventForGeofences(eventName: String?, geofenceProperties: JSONObject): Future<*>? = try {
         val event = JSONObject()
-        try {
-            event.put("evtName", eventName)
-            event.put("evtData", geofenceProperties)
+            .put("evtName", eventName)
+            .put("evtData", geofenceProperties)
 
-            val location = Location("")
-            location.latitude = geofenceProperties.getDouble("triggered_lat")
-            location.longitude = geofenceProperties.getDouble("triggered_lng")
-
-            geofenceProperties.remove("triggered_lat")
-            geofenceProperties.remove("triggered_lng")
-
-            coreMetaData.locationFromUser = location
-
-            future = baseEventQueueManager.queueEvent(
-                context, event, Constants.RAISED_EVENT,
-                getFlattenedEventProperties(geofenceProperties)
-            )
-        } catch (e: JSONException) {
-            config.logger.debug(
-                config.accountId, Constants.LOG_TAG_GEOFENCES +
-                        "JSON Exception when raising GeoFence event "
-                        + eventName + " - " + e.localizedMessage
-            )
+        val location = Location("").apply {
+            latitude = geofenceProperties.getDouble("triggered_lat")
+            longitude = geofenceProperties.getDouble("triggered_lng")
         }
+        geofenceProperties.remove("triggered_lat")
+        geofenceProperties.remove("triggered_lng")
 
-        return future
+        coreMetaData.locationFromUser = location
+
+        baseEventQueueManager.queueEvent(
+            context, event, Constants.RAISED_EVENT,
+            getFlattenedEventProperties(geofenceProperties)
+        )
+    } catch (e: JSONException) {
+        config.logger.debug(
+            config.accountId,
+            "${Constants.LOG_TAG_GEOFENCES}JSON Exception when raising GeoFence event $eventName - ${e.localizedMessage}"
+        )
+        null
     }
 
     fun recordPageEventWithExtras(extras: JSONObject?) {
         try {
             val jsonObject = JSONObject()
             // Add the extras
-            if (extras != null && extras.length() > 0) {
-                val keys: Iterator<*> = extras.keys()
-                while (keys.hasNext()) {
-                    try {
-                        val key = keys.next() as String
-                        jsonObject.put(key, extras.getString(key))
-                    } catch (ignore: ClassCastException) {
-                        // Really won't get here
-                    }
-                }
-            }
+            extras?.keys()?.forEach { key -> jsonObject.put(key, extras.getString(key)) }
             baseEventQueueManager.queueEvent(context, jsonObject, Constants.PAGE_EVENT)
         } catch (t: Throwable) {
             // We won't get here
         }
     }
 
-    fun setMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
+    fun setMultiValuesForKey(key: String?, values: List<String?>?) {
         config.logger.verbose(config.accountId, "setMultiValuesForKey: key=$key, values=$values")
-        val task = executors.postAsyncSafelyTask<Void?>()
-        task.execute("setMultiValuesForKey", Callable<Void?> {
-            _handleMultiValues(values, key, ProfileCommand.SET)
-            null
-        })
+        postAsyncSafely("setMultiValuesForKey") { handleMultiValues(values, key, ProfileCommand.SET) }
     }
 
-    private fun _handleMultiValues(values: ArrayList<String?>?, key: String?, command: ProfileCommand) {
+    private fun handleMultiValues(values: List<String?>?, key: String?, command: ProfileCommand) {
         if (key == null) {
             return
         }
 
-        val eventData: MutableMap<String, ArrayList<String?>?> = HashMap()
-        eventData[key] = values
+        val eventData = hashMapOf(key to values)
 
         val eventDataValidationResult =
             validationPipelineProvider.multiValueDataPipeline.execute(eventData, validationConfig)
@@ -1068,17 +935,18 @@ internal open class AnalyticsManager(
         }
 
         try {
-            _pushMultiValue(eventDataValidationResult.cleanedData.getJSONArray(key), key, command)
+            pushMultiValue(eventDataValidationResult.cleanedData.getJSONArray(key), key, command)
         } catch (e: JSONException) {
             config.logger.verbose(config.accountId, "Failed to handle Multi Values for key$key", e)
         }
     }
 
-    private fun _constructIncrementDecrementValues(value: Number?, key: String?, command: ProfileCommand) {
-        var key = key
+    private fun constructIncrementDecrementValues(value: Number?, key: String?, command: ProfileCommand) {
         if (value == null) {
             return
         }
+        // The failure log names the cleaned key once validation has produced one.
+        var logKey = key
         try {
             val keyResult = validationPipelineProvider.propertyKeyPipeline.execute(key, validationConfig)
 
@@ -1086,20 +954,20 @@ internal open class AnalyticsManager(
                 return
             }
 
-            key = keyResult.cleanedKey
+            val cleanedKey = keyResult.cleanedKey
+            logKey = cleanedKey
 
-            val profileCommand = JSONObject().put(command.commandString, value)
-            val profileUpdate = JSONObject().put(key, profileCommand)
-
-            val operation = command.operation
-
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, value, operation))
+            val profileUpdate = JSONObject().put(cleanedKey, JSONObject().put(command.commandString, value))
+            baseEventQueueManager.pushBasicProfile(
+                profileUpdate, false,
+                mergeProfileChanges(cleanedKey, value, command.operation)
+            )
         } catch (t: Throwable) {
-            config.logger.verbose(config.accountId, "Failed to update profile value for key $key", t)
+            config.logger.verbose(config.accountId, "Failed to update profile value for key $logKey", t)
         }
     }
 
-    private fun _push(profile: Map<String, Any?>) {
+    private fun pushProfileInternal(profile: Map<String, Any?>) {
         try {
             // Validate profile data
             val profileResult = validationPipelineProvider.eventDataPipeline.execute(profile, validationConfig)
@@ -1122,8 +990,9 @@ internal open class AnalyticsManager(
         }
     }
 
-    private fun _removeValueForKey(key: String?) {
-        var key = key
+    private fun removeValueForKeyInternal(key: String?) {
+        // The failure log names the cleaned key once validation has produced one.
+        var logKey = key
         try {
             val keyValidationResult = validationPipelineProvider.propertyKeyPipeline.execute(key, validationConfig)
 
@@ -1131,52 +1000,46 @@ internal open class AnalyticsManager(
                 return
             }
 
-            key = keyValidationResult.cleanedKey
+            val cleanedKey = keyValidationResult.cleanedKey
+            logKey = cleanedKey
 
             // If key contains "Identity" then do not remove from SQLDb and shared prefs
-            if (key.lowercase(Locale.getDefault()).contains("identity")) {
+            if (cleanedKey.lowercase(Locale.getDefault()).contains("identity")) {
                 config.logger.verbose(
                     config.accountId,
-                    "Cannot remove value for key $key from user profile"
+                    "Cannot remove value for key $cleanedKey from user profile"
                 )
                 return
             }
 
             // Send the delete command
             val command = ProfileCommand.DELETE
-            val profileCommand = JSONObject().put(command.commandString, true)
-            val profileUpdate = JSONObject().put(key, profileCommand)
+            val profileUpdate = JSONObject().put(cleanedKey, JSONObject().put(command.commandString, true))
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
             baseEventQueueManager.pushBasicProfile(
                 profileUpdate, true,
-                mergeProfileChanges(key, Constants.DELETE_MARKER, command.operation)
+                mergeProfileChanges(cleanedKey, Constants.DELETE_MARKER, command.operation)
             )
 
             config.logger.verbose(
                 config.accountId,
-                "removing value for key $key from user profile"
+                "removing value for key $cleanedKey from user profile"
             )
         } catch (t: Throwable) {
             config.logger.verbose(
                 config.accountId,
-                "Failed to remove profile value for key $key", t
+                "Failed to remove profile value for key $logKey", t
             )
         }
     }
 
-    private fun _pushMultiValue(originalValues: JSONArray, key: String, command: ProfileCommand) {
+    private fun pushMultiValue(originalValues: JSONArray, key: String, command: ProfileCommand) {
         try {
-            val profileCommand = JSONObject()
-            profileCommand.put(command.commandString, originalValues)
-
-            val profileUpdate = JSONObject()
-            profileUpdate.put(key, profileCommand)
-
-            val operation = command.operation
+            val profileUpdate = JSONObject().put(key, JSONObject().put(command.commandString, originalValues))
             baseEventQueueManager.pushBasicProfile(
                 profileUpdate, false,
-                mergeProfileChanges(key, originalValues, operation)
+                mergeProfileChanges(key, originalValues, command.operation)
             )
 
             config.logger.verbose(
@@ -1194,59 +1057,39 @@ internal open class AnalyticsManager(
     fun dedupeCheckKey(extras: Bundle): String? {
         // This flag is used so that we can release in phased manner, eventually the check has to go away.
         @Suppress("DEPRECATION")
-        val doDedupeCheck = extras.get(Constants.WZRK_DEDUPE)
-
-        var check = false
-        if (doDedupeCheck != null) {
-            if (doDedupeCheck is String) {
-                check = "true".equals(doDedupeCheck, ignoreCase = true)
-            }
-            if (doDedupeCheck is Boolean) {
-                check = doDedupeCheck
-            }
+        val check = when (val doDedupeCheck = extras.get(Constants.WZRK_DEDUPE)) {
+            is String -> "true".equals(doDedupeCheck, ignoreCase = true)
+            is Boolean -> doDedupeCheck
+            else -> false
         }
-
-        val notificationIdTag: String? = if (check) {
-            extras.getString(Constants.WZRK_PUSH_ID)
-        } else {
-            extras.getString(Constants.NOTIFICATION_ID_TAG)
-        }
-        return notificationIdTag
+        return extras.getString(if (check) Constants.WZRK_PUSH_ID else Constants.NOTIFICATION_ID_TAG)
     }
 
     private fun checkDuplicateNotificationIds(
         notificationIdTag: String?,
-        notificationTagMap: HashMap<String?, Long>,
+        notificationTagMap: MutableMap<String?, Long>,
         interval: Int
-    ): Boolean {
-        synchronized(notificationMapLock) {
-            // default to false; only return true if we are sure we've seen this one before
-            var isDupe = false
-            try {
-                val now = currentTimeProvider.currentTimeMillis()
-                if (notificationTagMap.containsKey(notificationIdTag)) {
-                    val timestamp: Long = notificationTagMap[notificationIdTag]!!
-                    // same notificationId within time internal treat as dupe
-                    if (now - timestamp < interval) {
-                        isDupe = true
-                    }
-                }
-                notificationTagMap[notificationIdTag] = now
-            } catch (ignored: Throwable) {
-                // no-op
-            }
-            return isDupe
+    ): Boolean = synchronized(notificationMapLock) {
+        // default to false; only return true if we are sure we've seen this one before
+        var isDupe = false
+        try {
+            val now = currentTimeProvider.currentTimeMillis()
+            // same notificationId within time internal treat as dupe
+            val lastSeen = notificationTagMap[notificationIdTag]
+            isDupe = lastSeen != null && now - lastSeen < interval
+            notificationTagMap[notificationIdTag] = now
+        } catch (ignored: Throwable) {
+            // no-op
         }
+        isDupe
     }
 
-    fun sendPingEvent(eventObject: JSONObject?) {
-        baseEventQueueManager
-            .queueEvent(context, eventObject!!, Constants.PING_EVENT)
+    fun sendPingEvent(eventObject: JSONObject) {
+        baseEventQueueManager.queueEvent(context, eventObject, Constants.PING_EVENT)
     }
 
-    override fun sendFetchEvent(eventObject: JSONObject?) {
-        baseEventQueueManager
-            .queueEvent(context, eventObject!!, Constants.FETCH_EVENT)
+    override fun sendFetchEvent(eventObject: JSONObject) {
+        baseEventQueueManager.queueEvent(context, eventObject, Constants.FETCH_EVENT)
     }
 
     /**
@@ -1288,7 +1131,7 @@ internal open class AnalyticsManager(
         if (msgId != null && gate.shouldSuppress(msgId)) {
             config.logger.verbose(
                 config.accountId,
-                "Inbox: " + (if (clicked) "Clicked" else "Viewed") + " suppressed for " + msgId
+                "Inbox: ${if (clicked) "Clicked" else "Viewed"} suppressed for $msgId"
             )
             return
         }
@@ -1300,29 +1143,14 @@ internal open class AnalyticsManager(
                 notif.put(Constants.WZRK_MID, msgId)
             }
 
-            if (customData != null) {
-                for (x in customData.keySet()) {
-                    @Suppress("DEPRECATION")
-                    val value = customData.get(x)
-                    if (value != null) {
-                        notif.put(x, value)
-                    }
-                }
+            customData?.keySet()?.forEach { x ->
+                @Suppress("DEPRECATION")
+                customData.get(x)?.let { notif.put(x, it) }
             }
 
-            if (clicked) {
-                try {
-                    coreMetaData.wzrkParams = notif
-                } catch (t: Throwable) {
-                    // no-op
-                }
-                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
-            } else {
-                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-            }
-
+            putStateEventName(event, clicked, notif)
             event.put("evtData", notif)
-            baseEventQueueManager.queueEvent(context, event!!, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
         } catch (ignored: Throwable) {
             // We won't get here
         }
@@ -1333,30 +1161,39 @@ internal open class AnalyticsManager(
      * the backend rejects them. Safe defaults: null id, null controller, or
      * an id the controller doesn't know about all fall through to V1 behavior.
      */
-    private fun isV2InboxMessage(msgId: String?): Boolean {
-        if (msgId == null) return false
-        val controller = controllerManager.ctInboxController
-        return controller != null && controller.isV2Message(msgId)
+    private fun isV2InboxMessage(msgId: String?): Boolean =
+        msgId != null && controllerManager.ctInboxController?.isV2Message(msgId) == true
+
+    /**
+     * Sets the Notification Clicked / Viewed event name; a click also becomes the current
+     * [CoreMetaData.wzrkParams] attribution.
+     */
+    private fun putStateEventName(event: JSONObject, clicked: Boolean, notif: JSONObject) {
+        if (clicked) {
+            try {
+                coreMetaData.wzrkParams = notif
+            } catch (t: Throwable) {
+                // no-op
+            }
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+        } else {
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
+        }
     }
 
-    private fun getFlattenedEventProperties(properties: JSONObject): FlattenedEventData {
-        return FlattenedEventData.EventProperties(JsonFlattener.flatten(properties))
-    }
+    private fun getFlattenedEventProperties(properties: JSONObject): FlattenedEventData =
+        FlattenedEventData.EventProperties(JsonFlattener.flatten(properties))
 
     private fun mergeProfileChanges(
         key: String,
         originalValues: Any?,
         operation: ProfileOperation
-    ): FlattenedEventData.ProfileChanges {
-        val profileChanges = localDataStore.processProfileTree(key, originalValues, operation)
-        return FlattenedEventData.ProfileChanges(profileChanges)
-    }
+    ): FlattenedEventData.ProfileChanges =
+        FlattenedEventData.ProfileChanges(localDataStore.processProfileTree(key, originalValues, operation))
 
     private fun mergeProfileChanges(
         originalValues: JSONObject,
         operation: ProfileOperation
-    ): FlattenedEventData.ProfileChanges {
-        val profileChanges = localDataStore.processProfileTree(originalValues, operation)
-        return FlattenedEventData.ProfileChanges(profileChanges)
-    }
+    ): FlattenedEventData.ProfileChanges =
+        FlattenedEventData.ProfileChanges(localDataStore.processProfileTree(originalValues, operation))
 }

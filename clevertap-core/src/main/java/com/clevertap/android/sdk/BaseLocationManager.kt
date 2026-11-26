@@ -5,7 +5,7 @@ import java.util.concurrent.Future
 
 internal abstract class BaseLocationManager {
 
-    abstract fun _getLocation(): Location?
+    abstract fun findBestLocation(): Location?
 
-    abstract fun _setLocation(location: Location?): Future<*>?
+    abstract fun updateLocation(location: Location?): Future<*>?
 }

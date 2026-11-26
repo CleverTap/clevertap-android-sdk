@@ -115,12 +115,12 @@ internal object CTJsonConverter {
                 evtData.put("lib", deviceInfo.library)
             }
 
-            val proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getProxyDomain()
+            val proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).proxyDomain
             if (!TextUtils.isEmpty(proxyDomain)) {
                 evtData.put("proxyDomain", proxyDomain)
             }
 
-            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getSpikeyProxyDomain()
+            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).spikeyProxyDomain
             if (!TextUtils.isEmpty(spikyProxyDomain)) {
                 evtData.put("spikyProxyDomain", spikyProxyDomain)
             }
