@@ -332,7 +332,7 @@ internal class DisplayUnitResponse(
         // in-app does (InAppController.onAppLaunchServerSideInAppsResponse): appLaunchedFields + user location.
         // Guarded: a malformed appLaunchedFields must not abort content delivery.
         val eventProperties: Map<String, Any> = try {
-            deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) } ?: emptyMap()
+            deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) }.orEmpty()
         } catch (t: Throwable) {
             logger.verbose(
                 config.accountId,

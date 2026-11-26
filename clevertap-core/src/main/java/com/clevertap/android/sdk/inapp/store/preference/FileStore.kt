@@ -15,7 +15,7 @@ internal class FileStore(private val ctPreference: ICTPreference) {
     }
 
     fun getAllFileUrls(): Set<String> {
-        return ctPreference.readAll()?.keys ?: emptySet()
+        return ctPreference.readAll()?.keys.orEmpty()
     }
 
     fun expiryForUrl(url: String): Long {

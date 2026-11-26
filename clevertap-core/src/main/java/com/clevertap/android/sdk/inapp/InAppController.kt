@@ -508,7 +508,7 @@ internal class InAppController(
     ) {
 
         if (controllerManager.inAppFCManager != null) {
-            val templateName = inAppNotification.customTemplateData?.templateName ?: ""
+            val templateName = inAppNotification.customTemplateData?.templateName.orEmpty()
             logger.verbose(
                 defaultLogTag,
                 "InApp Dismissed: ${inAppNotification.campaignId} $templateName"

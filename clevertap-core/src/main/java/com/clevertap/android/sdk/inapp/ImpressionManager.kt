@@ -233,7 +233,7 @@ internal class ImpressionManager @JvmOverloads constructor(
     }
 
     fun getImpressions(campaignId: String): List<Long> {
-        return impressionStoreProvider()?.read(campaignId) ?: emptyList()
+        return impressionStoreProvider()?.read(campaignId).orEmpty()
     }
 
     /**

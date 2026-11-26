@@ -212,7 +212,7 @@ public open class CleverTapDisplayUnitContent private constructor(
 
     /** The content type, or null when there is no media. */
     private val mediaContentType: String?
-        get() = if (mediaValue != null) { contentTypeValue } else { null }
+        get() = mediaValue?.let { contentTypeValue }
 
     override fun toString(): String =
         "[ title:$titleValue, titleColor:$titleColorValue message:$messageValue, messageColor:$messageColorValue, " +
@@ -271,7 +271,7 @@ public open class CleverTapDisplayUnitContent private constructor(
                 // opt + instanceof, not getString: getString coerces a number to
                 // its digits and a JSON null to the literal "null", either of
                 // which would then be reported as the tapped url.
-                val actionUrl = androidObject?.opt(Constants.KEY_TEXT) as? String ?: ""
+                val actionUrl = (androidObject?.opt(Constants.KEY_TEXT) as? String).orEmpty()
 
                 CleverTapDisplayUnitContent(
                     titleValue = titleObject.stringOrEmpty(Constants.KEY_TEXT),
@@ -346,7 +346,7 @@ public open class CleverTapDisplayUnitContent private constructor(
             // knows which platform's url actually ran. With no url there is nothing to
             // derive and the BE's pair, if any, stays.
             // trim { it <= ' ' } matches java.lang.String#trim exactly.
-            val trimmedUrl = actionUrl?.trim { it <= ' ' } ?: ""
+            val trimmedUrl = actionUrl?.trim { it <= ' ' }.orEmpty()
             if (trimmedUrl.isNotEmpty()) {
                 metaData[Constants.KEY_WZRK_ACTION] = Constants.KEY_URL
                 metaData[Constants.KEY_WZRK_DATA] = trimmedUrl

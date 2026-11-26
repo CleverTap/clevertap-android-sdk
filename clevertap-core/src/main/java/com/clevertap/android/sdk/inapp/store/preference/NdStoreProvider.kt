@@ -25,13 +25,22 @@ internal class NdStoreProvider(
     private var ndCountsStoreCache: NdCountsStore? = null
 
     val ndStore: NdStore?
-        get() = ensureForCurrentUser().let { ndStoreCache }
+        get() {
+            ensureForCurrentUser()
+            return ndStoreCache
+        }
 
     val ndImpressionStore: ImpressionStore?
-        get() = ensureForCurrentUser().let { ndImpressionStoreCache }
+        get() {
+            ensureForCurrentUser()
+            return ndImpressionStoreCache
+        }
 
     val ndCountsStore: NdCountsStore?
-        get() = ensureForCurrentUser().let { ndCountsStoreCache }
+        get() {
+            ensureForCurrentUser()
+            return ndCountsStoreCache
+        }
 
     /** (Re)creates the stores if the device id is now available or has changed since last access. */
     @Synchronized

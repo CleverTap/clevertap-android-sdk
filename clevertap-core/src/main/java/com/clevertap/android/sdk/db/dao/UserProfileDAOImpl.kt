@@ -64,7 +64,7 @@ internal class UserProfileDAOImpl(
                 null,
                 null,
                 null
-            )?.use { cursor ->
+            ).use { cursor ->
                 val dataIndex = cursor.getColumnIndex(Column.DATA)
                 val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
                 
@@ -99,7 +99,7 @@ internal class UserProfileDAOImpl(
                 "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?",
                 arrayOf(accountId, deviceId),
                 null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 if (cursor.moveToFirst()) {
                     val dataIndex = cursor.getColumnIndex(Column.DATA)
                     if (dataIndex >= 0) {

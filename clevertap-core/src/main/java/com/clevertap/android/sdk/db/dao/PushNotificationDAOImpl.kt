@@ -65,7 +65,7 @@ internal class PushNotificationDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, "${Column.IS_READ} = 0", 
                 null, null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val dataIndex = cursor.getColumnIndex(Column.DATA)
                     if (dataIndex >= 0) {
@@ -140,7 +140,7 @@ internal class PushNotificationDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, "${Column.DATA} = ?", arrayOf(id), 
                 null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 if (cursor.moveToFirst()) {
                     pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
                 }

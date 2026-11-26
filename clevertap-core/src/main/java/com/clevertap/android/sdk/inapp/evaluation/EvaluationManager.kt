@@ -278,7 +278,7 @@ internal class EvaluationManager(
             val eligibleInApps = evaluateEventsAgainstMetadata(events, metadata)
             trackAndSaveEvaluatedCampaignIds(eligibleInApps)
             eligibleInApps
-        } ?: emptyList()
+        }.orEmpty()
     }
 
     private fun evaluateEventsAgainstMetadata(

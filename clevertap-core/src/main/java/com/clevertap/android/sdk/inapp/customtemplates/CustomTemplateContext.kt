@@ -302,7 +302,7 @@ public sealed class CustomTemplateContext private constructor(
     }
 
     private fun getActionName(action: CTInAppAction?): String {
-        return action?.customTemplateInAppData?.templateName ?: action?.type?.toString() ?: ""
+        return action?.customTemplateInAppData?.templateName ?: action?.type?.toString().orEmpty()
     }
 
     /**

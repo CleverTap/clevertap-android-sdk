@@ -199,7 +199,7 @@ internal class InAppResponseAdapter(
     // (arbitration) consumes these instead of re-reading the raw JSON by key.
     val contentFetchItems: List<ContentFetchItem> =
         responseJson.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)
-            ?.let { ContentFetchItem.listFrom(it) } ?: emptyList()
+            ?.let { ContentFetchItem.listFrom(it) }.orEmpty()
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

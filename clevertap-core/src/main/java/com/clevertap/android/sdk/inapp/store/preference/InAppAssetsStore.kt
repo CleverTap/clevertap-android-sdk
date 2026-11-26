@@ -23,7 +23,7 @@ internal class InAppAssetsStore(
     }
 
     fun getAllAssetUrls(): Set<String> {
-        return ctPreference.readAll()?.keys ?: emptySet()
+        return ctPreference.readAll()?.keys.orEmpty()
     }
 
     fun expiryForUrl(url: String) : Long {

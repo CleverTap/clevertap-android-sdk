@@ -110,7 +110,7 @@ public class CTLocalInApp private constructor() {
                     val mediaObject = JSONObject().apply {
                         put(Constants.KEY_URL, imageUrl)
                         put(Constants.KEY_CONTENT_TYPE, "image")
-                        contentDescription?.let {
+                        if (contentDescription != null) {
                             put(Constants.KEY_ALT_TEXT, contentDescription)
                         }
                     }
