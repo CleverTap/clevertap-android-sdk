@@ -142,38 +142,7 @@ internal class GoogleLocationAdapter(context: Context) : CTLocationAdapter {
         }
 
         if (locationFetchMode == CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC.toInt()) {
-            // should get same pendingIntent on each app launch or else instance will leak
-            val pendingIntent = PendingIntentFactory.getPendingIntent(
-                context,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT
-            )
-
-            clearLocationWorkRequest()
-
-            CTGeofenceAPI.getLogger().debug(
-                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "requesting current location periodically.."
-            )
-
-            try {
-                // will overwrite location request if change in location config is detected
-                @SuppressLint("MissingPermission")
-                val requestLocationUpdatesTask: Task<Void> = fusedProviderClient
-                    .requestLocationUpdates(getLocationRequest(), pendingIntent!!)
-
-                // blocking task
-                Tasks.await(requestLocationUpdatesTask)
-
-                CTGeofenceAPI.getLogger().debug(
-                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Finished requesting current location periodically.."
-                )
-            } catch (e: Exception) {
-                CTGeofenceAPI.getLogger().debug(
-                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to request location updates", e
-                )
-            }
+            requestCurrentLocationUpdates()
         } else {
             // remove previously registered location request
             val pendingIntent = PendingIntentFactory.getPendingIntent(
@@ -185,6 +154,46 @@ internal class GoogleLocationAdapter(context: Context) : CTLocationAdapter {
 
             // start periodic work for location updates
             scheduleManualLocationUpdates()
+        }
+    }
+
+    /**
+     * Registers periodic current-location updates with [FusedLocationProviderClient], replacing any
+     * scheduled [WorkManager] location work. Blocks until the request task completes.
+     */
+    @WorkerThread
+    private fun requestCurrentLocationUpdates() {
+        // should get same pendingIntent on each app launch or else instance will leak
+        val pendingIntent = PendingIntentFactory.getPendingIntent(
+            context,
+            PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT
+        )
+
+        clearLocationWorkRequest()
+
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "requesting current location periodically.."
+        )
+
+        try {
+            // will overwrite location request if change in location config is detected
+            @SuppressLint("MissingPermission")
+            val requestLocationUpdatesTask: Task<Void> = fusedProviderClient
+                .requestLocationUpdates(getLocationRequest(), pendingIntent!!)
+
+            // blocking task
+            Tasks.await(requestLocationUpdatesTask)
+
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Finished requesting current location periodically.."
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to request location updates", e
+            )
         }
     }
 
