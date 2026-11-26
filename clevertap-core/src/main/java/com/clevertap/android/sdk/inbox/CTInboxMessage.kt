@@ -232,7 +232,11 @@ public open class CTInboxMessage : Parcelable {
     public constructor(jsonObject: JSONObject) {
         this._data = jsonObject
         try {
-            this._messageId = if (jsonObject.has(Constants.KEY_ID)) jsonObject.getString(Constants.KEY_ID) else "0"
+            this._messageId = if (jsonObject.has(Constants.KEY_ID)) {
+                jsonObject.getString(Constants.KEY_ID)
+            } else {
+                "0"
+            }
             this._campaignId = if (jsonObject.has(Constants.NOTIFICATION_ID_TAG)) {
                 jsonObject.getString(Constants.NOTIFICATION_ID_TAG)
             } else {

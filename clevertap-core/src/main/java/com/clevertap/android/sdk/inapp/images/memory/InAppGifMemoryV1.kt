@@ -79,7 +79,8 @@ internal class InAppGifMemoryV1(
             b = config.minInMemorySizeKB
         ).toInt()
 
-        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")
+        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = " +
+            "${config.minInMemorySizeKB}, selected = $selected")
 
         return selected
     }

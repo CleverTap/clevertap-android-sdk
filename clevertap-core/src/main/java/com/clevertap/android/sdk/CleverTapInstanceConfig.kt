@@ -811,7 +811,8 @@ public open class CleverTapInstanceConfig : Parcelable {
             val accountId = info.accountId
             val accountToken = info.accountToken
             if (accountId == null || accountToken == null) {
-                Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig")
+                Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default " +
+                    "CleverTapInstanceConfig")
                 return null
             }
             return createInstanceWithManifest(

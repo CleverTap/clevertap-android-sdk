@@ -27,7 +27,11 @@ internal object EvalRules {
         val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
         val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
         return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).mapNotNull {
-            if (it.isNotNullAndEmpty()) LimitAdapter(it) else null
+            if (it.isNotNullAndEmpty()) {
+                LimitAdapter(it)
+            } else {
+                null
+            }
         }
     }
 }

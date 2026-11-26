@@ -897,7 +897,8 @@ internal class PushProviders internal constructor(
         } else {
             config.logger.debug(
                 config.accountId,
-                "Have user provided notificationId: $notifId won't use collapse_key (if any) as basis for notificationId"
+                "Have user provided notificationId: $notifId won't use collapse_key (if any) as basis for " +
+                "notificationId"
             )
         }
 

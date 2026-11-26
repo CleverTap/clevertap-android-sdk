@@ -20,7 +20,8 @@ internal class CTFlushPushImpressionsWork(
     override fun doWork(): Result {
         Logger.d(
             tag,
-            "hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push impressions:-)"
+            "hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push " +
+            "impressions:-)"
         )
         Logger.d(tag, "initiating push impressions flush...")
 

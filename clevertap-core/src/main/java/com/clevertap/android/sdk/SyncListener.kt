@@ -10,7 +10,8 @@ import org.json.JSONObject
  * </b><br>
  * <code>Use [CleverTapAPI.getCleverTapID] with an [OnInitCleverTapIDListener] instead</code>
  */
-@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
+@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use " +
+    "CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
 public interface SyncListener {
 
     /**

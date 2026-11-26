@@ -201,7 +201,8 @@ internal open class CTInboxController @WorkerThread constructor(
 
             if (!videoSupported && messageDAO.containsVideoOrAudio()) {
                 Logger.d(
-                    "Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
+                    "Dropping inbox message containing video/audio as app does not support video. For more " +
+                    "information checkout CleverTap documentation."
                 )
                 return
             }
@@ -491,7 +492,8 @@ internal open class CTInboxController @WorkerThread constructor(
             for (message in messagesList) {
                 if (!videoSupported && message.containsVideoOrAudio()) {
                     Logger.d(
-                        "Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
+                        "Removing inbox message containing video/audio as app does not support video. For more " +
+                        "information checkout CleverTap documentation."
                     )
                     toDelete.add(message)
                     continue

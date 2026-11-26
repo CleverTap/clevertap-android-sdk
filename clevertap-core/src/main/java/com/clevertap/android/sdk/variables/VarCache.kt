@@ -85,7 +85,11 @@ internal open class VarCache(
         vars[checkNotNull(variable.name())] = variable
 
         val defaultValue = variable.defaultValue().let {
-            if (it is Map<*, *>) CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(it)) else it
+            if (it is Map<*, *>) {
+                CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(it))
+            } else {
+                it
+            }
         }
         CTVariableUtils.updateValuesAndKinds(
             variable.name(),
