@@ -12,38 +12,40 @@ import com.clevertap.android.sdk.pushnotification.PushType
 open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
     override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {
-        // Same NPE point as the previous non-null parameter when a caller passes null extras.
-        extras!!
+        // A null extras threw here in Java as well (the caller logs the failure).
+        requireNotNull(extras) { "onActionButtonClick needs the notification extras" }
         val actionID = extras.getString(PTConstants.PT_ACTION_ID)
         val dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK)
         @Suppress("DEPRECATION")
         val config: CleverTapInstanceConfig? = extras.getParcelable("config")
 
-        if (dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)) {
-
-            // For input box remind CTA,pt_dismiss_on_click must be true to raise event
-            if (actionID != null && actionID.contains("remind")) {
-                Utils.raiseCleverTapEvent(context, config, extras)
-            }
-            Utils.cancelNotification(context, notificationId)
-            return true
+        if (!dismissOnClick.equals("true", ignoreCase = true)) {
+            return false
         }
-        return false
+        // For input box remind CTA,pt_dismiss_on_click must be true to raise event
+        if (actionID?.contains("remind") == true) {
+            Utils.raiseCleverTapEvent(context, config, extras)
+        }
+        Utils.cancelNotification(context, notificationId)
+        return true
     }
 
     override fun onMessageReceived(applicationContext: Context?, message: Bundle?, pushType: String?): Boolean {
         try {
             PTLog.debug("Inside Push Templates")
             // initial setup
-            val cleverTapAPI = CleverTapAPI
-                .getGlobalInstance(
-                    applicationContext,
-                    PushNotificationUtil.getAccountIdFromNotificationBundle(message)
-                )
+            val cleverTapAPI = CleverTapAPI.getGlobalInstance(
+                applicationContext,
+                PushNotificationUtil.getAccountIdFromNotificationBundle(message)
+            )
             if (cleverTapAPI != null) {
                 val config = cleverTapAPI.getInstanceConfig()
-                val templateRenderer: INotificationRenderer =
-                    TemplateRenderer(applicationContext!!, message!!, config)
+                // Java dereferenced both unchecked; the catch below logs the failure.
+                val templateRenderer: INotificationRenderer = TemplateRenderer(
+                    requireNotNull(applicationContext) { "No application context" },
+                    requireNotNull(message) { "No message" },
+                    config
+                )
                 cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message)
             }
         } catch (throwable: Throwable) {
@@ -52,7 +54,5 @@ open class PushTemplateNotificationHandler : ActionButtonClickHandler {
         return true
     }
 
-    override fun onNewToken(applicationContext: Context?, token: String?, pushType: PushType?): Boolean {
-        return true
-    }
+    override fun onNewToken(applicationContext: Context?, token: String?, pushType: PushType?): Boolean = true
 }

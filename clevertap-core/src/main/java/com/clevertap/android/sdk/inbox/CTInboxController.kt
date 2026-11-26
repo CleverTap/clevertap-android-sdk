@@ -15,13 +15,14 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
 import org.json.JSONException
-import java.util.Collections
 import java.util.concurrent.Callable
 
 /**
- * Controller class which handles Users and Messages for the Notification Inbox
+ * Controller class which handles Users and Messages for the Notification Inbox.
+ *
+ * Always construct it off the main thread: it reads the messages from the database.
  */
-internal open class CTInboxController @VisibleForTesting internal constructor(
+internal open class CTInboxController @WorkerThread constructor(
     private val config: CleverTapInstanceConfig,
     guid: String?,
     private val dbAdapter: DBAdapter,
@@ -29,55 +30,36 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     private val callbackManager: BaseCallbackManager,
     private val videoSupported: Boolean,
     private val inboxDeleteCoordinator: InboxDeleteCoordinator?,
-    private val clock: Clock
+    private val clock: Clock = Clock.SYSTEM
 ) {
-
-    private var messagesList: ArrayList<CTMessageDAO>
 
     private val messagesLock = Any()
 
     @get:AnyThread
     // Java let a null guid through to dbAdapter.getMessages(), which rejects it; fail at the same point.
-    val userId: String = guid!!
+    val userId: String = requireNotNull(guid) { "CTInboxController needs a user id" }
 
-    init {
-        this.messagesList = this.dbAdapter.getMessages(this.userId)
-    }
+    private var messagesList: MutableList<CTMessageDAO> = dbAdapter.getMessages(userId)
 
-    // always call async
-    @WorkerThread
-    constructor(
-        config: CleverTapInstanceConfig, guid: String?, adapter: DBAdapter,
-        ctLockManager: CTLockManager,
-        callbackManager: BaseCallbackManager,
-        videoSupported: Boolean,
-        inboxDeleteCoordinator: InboxDeleteCoordinator?
-    ) : this(
-        config, guid, adapter, ctLockManager, callbackManager, videoSupported,
-        inboxDeleteCoordinator, Clock.SYSTEM
-    )
-
-    fun count(): Int {
-        return messages.size
-    }
+    fun count(): Int = messages.size
 
     @AnyThread
     fun deleteInboxMessage(message: CTInboxMessage?) {
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("deleteInboxMessage", Callable<Void?> {
-            val message = message!!
+            // A null message failed inside the task in Java as well (logged by the executor).
+            val message = checkNotNull(message) { "deleteInboxMessage: no message" }
             // Look up the DAO directly. Must happen BEFORE
             // the local delete wipes the DAO from cache.
-            val dao = findMessageById(message.messageId)
-            val isV2 = dao != null && dao.source == InboxMessageSource.V2
+            val v2Dao = findMessageById(message.messageId)?.takeIf { it.source == InboxMessageSource.V2 }
 
-            if (isV2) {
+            if (v2Dao != null) {
                 val now = clock.currentTimeSeconds()
                 dbAdapter.addPendingDelete(
                     message.messageId,
                     userId,
-                    dao!!.wzrkParams,
-                    resolvePendingActionExpiry(dao, now)
+                    v2Dao.wzrkParams,
+                    resolvePendingActionExpiry(v2Dao, now)
                 )
             }
             synchronized(ctLockManager.inboxControllerLock) {
@@ -86,40 +68,32 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
                     callbackManager._notifyInboxMessagesDidUpdate()
                 }
             }
-            if (isV2 && inboxDeleteCoordinator != null) {
-                inboxDeleteCoordinator.syncDelete(Collections.singletonList(message), userId)
+            if (v2Dao != null) {
+                inboxDeleteCoordinator?.syncDelete(listOf(message), userId)
             }
             null
         })
     }
 
     @AnyThread
-    fun deleteInboxMessagesForIDs(messageIDs: ArrayList<String>?) {
+    fun deleteInboxMessagesForIDs(messageIDs: List<String>?) {
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("deleteInboxMessagesForIDs", Callable<Void?> {
-            val messageIDs = messageIDs!!
+            // A null list failed inside the task in Java as well (logged by the executor).
+            val messageIDs = checkNotNull(messageIDs) { "deleteInboxMessagesForIDs: no ids" }
             // Partition ids into V1 and V2 BEFORE the local delete wipes
             // the cache.
             val now = clock.currentTimeSeconds()
-            val idSet: Set<String> = HashSet(messageIDs)
-            val v2Messages: MutableList<CTInboxMessage> = ArrayList()
-            val pendingRows: MutableList<PendingDelete> = ArrayList()
+            val idSet = messageIDs.toHashSet()
+            val v2Messages = ArrayList<CTInboxMessage>()
+            val pendingRows = ArrayList<PendingDelete>()
             synchronized(messagesLock) {
                 for (d in messagesList) {
-                    if (!idSet.contains(d.id)) {
-                        continue
-                    }
-                    if (d.source != InboxMessageSource.V2) {
+                    if (d.id !in idSet || d.source != InboxMessageSource.V2) {
                         continue
                     }
                     v2Messages.add(CTInboxMessage(d.toJSON()))
-                    pendingRows.add(
-                        PendingDelete(
-                            d.id,
-                            d.wzrkParams,
-                            resolvePendingActionExpiry(d, now)
-                        )
-                    )
+                    pendingRows.add(PendingDelete(d.id, d.wzrkParams, resolvePendingActionExpiry(d, now)))
                 }
             }
 
@@ -140,45 +114,27 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     }
 
     @AnyThread
-    private fun getInboxMessageForId(messageId: String?): CTInboxMessage? {
-        val dao = findMessageById(messageId)
-        return if (dao == null) null else CTInboxMessage(dao.toJSON())
-    }
-
-    @AnyThread
-    fun getMessageForId(messageId: String?): CTMessageDAO? {
-        return findMessageById(messageId)
-    }
+    fun getMessageForId(messageId: String?): CTMessageDAO? = findMessageById(messageId)
 
     @get:AnyThread
-    val messages: ArrayList<CTMessageDAO>
-        get() {
-            synchronized(messagesLock) {
-                trimMessages()
-                return messagesList
-            }
+    val messages: List<CTMessageDAO>
+        get() = synchronized(messagesLock) {
+            trimMessages()
+            messagesList
         }
 
     @get:AnyThread
-    val unreadMessages: ArrayList<CTMessageDAO>
-        get() {
-            val unread = ArrayList<CTMessageDAO>()
-            synchronized(messagesLock) {
-                val messages = messages
-                for (message in messages) {
-                    if (message.isRead == 0) {
-                        unread.add(message)
-                    }
-                }
-            }
-            return unread
+    val unreadMessages: List<CTMessageDAO>
+        get() = synchronized(messagesLock) {
+            messages.filter { it.isRead == 0 }
         }
 
     @AnyThread
     fun markReadInboxMessage(message: CTInboxMessage?) {
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("markReadInboxMessage", Callable<Void?> {
-            val message = message!!
+            // A null message failed inside the task in Java as well (logged by the executor).
+            val message = checkNotNull(message) { "markReadInboxMessage: no message" }
             synchronized(ctLockManager.inboxControllerLock) {
                 val read = _markReadForMessageWithId(message.messageId)
                 if (read) {
@@ -190,10 +146,11 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     }
 
     @AnyThread
-    fun markReadInboxMessagesForIDs(messageIDs: ArrayList<String>?) {
+    fun markReadInboxMessagesForIDs(messageIDs: List<String>?) {
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("markReadInboxMessagesForIDs", Callable<Void?> {
-            val messageIDs = messageIDs!!
+            // A null list failed inside the task in Java as well (logged by the executor).
+            val messageIDs = checkNotNull(messageIDs) { "markReadInboxMessagesForIDs: no ids" }
             synchronized(ctLockManager.inboxControllerLock) {
                 val read = _markReadForMessagesWithIds(messageIDs)
                 if (read) {
@@ -205,16 +162,13 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     }
 
     @AnyThread
-    fun unreadCount(): Int {
-        return unreadMessages.size
-    }
+    fun unreadCount(): Int = unreadMessages.size
 
     // always call async
     @WorkerThread
     fun updateMessages(inboxMessages: JSONArray): Boolean {
         Logger.v("CTInboxController:updateMessages() called")
 
-        var haveUpdates = false
         val newMessages = ArrayList<CTMessageDAO>()
 
         for (i in 0 until inboxMessages.length()) {
@@ -232,22 +186,22 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
 
                 newMessages.add(messageDAO)
 
-                Logger.v("Inbox Message for message id - " + messageDAO.id + " added")
+                Logger.v("Inbox Message for message id - ${messageDAO.id} added")
             } catch (e: JSONException) {
-                Logger.d("Unable to update notification inbox messages - " + e.localizedMessage)
+                Logger.d("Unable to update notification inbox messages - ${e.localizedMessage}")
             }
         }
 
-        if (newMessages.size > 0) {
-            this.dbAdapter.upsertMessages(newMessages)
-            haveUpdates = true
-            Logger.v("New Notification Inbox messages added")
-            synchronized(messagesLock) {
-                this.messagesList = this.dbAdapter.getMessages(this.userId)
-                trimMessages()
-            }
+        if (newMessages.isEmpty()) {
+            return false
         }
-        return haveUpdates
+        dbAdapter.upsertMessages(newMessages)
+        Logger.v("New Notification Inbox messages added")
+        synchronized(messagesLock) {
+            messagesList = dbAdapter.getMessages(userId)
+            trimMessages()
+        }
+        return true
     }
 
     /**
@@ -279,15 +233,9 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
         // response to INDEXED, then sweep V2 rows absent from the authoritative
         // fetch snapshot (cross-device delete signal).
         if (source == InboxV2DeliverySource.FETCH) {
-            val incomingIds: MutableSet<String> = HashSet(incoming.size)
-            for (dao in incoming) {
-                incomingIds.add(dao.id)
-            }
+            val incomingIds = incoming.mapTo(HashSet(incoming.size)) { it.id }
             if (incomingIds.isNotEmpty()) {
-                config.logger.verbose(
-                    config.accountId,
-                    "InboxV2: markIndexed " + incomingIds.size + " msg(s)"
-                )
+                config.logger.verbose(config.accountId, "InboxV2: markIndexed ${incomingIds.size} msg(s)")
                 dbAdapter.markIndexed(ArrayList(incomingIds), userId)
             }
 
@@ -301,7 +249,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
             if (sweepable.isNotEmpty()) {
                 config.logger.verbose(
                     config.accountId,
-                    "InboxV2: cross-device sweep — removing " + sweepable.size + " msg(s): " + sweepable
+                    "InboxV2: cross-device sweep — removing ${sweepable.size} msg(s): $sweepable"
                 )
                 dbAdapter.deleteMessagesForIDs(ArrayList(sweepable), userId)
                 updated = true
@@ -339,12 +287,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
         // the pending-read override and would make every pending id look
         // server-confirmed.
         if (pendingReads.isNotEmpty()) {
-            val confirmedReads: MutableList<String> = ArrayList()
-            for (dao in incoming) {
-                if (dao.isRead == 1 && pendingReads.contains(dao.id)) {
-                    confirmedReads.add(dao.id)
-                }
-            }
+            val confirmedReads = incoming.filter { it.isRead == 1 && it.id in pendingReads }.map { it.id }
             if (confirmedReads.isNotEmpty()) {
                 dbAdapter.removePendingReads(confirmedReads, userId)
             }
@@ -358,9 +301,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
             // server-confirmed, so write them as INDEXED directly. ON CONFLICT
             // preserves index_state for existing rows, so this only affects INSERTs.
             if (source == InboxV2DeliverySource.FETCH) {
-                for (dao in toUpsert) {
-                    dao.indexState = InboxIndexState.INDEXED
-                }
+                toUpsert.forEach { it.indexState = InboxIndexState.INDEXED }
             }
             dbAdapter.upsertMessages(toUpsert)
         }
@@ -376,7 +317,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
                 dbAdapter.deleteMessagesForIDs(cleanup.toDelete, userId)
                 updated = true
             }
-            this.messagesList = ArrayList(cleanup.finalList)
+            messagesList = ArrayList(cleanup.finalList)
         }
         return updated
     }
@@ -385,7 +326,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     fun _deleteMessageWithId(messageId: String?): Boolean {
         val messageDAO = findMessageById(messageId) ?: return false
         synchronized(messagesLock) {
-            this.messagesList.remove(messageDAO)
+            messagesList.remove(messageDAO)
         }
 
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
@@ -397,18 +338,14 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     }
 
     @AnyThread
-    fun _deleteMessagesForIds(messageIDs: ArrayList<String>): Boolean {
-        val messageDAOList = ArrayList<CTMessageDAO>()
-        for (messageID in messageIDs) {
-            val messageDAO = findMessageById(messageID) ?: continue
-            messageDAOList.add(messageDAO)
-        }
+    fun _deleteMessagesForIds(messageIDs: List<String>): Boolean {
+        val messageDAOList = messageIDs.mapNotNull { findMessageById(it) }
         if (messageDAOList.isEmpty()) {
             return false
         }
 
         synchronized(messagesLock) {
-            this.messagesList.removeAll(messageDAOList)
+            messagesList.removeAll(messageDAOList)
         }
 
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
@@ -440,7 +377,8 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
         task.execute("RunMarkMessageRead", Callable<Void?> {
             dbAdapter.markReadMessageForId(messageId, userId)
             if (isV2) {
-                dbAdapter.addPendingRead(messageId!!, userId, pendingReadExpiresAt)
+                // The DAO was found by this id.
+                dbAdapter.addPendingRead(messageDAO.id, userId, pendingReadExpiresAt)
             }
             null
         })
@@ -448,16 +386,16 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     }
 
     @AnyThread
-    fun _markReadForMessagesWithIds(messageIDs: ArrayList<String>): Boolean {
+    fun _markReadForMessagesWithIds(messageIDs: List<String>): Boolean {
         // One pass over `messages` under a single lock
-        val idSet: Set<String> = HashSet(messageIDs)
-        val pendingReadRows: MutableList<PendingRead> = ArrayList()
+        val idSet = messageIDs.toHashSet()
+        val pendingReadRows = ArrayList<PendingRead>()
         var atleastOneMessageIsValid = false
 
         synchronized(messagesLock) {
             val now = clock.currentTimeSeconds()
             for (dao in messagesList) {
-                if (!idSet.contains(dao.id)) {
+                if (dao.id !in idSet) {
                     continue
                 }
                 atleastOneMessageIsValid = true
@@ -497,30 +435,18 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
      */
     @AnyThread
     fun isV2Message(id: String?): Boolean {
-        if (id == null) {
-            return false
-        }
-        synchronized(messagesLock) {
-            for (message in messagesList) {
-                if (id == message.id) {
-                    return message.source == InboxMessageSource.V2
-                }
-            }
-        }
-        return false
+        id ?: return false
+        val message = synchronized(messagesLock) { messagesList.firstOrNull { it.id == id } }
+        return message?.source == InboxMessageSource.V2
     }
 
     @AnyThread
     private fun findMessageById(id: String?): CTMessageDAO? {
-        synchronized(messagesLock) {
-            for (message in messagesList) {
-                if (message.id == id) {
-                    return message
-                }
-            }
+        val message = synchronized(messagesLock) { messagesList.firstOrNull { it.id == id } }
+        if (message == null) {
+            Logger.v("Inbox Message for message id - $id not found")
         }
-        Logger.v("Inbox Message for message id - $id not found")
-        return null
+        return message
     }
 
     @AnyThread
@@ -528,7 +454,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
         Logger.v("CTInboxController:trimMessages() called")
         val toDelete = ArrayList<CTMessageDAO>()
         synchronized(messagesLock) {
-            for (message in this.messagesList) {
+            for (message in messagesList) {
                 if (!videoSupported && message.containsVideoOrAudio()) {
                     Logger.d(
                         "Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
@@ -539,18 +465,12 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
                 val expires = message.expires
                 val expired = expires > 0 && clock.currentTimeSeconds() > expires
                 if (expired) {
-                    Logger.v("Inbox Message: " + message.id + " is expired - removing")
+                    Logger.v("Inbox Message: ${message.id} is expired - removing")
                     toDelete.add(message)
                 }
             }
 
-            if (toDelete.size <= 0) {
-                return
-            }
-
-            for (message in toDelete) {
-                _deleteMessageWithId(message.id)
-            }
+            toDelete.forEach { _deleteMessageWithId(it.id) }
         }
     }
 

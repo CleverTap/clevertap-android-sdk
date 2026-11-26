@@ -26,57 +26,48 @@ internal open class CTCarouselViewPagerAdapter(
     private val row: Int
 ) : PagerAdapter() {
 
-    private val carouselImagesData: ArrayList<CTInboxImageData> = inboxMessage.carouselImagesData
-
-    private var layoutInflater: LayoutInflater? = null
+    private val carouselImagesData: List<CTInboxImageData> = inboxMessage.carouselImagesData
 
     private val parentWeakReference: WeakReference<CTInboxListViewFragment> = WeakReference(parent)
 
-    private var view: View? = null
+    private val parent: CTInboxListViewFragment?
+        get() = parentWeakReference.get()
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
-        val view = `object` as View
-        container.removeView(view)
+        container.removeView(`object` as View)
     }
 
-    override fun getCount(): Int {
-        return carouselImagesData.size
-    }
+    override fun getCount(): Int = carouselImagesData.size
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater?
-        this.layoutInflater = layoutInflater
-        val view = layoutInflater!!.inflate(R.layout.inbox_carousel_image_layout, container, false)
-        this.view = view
+        val view = LayoutInflater.from(context).inflate(R.layout.inbox_carousel_image_layout, container, false)
         try {
-            if (inboxMessage.orientation!!.equals("l", ignoreCase = true)) {
-                val imageView = view.findViewById<ImageView>(R.id.imageView)
-                addImageAndSetClick(imageView, view, position, container)
-            } else if (inboxMessage.orientation!!.equals("p", ignoreCase = true)) {
-                val imageView = view.findViewById<ImageView>(R.id.squareImageView)
-                addImageAndSetClick(imageView, view, position, container)
-            } else {
-                val imageView = view.findViewById<ImageView>(R.id.defaultImageView)
-                imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-                addImageAndSetClick(imageView, view, position, container)
+            // Java dereferenced the orientation unchecked; only a message without a "msg" object has none.
+            val orientation = checkNotNull(inboxMessage.orientation)
+            val imageView = when {
+                orientation.equals("l", ignoreCase = true) -> view.findViewById<ImageView>(R.id.imageView)
+                orientation.equals("p", ignoreCase = true) -> view.findViewById(R.id.squareImageView)
+                else -> view.findViewById<ImageView>(R.id.defaultImageView).apply {
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                }
             }
+            addImageAndSetClick(imageView, view, position, container)
         } catch (error: NoClassDefFoundError) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info")
         }
         return view
     }
 
-    override fun isViewFromObject(view: View, o: Any): Boolean {
-        return view === o
-    }
+    override fun isViewFromObject(view: View, o: Any): Boolean = view === o
 
     fun addImageAndSetClick(imageView: ImageView, view: View, position: Int, container: ViewGroup) {
         imageView.visibility = View.VISIBLE
         imageView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        val url = carouselImagesData[position].url
         try {
             Glide.with(imageView.context)
-                .load(carouselImagesData[position].url)
+                .load(url)
                 .apply(
                     RequestOptions()
                         .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
@@ -88,20 +79,11 @@ internal open class CTCarouselViewPagerAdapter(
                 "CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info"
             )
             Glide.with(imageView.context)
-                .load(carouselImagesData[position].url)
+                .load(url)
                 .into(imageView)
         }
 
         container.addView(view, layoutParams)
-        view.setOnClickListener {
-            val parent = getParent()
-            if (parent != null) {
-                parent.handleViewPagerClick(row, position)
-            }
-        }
-    }
-
-    fun getParent(): CTInboxListViewFragment? {
-        return parentWeakReference.get()
+        view.setOnClickListener { parent?.handleViewPagerClick(row, position) }
     }
 }

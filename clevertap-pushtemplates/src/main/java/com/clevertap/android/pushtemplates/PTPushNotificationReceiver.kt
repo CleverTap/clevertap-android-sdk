@@ -18,33 +18,32 @@ internal class PTPushNotificationReceiver : CTPushNotificationReceiver() {
         super.onReceive(context, intent)
 
         val extras = intent.extras ?: return
-        val cleverTapAPI = CleverTapAPI
-            .getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY))
-
-        if (cleverTapAPI != null) {
-            try {
-                val config = cleverTapAPI.getInstanceConfig()
-                val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-                task.execute("PTPushNotificationReceiver#cleanUpFiles") {
-                    try {
-                        Utils.deleteImageFromStorage(context, intent)
-                        Utils.deleteSilentNotificationChannel(context)
-                    } catch (t: Throwable) {
-                        PTLog.verbose(
-                            "Couldn't clean up images and/or couldn't delete silent notification channel: "
-                                    + t.localizedMessage
-                        )
-                    }
-                    null
-                }
-            } catch (e: Exception) {
-                PTLog.verbose(
-                    "Couldn't clean up images and/or couldn't delete silent notification channel: " + e
-                        .localizedMessage
-                )
-            }
-        } else {
+        val cleverTapAPI = CleverTapAPI.getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY))
+        if (cleverTapAPI == null) {
             PTLog.verbose("clevertap instance is null, not running PTPushNotificationReceiver#cleanUpFiles")
+            return
         }
+
+        try {
+            val config = cleverTapAPI.getInstanceConfig()
+            val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
+            task.execute("PTPushNotificationReceiver#cleanUpFiles") {
+                try {
+                    Utils.deleteImageFromStorage(context, intent)
+                    Utils.deleteSilentNotificationChannel(context)
+                } catch (t: Throwable) {
+                    PTLog.verbose("$CLEAN_UP_FAILED${t.localizedMessage}")
+                }
+                null
+            }
+        } catch (e: Exception) {
+            PTLog.verbose("$CLEAN_UP_FAILED${e.localizedMessage}")
+        }
+    }
+
+    private companion object {
+
+        private const val CLEAN_UP_FAILED =
+            "Couldn't clean up images and/or couldn't delete silent notification channel: "
     }
 }

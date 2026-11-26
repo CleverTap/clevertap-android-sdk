@@ -23,10 +23,6 @@ class NotificationInfo @RestrictTo(RestrictTo.Scope.LIBRARY) constructor(
     @JvmField val shouldRender: Boolean
 ) {
 
-    override fun toString(): String {
-        return "NotificationInfo{" +
-                "fromCleverTap=" + fromCleverTap +
-                ", shouldRender=" + shouldRender +
-                '}'
-    }
+    override fun toString(): String =
+        "NotificationInfo{fromCleverTap=$fromCleverTap, shouldRender=$shouldRender}"
 }

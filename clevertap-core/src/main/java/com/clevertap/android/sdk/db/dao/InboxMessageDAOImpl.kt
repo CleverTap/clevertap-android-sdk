@@ -181,7 +181,7 @@ internal class InboxMessageDAOImpl(
             put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
             put(Column.CAMPAIGN, messageDAO.campaignId)
             put(Column.TAGS, messageDAO.tags)
-            put(Column.IS_READ, messageDAO.isRead())
+            put(Column.IS_READ, messageDAO.isRead)
             put(Column.EXPIRES, messageDAO.expires)
             put(Column.CREATED_AT, messageDAO.date)
             put(Column.SOURCE, (messageDAO.source ?: InboxMessageSource.V1).name)

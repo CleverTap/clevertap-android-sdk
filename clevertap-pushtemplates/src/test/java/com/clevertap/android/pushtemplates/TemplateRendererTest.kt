@@ -130,7 +130,7 @@ class TemplateRendererTest {
         // Mock static methods
         mockkObject(TemplateDataFactory)
         mockkObject(ValidatorFactory)
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
         mockkObject(ManifestInfo.Companion)
 
         // Default bundle setup

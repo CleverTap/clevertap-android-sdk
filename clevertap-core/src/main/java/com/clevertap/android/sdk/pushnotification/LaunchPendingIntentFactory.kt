@@ -12,29 +12,29 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Utils
 import java.util.Random
 
+/**
+ * `@JvmStatic` is kept on purpose: this is a cross-module (`LIBRARY_GROUP`) type, and separately
+ * published push templates artifacts built against the former Java class call it statically.
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object LaunchPendingIntentFactory {
 
-    private const val flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    private const val FLAGS_LAUNCH_PENDING_INTENT = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 
     /**
      * Returns null on Android 12+ when the app has no launch intent and the payload has no deep link.
      */
     @JvmStatic
     fun getLaunchPendingIntent(extras: Bundle, context: Context): PendingIntent? {
-        return if (VERSION.SDK_INT >= VERSION_CODES.S) {
-            getActivityIntent(extras, context)
-        } else {
-            val launchIntent = Intent(context, CTPushNotificationReceiver::class.java)
-            // Take all the properties from the notif and add it to the intent
-            launchIntent.putExtras(extras)
-            launchIntent.removeExtra(Constants.WZRK_ACTIONS)
-
-            PendingIntent.getBroadcast(
-                context, Random().nextInt(),
-                launchIntent, flagsLaunchPendingIntent
-            )
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            return getActivityIntent(extras, context)
         }
+        val launchIntent = Intent(context, CTPushNotificationReceiver::class.java).apply {
+            // Take all the properties from the notif and add it to the intent
+            putExtras(extras)
+            removeExtra(Constants.WZRK_ACTIONS)
+        }
+        return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, FLAGS_LAUNCH_PENDING_INTENT)
     }
 
     /**
@@ -42,26 +42,22 @@ object LaunchPendingIntentFactory {
      */
     @JvmStatic
     fun getActivityIntent(extras: Bundle, context: Context): PendingIntent? {
-        val launchIntent: Intent
         val deepLink = extras.getString(Constants.DEEP_LINK_KEY)
-        if (extras.containsKey(Constants.DEEP_LINK_KEY) && deepLink != null) {
-            launchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
-            Utils.setPackageNameFromResolveInfoList(context, launchIntent)
+        val launchIntent = if (extras.containsKey(Constants.DEEP_LINK_KEY) && deepLink != null) {
+            Intent(Intent.ACTION_VIEW, Uri.parse(deepLink)).also {
+                Utils.setPackageNameFromResolveInfoList(context, it)
+            }
         } else {
-            launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                ?: return null
+            context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
         }
 
-        launchIntent.flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        launchIntent.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            // Take all the properties from the notif and add it to the intent
+            putExtras(extras)
+            removeExtra(Constants.WZRK_ACTIONS)
+        }
 
-        // Take all the properties from the notif and add it to the intent
-        launchIntent.putExtras(extras)
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS)
-
-        return PendingIntent.getActivity(
-            context, Random().nextInt(), launchIntent,
-            flagsLaunchPendingIntent, null
-        )
+        return PendingIntent.getActivity(context, Random().nextInt(), launchIntent, FLAGS_LAUNCH_PENDING_INTENT, null)
     }
 }

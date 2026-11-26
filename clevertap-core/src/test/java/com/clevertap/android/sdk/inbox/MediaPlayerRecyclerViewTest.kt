@@ -58,9 +58,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val showsVideo: Boolean
             get() = container.visibility == View.VISIBLE && container.childCount > 0
 
-        override fun getMessageId() = messageIdValue
+        override val messageId get() = messageIdValue
 
-        override fun getMediaUrl() = mediaUrlValue
+        override val mediaUrl get() = mediaUrlValue
 
         override fun needsMediaPlayer() = isVideoRow
 

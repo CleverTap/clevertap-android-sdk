@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.pushnotification.fcm
 
 import android.content.Context
-import android.os.Bundle
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.interfaces.INotificationParser
@@ -16,7 +15,7 @@ import com.google.firebase.messaging.RemoteMessage
  * implementation of [IFcmMessageHandler] and [IPushAmpHandler] for Firebase notification message
  */
 open class CTFcmMessageHandler internal constructor(
-    private val mParser: INotificationParser<RemoteMessage>
+    private val parser: INotificationParser<RemoteMessage>
 ) : IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
 
     constructor() : this(FcmNotificationParser())
@@ -34,39 +33,36 @@ open class CTFcmMessageHandler internal constructor(
         /*
          * Convert firebase message to bundle and pass to PushNotificationHandler for further processing
          */
-        var isSuccess = false
-
-        var messageBundle = toBundle(message)
-        if (messageBundle != null) {
-            /*
-             * Analytics: If FCM alters original priority of a notification
-             */
-            messageBundle = FcmNotificationBundleManipulation(messageBundle).addPriority(message!!).build()
-
-            isSuccess = PushNotificationHandler.getPushNotificationHandler()
-                .onMessageReceived(applicationContext, messageBundle, PushConstants.FCM_PUSH_TYPE)
+        if (message == null) {
+            // The parser contract takes a non-null message. The Java implementation handed a null
+            // message to the parser, which failed inside its own try/catch, logged and returned null.
+            Logger.d(LOG_TAG, "${FCM_LOG_TAG}Invalid Notification Message ", NullPointerException())
+            return false
         }
+        val messageBundle = parser.toBundle(message) ?: return false
+        /*
+         * Analytics: If FCM alters original priority of a notification
+         */
+        val prioritisedBundle = FcmNotificationBundleManipulation(messageBundle).addPriority(message).build()
 
-        return isSuccess
+        return PushNotificationHandler.getPushNotificationHandler()
+            .onMessageReceived(applicationContext, prioritisedBundle, PushConstants.FCM_PUSH_TYPE)
     }
 
     /**
      * {@inheritDoc}
      */
-    override fun onNewToken(applicationContext: Context?, token: String?): Boolean {
-        var isSuccess = false
-        try {
-            PushNotificationHandler
-                .getPushNotificationHandler()
-                .onNewToken(applicationContext, token, PushConstants.FCM)
+    override fun onNewToken(applicationContext: Context?, token: String?): Boolean = try {
+        PushNotificationHandler
+            .getPushNotificationHandler()
+            .onNewToken(applicationContext, token, PushConstants.FCM)
 
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token)
-            isSuccess = true
-        } catch (t: Throwable) {
-            // do nothing
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Error onNewToken", t)
-        }
-        return isSuccess
+        Logger.d(LOG_TAG, "${FCM_LOG_TAG}New token received from FCM - $token")
+        true
+    } catch (t: Throwable) {
+        // do nothing
+        Logger.d(LOG_TAG, "${FCM_LOG_TAG}Error onNewToken", t)
+        false
     }
 
     /**
@@ -76,21 +72,6 @@ open class CTFcmMessageHandler internal constructor(
      * notification for Pull Notifications
      */
     override fun processPushAmp(context: Context?, message: RemoteMessage) {
-        val messageBundle = mParser.toBundle(message)
-        if (messageBundle != null) {
-            CleverTapAPI.processPushNotification(context, messageBundle)
-        }
-    }
-
-    /**
-     * The parser contract takes a non-null message. The Java implementation handed a null message to
-     * the parser, which failed inside its own try/catch, logged and returned `null`; keep that result.
-     */
-    private fun toBundle(message: RemoteMessage?): Bundle? {
-        if (message == null) {
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Invalid Notification Message ", NullPointerException())
-            return null
-        }
-        return mParser.toBundle(message)
+        parser.toBundle(message)?.let { CleverTapAPI.processPushNotification(context, it) }
     }
 }

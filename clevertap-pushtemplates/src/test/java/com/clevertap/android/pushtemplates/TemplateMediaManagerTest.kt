@@ -37,7 +37,7 @@ class TemplateMediaManagerTest {
         templateMediaManager = TemplateMediaManager(mockTemplateRepository, mockGifDecoder)
 
         // Mock static methods
-        mockkStatic(Utils::class)
+        mockkObject(Utils)
     }
 
     @After

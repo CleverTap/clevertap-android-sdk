@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.pushnotification.fcm
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.pushnotification.CTPushProvider
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
@@ -20,7 +21,8 @@ internal open class FcmPushProvider @SuppressLint("unused") constructor(
     config: CleverTapInstanceConfig
 ) : CTPushProvider {
 
-    private var handler: IFcmSdkHandler = FcmSdkHandlerImpl(ctPushListener, context, config)
+    @VisibleForTesting
+    internal var handler: IFcmSdkHandler = FcmSdkHandlerImpl(ctPushListener, context, config)
 
     override val pushType: PushType
         get() = handler.pushType
@@ -41,15 +43,9 @@ internal open class FcmPushProvider @SuppressLint("unused") constructor(
     override val isSupported: Boolean
         get() = handler.isSupported
 
-    override fun minSDKSupportVersionCode(): Int {
-        return 0 // supporting FCM from base version
-    }
+    override fun minSDKSupportVersionCode(): Int = 0 // supporting FCM from base version
 
     override fun requestToken() {
         handler.requestToken()
-    }
-
-    fun setHandler(handler: IFcmSdkHandler) {
-        this.handler = handler
     }
 }

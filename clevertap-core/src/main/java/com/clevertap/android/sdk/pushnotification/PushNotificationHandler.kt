@@ -17,17 +17,9 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
         val INSTANCE = PushNotificationHandler()
     }
 
-    private fun isForSignedCall(extras: Bundle?): Boolean {
-        if (extras == null) {
-            return false
-        }
-        val source = extras.getString("source")
-        return "signedcall" == source
-    }
+    private fun isForSignedCall(extras: Bundle?): Boolean = extras?.getString("source") == "signedcall"
 
-    override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {
-        return false
-    }
+    override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean = false
 
     @Synchronized
     override fun onMessageReceived(
@@ -35,48 +27,42 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
         message: Bundle?,
         pushType: String?
     ): Boolean {
+        // A null message threw a NullPointerException in Java; `!!` keeps that.
         message!!.putLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, System.currentTimeMillis())
         val cleverTapAPI = CleverTapAPI
             .getGlobalInstance(applicationContext, getAccountIdFromNotificationBundle(message))
         val info = CleverTapAPI.getNotificationInfo(message)
 
-        if (info.fromCleverTap) {
-            if (cleverTapAPI != null) {
-                cleverTapAPI.coreState.config.log(
-                    LOG_TAG,
-                    pushType + "received notification from CleverTap: " + message.toString()
-                )
-                // Live Update: surface the single nested `data` object (incl. pt_id, if any) to the
-                // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
-                // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
-                // Mode A vs Mode B decision is finalised in _createNotification.
-                if (LiveUpdateRouter.isLiveUpdate(message)) {
-                    surfaceLiveUpdatePayload(message)
-                }
-                if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
-                    // render push template
-                    CleverTapAPI.getNotificationHandler()!!.onMessageReceived(applicationContext, message, pushType)
-                } else if (isForSignedCall(message) && CleverTapAPI.getSignedCallNotificationHandler() != null) {
-                    // handle voip push payload
-                    CleverTapAPI.getSignedCallNotificationHandler()!!
-                        .onMessageReceived(applicationContext, message, pushType)
-                } else {
-                    // render core push
-                    cleverTapAPI.renderPushNotificationOnCallerThread(
-                        CoreNotificationRenderer(),
-                        applicationContext,
-                        message
-                    )
-                    //CleverTapAPI.createNotification(applicationContext, message);
-                }
-            } else {
-                Logger.d(LOG_TAG, pushType + "received notification from CleverTap: " + message.toString())
-                Logger.d(LOG_TAG, "$pushType not renderning since cleverTapAPI is null")
-            }
+        if (!info.fromCleverTap) {
+            return false
+        }
+        if (cleverTapAPI == null) {
+            Logger.d(LOG_TAG, "${pushType}received notification from CleverTap: $message")
+            Logger.d(LOG_TAG, "$pushType not renderning since cleverTapAPI is null")
             return true
         }
-
-        return false
+        cleverTapAPI.coreState.config.log(LOG_TAG, "${pushType}received notification from CleverTap: $message")
+        // Live Update: surface the single nested `data` object (incl. pt_id, if any) to the
+        // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
+        // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
+        // Mode A vs Mode B decision is finalised in _createNotification.
+        if (LiveUpdateRouter.isLiveUpdate(message)) {
+            surfaceLiveUpdatePayload(message)
+        }
+        // A push template handler renders push templates, a signed call handler handles voip push
+        // payloads; everything else is rendered by core.
+        val delegate = (if (isForPushTemplates(message)) CleverTapAPI.getNotificationHandler() else null)
+            ?: (if (isForSignedCall(message)) CleverTapAPI.getSignedCallNotificationHandler() else null)
+        if (delegate != null) {
+            delegate.onMessageReceived(applicationContext, message, pushType)
+        } else {
+            cleverTapAPI.renderPushNotificationOnCallerThread(
+                CoreNotificationRenderer(),
+                applicationContext,
+                message
+            )
+        }
+        return true
     }
 
     override fun onNewToken(applicationContext: Context?, token: String?, pushType: PushType?): Boolean {
@@ -87,9 +73,7 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
     companion object {
 
         @JvmStatic
-        fun getPushNotificationHandler(): NotificationHandler {
-            return SingletonNotificationHandler.INSTANCE
-        }
+        fun getPushNotificationHandler(): NotificationHandler = SingletonNotificationHandler.INSTANCE
 
         /**
          * Merges the single nested `data` JSON object of a Live Update push into the top-level
@@ -106,18 +90,13 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
         internal fun surfaceLiveUpdatePayload(message: Bundle) {
             val data = message.getString(Constants.WZRK_LIVE_UPDATE_DATA)
             val toSurface = LiveUpdatePayloadSurfacer.flatten(data, message.keySet())
-            for ((key, value) in toSurface) {
-                message.putString(key, value)
-            }
+            toSurface.forEach { (key, value) -> message.putString(key, value) }
         }
 
         @JvmStatic
         fun isForPushTemplates(extras: Bundle?): Boolean {
-            if (extras == null) {
-                return false
-            }
-            val ptId = extras.getString("pt_id")
-            return !("0" == ptId || ptId == null || ptId.isEmpty())
+            val ptId = extras?.getString("pt_id")
+            return !ptId.isNullOrEmpty() && ptId != "0"
         }
     }
 }

@@ -34,7 +34,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
         listener = mockk(relaxed = true)
         handler = FcmSdkHandlerImpl(listener, application, cleverTapInstanceConfig)
         manifestInfo = mockk(relaxed = true)
-        handler.setManifestInfo(manifestInfo)
+        handler.manifestInfo = manifestInfo
     }
 
     @Test

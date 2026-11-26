@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inbox
 
-import android.text.TextUtils
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope
 import com.clevertap.android.sdk.Constants
@@ -29,7 +28,7 @@ open class CTMessageDAO() {
      * before it is set throws, where the Java getter returned null.
      */
     var id: String
-        get() = _id!!
+        get() = checkNotNull(_id) { "CTMessageDAO id read before it was set" }
         set(value) {
             _id = value
         }
@@ -55,25 +54,9 @@ open class CTMessageDAO() {
      */
     var indexState: String? = InboxIndexState.PENDING_INDEXING
 
-    private constructor(
-        id: String?, jsonData: JSONObject?, read: Boolean, date: Long, expires: Long, userId: String?,
-        tags: MutableList<String>, campaignId: String?, wzrkParams: JSONObject?, source: InboxMessageSource?
-    ) : this() {
-        this._id = id
-        this.jsonData = jsonData
-        this.read = read
-        this.date = date
-        this.expires = expires
-        this.userId = userId
-        this.tagsList = tags
-        this.campaignId = campaignId
-        this.wzrkParams = wzrkParams
-        this.source = source
-    }
-
     internal open fun containsVideoOrAudio(): Boolean {
         Logger.d("CTMessageDAO:containsVideoOrAudio() called")
-        val content = CTInboxMessage(this.toJSON()).inboxMessageContents[0]
+        val content = CTInboxMessage(toJSON()).inboxMessageContents[0]
         return content.mediaIsVideo() || content.mediaIsAudio()
     }
 
@@ -82,55 +65,40 @@ open class CTMessageDAO() {
      * existing tags.
      */
     var tags: String
-        get() = TextUtils.join(",", tagsList)
+        get() = tagsList.joinToString(",")
         set(tags) {
             // java.lang.String.split semantics (trailing empty strings dropped), as before.
-            val tagsArray = Pattern.compile(",").split(tags)
-            this.tagsList.addAll(tagsArray.asList())
+            tagsList.addAll(Pattern.compile(",").split(tags))
         }
 
-    fun isRead(): Int {
-        return if (read) {
-            1
-        } else {
-            0
-        }
-    }
-
-    fun setRead(read: Int) {
-        this.read = read == 1
-    }
-
-    /** Kotlin property syntax, equivalent to [isRead] / [setRead] (1 when read, 0 otherwise). */
+    /** 1 when read, 0 otherwise (the database column's value). */
     var isRead: Int
-        @JvmSynthetic @JvmName("ktIsRead") inline get() = isRead()
-        @JvmSynthetic @JvmName("ktSetRead") inline set(value) = setRead(value)
+        get() = if (read) 1 else 0
+        set(value) {
+            read = value == 1
+        }
 
     fun toJSON(): JSONObject {
         val jsonObject = JSONObject()
         return try {
-            jsonObject.put("id", this._id)
-            jsonObject.put("msg", this.jsonData)
-            jsonObject.put("isRead", this.read)
-            jsonObject.put("date", this.date)
-            jsonObject.put("wzrk_ttl", this.expires)
-            val jsonArray = JSONArray()
-            for (i in this.tagsList.indices) {
-                jsonArray.put(tagsList[i])
+            jsonObject.apply {
+                put("id", _id)
+                put("msg", jsonData)
+                put("isRead", read)
+                put("date", date)
+                put("wzrk_ttl", expires)
+                put("tags", JSONArray(tagsList))
+                put("wzrk_id", campaignId)
+                put("wzrkParams", wzrkParams)
             }
-            jsonObject.put("tags", jsonArray)
-            jsonObject.put("wzrk_id", campaignId)
-            jsonObject.put("wzrkParams", wzrkParams)
-            jsonObject
         } catch (e: JSONException) {
-            Logger.v("Unable to convert CTMessageDao to JSON - " + e.localizedMessage)
+            Logger.v("Unable to convert CTMessageDao to JSON - ${e.localizedMessage}")
             jsonObject
         }
     }
 
     companion object {
 
-        @JvmStatic
         internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO? {
             return try {
                 val id = if (inboxMessage.has("_id")) inboxMessage.getString("_id") else null
@@ -145,47 +113,46 @@ open class CTMessageDAO() {
                     (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000
                 }
                 val cellObject = if (inboxMessage.has("msg")) inboxMessage.getJSONObject("msg") else null
-                val tagsList: MutableList<String> = ArrayList()
-                if (cellObject != null) { //Part of "msg" object
-                    val tagsArray = if (cellObject.has("tags")) cellObject.getJSONArray("tags") else null
-                    if (tagsArray != null) {
-                        for (i in 0 until tagsArray.length()) {
-                            tagsList.add(tagsArray.getString(i))
-                        }
+                val tagsList = ArrayList<String>()
+                //Part of "msg" object
+                val tagsArray = if (cellObject?.has("tags") == true) cellObject.getJSONArray("tags") else null
+                if (tagsArray != null) {
+                    for (i in 0 until tagsArray.length()) {
+                        tagsList.add(tagsArray.getString(i))
                     }
                 }
                 val campaignId = if (inboxMessage.has("wzrk_id")) inboxMessage.getString("wzrk_id") else "0_0"
                 if (campaignId.equals("0_0", ignoreCase = true)) {
                     inboxMessage.put("wzrk_id", campaignId) //For test inbox Notification Viewed
                 }
-                val wzrkParams = getWzrkFields(inboxMessage)
+                val wzrkParams = wzrkFieldsOf(inboxMessage)
                 val read = inboxMessage.optBoolean(Constants.INBOX_V2_ISREAD_KEY, false)
-                if (id == null) {
-                    null
-                } else {
-                    CTMessageDAO(
-                        id, cellObject, read, date, expires, userId, tagsList, campaignId,
-                        wzrkParams, source
-                    )
+                id ?: return null
+                CTMessageDAO().also {
+                    it._id = id
+                    it.jsonData = cellObject
+                    it.read = read
+                    it.date = date
+                    it.expires = expires
+                    it.userId = userId
+                    it.tagsList = tagsList
+                    it.campaignId = campaignId
+                    it.wzrkParams = wzrkParams
+                    it.source = source
                 }
             } catch (e: JSONException) {
-                Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.localizedMessage)
+                Logger.d("Unable to parse Notification inbox message to CTMessageDao - ${e.localizedMessage}")
                 null
             }
         }
 
-        @Throws(JSONException::class)
-        private fun getWzrkFields(root: JSONObject): JSONObject {
+        private fun wzrkFieldsOf(root: JSONObject): JSONObject {
             val fields = JSONObject()
-            val iterator = root.keys()
-
-            while (iterator.hasNext()) {
-                val keyName = iterator.next()
+            for (keyName in root.keys()) {
                 if (keyName.startsWith(Constants.WZRK_PREFIX)) {
                     fields.put(keyName, root.get(keyName))
                 }
             }
-
             return fields
         }
     }

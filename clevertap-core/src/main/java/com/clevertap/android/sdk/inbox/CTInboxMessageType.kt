@@ -7,24 +7,10 @@ enum class CTInboxMessageType(private val inboxMessageType: String) {
     CarouselMessage("carousel"),
     CarouselImageMessage("carousel-image");
 
-    override fun toString(): String {
-        return inboxMessageType
-    }
+    override fun toString(): String = inboxMessageType
 
     companion object {
 
-        internal fun fromString(type: String): CTInboxMessageType? {
-            return when (type) {
-                "simple" -> SimpleMessage
-
-                "message-icon" -> IconMessage
-
-                "carousel" -> CarouselMessage
-
-                "carousel-image" -> CarouselImageMessage
-
-                else -> null
-            }
-        }
+        internal fun fromString(type: String): CTInboxMessageType? = entries.firstOrNull { it.inboxMessageType == type }
     }
 }

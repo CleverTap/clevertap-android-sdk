@@ -12,17 +12,14 @@ import com.google.firebase.messaging.RemoteMessage
  */
 internal class FcmNotificationParser : INotificationParser<RemoteMessage> {
 
-    override fun toBundle(message: RemoteMessage): Bundle? {
-        try {
-            val extras = Bundle()
+    override fun toBundle(message: RemoteMessage): Bundle? = try {
+        Bundle().apply {
             for ((key, value) in message.data) {
-                extras.putString(key, value)
+                putString(key, value)
             }
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Found Valid Notification Message ")
-            return extras
-        } catch (e: Throwable) {
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Invalid Notification Message ", e)
-        }
-        return null
+        }.also { Logger.d(LOG_TAG, "${FCM_LOG_TAG}Found Valid Notification Message ") }
+    } catch (e: Throwable) {
+        Logger.d(LOG_TAG, "${FCM_LOG_TAG}Invalid Notification Message ", e)
+        null
     }
 }

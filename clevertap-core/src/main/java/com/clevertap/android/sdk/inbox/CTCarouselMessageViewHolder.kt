@@ -20,44 +20,29 @@ internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageV
     /**
      * Custom PageChangeListener for Carousel
      */
-    inner class CarouselPageChangeListener(
+    private inner class CarouselPageChangeListener(
         private val context: Context,
-        private val viewHolder: CTCarouselMessageViewHolder,
-        private val dots: Array<ImageView?>,
+        private val dots: Array<ImageView>,
         private val inboxMessage: CTInboxMessage
-    ) : ViewPager.OnPageChangeListener {
+    ) : ViewPager.SimpleOnPageChangeListener() {
 
         init {
-            this.dots[0]!!.setImageDrawable(
-                ResourcesCompat.getDrawable(context.resources, R.drawable.ct_selected_dot, null)
-            )
-        }
-
-        override fun onPageScrollStateChanged(i: Int) {
-        }
-
-        override fun onPageScrolled(i: Int, v: Float, i1: Int) {
-
+            dots[0].setImageDrawable(ResourcesCompat.getDrawable(context.resources, R.drawable.ct_selected_dot, null))
         }
 
         override fun onPageSelected(position: Int) {
-            for (dot in this.dots) {
-                dot!!.setImageDrawable(
-                    ResourcesCompat.getDrawable(context.resources, R.drawable.ct_unselected_dot, null)
-                )
+            for (dot in dots) {
+                dot.setImageDrawable(ResourcesCompat.getDrawable(context.resources, R.drawable.ct_unselected_dot, null))
             }
-            dots[position]!!.setImageDrawable(
+            dots[position].setImageDrawable(
                 ResourcesCompat.getDrawable(context.resources, R.drawable.ct_selected_dot, null)
             )
-            viewHolder.title!!.text = inboxMessage.inboxMessageContents[position].title
-            viewHolder.title.setTextColor(
-                Color.parseColor(inboxMessage.inboxMessageContents[position].titleColor)
-            )
-            viewHolder.message!!.text = inboxMessage.inboxMessageContents[position].message
-            viewHolder.message.setTextColor(
-                Color.parseColor(inboxMessage.inboxMessageContents[position].messageColor)
-            )
-            viewHolder.imageViewPager!!.setAccessibilityState(
+            val content = inboxMessage.inboxMessageContents[position]
+            title.text = content.title
+            title.setTextColor(Color.parseColor(content.titleColor))
+            messageText.text = content.message
+            messageText.setTextColor(Color.parseColor(content.messageColor))
+            imageViewPager.setAccessibilityState(
                 getImageContentDescription(context, inboxMessage, position),
                 position,
                 inboxMessage.inboxMessageContents.size
@@ -65,30 +50,19 @@ internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageV
         }
     }
 
-    // Java declared this as a private field shadowing the base holder's clickLayout (which stays
-    // null for this holder); Kotlin cannot shadow, so it is renamed.
-    private val carouselClickLayout: RelativeLayout?
+    private val imageViewPager: CTCarouselViewPager = itemView.findViewById(R.id.image_carousel_viewpager)
 
-    private val imageViewPager: CTCarouselViewPager?
+    private val sliderDots: LinearLayout = itemView.findViewById(R.id.sliderDots)
 
-    private val sliderDots: LinearLayout?
+    private val title: TextView = itemView.findViewById(R.id.messageTitle)
+
+    private val messageText: TextView = itemView.findViewById(R.id.messageText)
+
+    private val timestamp: TextView = itemView.findViewById(R.id.timestamp)
+
+    private val clickLayout: RelativeLayout = itemView.findViewById(R.id.body_linear_layout)
 
     private var activePageChangeListener: CarouselPageChangeListener? = null
-
-    private val title: TextView?
-
-    private val message: TextView?
-
-    private val timestamp: TextView?
-
-    init {
-        imageViewPager = itemView.findViewById(R.id.image_carousel_viewpager)
-        sliderDots = itemView.findViewById(R.id.sliderDots)
-        title = itemView.findViewById(R.id.messageTitle)
-        message = itemView.findViewById(R.id.messageText)
-        timestamp = itemView.findViewById(R.id.timestamp)
-        carouselClickLayout = itemView.findViewById(R.id.body_linear_layout)
-    }
 
     override fun configureWithMessage(
         inboxMessage: CTInboxMessage,
@@ -96,45 +70,29 @@ internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageV
         position: Int
     ) {
         super.configureWithMessage(inboxMessage, parent, position)
-        val parentWeak = getParent()
-        // noinspection ConstantConditions
-        val appContext = parent.activity!!.applicationContext
+        // Java dereferenced the activity unchecked as well; a bound list always has one.
+        val appContext = parent.requireActivity().applicationContext
         val content = inboxMessage.inboxMessageContents[0]
-        val title = this.title!!
-        val message = this.message!!
-        val timestamp = this.timestamp!!
-        val clickLayout = this.carouselClickLayout!!
-        val imageViewPager = this.imageViewPager!!
-        val sliderDots = this.sliderDots!!
         title.visibility = View.VISIBLE
-        message.visibility = View.VISIBLE
+        messageText.visibility = View.VISIBLE
         title.text = content.title
         title.setTextColor(Color.parseColor(content.titleColor))
-        message.text = content.message
-        message.setTextColor(Color.parseColor(content.messageColor))
-        if (inboxMessage.isRead) {
-            readDot!!.visibility = View.GONE
-        } else {
-            readDot!!.visibility = View.VISIBLE
-        }
+        messageText.text = content.message
+        messageText.setTextColor(Color.parseColor(content.messageColor))
+        showReadState(inboxMessage.isRead)
         timestamp.visibility = View.VISIBLE
-        val carouselDisplayTimestamp = calculateDisplayTimestamp(inboxMessage.date)
-        timestamp.text = carouselDisplayTimestamp
+        timestamp.text = calculateDisplayTimestamp(inboxMessage.date)
         timestamp.setTextColor(Color.parseColor(content.titleColor))
         clickLayout.setBackgroundColor(Color.parseColor(inboxMessage.bgColor))
 
         //Loads the viewpager
         val layoutParams = imageViewPager.layoutParams as LinearLayout.LayoutParams?
-        val carouselViewPagerAdapter = CTCarouselViewPagerAdapter(
-            appContext, parent,
-            inboxMessage, layoutParams, position
-        )
+        val carouselViewPagerAdapter = CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position)
         // Detach the recycled holder's listener BEFORE swapping the adapter. setAdapter() resets
         // the current item to 0, and that dispatch would otherwise reach a listener still holding
         // the previous message's data and dots array.
-        val previousListener = activePageChangeListener
-        if (previousListener != null) {
-            imageViewPager.removeOnPageChangeListener(previousListener)
+        activePageChangeListener?.let {
+            imageViewPager.removeOnPageChangeListener(it)
             activePageChangeListener = null
         }
         imageViewPager.adapter = carouselViewPagerAdapter
@@ -143,26 +101,22 @@ internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageV
         if (sliderDots.childCount > 0) {
             sliderDots.removeAllViews()
         }
-        val dots = arrayOfNulls<ImageView>(dotsCount)
-        setDots(dots, dotsCount, appContext, sliderDots)
-        dots[0]!!.setImageDrawable(
-            ResourcesCompat.getDrawable(appContext.resources, R.drawable.ct_selected_dot, null)
-        )
-        val pageChangeListener = CarouselPageChangeListener(
-            parent.activity!!.applicationContext, this, dots, inboxMessage
-        )
+        val dots = createDots(dotsCount, appContext, sliderDots)
+        dots[0].setImageDrawable(ResourcesCompat.getDrawable(appContext.resources, R.drawable.ct_selected_dot, null))
+        val pageChangeListener = CarouselPageChangeListener(appContext, dots, inboxMessage)
         activePageChangeListener = pageChangeListener
         imageViewPager.addOnPageChangeListener(pageChangeListener)
         // onPageSelected() never fires for the initial page - ViewPager only dispatches on a
         // change - so page 0's state must be set explicitly, and last, so nothing triggered by
         // the adapter swap can overwrite it.
-        imageViewPager.setAccessibilityState(
-            getImageContentDescription(appContext, inboxMessage, 0), 0, dotsCount
-        )
+        imageViewPager.setAccessibilityState(getImageContentDescription(appContext, inboxMessage, 0), 0, dotsCount)
 
         val bodyClickListener = CTInboxButtonClickListener(
-            position, inboxMessage, null,
-            parentWeak, imageViewPager, true, APP_INBOX_ITEM_INDEX
+            position = position,
+            inboxMessage = inboxMessage,
+            fragment = parent,
+            viewPager = imageViewPager,
+            buttonIndex = APP_INBOX_ITEM_INDEX
         )
         clickLayout.setOnClickListener(bodyClickListener)
         // The adapter hides each page from the accessibility tree, which also hides the page's

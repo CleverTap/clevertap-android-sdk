@@ -31,30 +31,24 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
 
     private var notifTitle: String? = null
 
-    private var smallIcon = 0
+    private var smallIconRes = 0
 
-    override fun getCollapseKey(extras: Bundle): Any? {
-        @Suppress("DEPRECATION")
-        return extras.get(Constants.WZRK_COLLAPSE)
-    }
+    @Suppress("DEPRECATION")
+    override fun getCollapseKey(extras: Bundle): Any? = extras.get(Constants.WZRK_COLLAPSE)
 
-    override fun getMessage(extras: Bundle): String? {
-        notifMessage = extras.getString(Constants.NOTIF_MSG)
-        return notifMessage
-    }
+    override fun getMessage(extras: Bundle): String? =
+        extras.getString(Constants.NOTIF_MSG).also { notifMessage = it }
 
     override fun getTitle(extras: Bundle, context: Context): String? {
         val title = extras.getString(Constants.NOTIF_TITLE, "")
-        notifTitle = if (title.isEmpty()) context.applicationInfo.name else title
-        return notifTitle
+        return (if (title.isEmpty()) context.applicationInfo.name else title).also { notifTitle = it }
     }
 
     @RequiresApi(34)
-    private fun getNotificationGifUri(gif: String, context: Context, config: CleverTapInstanceConfig): Uri? {
-        return Utils.getNotificationGifURI(gif, context, config, Clock.SYSTEM)
-    }
+    private fun notificationGifUri(gif: String, context: Context, config: CleverTapInstanceConfig): Uri? =
+        Utils.getNotificationGifURI(gif, context, config, Clock.SYSTEM)
 
-    private fun getNotificationImageBitmap(
+    private fun downloadBigPicture(
         bigPictureUrl: String?,
         context: Context,
         config: CleverTapInstanceConfig
@@ -69,9 +63,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
                 false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS
             )
             if (downloadedBitmap.bitmap != null) {
-                val pift = downloadedBitmap.downloadTime
-                config.logger
-                    .verbose("Fetched big picture in $pift millis")
+                config.logger.verbose("Fetched big picture in ${downloadedBitmap.downloadTime} millis")
             }
         } catch (t: Throwable) {
             config.logger.verbose(
@@ -105,14 +97,12 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
         val gifUrl = extras.getString(Constants.WZRK_GIF)
         val summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY, notifMessage)
 
-        var style: NotificationCompat.Style
-
         try {
             // 1. Try GIF if on Android 14+ and valid URL
             if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE && gifUrl != null && gifUrl.startsWith("http")) {
-                val gifUri = getNotificationGifUri(gifUrl, context, config)
+                val gifUri = notificationGifUri(gifUrl, context, config)
                 if (gifUri != null) {
-                    style = NotificationCompat.BigPictureStyle()
+                    val style = NotificationCompat.BigPictureStyle()
                         .setSummaryText(summaryText)
                         .bigPicture(Icon.createWithContentUri(gifUri))
                     addContentDescriptionIfNeeded(style, extras, context)
@@ -125,7 +115,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
         }
 
         // 2. Try image fallback
-        val downloadedBitmap = getNotificationImageBitmap(bigPictureUrl, context, config)
+        val downloadedBitmap = downloadBigPicture(bigPictureUrl, context, config)
         extras.putString(Constants.WZRK_BPDS, downloadedBitmap.status.statusValue)
         if (downloadedBitmap.failureReason != null) {
             extras.putString(Constants.WZRK_BPDS_REASON, downloadedBitmap.failureReason)
@@ -134,7 +124,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
         try {
             val bitmap = downloadedBitmap.bitmap
             if (bitmap != null) {
-                style = NotificationCompat.BigPictureStyle()
+                val style = NotificationCompat.BigPictureStyle()
                     .setSummaryText(summaryText)
                     .bigPicture(bitmap)
                 addContentDescriptionIfNeeded(style, extras, context)
@@ -145,8 +135,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
         }
 
         // Fallback to message only
-        style = NotificationCompat.BigTextStyle().bigText(notifMessage)
-        return style
+        return NotificationCompat.BigTextStyle().bigText(notifMessage)
     }
 
     override fun renderNotification(
@@ -165,19 +154,11 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
         config: CleverTapInstanceConfig,
         notificationId: Int
     ) {
-        val actions: JSONArray
-        val actionsString = extras.getString(Constants.WZRK_ACTIONS)
-        if (actionsString != null) {
-            try {
-                actions = JSONArray(actionsString)
-                setActionButtons(context, extras, notificationId, nb, actions)
-            } catch (t: Throwable) {
-                config.logger
-                    .debug(
-                        config.accountId,
-                        "error parsing notification actions: " + t.localizedMessage
-                    )
-            }
+        val actionsString = extras.getString(Constants.WZRK_ACTIONS) ?: return
+        try {
+            setActionButtons(context, extras, notificationId, nb, JSONArray(actionsString))
+        } catch (t: Throwable) {
+            config.logger.debug(config.accountId, "error parsing notification actions: ${t.localizedMessage}")
         }
     }
 
@@ -198,11 +179,9 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
             nb.setColorized(true)
         } // uncommon
 
-        val dismissValue = extras.getString(Constants.WZRK_DISMISS)
-        if (dismissValue != null) {
+        extras.getString(Constants.WZRK_DISMISS)?.let { dismissValue ->
             try {
-                val dismissAfter = dismissValue.toLong() * 1000L
-                nb.setTimeoutAfter(dismissAfter)
+                nb.setTimeoutAfter(dismissValue.toLong() * 1000L)
             } catch (e: NumberFormatException) {
                 config.logger.verbose(config.accountId, "Failed to parse timeout dismiss value", e)
             }
@@ -219,7 +198,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
             .setContentIntent(LaunchPendingIntentFactory.getLaunchPendingIntent(extras, context))
             .setAutoCancel(true)
             .setStyle(style)
-            .setSmallIcon(smallIcon)
+            .setSmallIcon(smallIconRes)
 
         val icoPath = extras.getString(Constants.NOTIF_ICON) // uncommon
         val showIcon = !"true".equals(extras.getString(Constants.NOTIF_HIDE_APP_LARGE_ICON), ignoreCase = true)
@@ -236,12 +215,10 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
     }
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
-        this.smallIcon = smallIcon
+        smallIconRes = smallIcon
     }
 
-    override fun getActionButtonIconKey(): String {
-        return Constants.NOTIF_ICON
-    }
+    override fun getActionButtonIconKey(): String = Constants.NOTIF_ICON
 
     override fun setSound(
         context: Context, extras: Bundle, nb: Builder,
@@ -249,33 +226,23 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
     ): Builder {
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
-                var soundUri: Uri? = null
-
                 @Suppress("DEPRECATION")
                 val o = extras.get(Constants.WZRK_SOUND)
-
-                if (o is Boolean && o) {
-                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                } else if (o is String) {
-                    var s: String = o
-                    if (s == "true") {
-                        soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    } else if (!s.isEmpty()) {
-                        if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
-                            s = s.substring(0, (s.length - 4))
+                val soundUri = when {
+                    o == true || o == "true" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    o is String && o.isNotEmpty() -> {
+                        val sound = if (o.contains(".mp3") || o.contains(".ogg") || o.contains(".wav")) {
+                            o.substring(0, o.length - 4)
+                        } else {
+                            o
                         }
-                        soundUri = Uri
-                            .parse(
-                                ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName
-                                        + "/raw/" + s
-                            )
-
+                        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/raw/$sound")
                     }
+
+                    else -> null
                 }
 
-                if (soundUri != null) {
-                    nb.setSound(soundUri)
-                }
+                soundUri?.let { nb.setSound(it) }
             }
         } catch (t: Throwable) {
             config.logger.debug(config.accountId, "Could not process sound parameter", t)
