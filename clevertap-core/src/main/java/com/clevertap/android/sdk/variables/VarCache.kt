@@ -235,21 +235,7 @@ internal open class VarCache(
         val urls = ArrayList<Pair<String, CtCacheType>>()
 
         for (name in clientRegisteredVars.keys) {
-            val variable = vars[name]
-            // a registered variable always has a kind (set by Var.define)
-            if (variable == null || checkNotNull(variable.kind()) != CTVariableUtils.FILE) {
-                continue
-            }
-            val url = variable.rawFileValue()
-            if (url == null) {
-                skipped.append(name).append("\n")
-                continue
-            }
-            val isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).isFileCached(url)
-            if (!isFileCached) {
-                urls.add(Pair(url, CtCacheType.FILES))
-                added.append(name).append(" : ").append(url).append("\n")
-            }
+            collectFileVarUrl(name = name, skipped = skipped, added = added, urls = urls)
         }
         log(skipped.toString())
         log(added.toString())
@@ -260,6 +246,33 @@ internal open class VarCache(
         }
         // triggers global files callbacks to client
         fileResourcesRepoImpl.preloadFilesAndCache(urls, completionCallback = { func() })
+    }
+
+    /**
+     * If [name] is a file variable whose file is not cached yet, adds its url to [urls]. File
+     * variables without a url are listed in [skipped], queued ones in [added].
+     */
+    private fun collectFileVarUrl(
+        name: String,
+        skipped: StringBuilder,
+        added: StringBuilder,
+        urls: MutableList<Pair<String, CtCacheType>>
+    ) {
+        val variable = vars[name]
+        // a registered variable always has a kind (set by Var.define)
+        if (variable == null || checkNotNull(variable.kind()) != CTVariableUtils.FILE) {
+            return
+        }
+        val url = variable.rawFileValue()
+        if (url == null) {
+            skipped.append(name).append("\n")
+            return
+        }
+        val isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).isFileCached(url)
+        if (!isFileCached) {
+            urls.add(Pair(url, CtCacheType.FILES))
+            added.append(name).append(" : ").append(url).append("\n")
+        }
     }
 
     @Synchronized
