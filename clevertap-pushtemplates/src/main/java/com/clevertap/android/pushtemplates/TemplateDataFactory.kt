@@ -308,7 +308,8 @@ internal object TemplateDataFactory {
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
             mediaData = mediaData,
-            showCollapsedBackgroundImage = extras.getString(PT_SMALL_VIEW)?.equals(TEXT_ONLY, ignoreCase = true) != true,
+            showCollapsedBackgroundImage =
+                extras.getString(PT_SMALL_VIEW)?.equals(TEXT_ONLY, ignoreCase = true) != true,
             collapsedMediaData = createCollapsedMediaData(extras, mediaData)
         )
     }
@@ -323,7 +324,9 @@ internal object TemplateDataFactory {
         val timerThreshold = Utils.getTimerThreshold(extras)
         val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)
         val baseContent = createBaseContent(extras, colorMap)
-        val resolvedBaseContent = baseContent.copy(notificationBehavior = baseContent.notificationBehavior.copy(dismissAfter = dismissAfter))
+        val resolvedBaseContent = baseContent.copy(
+            notificationBehavior = baseContent.notificationBehavior.copy(dismissAfter = dismissAfter)
+        )
         return TimerTemplateData(
             baseContent = resolvedBaseContent,
             mediaData = mediaData,
@@ -336,7 +339,8 @@ internal object TemplateDataFactory {
             chronometerStyle = ButtonStyle.fromString(extras.getString(PT_CHRONO_STYLE)),
             chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
             chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
-            chronometerGradientDirection = extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
+            chronometerGradientDirection =
+                extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
             chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
             chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
@@ -396,7 +400,7 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         collapsed: Boolean = false,
     ): VerticalImageButtonData? {
-        val suffix = if (collapsed) "_collapsed" else ""
+        val suffix = if (collapsed) { "_collapsed" } else { "" }
         val btnName = extras.getString(PT_BTN_NAME + suffix)?.takeIf { it.isNotEmpty() } ?: return null
         return VerticalImageButtonData(
             name = btnName,
@@ -408,8 +412,10 @@ internal object TemplateDataFactory {
             gradientColor1 = colorMap[PT_BTN_GRAD_CLR1 + suffix],
             gradientColor2 = colorMap[PT_BTN_GRAD_CLR2 + suffix],
             gradientDirection = extras.getString(PT_BTN_GRAD_DIR + suffix)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
-            borderRadius = extras.getString(PT_BTN_BORDER_RADIUS + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_RADIUS_DEFAULT,
-            borderWidth = extras.getString(PT_BTN_BORDER_WIDTH + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_WIDTH_DEFAULT,
+            borderRadius =
+                extras.getString(PT_BTN_BORDER_RADIUS + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_RADIUS_DEFAULT,
+            borderWidth =
+                extras.getString(PT_BTN_BORDER_WIDTH + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_WIDTH_DEFAULT,
         )
     }
 
@@ -522,7 +528,7 @@ internal object TemplateDataFactory {
     private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
         val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)?.takeIf { it.isNotBlank() }
         val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)?.takeIf { it.isNotBlank() }
-        if (bigImageCollapsed == null && gifCollapsed == null) return null
+        if (bigImageCollapsed == null && gifCollapsed == null) { return null }
         return MediaData(
             bigImage = ImageData(
                 url = bigImageCollapsed,
@@ -582,7 +588,8 @@ internal object TemplateDataFactory {
             ),
             gif = GifData(
                 url = terminalGif,
-                numberOfFrames = extras.getString(PT_GIF_FRAMES_ALT)?.toIntOrNull() ?: defaultMediaData.gif.numberOfFrames
+                numberOfFrames =
+                    extras.getString(PT_GIF_FRAMES_ALT)?.toIntOrNull() ?: defaultMediaData.gif.numberOfFrames
             ),
             scaleType = PTScaleType.fromString(
                 extras.getString(

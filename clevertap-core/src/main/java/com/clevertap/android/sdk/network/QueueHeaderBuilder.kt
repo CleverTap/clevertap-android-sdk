@@ -1,7 +1,15 @@
 package com.clevertap.android.sdk.network
 
 import android.content.Context
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.areAppNotificationsEnabled
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.utils.CTJsonConverter
@@ -74,7 +82,10 @@ internal class QueueHeaderBuilder(
         if (!deviceId.isNullOrEmpty()) {
             header.put("g", deviceId)
         } else {
-            logger.verbose(config.accountId, "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!")
+            logger.verbose(
+                config.accountId,
+                "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!"
+            )
         }
     }
 
@@ -117,7 +128,11 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addDoNotDisturb(header: JSONObject) {
-        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders?.isNotificationSupported ?: true)))
+        header.put(
+            "ddnd",
+            !(context.areAppNotificationsEnabled() &&
+                (controllerManager.pushProviders?.isNotificationSupported ?: true))
+        )
     }
 
     private fun addBackgroundPing(header: JSONObject) {
@@ -193,7 +208,10 @@ internal class QueueHeaderBuilder(
             Logger.v("Attaching InAppFC to Header")
             header.put("imp", it.shownTodayCount)
             header.put("tlc", it.getInAppsCount(context))
-        } ?: logger.verbose(config.accountId, "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header")
+        } ?: logger.verbose(
+            config.accountId,
+            "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header"
+        )
     }
 
     /**
@@ -207,6 +225,9 @@ internal class QueueHeaderBuilder(
             Logger.v("Attaching NdFC to Header")
             header.put(Constants.ND_MAX_PER_DAY_KEY, it.shownTodayCount)
             header.put(Constants.ND_TARGET_SHOWN_LIST, it.getNdCounts())
-        } ?: logger.verbose(config.accountId, "controllerManager.getNdFCManager() is NULL, not Attaching NdFC to Header")
+        } ?: logger.verbose(
+            config.accountId,
+            "controllerManager.getNdFCManager() is NULL, not Attaching NdFC to Header"
+        )
     }
 }

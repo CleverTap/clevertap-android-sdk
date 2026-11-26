@@ -46,7 +46,9 @@ internal class InboxDeleteCoordinator(
      * (with `wzrk_*` params) in hand.
      */
     fun syncDelete(messages: List<CTInboxMessage>, userId: String) {
-        if (messages.isEmpty()) return
+        if (messages.isEmpty()) {
+            return
+        }
         logger.verbose("InboxV2", "syncDelete launching for n=${messages.size} message(s)")
         networkScope.coroutineScope.launch {
             runDelete(messages, userId)
@@ -63,7 +65,9 @@ internal class InboxDeleteCoordinator(
         networkScope.coroutineScope.launch {
             dbAdapterProvider().removeExpiredAwaitingConfirm(userId, clock.currentTimeSeconds())
             val rows = dbAdapterProvider().getPendingDeletes(userId)
-            if (rows.isEmpty()) return@launch
+            if (rows.isEmpty()) {
+                return@launch
+            }
             logger.verbose("InboxV2", "retryPending: ${rows.size} pending delete row(s) for user")
             val messages = rows.map { row ->
                 val json = JSONObject().put("id", row.messageId)

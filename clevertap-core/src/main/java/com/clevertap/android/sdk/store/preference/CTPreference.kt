@@ -191,6 +191,7 @@ internal class CTPreference(context: Context, private var prefName: String? = nu
     @VisibleForTesting
     internal fun sharedPrefs(): SharedPreferences? {
         val context = contextRef.get() ?: return null
-        return context.getSharedPreferences(prefName, Context.MODE_PRIVATE) // todo : can cache context.getSharedPreferences call
+        // todo : can cache context.getSharedPreferences call
+        return context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
     }
 }

@@ -37,7 +37,9 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         operation: ProfileOperation,
         recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
-        if (newArray.length() == 0) return
+        if (newArray.length() == 0) {
+            return
+        }
 
         when (operation) {
             ProfileOperation.ARRAY_ADD -> handleArrayAdd(oldArray, newArray, currentPath, changes)

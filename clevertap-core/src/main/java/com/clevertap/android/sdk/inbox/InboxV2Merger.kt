@@ -34,7 +34,9 @@ internal object InboxV2Merger {
             !videoSupported && dao.containsVideoOrAudio() -> null
             isExpired(dao, nowSec) -> null
             else -> dao.also {
-                if (it.id in pendingReads) it.isRead = 1
+                if (it.id in pendingReads) {
+                    it.isRead = 1
+                }
             }
         }
     }
@@ -59,7 +61,9 @@ internal object InboxV2Merger {
                 isExpired(dao, nowSec) -> toDelete.add(dao.id)
                 !videoSupported && dao.containsVideoOrAudio() -> toDelete.add(dao.id)
                 else -> {
-                    if (dao.id in pendingReads) dao.isRead = 1
+                    if (dao.id in pendingReads) {
+                        dao.isRead = 1
+                    }
                     kept.add(dao)
                 }
             }

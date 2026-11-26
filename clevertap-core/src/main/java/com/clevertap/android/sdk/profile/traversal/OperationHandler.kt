@@ -86,12 +86,16 @@ internal class OperationHandler(
         val updatedValue = when (operation) {
             ProfileOperation.DECREMENT -> {
                 // For missing keys, DECREMENT means 0 - value = -value
-                if (newValue !is Number) return
+                if (newValue !is Number) {
+                    return
+                }
                 NumberOperationUtils.negateNumber(newValue)
             }
             ProfileOperation.INCREMENT -> {
                 // For missing keys, INCREMENT means 0 + value = value
-                if (newValue !is Number) return
+                if (newValue !is Number) {
+                    return
+                }
                 newValue
             }
             else -> newValue

@@ -33,14 +33,18 @@ internal open class ProductDisplayLinearBigContentView(
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
 
-        if (data.bigTextList.isNotEmpty()) setCustomContentViewText(
-            R.id.product_name,
-            productName
-        )
-        if (data.priceList.isNotEmpty()) setCustomContentViewText(
-            R.id.product_price,
-            productPrice
-        )
+        if (data.bigTextList.isNotEmpty()) {
+            setCustomContentViewText(
+                R.id.product_name,
+                productName
+            )
+        }
+        if (data.priceList.isNotEmpty()) {
+            setCustomContentViewText(
+                R.id.product_price,
+                productPrice
+            )
+        }
 
         setCustomContentViewButtonLabel(R.id.product_action, data.displayActionText)
 
@@ -56,7 +60,8 @@ internal open class ProductDisplayLinearBigContentView(
         remoteView.setOnClickPendingIntent(
             R.id.small_image1, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL1_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
+                renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL1_PENDING_INTENT,
+                data.baseContent.deepLinkList.getOrNull(0)
             )
         )
 

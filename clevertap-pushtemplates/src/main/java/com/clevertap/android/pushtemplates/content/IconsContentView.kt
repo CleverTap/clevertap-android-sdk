@@ -46,8 +46,8 @@ internal abstract class IconsContentView(
     protected fun setupTextRow(data: IconsTemplateData, hideMessage: Boolean) {
         setCustomContentViewTitle(data.iconTextData.title)
         setCustomContentViewMessage(data.iconTextData.message)
-        if (data.iconTextData.title.isNullOrEmpty()) remoteView.setViewVisibility(R.id.title, View.GONE)
-        if (hideMessage) remoteView.setViewVisibility(R.id.msg, View.GONE)
+        if (data.iconTextData.title.isNullOrEmpty()) { remoteView.setViewVisibility(R.id.title, View.GONE) }
+        if (hideMessage) { remoteView.setViewVisibility(R.id.msg, View.GONE) }
         setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
@@ -67,7 +67,7 @@ internal abstract class IconsContentView(
         data.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
-            if (index >= ctaIds.size) return@forEachIndexed
+            if (index >= ctaIds.size) { return@forEachIndexed }
 
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)

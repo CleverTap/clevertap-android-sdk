@@ -44,7 +44,7 @@ internal class TriggerValue(val value: Any? = null, private var listValue: List<
             is JSONArray -> {
                 listValue = JsonUtil.listFromJson<Any>(value)
                 listValueWithCleanedStringIfPresent =
-                    listValue?.map { if (it is String) it.trim().lowercase() else it }
+                    listValue?.map { if (it is String) { it.trim().lowercase() } else { it } }
             }
         }
     }

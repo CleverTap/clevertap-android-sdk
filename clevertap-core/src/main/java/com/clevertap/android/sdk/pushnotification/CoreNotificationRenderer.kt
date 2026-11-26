@@ -43,7 +43,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
 
     override fun getTitle(extras: Bundle, context: Context): String? {
         val title = extras.getString(Constants.NOTIF_TITLE, "")
-        return (if (title.isEmpty()) context.applicationInfo.name else title).also { notifTitle = it }
+        return (if (title.isEmpty()) { context.applicationInfo.name } else { title }).also { notifTitle = it }
     }
 
     @RequiresApi(34)

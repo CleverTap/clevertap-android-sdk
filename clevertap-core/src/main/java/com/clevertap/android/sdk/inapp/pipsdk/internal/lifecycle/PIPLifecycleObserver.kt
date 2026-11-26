@@ -14,6 +14,8 @@ internal class PIPLifecycleObserver(
     private val onStop: () -> Unit,
 ) : LifecycleEventObserver {
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (event == Lifecycle.Event.ON_STOP) onStop()
+        if (event == Lifecycle.Event.ON_STOP) {
+            onStop()
+        }
     }
 }

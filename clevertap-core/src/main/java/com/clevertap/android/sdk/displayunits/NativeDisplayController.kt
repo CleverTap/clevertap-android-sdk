@@ -45,7 +45,11 @@ internal class NativeDisplayController(
         location: Location?
     ) {
         runGuarded {
-            ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, mergedAppFields())
+            ndEvaluationManager.evaluateOnUserAttributeChange(
+                userAttributeChangedProperties,
+                location,
+                mergedAppFields()
+            )
         }
     }
 

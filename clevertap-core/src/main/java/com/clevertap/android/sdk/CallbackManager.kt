@@ -96,11 +96,15 @@ internal open class CallbackManager(
             featureFlagListenerWeakReference = WeakReference(listener)
         }
 
-    override fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?) {
+    override fun registerPushPermissionResponseListener(
+        pushPermissionResponseListener: PushPermissionResponseListener?
+    ) {
         pushPermissionResponseListenerList.add(pushPermissionResponseListener)
     }
 
-    override fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?) {
+    override fun unregisterPushPermissionResponseListener(
+        pushPermissionResponseListener: PushPermissionResponseListener?
+    ) {
         pushPermissionResponseListenerList.remove(pushPermissionResponseListener)
     }
 

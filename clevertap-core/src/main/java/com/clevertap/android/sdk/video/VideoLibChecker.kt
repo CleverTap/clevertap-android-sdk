@@ -32,8 +32,9 @@ internal object VideoLibChecker {
      * @return boolean - true/false depending on app's availability of either ExoPlayer or Media3 dependencies
      */
     private fun checkForVideoPlayerSupport(): Boolean {
-        if (!hasMedia3 && !hasExoplayer)
+        if (!hasMedia3 && !hasExoplayer) {
             Logger.d("Please add ExoPlayer/Media3 dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
+        }
         return hasExoplayer || hasMedia3
     }
 

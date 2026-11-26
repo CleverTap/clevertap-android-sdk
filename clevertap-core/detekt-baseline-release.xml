@@ -4,215 +4,19 @@
   <CurrentIssues>
     <ID>ArrayPrimitive:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$arrayOf(0, 1)</ID>
     <ID>ArrayPrimitive:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$arrayOf(threshold,numberOfRowsToKeep)</ID>
-    <ID>BracesOnIfStatements:AESGCMCrypt.kt$AESGCMCrypt.AESGCMCryptResult$if</ID>
-    <ID>BracesOnIfStatements:AnalyticsManager.kt$AnalyticsManager$else</ID>
-    <ID>BracesOnIfStatements:AnalyticsManager.kt$AnalyticsManager$if</ID>
-    <ID>BracesOnIfStatements:ArrayOperationHandler.kt$ArrayOperationHandler$if</ID>
-    <ID>BracesOnIfStatements:CTExecutors.kt$CTExecutors$else</ID>
-    <ID>BracesOnIfStatements:CTExecutors.kt$CTExecutors$if</ID>
-    <ID>BracesOnIfStatements:CTFlushPushImpressionsWork.kt$CTFlushPushImpressionsWork$if</ID>
-    <ID>BracesOnIfStatements:CTInAppAction.kt$CTInAppAction$else</ID>
-    <ID>BracesOnIfStatements:CTInAppAction.kt$CTInAppAction$if</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFragment.kt$CTInAppBaseFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFragment.kt$CTInAppBaseFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment.Companion$else</ID>
-    <ID>BracesOnIfStatements:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment.Companion$if</ID>
-    <ID>BracesOnIfStatements:CTInAppBasePartialFragment.kt$CTInAppBasePartialFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppBasePartialHtmlFragment.kt$CTInAppBasePartialHtmlFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppNativeCoverImageFragment.kt$CTInAppNativeCoverImageFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInAppNativeFooterFragment.kt$CTInAppNativeFooterFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppNativeHalfInterstitialImageFragment.kt$CTInAppNativeHalfInterstitialImageFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInAppNativeHeaderFragment.kt$CTInAppNativeHeaderFragment$if</ID>
-    <ID>BracesOnIfStatements:CTInAppNativeInterstitialImageFragment.kt$CTInAppNativeInterstitialImageFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInAppNotification.kt$CTInAppNotification$else</ID>
-    <ID>BracesOnIfStatements:CTInAppNotification.kt$CTInAppNotification$if</ID>
-    <ID>BracesOnIfStatements:CTInAppNotificationButton.kt$CTInAppNotificationButton$if</ID>
-    <ID>BracesOnIfStatements:CTInAppNotificationMedia.kt$CTInAppNotificationMedia$if</ID>
-    <ID>BracesOnIfStatements:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$else</ID>
-    <ID>BracesOnIfStatements:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$if</ID>
-    <ID>BracesOnIfStatements:CTInboxController.kt$CTInboxController.Companion$else</ID>
-    <ID>BracesOnIfStatements:CTInboxController.kt$CTInboxController.Companion$if</ID>
-    <ID>BracesOnIfStatements:CTInboxListViewFragment.kt$CTInboxListViewFragment$else</ID>
-    <ID>BracesOnIfStatements:CTInboxListViewFragment.kt$CTInboxListViewFragment$if</ID>
     <ID>BracesOnIfStatements:CTInboxMessage.kt$CTInboxMessage$else</ID>
     <ID>BracesOnIfStatements:CTInboxMessage.kt$CTInboxMessage$if</ID>
-    <ID>BracesOnIfStatements:CTInboxMessageContent.kt$CTInboxMessageContent$else</ID>
-    <ID>BracesOnIfStatements:CTInboxMessageContent.kt$CTInboxMessageContent$if</ID>
-    <ID>BracesOnIfStatements:CTJsonConverter.kt$CTJsonConverter$else</ID>
-    <ID>BracesOnIfStatements:CTJsonConverter.kt$CTJsonConverter$if</ID>
-    <ID>BracesOnIfStatements:CTMessageDAO.kt$CTMessageDAO$else</ID>
-    <ID>BracesOnIfStatements:CTMessageDAO.kt$CTMessageDAO$if</ID>
-    <ID>BracesOnIfStatements:CTMessageDAO.kt$CTMessageDAO.Companion$else</ID>
-    <ID>BracesOnIfStatements:CTMessageDAO.kt$CTMessageDAO.Companion$if</ID>
-    <ID>BracesOnIfStatements:CTVariableUtils.kt$CTVariableUtils.Companion$else</ID>
-    <ID>BracesOnIfStatements:CTVariableUtils.kt$CTVariableUtils.Companion$if</ID>
-    <ID>BracesOnIfStatements:CTWrapper.kt$CTWrapper$if</ID>
-    <ID>BracesOnIfStatements:CleverTapAPI.kt$CleverTapAPI.Companion$else</ID>
-    <ID>BracesOnIfStatements:CleverTapAPI.kt$CleverTapAPI.Companion$if</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnit.kt$CleverTapDisplayUnit$else</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnit.kt$CleverTapDisplayUnit$if</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$else</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$if</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent$else</ID>
-    <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent$if</ID>
     <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$else</ID>
     <ID>BracesOnIfStatements:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$if</ID>
-    <ID>BracesOnIfStatements:CleverTapInstanceConfig.kt$CleverTapInstanceConfig$else</ID>
-    <ID>BracesOnIfStatements:CleverTapInstanceConfig.kt$CleverTapInstanceConfig$if</ID>
-    <ID>BracesOnIfStatements:CleverTapInstanceConfig.kt$CleverTapInstanceConfig.Companion$else</ID>
-    <ID>BracesOnIfStatements:CleverTapInstanceConfig.kt$CleverTapInstanceConfig.Companion$if</ID>
-    <ID>BracesOnIfStatements:ColorUtils.kt$if</ID>
-    <ID>BracesOnIfStatements:ContentFetchItem.kt$ContentFetchItem.Companion$else</ID>
-    <ID>BracesOnIfStatements:ContentFetchItem.kt$ContentFetchItem.Companion$if</ID>
-    <ID>BracesOnIfStatements:CoreNotificationRenderer.kt$CoreNotificationRenderer$else</ID>
-    <ID>BracesOnIfStatements:CoreNotificationRenderer.kt$CoreNotificationRenderer$if</ID>
-    <ID>BracesOnIfStatements:CtDatabase.kt$DatabaseHelper$if</ID>
-    <ID>BracesOnIfStatements:CustomTemplate.kt$CustomTemplate$if</ID>
-    <ID>BracesOnIfStatements:CustomTemplateInAppData.kt$CustomTemplateInAppData$else</ID>
-    <ID>BracesOnIfStatements:CustomTemplateInAppData.kt$CustomTemplateInAppData$if</ID>
-    <ID>BracesOnIfStatements:DBAdapter.kt$DBAdapter$else</ID>
-    <ID>BracesOnIfStatements:DBAdapter.kt$DBAdapter$if</ID>
-    <ID>BracesOnIfStatements:DBAdapter.kt$DBAdapter.Companion$else</ID>
-    <ID>BracesOnIfStatements:DBAdapter.kt$DBAdapter.Companion$if</ID>
-    <ID>BracesOnIfStatements:DBManager.kt$DBManager$else</ID>
-    <ID>BracesOnIfStatements:DBManager.kt$DBManager$if</ID>
-    <ID>BracesOnIfStatements:DelayedLegacyInAppStore.kt$DelayedLegacyInAppStore$if</ID>
-    <ID>BracesOnIfStatements:DeleteOperationHandler.kt$DeleteOperationHandler$if</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo$else</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo$if</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.Companion$else</ID>
-    <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.Companion$if</ID>
     <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.DeviceCachedInfo$else</ID>
     <ID>BracesOnIfStatements:DeviceInfo.kt$DeviceInfo.DeviceCachedInfo$if</ID>
-    <ID>BracesOnIfStatements:DownloadedBitmap.kt$DownloadedBitmap$if</ID>
     <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$else</ID>
     <ID>BracesOnIfStatements:EvalRules.kt$EvalRules$if</ID>
-    <ID>BracesOnIfStatements:EvaluationManager.kt$EvaluationManager$if</ID>
-    <ID>BracesOnIfStatements:ExoplayerHandle.kt$ExoplayerHandle$else</ID>
-    <ID>BracesOnIfStatements:ExoplayerHandle.kt$ExoplayerHandle$if</ID>
-    <ID>BracesOnIfStatements:FallbackImageLoader.kt$FallbackImageLoader$if</ID>
-    <ID>BracesOnIfStatements:GifDecoder.kt$GifDecoder$else</ID>
-    <ID>BracesOnIfStatements:GifDecoder.kt$GifDecoder$if</ID>
-    <ID>BracesOnIfStatements:GifImageView.kt$GifImageView$else</ID>
-    <ID>BracesOnIfStatements:GifImageView.kt$GifImageView$if</ID>
-    <ID>BracesOnIfStatements:GifRenderer.kt$GifRenderer$if</ID>
-    <ID>BracesOnIfStatements:HeaderVoteLists.kt$HeaderVoteLists$else</ID>
-    <ID>BracesOnIfStatements:HeaderVoteLists.kt$HeaderVoteLists$if</ID>
-    <ID>BracesOnIfStatements:ImageRenderer.kt$ImageRenderer$if</ID>
-    <ID>BracesOnIfStatements:ImpressionStore.kt$ImpressionStore$if</ID>
-    <ID>BracesOnIfStatements:InAppController.kt$InAppController$else</ID>
-    <ID>BracesOnIfStatements:InAppController.kt$InAppController$if</ID>
-    <ID>BracesOnIfStatements:InAppController.kt$InAppController.Companion$if</ID>
-    <ID>BracesOnIfStatements:InAppDurationPartitioner.kt$InAppDurationPartitioner$if</ID>
-    <ID>BracesOnIfStatements:InAppFCManager.kt$InAppFCManager$else</ID>
-    <ID>BracesOnIfStatements:InAppFCManager.kt$InAppFCManager$if</ID>
-    <ID>BracesOnIfStatements:InAppGifHandler.kt$InAppGifHandler$if</ID>
-    <ID>BracesOnIfStatements:InAppNotificationActivity.kt$InAppNotificationActivity$else</ID>
-    <ID>BracesOnIfStatements:InAppNotificationActivity.kt$InAppNotificationActivity$if</ID>
-    <ID>BracesOnIfStatements:InAppPreviewHandler.kt$InAppPreviewHandler$if</ID>
-    <ID>BracesOnIfStatements:InAppStore.kt$InAppStore$if</ID>
-    <ID>BracesOnIfStatements:InAppStreamMediaHandler.kt$InAppStreamMediaHandler$if</ID>
-    <ID>BracesOnIfStatements:InboxDeleteCall.kt$InboxDeleteCall$if</ID>
-    <ID>BracesOnIfStatements:InboxDeleteCoordinator.kt$InboxDeleteCoordinator$if</ID>
-    <ID>BracesOnIfStatements:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$if</ID>
-    <ID>BracesOnIfStatements:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$else</ID>
-    <ID>BracesOnIfStatements:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$if</ID>
-    <ID>BracesOnIfStatements:InboxV2Merger.kt$InboxV2Merger$if</ID>
-    <ID>BracesOnIfStatements:InboxV2Response.kt$InboxV2Response$if</ID>
-    <ID>BracesOnIfStatements:JsonComparisonUtils.kt$JsonComparisonUtils$if</ID>
-    <ID>BracesOnIfStatements:JsonFlattener.kt$JsonFlattener$else</ID>
-    <ID>BracesOnIfStatements:JsonFlattener.kt$JsonFlattener$if</ID>
-    <ID>BracesOnIfStatements:JsonUtil.kt$JsonUtil$else</ID>
-    <ID>BracesOnIfStatements:JsonUtil.kt$JsonUtil$if</ID>
-    <ID>BracesOnIfStatements:LiveUpdatePayloadSurfacer.kt$LiveUpdatePayloadSurfacer$else</ID>
     <ID>BracesOnIfStatements:LiveUpdatePayloadSurfacer.kt$LiveUpdatePayloadSurfacer$if</ID>
-    <ID>BracesOnIfStatements:LiveUpdateRouter.kt$LiveUpdateRouter$else</ID>
-    <ID>BracesOnIfStatements:LiveUpdateRouter.kt$LiveUpdateRouter$if</ID>
-    <ID>BracesOnIfStatements:LocalDataStore.kt$LocalDataStore$else</ID>
-    <ID>BracesOnIfStatements:LocalDataStore.kt$LocalDataStore$if</ID>
-    <ID>BracesOnIfStatements:LocationManager.kt$LocationManager$else</ID>
-    <ID>BracesOnIfStatements:LocationManager.kt$LocationManager$if</ID>
-    <ID>BracesOnIfStatements:LoginController.kt$LoginController$else</ID>
-    <ID>BracesOnIfStatements:LoginController.kt$LoginController$if</ID>
-    <ID>BracesOnIfStatements:ManifestInfo.kt$ManifestInfo.Companion$else</ID>
-    <ID>BracesOnIfStatements:ManifestInfo.kt$ManifestInfo.Companion$if</ID>
-    <ID>BracesOnIfStatements:ManifestValidator.kt$ManifestValidator$else</ID>
-    <ID>BracesOnIfStatements:ManifestValidator.kt$ManifestValidator$if</ID>
-    <ID>BracesOnIfStatements:Media3Handle.kt$Media3Handle$else</ID>
-    <ID>BracesOnIfStatements:Media3Handle.kt$Media3Handle$if</ID>
-    <ID>BracesOnIfStatements:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$else</ID>
-    <ID>BracesOnIfStatements:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$if</ID>
-    <ID>BracesOnIfStatements:NdCountsStore.kt$NdCountsStore$if</ID>
-    <ID>BracesOnIfStatements:NdStore.kt$NdStore$if</ID>
-    <ID>BracesOnIfStatements:NestedJsonBuilder.kt$NestedJsonBuilder$if</ID>
-    <ID>BracesOnIfStatements:NetworkManager.kt$NetworkManager$else</ID>
-    <ID>BracesOnIfStatements:NetworkManager.kt$NetworkManager$if</ID>
-    <ID>BracesOnIfStatements:OperationHandler.kt$OperationHandler$if</ID>
-    <ID>BracesOnIfStatements:PIPCompactView.kt$PIPCompactView$else</ID>
-    <ID>BracesOnIfStatements:PIPCompactView.kt$PIPCompactView$if</ID>
-    <ID>BracesOnIfStatements:PIPConfigFactory.kt$PIPConfigFactory$if</ID>
-    <ID>BracesOnIfStatements:PIPControlsOverlay.kt$PIPControlsOverlay$if</ID>
-    <ID>BracesOnIfStatements:PIPDragHandler.kt$PIPDragHandler$if</ID>
-    <ID>BracesOnIfStatements:PIPExpandedView.kt$PIPExpandedView$else</ID>
-    <ID>BracesOnIfStatements:PIPExpandedView.kt$PIPExpandedView$if</ID>
-    <ID>BracesOnIfStatements:PIPIcons.kt$PIPIcons$else</ID>
-    <ID>BracesOnIfStatements:PIPIcons.kt$PIPIcons$if</ID>
-    <ID>BracesOnIfStatements:PIPLifecycleObserver.kt$PIPLifecycleObserver$if</ID>
-    <ID>BracesOnIfStatements:PIPManager.kt$PIPManager$else</ID>
-    <ID>BracesOnIfStatements:PIPManager.kt$PIPManager$if</ID>
-    <ID>BracesOnIfStatements:PIPManager.kt$PIPManager.&lt;no name provided&gt;$if</ID>
-    <ID>BracesOnIfStatements:PIPMediaView.kt$PIPMediaView$if</ID>
-    <ID>BracesOnIfStatements:PIPMediaView.kt$PIPMediaView.&lt;no name provided&gt;$else</ID>
-    <ID>BracesOnIfStatements:PIPMediaView.kt$PIPMediaView.&lt;no name provided&gt;$if</ID>
-    <ID>BracesOnIfStatements:PIPRootContainer.kt$PIPRootContainer$else</ID>
-    <ID>BracesOnIfStatements:PIPRootContainer.kt$PIPRootContainer$if</ID>
-    <ID>BracesOnIfStatements:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper$else</ID>
-    <ID>BracesOnIfStatements:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper$if</ID>
-    <ID>BracesOnIfStatements:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper.PIPLoadErrorPolicy$else</ID>
-    <ID>BracesOnIfStatements:PIPVideoPlayerWrapper.kt$PIPVideoPlayerWrapper.PIPLoadErrorPolicy$if</ID>
-    <ID>BracesOnIfStatements:Parser.kt$Parser$else</ID>
-    <ID>BracesOnIfStatements:Parser.kt$Parser$if</ID>
-    <ID>BracesOnIfStatements:ProductConfigSettings.kt$ProductConfigSettings$else</ID>
-    <ID>BracesOnIfStatements:ProductConfigSettings.kt$ProductConfigSettings$if</ID>
-    <ID>BracesOnIfStatements:ProfileChangeTracker.kt$ProfileChangeTracker$else</ID>
-    <ID>BracesOnIfStatements:ProfileChangeTracker.kt$ProfileChangeTracker$if</ID>
-    <ID>BracesOnIfStatements:ProfileStateTraverser.kt$ProfileStateTraverser$else</ID>
-    <ID>BracesOnIfStatements:ProfileStateTraverser.kt$ProfileStateTraverser$if</ID>
-    <ID>BracesOnIfStatements:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$else</ID>
-    <ID>BracesOnIfStatements:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$if</ID>
-    <ID>BracesOnIfStatements:PushNotificationHandler.kt$PushNotificationHandler$else</ID>
-    <ID>BracesOnIfStatements:PushNotificationHandler.kt$PushNotificationHandler$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewDAOImpl.kt$PushPreviewDAOImpl$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewDAOImpl.kt$PushPreviewDAOImpl$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewKey.kt$CanonicalJson$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewKey.kt$CanonicalJson$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewKey.kt$CanonicalJson.Lexer$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewKey.kt$CanonicalJson.Lexer$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewKey.kt$CanonicalJson.Reader$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewPayload.kt$PushPreviewPayload.Companion$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewPayload.kt$PushPreviewPayload.Companion$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewStore.kt$PushPreviewStore$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewStore.kt$PushPreviewStore$if</ID>
-    <ID>BracesOnIfStatements:PushPreviewStore.kt$PushPreviewStore.Companion$else</ID>
-    <ID>BracesOnIfStatements:PushPreviewStore.kt$PushPreviewStore.Companion$if</ID>
-    <ID>BracesOnIfStatements:PushProviders.kt$PushProviders$else</ID>
-    <ID>BracesOnIfStatements:PushProviders.kt$PushProviders$if</ID>
-    <ID>BracesOnIfStatements:StoreRegistryInAppQueue.kt$StoreRegistryInAppQueue$if</ID>
     <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$else</ID>
     <ID>BracesOnIfStatements:TriggerValue.kt$TriggerValue$if</ID>
-    <ID>BracesOnIfStatements:TriggersMatcher.kt$TriggersMatcher$else</ID>
-    <ID>BracesOnIfStatements:TriggersMatcher.kt$TriggersMatcher$if</ID>
-    <ID>BracesOnIfStatements:UriHelper.kt$UriHelper$else</ID>
-    <ID>BracesOnIfStatements:UriHelper.kt$UriHelper$if</ID>
-    <ID>BracesOnIfStatements:Utils.kt$Utils$else</ID>
-    <ID>BracesOnIfStatements:Utils.kt$Utils$if</ID>
-    <ID>BracesOnIfStatements:Var.kt$Var$else</ID>
-    <ID>BracesOnIfStatements:Var.kt$Var$if</ID>
     <ID>BracesOnIfStatements:VarCache.kt$VarCache$else</ID>
     <ID>BracesOnIfStatements:VarCache.kt$VarCache$if</ID>
-    <ID>BracesOnIfStatements:VideoLibChecker.kt$VideoLibChecker$if</ID>
     <ID>CanBeNonNullable:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$deepLink: Uri?</ID>
     <ID>CanBeNonNullable:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$notification: Bundle?</ID>
     <ID>CanBeNonNullable:AnalyticsManager.kt$AnalyticsManager$extras: JSONObject?</ID>
@@ -311,7 +115,7 @@
     <ID>CyclomaticComplexMethod:CTInboxListViewFragment.kt$CTInboxListViewFragment$open fun refreshList()</ID>
     <ID>CyclomaticComplexMethod:CTInboxMessageContent.kt$CTInboxMessageContent$internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent</ID>
     <ID>CyclomaticComplexMethod:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
-    <ID>CyclomaticComplexMethod:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO?</ID>
+    <ID>CyclomaticComplexMethod:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>CyclomaticComplexMethod:CTNotificationIntentService.kt$CTNotificationIntentService$@SuppressLint("MissingPermission") private fun handleActionButtonClick(extras: Bundle, actionButtonClickHandler: ActionButtonClickHandler)</ID>
     <ID>CyclomaticComplexMethod:CTProductConfigController.kt$CTProductConfigController$private fun getStoredValues(fullFilePath: String): HashMap&lt;String, String&gt;</ID>
     <ID>CyclomaticComplexMethod:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun mergeHelper(vars: Any?, diff: Any?): Any?</ID>
@@ -428,7 +232,7 @@
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$e("ProductConfig", "Encountered an error while parsing the defaults XML file.", e)</ID>
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$w( LOG_TAG_PRODUCT_CONFIG, "An entry in the defaults XML has an invalid key and/or value tag." )</ID>
     <ID>ForbiddenMethodCall:DefaultXmlParser.kt$DefaultXmlParser$w( LOG_TAG_PRODUCT_CONFIG, "Encountered an unexpected tag while parsing the defaults XML." )</ID>
-    <ID>ForbiddenMethodCall:GifImageView.kt$GifImageView$sleep(if (framesDisplayDuration &gt; 0) framesDisplayDuration else delay.toLong())</ID>
+    <ID>ForbiddenMethodCall:GifImageView.kt$GifImageView$sleep(if (framesDisplayDuration &gt; 0) { framesDisplayDuration } else { delay.toLong() })</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$d</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$d(Constants.CLEVERTAP_LOG_TAG, message, t)</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$d(Constants.CLEVERTAP_LOG_TAG, message.requireMessage())</ID>
@@ -477,12 +281,14 @@
     <ID>LargeClass:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder : ViewHolder</ID>
     <ID>LargeClass:CTInboxController.kt$CTInboxController</ID>
     <ID>LargeClass:CTInboxListViewFragment.kt$CTInboxListViewFragment : Fragment</ID>
+    <ID>LargeClass:CTInboxMessageContent.kt$CTInboxMessageContent : Parcelable</ID>
     <ID>LargeClass:CTProductConfigController.kt$CTProductConfigController</ID>
     <ID>LargeClass:CleverTapAPI.kt$CleverTapAPI : InboxActivityListener</ID>
     <ID>LargeClass:CleverTapAPI.kt$CleverTapAPI$Companion</ID>
     <ID>LargeClass:CleverTapFactory.kt$CleverTapFactory</ID>
     <ID>LargeClass:CleverTapInstanceConfig.kt$CleverTapInstanceConfig : Parcelable</ID>
     <ID>LargeClass:Constants.kt$Constants</ID>
+    <ID>LargeClass:DBAdapter.kt$DBAdapter</ID>
     <ID>LargeClass:DeviceInfo.kt$DeviceInfo</ID>
     <ID>LargeClass:EvaluationManager.kt$EvaluationManager : NetworkHeadersListener</ID>
     <ID>LargeClass:EventDataNormalizer.kt$EventDataNormalizer : Normalizer</ID>
@@ -493,6 +299,7 @@
     <ID>LargeClass:LocalDataStore.kt$LocalDataStore</ID>
     <ID>LargeClass:NetworkManager.kt$NetworkManager</ID>
     <ID>LargeClass:PushProviders.kt$PushProviders : CTPushProviderListener</ID>
+    <ID>LargeClass:UserEventLogDAOImpl.kt$UserEventLogDAOImpl : UserEventLogDAO</ID>
     <ID>LargeClass:Utils.kt$Utils</ID>
     <ID>LongMethod:AESGCMCrypt.kt$AESGCMCrypt$fun performCryptOperation( mode: Int, data: ByteArray, iv: ByteArray? = null, secretKey: SecretKey? = ctKeyGenerator.generateOrGetKey() ): AESGCMCryptResult?</ID>
     <ID>LongMethod:ActivityLifeCycleManager.kt$ActivityLifeCycleManager.&lt;no name provided&gt;$override fun onInstallReferrerSetupFinished(responseCode: Int)</ID>
@@ -524,6 +331,7 @@
     <ID>LongMethod:CTInAppNativeHalfInterstitialImageFragment.kt$CTInAppNativeHalfInterstitialImageFragment$override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
     <ID>LongMethod:CTInAppNativeHeaderFragment.kt$CTInAppNativeHeaderFragment$override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
     <ID>LongMethod:CTInAppNativeInterstitialFragment.kt$CTInAppNativeInterstitialFragment$@SuppressLint("ResourceType") override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
+    <ID>LongMethod:CTInAppNativeInterstitialImageFragment.kt$CTInAppNativeInterstitialImageFragment$override fun onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View?</ID>
     <ID>LongMethod:CTInAppNotification.kt$CTInAppNotification$internal fun createNotificationForAction(actionData: CustomTemplateInAppData?): CTInAppNotification?</ID>
     <ID>LongMethod:CTInAppNotification.kt$CTInAppNotification$override fun writeToParcel(dest: Parcel, flags: Int)</ID>
     <ID>LongMethod:CTInAppNotification.kt$CTInAppNotification$private fun configureWithJson(jsonObject: JSONObject)</ID>
@@ -543,7 +351,7 @@
     <ID>LongMethod:CTInboxListViewFragment.kt$CTInboxListViewFragment$open fun refreshList()</ID>
     <ID>LongMethod:CTInboxMessageContent.kt$CTInboxMessageContent$internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent</ID>
     <ID>LongMethod:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
-    <ID>LongMethod:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO?</ID>
+    <ID>LongMethod:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>LongMethod:CTNotificationIntentService.kt$CTNotificationIntentService$@SuppressLint("MissingPermission") private fun handleActionButtonClick(extras: Bundle, actionButtonClickHandler: ActionButtonClickHandler)</ID>
     <ID>LongMethod:CTProductConfigController.kt$CTProductConfigController$@Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.") public open fun onFetchSuccess(kvResponse: JSONObject?)</ID>
     <ID>LongMethod:CTProductConfigController.kt$CTProductConfigController$private fun getStoredValues(fullFilePath: String): HashMap&lt;String, String&gt;</ID>
@@ -551,6 +359,7 @@
     <ID>LongMethod:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun mergeHelper(vars: Any?, diff: Any?): Any?</ID>
     <ID>LongMethod:CleverTapAPI.kt$CleverTapAPI$private fun asyncStartup()</ID>
     <ID>LongMethod:CleverTapAPI.kt$CleverTapAPI.Companion$@RestrictTo(Scope.LIBRARY) @JvmStatic @JvmName("onActivityCreated") internal fun onActivityCreated(activity: Activity, cleverTapID: String?)</ID>
+    <ID>LongMethod:CleverTapAPI.kt$CleverTapAPI.Companion$private fun getDefaultConfig(context: Context?): CleverTapInstanceConfig?</ID>
     <ID>LongMethod:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$@JvmStatic public fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit</ID>
     <ID>LongMethod:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$internal fun toContent(contentObject: JSONObject?): CleverTapDisplayUnitContent</ID>
     <ID>LongMethod:CleverTapFactory.kt$CleverTapFactory$@JvmStatic fun getCoreState( context: Context?, cleverTapInstanceConfig: CleverTapInstanceConfig?, cleverTapID: String? ): CoreState</ID>
@@ -575,10 +384,11 @@
     <ID>LongMethod:EvaluationManager.kt$EvaluationManager$private fun collectEligibleInApps( event: EventAdapter, inappNotifs: List&lt;JSONObject&gt;, clearResource: (url: String) -&gt; Unit, recordTrigger: (campaignId: String) -&gt; Unit, limits: LimitsMatcher ): List&lt;JSONObject&gt;</ID>
     <ID>LongMethod:EventDAOImpl.kt$EventDAOImpl$@Synchronized override fun fetchEvents(table: Table, limit: Int): QueueData</ID>
     <ID>LongMethod:EventDAOImpl.kt$EventDAOImpl$@WorkerThread @Synchronized override fun updateAllEvents(table: Table): Int</ID>
+    <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanAnyValue( value: Any?, parentKey: String, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): Any?</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanJSONObject( json: JSONObject, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$private fun cleanKey(key: String, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?): String</ID>
-    <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$private fun cleanStringValue(value: String, key: String, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?): String?</ID>
+    <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$private fun cleanStringValue( value: String, key: String, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int? ): String?</ID>
     <ID>LongMethod:EventDataValidator.kt$EventDataValidator$private fun checkItemRemovals(metrics: EventDataMetrics, errors: MutableList&lt;ValidationResult&gt;)</ID>
     <ID>LongMethod:EventDataValidator.kt$EventDataValidator$private fun checkStructuralLimits( metrics: EventDataMetrics, maxDepth: Int?, maxArrayKeyCount: Int?, maxObjectKeyCount: Int?, maxArrayLength: Int?, maxKVPairCount: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
     <ID>LongMethod:EventMediator.kt$EventMediator$open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean</ID>
@@ -591,6 +401,7 @@
     <ID>LongMethod:EventQueueManager.kt$EventQueueManager$override fun flushQueueSync( context: Context, eventGroup: EventGroup, caller: String?, isUserSwitchFlush: Boolean )</ID>
     <ID>LongMethod:EventQueueManager.kt$EventQueueManager$override fun pushBasicProfile( baseProfile: JSONObject?, removeFromSharedPrefs: Boolean, profileChanges: FlattenedEventData )</ID>
     <ID>LongMethod:EventQueueManager.kt$EventQueueManager$override fun queueEvent( context: Context, event: JSONObject, eventType: Int, flattenedEventData: FlattenedEventData ): Future&lt;*&gt;?</ID>
+    <ID>LongMethod:ExoplayerHandle.kt$ExoplayerHandle$override fun setMuteClickListener()</ID>
     <ID>LongMethod:FallbackImageLoader.kt$FallbackImageLoader$fun load(request: FallbackLoadRequest)</ID>
     <ID>LongMethod:FeatureFlagResponse.kt$FeatureFlagResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
     <ID>LongMethod:FilePreloaderCoroutine.kt$FilePreloaderCoroutine$private fun preloadAssets( urlMetas: List&lt;Pair&lt;String, CtCacheType&gt;&gt;, successBlock: (meta: Pair&lt;String, CtCacheType&gt;) -&gt; Unit, failureBlock: (meta: Pair&lt;String, CtCacheType&gt;) -&gt; Unit = {}, startedBlock: (urlMeta: Pair&lt;String, CtCacheType&gt;) -&gt; Unit = {}, preloadFinished: (urlDownloadStatus: Map&lt;String, Boolean&gt;) -&gt; Unit = {}, assetBlock: (meta: Pair&lt;String, CtCacheType&gt;) -&gt; Any? )</ID>
@@ -627,14 +438,18 @@
     <ID>LongMethod:InAppStreamMediaHandler.kt$InAppStreamMediaHandler$private fun openFullscreenDialog()</ID>
     <ID>LongMethod:InAppTimerManager.kt$InAppTimerManager$@WorkerThread fun scheduleTimer( id: String, delayInMs: Long, callback: (TimerResult) -&gt; Unit ): Job</ID>
     <ID>LongMethod:InAppTimerManager.kt$InAppTimerManager$fun onAppForeground()</ID>
+    <ID>LongMethod:InboxDeleteCall.kt$InboxDeleteCall$override suspend fun execute(): CallResult&lt;Unit&gt;</ID>
     <ID>LongMethod:InboxFetchCall.kt$InboxFetchCall$override suspend fun execute(): CallResult&lt;JSONObject&gt;</ID>
     <ID>LongMethod:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set&lt;String&gt;</ID>
     <ID>LongMethod:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun getMessages(userId: String): ArrayList&lt;CTMessageDAO&gt;</ID>
     <ID>LongMethod:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread private fun writeMessage(db: SQLiteDatabase, messageDAO: CTMessageDAO)</ID>
+    <ID>LongMethod:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun addPendingDeletes(rows: List&lt;PendingDelete&gt;, userId: String): Boolean</ID>
+    <ID>LongMethod:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun addPendingReads(rows: List&lt;PendingRead&gt;, userId: String): Boolean</ID>
     <ID>LongMethod:InboxPendingActionsDAO.kt$InboxPendingActionsDAOImpl$@WorkerThread override fun getPendingDeletes(userId: String): List&lt;PendingDelete&gt;</ID>
     <ID>LongMethod:InboxV2Fetcher.kt$InboxV2Fetcher$suspend fun fetch(trigger: FetchTrigger): CallResult&lt;Unit&gt;</ID>
     <ID>LongMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.FunctionBuilder, json: JSONObject )</ID>
     <ID>LongMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun addJsonArgumentsToBuilder( builder: CustomTemplate.TemplateBuilder, json: JSONObject )</ID>
+    <ID>LongMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun createTemplateFromJson(templateName: String, json: JSONObject): CustomTemplate</ID>
     <ID>LongMethod:JsonTemplatesProducer.kt$JsonTemplatesProducer$private fun jsonArgToMap(json: JSONObject): Map&lt;String, Any&gt;</ID>
     <ID>LongMethod:LocalDataStore.kt$LocalDataStore$@WorkerThread public fun setDataSyncFlag(event: JSONObject)</ID>
     <ID>LongMethod:LocalDataStore.kt$LocalDataStore$private fun persistLocalProfileAsync()</ID>
@@ -642,7 +457,9 @@
     <ID>LongMethod:LoginController.kt$LoginController$open fun asyncProfileSwitchUser(profile: Map&lt;String, Any?&gt;?, cacheGuid: String?, cleverTapID: String?)</ID>
     <ID>LongMethod:LoginController.kt$LoginController$private fun onUserLoginInternal(profile: Map&lt;String, Any?&gt;?, cleverTapID: String?)</ID>
     <ID>LongMethod:ManifestInfo.kt$ManifestInfo.Companion$private fun fromManifest(context: Context?): ManifestInfo</ID>
+    <ID>LongMethod:Media3Handle.kt$Media3Handle$override fun setMuteClickListener()</ID>
     <ID>LongMethod:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$fun playVideo()</ID>
+    <ID>LongMethod:NdEvaluationManager.kt$NdEvaluationManager$@WorkerThread @VisibleForTesting internal fun evaluate(events: List&lt;EventAdapter&gt;)</ID>
     <ID>LongMethod:NdEvaluationManager.kt$NdEvaluationManager$@WorkerThread fun retainAppLaunchedWithinLimits( content: List&lt;JSONObject&gt;, eventProperties: Map&lt;String, Any&gt;, userLocation: Location?, ): List&lt;JSONObject&gt;</ID>
     <ID>LongMethod:NdEvaluationManager.kt$NdEvaluationManager$fun selectTopPriorityBand(content: List&lt;JSONObject&gt;, stubs: List&lt;JSONObject&gt;): AppLaunchedSelection</ID>
     <ID>LongMethod:NestedJsonBuilder.kt$NestedJsonBuilder$@Throws(JSONException::class) private fun setValueRecursive( current: Any, segments: List&lt;PathSegment&gt;, index: Int, value: Any? )</ID>
@@ -650,7 +467,9 @@
     <ID>LongMethod:NetworkManager.kt$NetworkManager$fun flushDBQueue( context: Context, eventGroup: EventGroup, caller: String?, isUserSwitchFlush: Boolean )</ID>
     <ID>LongMethod:NetworkManager.kt$NetworkManager$fun sendQueue( context: Context, eventGroup: EventGroup, queue: JSONArray?, caller: String?, isUserSwitchFlush: Boolean = false ): Boolean</ID>
     <ID>LongMethod:PIPAnimator.kt$PIPAnimator$fun animateIn( view: View, anchor: PointF, animationConfig: PIPAnimationConfig, containerWidth: Int, containerHeight: Int, onComplete: () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:PIPCompactView.kt$PIPCompactView$private fun applyBorderStyle(cfg: PIPConfig)</ID>
     <ID>LongMethod:PIPConfigFactory.kt$PIPConfigFactory$fun create( inAppNotification: CTInAppNotification, callbacks: PIPCallbacks, logger: ILogger ): PIPConfig?</ID>
+    <ID>LongMethod:PIPDragHandler.kt$PIPDragHandler$fun onTouchEvent(event: MotionEvent): Boolean</ID>
     <ID>LongMethod:PIPManager.kt$PIPManager$private fun dismissInternal( reason: DismissReason = DismissReason.Dismiss, animate: Boolean = true, )</ID>
     <ID>LongMethod:PIPManager.kt$PIPManager$private fun showInternal(activity: Activity, config: PIPConfig, lifecycleOwner: LifecycleOwner?)</ID>
     <ID>LongMethod:PIPRootContainer.kt$PIPRootContainer$fun bindSession( s: PIPSession, isReattach: Boolean = false, resourceProvider: FileResourceProvider? = null, mediaExecutor: ExecutorService? = null, )</ID>
@@ -671,6 +490,7 @@
     <ID>LongMethod:QueueHeaderBuilder.kt$QueueHeaderBuilder$fun buildHeader(caller: String?): JSONObject?</ID>
     <ID>LongMethod:TriggersMatcher.kt$TriggersMatcher$@VisibleForTesting internal fun expectedValueEqualsActual(expected: TriggerValue, actual: TriggerValue): Boolean</ID>
     <ID>LongMethod:UrlConnectionHttpClient.kt$UrlConnectionHttpClient$override fun execute(request: Request): Response</ID>
+    <ID>LongMethod:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun allEventsByDeviceID(deviceID: String): List&lt;UserEventLog&gt;</ID>
     <ID>LongMethod:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun cleanUpExtraEvents(threshold: Int, numberOfRowsToCleanup: Int): Boolean</ID>
     <ID>LongMethod:UserProfileDAOImpl.kt$UserProfileDAOImpl$@WorkerThread override fun fetchUserProfile(accountId: String, deviceId: String): JSONObject?</ID>
     <ID>LongMethod:UserProfileDAOImpl.kt$UserProfileDAOImpl$@WorkerThread override fun fetchUserProfilesByAccountId(accountId: String): Map&lt;String, JSONObject&gt;</ID>
@@ -968,104 +788,26 @@
     <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - ${e.localizedMessage}"</ID>
     <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"Push notification: ${extras ?: "NULL"} not from CleverTap - will not process Notification Viewed event."</ID>
     <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$"Recorded Live Activity event ($state) for activityId: ${extras.getString(Constants.WZRK_LIVE_UPDATE_ID)}"</ID>
-    <ID>MaxLineLength:AnalyticsManager.kt$AnalyticsManager$if</ID>
-    <ID>MaxLineLength:BaseCallbackManager.kt$BaseCallbackManager$abstract fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)</ID>
-    <ID>MaxLineLength:CTCarouselImageViewHolder.kt$CTCarouselImageViewHolder$val carouselViewPagerAdapter = CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position)</ID>
-    <ID>MaxLineLength:CTCarouselMessageViewHolder.kt$CTCarouselMessageViewHolder$val carouselViewPagerAdapter = CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position)</ID>
     <ID>MaxLineLength:CTFlushPushImpressionsWork.kt$CTFlushPushImpressionsWork$"hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push impressions:-)"</ID>
-    <ID>MaxLineLength:CTFlushPushImpressionsWork.kt$CTFlushPushImpressionsWork$internal</ID>
-    <ID>MaxLineLength:CTInAppBaseFragment.kt$CTInAppBaseFragment$generateListener()</ID>
-    <ID>MaxLineLength:CTInAppBaseFragment.kt$CTInAppBaseFragment$if</ID>
-    <ID>MaxLineLength:CTInAppNativeCoverImageFragment.kt$CTInAppNativeCoverImageFragment$InAppMediaConfig(imageViewId = R.id.cover_image, clickableMedia = true, videoFrameId = R.id.video_frame, gifImageId = R.id.gifImage)</ID>
-    <ID>MaxLineLength:CTInAppNativeHalfInterstitialImageFragment.kt$CTInAppNativeHalfInterstitialImageFragment$InAppMediaConfig(imageViewId = R.id.half_interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame, gifImageId = R.id.gifImage)</ID>
-    <ID>MaxLineLength:CTInAppNativeInterstitialImageFragment.kt$CTInAppNativeInterstitialImageFragment$InAppMediaConfig(imageViewId = R.id.interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame, gifImageId = R.id.gifImage)</ID>
-    <ID>MaxLineLength:CTInAppNotification.kt$CTInAppNotification$backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.WHITE)</ID>
-    <ID>MaxLineLength:CTInAppNotification.kt$CTInAppNotification$messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK)</ID>
-    <ID>MaxLineLength:CTInAppNotification.kt$CTInAppNotification$titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(Constants.BLACK)</ID>
-    <ID>MaxLineLength:CTInAppNotificationButton.kt$CTInAppNotificationButton.Companion$public</ID>
-    <ID>MaxLineLength:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$playMedia.invoke(checkNotNull(firstContentItem.media), firstContentItem.mediaIsAudio(), firstContentItem.mediaIsVideo())</ID>
     <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
     <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
-    <ID>MaxLineLength:CTInboxController.kt$CTInboxController$task.addOnSuccessListener { callbackManager._notifyInboxMessagesDidUpdate() }</ID>
-    <ID>MaxLineLength:CTInboxMessage.kt$CTInboxMessage$public open</ID>
-    <ID>MaxLineLength:CTInboxMessage.kt$CTInboxMessage$this._inboxMessageContents.add(CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i)))</ID>
-    <ID>MaxLineLength:CTInboxMessageContent.kt$CTInboxMessageContent.Companion$public</ID>
-    <ID>MaxLineLength:CTInboxTabAdapter.kt$CTInboxTabAdapter$checkNotNull(fragmentList[position]) { "Every slot is filled through addFragment() before the adapter is attached" }</ID>
-    <ID>MaxLineLength:CTMessageDAO.kt$CTMessageDAO.Companion$internal</ID>
-    <ID>MaxLineLength:CTPreference.kt$CTPreference$return context.getSharedPreferences(prefName, Context.MODE_PRIVATE)</ID>
-    <ID>MaxLineLength:CTProductConfigController.kt$CTProductConfigController.&lt;no name provided&gt;$config.logger.verbose(logTag, "Loaded configs ready to be applied: $waitingTobeActivatedConfig")</ID>
-    <ID>MaxLineLength:CTProductConfigListener.kt$CTProductConfigListener$@Deprecated("Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")</ID>
     <ID>MaxLineLength:CTXtensions.kt$"Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"</ID>
-    <ID>MaxLineLength:CallbackManager.kt$CallbackManager$override</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$"Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again"</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with first occurrence timestamp.")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with last occurrence timestamp.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log.")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLogCount(String) instead. getUserEventLogCount() provides user-specific event counts.")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific event logs.")</ID>
     <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last visit timestamp.")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@JvmSynthetic @JvmName("ktSetCTNotificationInboxListener") inline set(value) = setCTNotificationInboxListener(value)</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@JvmSynthetic @JvmName("ktSetCTPushNotificationListener") inline set(value) = setCTPushNotificationListener(value)</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@JvmSynthetic @JvmName("ktSetDevicePushTokenRefreshListener") inline set(value) = setDevicePushTokenRefreshListener(value)</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$public</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$public open</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI.Companion$Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance")</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI.Companion$private</ID>
-    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI.Companion$public</ID>
-    <ID>MaxLineLength:CleverTapDisplayUnit.kt$CleverTapDisplayUnit$jsonObjectValue = if (parcel.readByte().toInt() == 0x00) null else JSONObject(checkNotNull(parcel.readString()))</ID>
-    <ID>MaxLineLength:CleverTapDisplayUnit.kt$CleverTapDisplayUnit.Companion$public</ID>
-    <ID>MaxLineLength:CleverTapFactory.kt$CleverTapFactory$(inAppDelayManager.storageStrategy as DelayedInAppStorageStrategy).delayedLegacyInAppStore</ID>
-    <ID>MaxLineLength:CleverTapFactory.kt$CleverTapFactory$LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateTraverser, nestedJsonBuilder)</ID>
     <ID>MaxLineLength:CleverTapInstanceConfig.kt$CleverTapInstanceConfig.Companion$Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig")</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY: String = "adUnit_notifs_applaunched" // app-launch content + CG-suppressed stubs</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val KEY_ND_COUNTS_PER_TARGET: String = "nd_counts_per_target" // NdCountsStore namespace (per-target counts + globals)</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val KEY_ND_COUNTS_SHOWN_TODAY: String = "ndstc" // stored ND global shown-today (mirror of istc_inapp)</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val KEY_ND_IMPRESSIONS_PER_TARGET: String = "nd_impressions" // ND ImpressionStore namespace (whenLimits timestamps)</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val KEY_ND_LAST_RESET_DATE: String = "nd_ict_date" // ddMMyyyy of the last daily reset (mirror of ict_date)</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val ND_MAX_PER_DAY_KEY: String = "ndmp" // req: SDK daily count; resp: daily ceiling</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val ND_SUPPRESSED_META: String = "adUnit_suppressed" // CG-suppression acks (app-launch path only)</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val ND_TARGET_SHOWN_LIST: String = "ndtlc" // [[ti, todayCount, lifetimeCount], ...]</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val PREFS_EVALUATED_ND_KEY_SS: String = "evaluated_nd_ss" // pending adUnit_eval report</ID>
-    <ID>MaxLineLength:Constants.kt$Constants$public const val PREFS_SUPPRESSED_ND_KEY: String = "suppressed_nd" // pending adUnit_suppressed report</ID>
-    <ID>MaxLineLength:ContentFetchManager.kt$ContentFetchManager$logger.info(TAG, "Content fetch request was rate limited (429). Consider reducing request frequency.")</ID>
-    <ID>MaxLineLength:CryptFactory.kt$CryptFactory$return cryptInstances.getOrPut(EncryptionAlgorithm.AES_GCM) { getCrypt(EncryptionAlgorithm.AES_GCM, accountId, ctKeyGenerator) } as AESGCMCrypt</ID>
-    <ID>MaxLineLength:CryptMigrator.kt$CryptMigrator$storedEncryptionLevel != configEncryptionLevel &amp;&amp; storedFailureCount != -1 -&gt; MIGRATION_NEEDED</ID>
-    <ID>MaxLineLength:CustomTemplate.kt$CustomTemplate.Builder$else -&gt; throw CustomTemplateException("Unsupported value type ${argValue.javaClass} for argument $argName")</ID>
-    <ID>MaxLineLength:CustomTemplate.kt$CustomTemplate.Builder$throw CustomTemplateException("Argument name must not begin or end with a \".\" nor have consecutive \".\"")</ID>
-    <ID>MaxLineLength:CustomTemplateContext.kt$CustomTemplateContext$protected val argumentValues: Map&lt;String, Any&gt; = mergeArguments(template.args, notification.customTemplateData?.getArguments())</ID>
-    <ID>MaxLineLength:DBAdapter.kt$DBAdapter$private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }</ID>
     <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation"</ID>
     <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Set current user allowed system events and communications flag state from storage to: $storedAllowedSystemEvents for key: $key"</ID>
     <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$"Unable to set current user allowed system events and communications flag from storage: storage key is null"</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$evaluator.retainAppLaunchedWithinLimits(content = cgStubs, eventProperties = eventProperties, userLocation = userLocation)</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$evaluator.retainAppLaunchedWithinLimits(content = content, eventProperties = eventProperties, userLocation = userLocation)</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact")</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to read App-Launched event props", t)</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs", t)</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content", t)</ID>
-    <ID>MaxLineLength:DisplayUnitResponse.kt$DisplayUnitResponse$logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")</ID>
     <ID>MaxLineLength:EventDAOImpl.kt$EventDAOImpl$logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$is Array&lt;*&gt; -&gt; cleanList(value.toList(), parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$is JSONArray -&gt; cleanJSONArray(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$is JSONObject -&gt; cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$is List&lt;*&gt; -&gt; cleanList(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$private</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)</ID>
-    <ID>MaxLineLength:EventDataNormalizer.kt$EventDataNormalizer$val cleanedValue = cleanAnyValue(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)</ID>
     <ID>MaxLineLength:ExoplayerHandle.kt$ExoplayerHandle$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead."</ID>
-    <ID>MaxLineLength:ExoplayerHandle.kt$ExoplayerHandle$playerView</ID>
     <ID>MaxLineLength:ExoplayerPlayerListener.kt$ExoplayerPlayerListener$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3PlayerListener instead."</ID>
-    <ID>MaxLineLength:FallbackImageLoader.kt$FallbackImageLoader$request.callbacks?.onMediaError(request.primaryUrl, "${request.errorContext} and fallback failed")</ID>
-    <ID>MaxLineLength:FileMemoryAccessObject.kt$FileMemoryAccessObject$internal</ID>
     <ID>MaxLineLength:FileMemoryV2.kt$FileMemoryV2$logger?.verbose(" File cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:FileResourceProvider.kt$FileResourceProvider$private</ID>
-    <ID>MaxLineLength:FileResourceProvider.kt$FileResourceProvider$val dataToSave: Pair&lt;T, ByteArray&gt; = dataToSaveBlock(downloadedData)!! // can force unwrap since success case</ID>
-    <ID>MaxLineLength:FileResourceProvider.kt$FileResourceProvider.Companion$fun</ID>
-    <ID>MaxLineLength:GifDecoder.kt$GifDecoder$while</ID>
-    <ID>MaxLineLength:GzipBitmapInputStreamReader.kt$GzipBitmapInputStreamReader$logger?.verbose("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")</ID>
     <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$" Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n"</ID>
     <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$"1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n"</ID>
     <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$"2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate()."</ID>
@@ -1075,75 +817,28 @@
     <ID>MaxLineLength:InAppController.kt$InAppController$"Please verify the integration of your app. It is not setup to support in-app notifications yet."</ID>
     <ID>MaxLineLength:InAppController.kt$InAppController$"[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling fetch API"</ID>
     <ID>MaxLineLength:InAppController.kt$InAppController$"[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"</ID>
-    <ID>MaxLineLength:InAppController.kt$InAppController$if</ID>
-    <ID>MaxLineLength:InAppFCManager.kt$InAppFCManager$val prefs = getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))</ID>
-    <ID>MaxLineLength:InAppGifMemoryAccessObjectV1.kt$InAppGifMemoryAccessObjectV1$internal</ID>
     <ID>MaxLineLength:InAppGifMemoryV1.kt$InAppGifMemoryV1$logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:InAppImageMemoryAccessObjectV1.kt$InAppImageMemoryAccessObjectV1$internal</ID>
     <ID>MaxLineLength:InAppImageMemoryV1.kt$InAppImageMemoryV1$logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")</ID>
-    <ID>MaxLineLength:InAppPreviewHandler.kt$InAppPreviewHandler$logger.debug("Failed to parse the image-interstitial notification. Aborting preview display")</ID>
-    <ID>MaxLineLength:InAppResponse.kt$InAppResponse$if</ID>
-    <ID>MaxLineLength:InAppResponseAdapter.kt$InAppResponseAdapter$val staleInApps: Pair&lt;Boolean, JSONArray?&gt; = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)</ID>
-    <ID>MaxLineLength:InAppTimerManager.kt$InAppTimerManager$logCoroutineInfo("process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}")</ID>
-    <ID>MaxLineLength:InAppTimerManager.kt$InAppTimerManager$logCoroutineInfo("process lifeCycleOwner: started, $coroutineContext, ${coroutineContext[Job]?.parent}}")</ID>
     <ID>MaxLineLength:InAppTimerManager.kt$InAppTimerManager$logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")</ID>
-    <ID>MaxLineLength:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$cursor.getString(userIdColumnIndex)</ID>
-    <ID>MaxLineLength:JsonTemplatesProducer.kt$JsonTemplatesProducer$throw CustomTemplateException("Action arguments should not specify a value. Remove value from argument: \"$key\"")</ID>
-    <ID>MaxLineLength:JsonTemplatesProducer.kt$JsonTemplatesProducer$throw CustomTemplateException("File arguments should not specify a value. Remove value from argument: \"$key\"")</ID>
-    <ID>MaxLineLength:JsonTemplatesProducer.kt$JsonTemplatesProducer$throw CustomTemplateException("Function templates cannot have action arguments. Remove argument: \"$key\"")</ID>
-    <ID>MaxLineLength:JsonTemplatesProducer.kt$JsonTemplatesProducer$throw CustomTemplateException("JSON definition contains a function definition and a function presenter is required")</ID>
-    <ID>MaxLineLength:JsonTemplatesProducer.kt$JsonTemplatesProducer$throw CustomTemplateException("JSON definition contains a template definition and a templates presenter is required")</ID>
     <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID"</ID>
     <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"</ID>
     <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, "</ID>
     <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"be sure you have properly added the CleverTap Account ID and Token to your AndroidManifest.xml, \n"</ID>
     <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"if you have a custom Application class, call ActivityLifecycleCallback.register(this); before super.onCreate() in your class"</ID>
     <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"or set them programmatically in the onCreate method of your custom application class prior to calling super.onCreate()"</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_ACTIVITIES)</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_RECEIVERS)</ID>
-    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$val packageInfo = application.packageManager.getPackageInfo(application.packageName, PackageManager.GET_SERVICES)</ID>
-    <ID>MaxLineLength:Media3Handle.kt$Media3Handle$playerView</ID>
-    <ID>MaxLineLength:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView$states.remember(messageId, InboxVideoStates.VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume()))</ID>
-    <ID>MaxLineLength:NativeDisplayController.kt$NativeDisplayController$ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, mergedAppFields())</ID>
-    <ID>MaxLineLength:NdEvaluationManager.kt$NdEvaluationManager$config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")</ID>
-    <ID>MaxLineLength:NdEvaluationManager.kt$NdEvaluationManager$if</ID>
-    <ID>MaxLineLength:NdFcapGate.kt$NdFcapGate$maxPerSession = json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED)</ID>
     <ID>MaxLineLength:NetworkManager.kt$NetworkManager$"Processing batch of $batchSize events (${queueData.eventIds.size} from events, ${queueData.profileEventIds.size} from profile)"</ID>
-    <ID>MaxLineLength:PIPIcons.kt$PIPIcons$if (playing) R.string.ct_pip_pause_button_content_description else R.string.ct_pip_play_button_content_description</ID>
-    <ID>MaxLineLength:PIPInAppCallbacksBridge.kt$PIPInAppCallbacksBridge$logger.debug(LOG_TAG, "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error")</ID>
-    <ID>MaxLineLength:PIPPositionResolver.kt$PIPPositionResolver$val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom).toFloat().coerceAtLeast(top)</ID>
-    <ID>MaxLineLength:ProductConfigSettings.kt$ProductConfigSettings$@Synchronized</ID>
-    <ID>MaxLineLength:ProfileStateTraverser.kt$ProfileStateTraverser$traverseRecursive(nestedTarget, nestedSource, nestedPath, nestedChanges, ProfileOperation.DELETE)</ID>
     <ID>MaxLineLength:PushAmpResponse.kt$PushAmpResponse$"Push Notification already shown, ignoring local notification :${pushObject.getString("wzrk_pid")}"</ID>
-    <ID>MaxLineLength:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$val expiresAt = if (ttlInSeconds &gt; 0) ttlInSeconds else clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS</ID>
     <ID>MaxLineLength:PushProviders.kt$PushProviders$"Have user provided notificationId: $notifId won't use collapse_key (if any) as basis for notificationId"</ID>
     <ID>MaxLineLength:QueueData.kt$QueueData$return "QueueData: numItems=${data.length()}, eventIds=${eventIds.size}, profileEventIds=${profileEventIds.size}"</ID>
-    <ID>MaxLineLength:QueueHeaderBuilder.kt$QueueHeaderBuilder$header.put("ddnd", !(context.areAppNotificationsEnabled() &amp;&amp; (controllerManager.pushProviders?.isNotificationSupported ?: true)))</ID>
-    <ID>MaxLineLength:QueueHeaderBuilder.kt$QueueHeaderBuilder$logger.verbose(config.accountId, "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!")</ID>
-    <ID>MaxLineLength:QueueHeaderBuilder.kt$QueueHeaderBuilder$}</ID>
     <ID>MaxLineLength:SyncListener.kt$SyncListener$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
-    <ID>MaxLineLength:TemplatesManager.kt$TemplatesManager.Companion$throw CustomTemplateException("Cannot define system template with a name \"${producedTemplate.name}\".")</ID>
-    <ID>MaxLineLength:TemplatesManager.kt$TemplatesManager.Companion$throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is a system template.")</ID>
-    <ID>MaxLineLength:TemplatesManager.kt$TemplatesManager.Companion$throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is already registered.")</ID>
-    <ID>MaxLineLength:TriggersMatcher.kt$TriggersMatcher$&amp;&amp;</ID>
     <ID>MaxLineLength:TriggersMatcher.kt$TriggersMatcher$Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")</ID>
-    <ID>MaxLineLength:UserEventLogDAO.kt$UserEventLogDAO$fun</ID>
-    <ID>MaxLineLength:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0")</ID>
-    <ID>MaxLineLength:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold")</ID>
-    <ID>MaxLineLength:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME))</ID>
-    <ID>MaxLineLength:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$override</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."</ID>
     <ID>MaxLineLength:Utils.kt$Utils$"READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user"</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_MISSING_IN_PAYLOAD : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_NOT_REGISTERED : ValidationError</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$INVALID_CT_CUSTOM_ID : ValidationError</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$NOTIFICATION_VIEWED_DISABLED : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$USE_CUSTOM_ID_MISSING_IN_MANIFEST : ValidationError</ID>
-    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.INVALID_COUNTRY_CODE$INVALID_COUNTRY_CODE</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.USE_CUSTOM_ID_FALLBACK$USE_CUSTOM_ID_FALLBACK</ID>
     <ID>MaxLineLength:Var.kt$Var$"CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "</ID>
-    <ID>MaxLineLength:Var.kt$Var$private var hadStarted = false // flag to indicate whether the callbacks were invoked for the starting value of the variable</ID>
     <ID>MaxLineLength:Var.kt$Var.Companion$Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '$name'.")</ID>
     <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.d("Please add ExoPlayer/Media3 dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")</ID>
     <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.i("ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Please migrate to Media3 (androidx.media3).")</ID>
@@ -1189,7 +884,7 @@
     <ID>NestedBlockDepth:CTInboxMessageContent.kt$CTInboxMessageContent$public open fun getLinkUrl(jsonObject: JSONObject?): String?</ID>
     <ID>NestedBlockDepth:CTJsonConverter.kt$CTJsonConverter$fun from( deviceInfo: DeviceInfo, coreMetaData: CoreMetaData, enableNetworkInfoReporting: Boolean, deviceIsMultiUser: Boolean ): JSONObject</ID>
     <ID>NestedBlockDepth:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$public fun setImageUrl(imageUrl: String, contentDescription: String?): Builder6</ID>
-    <ID>NestedBlockDepth:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO?</ID>
+    <ID>NestedBlockDepth:CTMessageDAO.kt$CTMessageDAO.Companion$internal fun initWithJSON( inboxMessage: JSONObject, userId: String?, source: InboxMessageSource? ): CTMessageDAO?</ID>
     <ID>NestedBlockDepth:CTProductConfigController.kt$CTProductConfigController$private fun convertServerJsonToMap(jsonObject: JSONObject): HashMap&lt;String, String&gt;</ID>
     <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun convertFlatMapToNestedMaps(map: Map&lt;String, *&gt;): MutableMap&lt;String, Any?&gt;</ID>
     <ID>NestedBlockDepth:CTVariableUtils.kt$CTVariableUtils.Companion$@JvmStatic public fun getFlatVarsJson( values: Map&lt;String, *&gt;, kinds: Map&lt;String, *&gt; ): JSONObject</ID>
@@ -1308,8 +1003,8 @@
     <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun allEvents(): List&lt;UserEventLog&gt;</ID>
     <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun allEventsByDeviceID(deviceID: String): List&lt;UserEventLog&gt;</ID>
     <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID: String, normalizedEventName: String, count: Int): Boolean</ID>
-    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun readEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): UserEventLog?</ID>
+    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount( deviceID: String, normalizedEventName: String, count: Int ): Boolean</ID>
+    <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun readEventByDeviceIdAndNormalizedEventName( deviceID: String, normalizedEventName: String ): UserEventLog?</ID>
     <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int</ID>
     <ID>NestedBlockDepth:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$@WorkerThread override fun upsertEventsByDeviceIdAndNormalizedEventName( deviceID: String, setOfActualAndNormalizedEventNamePair: Set&lt;Pair&lt;String, String&gt;&gt; ): Boolean</ID>
     <ID>NestedBlockDepth:UserProfileDAOImpl.kt$UserProfileDAOImpl$@WorkerThread override fun fetchUserProfile(accountId: String, deviceId: String): JSONObject?</ID>
@@ -1317,125 +1012,6 @@
     <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic @SuppressLint("MissingPermission") @Suppress("DEPRECATION") public fun getDeviceNetworkType(context: Context): String</ID>
     <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic internal fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock)</ID>
     <ID>NestedBlockDepth:Utils.kt$Utils$@JvmStatic public fun convertJSONObjectToHashMap(b: JSONObject): HashMap&lt;String, Any&gt;</ID>
-    <ID>NewLineAtEndOfFile:AESCrypt.kt$com.clevertap.android.sdk.cryption.AESCrypt.kt</ID>
-    <ID>NewLineAtEndOfFile:AESGCMCrypt.kt$com.clevertap.android.sdk.cryption.AESGCMCrypt.kt</ID>
-    <ID>NewLineAtEndOfFile:AnalyticsManagerBundler.kt$com.clevertap.android.sdk.AnalyticsManagerBundler.kt</ID>
-    <ID>NewLineAtEndOfFile:ArpRepo.kt$com.clevertap.android.sdk.network.ArpRepo.kt</ID>
-    <ID>NewLineAtEndOfFile:BitmapDownloadRequest.kt$com.clevertap.android.sdk.bitmap.BitmapDownloadRequest.kt</ID>
-    <ID>NewLineAtEndOfFile:BitmapDownloadRequestHandlerWithTimeLimit.kt$com.clevertap.android.sdk.bitmap.BitmapDownloadRequestHandlerWithTimeLimit.kt</ID>
-    <ID>NewLineAtEndOfFile:BitmapDownloader.kt$com.clevertap.android.sdk.bitmap.BitmapDownloader.kt</ID>
-    <ID>NewLineAtEndOfFile:BitmapInputStreamDecoder.kt$com.clevertap.android.sdk.bitmap.BitmapInputStreamDecoder.kt</ID>
-    <ID>NewLineAtEndOfFile:BitmapInputStreamReader.kt$com.clevertap.android.sdk.bitmap.BitmapInputStreamReader.kt</ID>
-    <ID>NewLineAtEndOfFile:CTCaches.kt$com.clevertap.android.sdk.utils.CTCaches.kt</ID>
-    <ID>NewLineAtEndOfFile:CTExecutorFactory.kt$com.clevertap.android.sdk.task.CTExecutorFactory.kt</ID>
-    <ID>NewLineAtEndOfFile:CTKeyGenerator.kt$com.clevertap.android.sdk.cryption.CTKeyGenerator.kt</ID>
-    <ID>NewLineAtEndOfFile:CTPreference.kt$com.clevertap.android.sdk.store.preference.CTPreference.kt</ID>
-    <ID>NewLineAtEndOfFile:CTPreferenceCache.kt$com.clevertap.android.sdk.CTPreferenceCache.kt</ID>
-    <ID>NewLineAtEndOfFile:CTPushAmpWorker.kt$com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker.kt</ID>
-    <ID>NewLineAtEndOfFile:CTXtensions.kt$com.clevertap.android.sdk.CTXtensions.kt</ID>
-    <ID>NewLineAtEndOfFile:Cache.kt$com.clevertap.android.sdk.utils.Cache.kt</ID>
-    <ID>NewLineAtEndOfFile:ChangeUserCallback.kt$com.clevertap.android.sdk.login.ChangeUserCallback.kt</ID>
-    <ID>NewLineAtEndOfFile:CleverTapFactory.kt$com.clevertap.android.sdk.CleverTapFactory.kt</ID>
-    <ID>NewLineAtEndOfFile:ClevertapResponseHandler.kt$com.clevertap.android.sdk.response.ClevertapResponseHandler.kt</ID>
-    <ID>NewLineAtEndOfFile:ColorUtils.kt$com.clevertap.android.sdk.utils.ColorUtils.kt</ID>
-    <ID>NewLineAtEndOfFile:ContentFetchRequestBody.kt$com.clevertap.android.sdk.network.api.ContentFetchRequestBody.kt</ID>
-    <ID>NewLineAtEndOfFile:ContentFetchResponse.kt$com.clevertap.android.sdk.response.ContentFetchResponse.kt</ID>
-    <ID>NewLineAtEndOfFile:CoreState.kt$com.clevertap.android.sdk.CoreState.kt</ID>
-    <ID>NewLineAtEndOfFile:Crypt.kt$com.clevertap.android.sdk.cryption.Crypt.kt</ID>
-    <ID>NewLineAtEndOfFile:CryptExtensions.kt$com.clevertap.android.sdk.cryption.CryptExtensions.kt</ID>
-    <ID>NewLineAtEndOfFile:CryptFactory.kt$com.clevertap.android.sdk.cryption.CryptFactory.kt</ID>
-    <ID>NewLineAtEndOfFile:CryptRepository.kt$com.clevertap.android.sdk.cryption.CryptRepository.kt</ID>
-    <ID>NewLineAtEndOfFile:CtApi.kt$com.clevertap.android.sdk.network.api.CtApi.kt</ID>
-    <ID>NewLineAtEndOfFile:CtDefaultDispatchers.kt$com.clevertap.android.sdk.utils.CtDefaultDispatchers.kt</ID>
-    <ID>NewLineAtEndOfFile:DBEncryptionHandler.kt$com.clevertap.android.sdk.db.DBEncryptionHandler.kt</ID>
-    <ID>NewLineAtEndOfFile:DataMigrationRepository.kt$com.clevertap.android.sdk.cryption.DataMigrationRepository.kt</ID>
-    <ID>NewLineAtEndOfFile:DataProcessingUtils.kt$com.clevertap.android.sdk.utils.DataProcessingUtils.kt</ID>
-    <ID>NewLineAtEndOfFile:DelayedInAppResult.kt$com.clevertap.android.sdk.inapp.delay.DelayedInAppResult.kt</ID>
-    <ID>NewLineAtEndOfFile:DelayedInAppStorageStrategy.kt$com.clevertap.android.sdk.inapp.delay.DelayedInAppStorageStrategy.kt</ID>
-    <ID>NewLineAtEndOfFile:DelayedLegacyInAppDAO.kt$com.clevertap.android.sdk.db.DelayedLegacyInAppDAO.kt</ID>
-    <ID>NewLineAtEndOfFile:DelayedLegacyInAppStore.kt$com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore.kt</ID>
-    <ID>NewLineAtEndOfFile:DiskMemory.kt$com.clevertap.android.sdk.utils.DiskMemory.kt</ID>
-    <ID>NewLineAtEndOfFile:DispatcherProvider.kt$com.clevertap.android.sdk.utils.DispatcherProvider.kt</ID>
-    <ID>NewLineAtEndOfFile:DurationPartitionedInApps.kt$com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptedResponseBody.kt$com.clevertap.android.sdk.network.api.EncryptedResponseBody.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptedSendQueueRequestBody.kt$com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptionLevel.kt$com.clevertap.android.sdk.cryption.EncryptionLevel.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptionResult.kt$com.clevertap.android.sdk.network.api.EncryptionResult.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptionState.kt$com.clevertap.android.sdk.cryption.EncryptionState.kt</ID>
-    <ID>NewLineAtEndOfFile:EvaluatedInAppsResult.kt$com.clevertap.android.sdk.inapp.data.EvaluatedInAppsResult.kt</ID>
-    <ID>NewLineAtEndOfFile:EventDataNormalizer.kt$com.clevertap.android.sdk.validation.eventdata.EventDataNormalizer.kt</ID>
-    <ID>NewLineAtEndOfFile:EventDataValidator.kt$com.clevertap.android.sdk.validation.eventdata.EventDataValidator.kt</ID>
-    <ID>NewLineAtEndOfFile:EventNameNormalizer.kt$com.clevertap.android.sdk.validation.eventname.EventNameNormalizer.kt</ID>
-    <ID>NewLineAtEndOfFile:EventNameValidator.kt$com.clevertap.android.sdk.validation.eventname.EventNameValidator.kt</ID>
-    <ID>NewLineAtEndOfFile:EventPropertyKeyNormalizer.kt$com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyNormalizer.kt</ID>
-    <ID>NewLineAtEndOfFile:EventPropertyKeyValidator.kt$com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidator.kt</ID>
-    <ID>NewLineAtEndOfFile:EventQueueManager.kt$com.clevertap.android.sdk.events.EventQueueManager.kt</ID>
-    <ID>NewLineAtEndOfFile:ExoplayerHandle.kt$com.clevertap.android.sdk.video.inapps.ExoplayerHandle.kt</ID>
-    <ID>NewLineAtEndOfFile:ExoplayerHandle.kt$com.clevertap.android.sdk.video.inbox.ExoplayerHandle.kt</ID>
-    <ID>NewLineAtEndOfFile:Extensions.kt$com.clevertap.android.sdk.inapp.images.Extensions.kt</ID>
-    <ID>NewLineAtEndOfFile:Extensions.kt$com.clevertap.android.sdk.inapp.pipsdk.internal.engine.Extensions.kt</ID>
-    <ID>NewLineAtEndOfFile:FcmNotificationBundleManipulation.kt$com.clevertap.android.sdk.pushnotification.fcm.FcmNotificationBundleManipulation.kt</ID>
-    <ID>NewLineAtEndOfFile:FetchInAppsCallback.kt$com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback.kt</ID>
-    <ID>NewLineAtEndOfFile:FileCleanupStrategy.kt$com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy.kt</ID>
-    <ID>NewLineAtEndOfFile:FileCleanupStrategyCoroutine.kt$com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyCoroutine.kt</ID>
-    <ID>NewLineAtEndOfFile:FileCleanupStrategyExecutors.kt$com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors.kt</ID>
-    <ID>NewLineAtEndOfFile:FileFetchApi.kt$com.clevertap.android.sdk.inapp.images.FileFetchApi.kt</ID>
-    <ID>NewLineAtEndOfFile:FileMemoryAccessObject.kt$com.clevertap.android.sdk.inapp.images.memory.FileMemoryAccessObject.kt</ID>
-    <ID>NewLineAtEndOfFile:FileMemoryV2.kt$com.clevertap.android.sdk.inapp.images.memory.FileMemoryV2.kt</ID>
-    <ID>NewLineAtEndOfFile:FilePreloadConfig.kt$com.clevertap.android.sdk.inapp.images.preload.FilePreloadConfig.kt</ID>
-    <ID>NewLineAtEndOfFile:FilePreloaderCoroutine.kt$com.clevertap.android.sdk.inapp.images.preload.FilePreloaderCoroutine.kt</ID>
-    <ID>NewLineAtEndOfFile:FilePreloaderExecutors.kt$com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors.kt</ID>
-    <ID>NewLineAtEndOfFile:FilePreloaderStrategy.kt$com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy.kt</ID>
-    <ID>NewLineAtEndOfFile:FileResourceProvider.kt$com.clevertap.android.sdk.inapp.images.FileResourceProvider.kt</ID>
-    <ID>NewLineAtEndOfFile:FileResourcesRepo.kt$com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepo.kt</ID>
-    <ID>NewLineAtEndOfFile:FileResourcesRepoFactory.kt$com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.kt</ID>
-    <ID>NewLineAtEndOfFile:FileResourcesRepoImpl.kt$com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl.kt</ID>
-    <ID>NewLineAtEndOfFile:FileStore.kt$com.clevertap.android.sdk.inapp.store.preference.FileStore.kt</ID>
-    <ID>NewLineAtEndOfFile:FlattenedEventData.kt$com.clevertap.android.sdk.events.FlattenedEventData.kt</ID>
-    <ID>NewLineAtEndOfFile:GzipBitmapInputStreamReader.kt$com.clevertap.android.sdk.bitmap.GzipBitmapInputStreamReader.kt</ID>
-    <ID>NewLineAtEndOfFile:HttpBitmapLoader.kt$com.clevertap.android.sdk.bitmap.HttpBitmapLoader.kt</ID>
-    <ID>NewLineAtEndOfFile:HttpUrlConnectionParams.kt$com.clevertap.android.sdk.bitmap.HttpUrlConnectionParams.kt</ID>
-    <ID>NewLineAtEndOfFile:IBitmapDownloadRequestHandler.kt$com.clevertap.android.sdk.bitmap.IBitmapDownloadRequestHandler.kt</ID>
-    <ID>NewLineAtEndOfFile:IBitmapInputStreamReader.kt$com.clevertap.android.sdk.bitmap.IBitmapInputStreamReader.kt</ID>
-    <ID>NewLineAtEndOfFile:ICTPreference.kt$com.clevertap.android.sdk.store.preference.ICTPreference.kt</ID>
-    <ID>NewLineAtEndOfFile:IJRepo.kt$com.clevertap.android.sdk.network.IJRepo.kt</ID>
-    <ID>NewLineAtEndOfFile:INotificationBundleManipulation.kt$com.clevertap.android.sdk.pushnotification.fcm.INotificationBundleManipulation.kt</ID>
-    <ID>NewLineAtEndOfFile:InActionStorageStrategy.kt$com.clevertap.android.sdk.inapp.delay.InActionStorageStrategy.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppAssetsStore.kt$com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppDataExtractor.kt$com.clevertap.android.sdk.inapp.delay.InAppDataExtractor.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppDurationPartitioner.kt$com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppGifMemoryAccessObjectV1.kt$com.clevertap.android.sdk.inapp.images.memory.InAppGifMemoryAccessObjectV1.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppGifMemoryV1.kt$com.clevertap.android.sdk.inapp.images.memory.InAppGifMemoryV1.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppImageMemoryAccessObjectV1.kt$com.clevertap.android.sdk.inapp.images.memory.InAppImageMemoryAccessObjectV1.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppImageMemoryV1.kt$com.clevertap.android.sdk.inapp.images.memory.InAppImageMemoryV1.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppMediaConfig.kt$com.clevertap.android.sdk.inapp.media.InAppMediaConfig.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppScheduler.kt$com.clevertap.android.sdk.inapp.delay.InAppScheduler.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppSchedulerFactory.kt$com.clevertap.android.sdk.inapp.delay.InAppSchedulerFactory.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppSchedulingStrategy.kt$com.clevertap.android.sdk.inapp.delay.InAppSchedulingStrategy.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppStore.kt$com.clevertap.android.sdk.inapp.store.preference.InAppStore.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppTimerManager.kt$com.clevertap.android.sdk.inapp.delay.InAppTimerManager.kt</ID>
-    <ID>NewLineAtEndOfFile:InAppVideoPlayerHandle.kt$com.clevertap.android.sdk.video.InAppVideoPlayerHandle.kt</ID>
-    <ID>NewLineAtEndOfFile:JsonFlattener.kt$com.clevertap.android.sdk.utils.JsonFlattener.kt</ID>
-    <ID>NewLineAtEndOfFile:LegacyInAppStore.kt$com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore.kt</ID>
-    <ID>NewLineAtEndOfFile:Media3Handle.kt$com.clevertap.android.sdk.video.inapps.Media3Handle.kt</ID>
-    <ID>NewLineAtEndOfFile:Media3Handle.kt$com.clevertap.android.sdk.video.inbox.Media3Handle.kt</ID>
-    <ID>NewLineAtEndOfFile:MemoryConfig.kt$com.clevertap.android.sdk.inapp.images.memory.MemoryConfig.kt</ID>
-    <ID>NewLineAtEndOfFile:MemoryCreator.kt$com.clevertap.android.sdk.inapp.images.memory.MemoryCreator.kt</ID>
-    <ID>NewLineAtEndOfFile:MigrationResult.kt$com.clevertap.android.sdk.cryption.MigrationResult.kt</ID>
-    <ID>NewLineAtEndOfFile:MultiValueDataValidationPipeline.kt$com.clevertap.android.sdk.validation.eventdata.MultiValueDataValidationPipeline.kt</ID>
-    <ID>NewLineAtEndOfFile:NetworkEncryptionManager.kt$com.clevertap.android.sdk.network.NetworkEncryptionManager.kt</ID>
-    <ID>NewLineAtEndOfFile:NetworkHeadersListener.kt$com.clevertap.android.sdk.network.NetworkHeadersListener.kt</ID>
-    <ID>NewLineAtEndOfFile:NetworkRepo.kt$com.clevertap.android.sdk.network.NetworkRepo.kt</ID>
-    <ID>NewLineAtEndOfFile:NotificationBitmapDownloadRequestHandler.kt$com.clevertap.android.sdk.bitmap.NotificationBitmapDownloadRequestHandler.kt</ID>
-    <ID>NewLineAtEndOfFile:PIPCallbacks.kt$com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks.kt</ID>
-    <ID>NewLineAtEndOfFile:PartitionedInApps.kt$com.clevertap.android.sdk.inapp.data.PartitionedInApps.kt</ID>
-    <ID>NewLineAtEndOfFile:ProfileCommand.kt$com.clevertap.android.sdk.profile.ProfileCommand.kt</ID>
-    <ID>NewLineAtEndOfFile:QueueData.kt$com.clevertap.android.sdk.db.QueueData.kt</ID>
-    <ID>NewLineAtEndOfFile:StoreRegistry.kt$com.clevertap.android.sdk.inapp.store.preference.StoreRegistry.kt</ID>
-    <ID>NewLineAtEndOfFile:UrlHashGenerator.kt$com.clevertap.android.sdk.utils.UrlHashGenerator.kt</ID>
-    <ID>NewLineAtEndOfFile:ValidationConfig.kt$com.clevertap.android.sdk.validation.ValidationConfig.kt</ID>
-    <ID>NewLineAtEndOfFile:VariablesRepo.kt$com.clevertap.android.sdk.variables.repo.VariablesRepo.kt</ID>
-    <ID>NewLineAtEndOfFile:VideoLibChecker.kt$com.clevertap.android.sdk.video.VideoLibChecker.kt</ID>
     <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$message</ID>
     <ID>NoNameShadowing:CTInboxController.kt$CTInboxController$messageIDs</ID>
     <ID>NoNameShadowing:GifDecoder.kt$GifDecoder$sampleSize</ID>
@@ -1626,7 +1202,7 @@
     <ID>ReturnCount:DeviceInfo.kt$DeviceInfo$@Synchronized private fun fetchGoogleAdID()</ID>
     <ID>ReturnCount:DeviceInfo.kt$DeviceInfo$fun initDeviceID(cleverTapID: String?): String?</ID>
     <ID>ReturnCount:DisplayUnitResponse.kt$DisplayUnitResponse$private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?, source: CTResponseSource)</ID>
-    <ID>ReturnCount:EventDataNormalizer.kt$EventDataNormalizer$private fun cleanStringValue(value: String, key: String, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?): String?</ID>
+    <ID>ReturnCount:EventDataNormalizer.kt$EventDataNormalizer$private fun cleanStringValue( value: String, key: String, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int? ): String?</ID>
     <ID>ReturnCount:EventNameValidator.kt$EventNameValidator$override fun validate(input: EventNameNormalizationResult, config: ValidationConfig): ValidationOutcome</ID>
     <ID>ReturnCount:EventPropertyKeyNormalizer.kt$EventPropertyKeyNormalizer$override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult</ID>
     <ID>ReturnCount:EventQueueManager.kt$EventQueueManager$fun initEventEvaluation( context: Context?, event: JSONObject, eventType: Int, flattenedEventData: FlattenedEventData )</ID>
@@ -1674,8 +1250,8 @@
     <ID>ReturnCount:Utils.kt$Utils$@RequiresApi(26) private fun saveGifToFileAndGetUri( gifBytes: ByteArray?, context: Context, config: CleverTapInstanceConfig, clock: Clock ): Uri?</ID>
     <ID>ReturnCount:Utils.kt$Utils$private fun downloadGif(url: String?, context: Context?, config: CleverTapInstanceConfig): DownloadedBitmap?</ID>
     <ID>ReturnCount:VarCache.kt$VarCache$@VisibleForTesting internal fun mergeVariable(variable: Var&lt;*&gt;)</ID>
-    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (diff is Map&lt;*, *&gt;) diff else null</ID>
-    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (vars is Map&lt;*, *&gt;) vars else null</ID>
+    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (diff is Map&lt;*, *&gt;) { diff } else { null }</ID>
+    <ID>SafeCast:CTVariableUtils.kt$CTVariableUtils.Companion$if (vars is Map&lt;*, *&gt;) { vars } else { null }</ID>
     <ID>SpreadOperator:DeviceInfo.kt$DeviceInfo$(error, *(varargs as Array&lt;String&gt;))</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:CTFcmMessageHandler.kt$CTFcmMessageHandler$NullPointerException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:CTInboxActivity.kt$CTInboxActivity$IllegalArgumentException()</ID>
@@ -2038,13 +1614,13 @@
     <ID>UnnecessaryNotNullOperator:EventQueueManager.kt$EventQueueManager$eventName!!</ID>
     <ID>UnnecessarySafeCall:InboxDeleteCall.kt$InboxDeleteCall$m.wzrkParams?.let { params -&gt; params.keys().forEach { key -&gt; obj.put(key, params.get(key)) } }</ID>
     <ID>UnnecessarySafeCall:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$dbHelper.readableDatabase.query( tName, arrayOf(Column.ID), selection, selectionArgs, null, null, null )?.use { cursor -&gt; val idIndex = cursor.getColumnIndexOrThrow(Column.ID) while (cursor.moveToNext()) { cursor.getString(idIndex)?.let { result.add(it) } } }</ID>
-    <ID>UnnecessarySafeCall:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC" )?.use { cursor -&gt; // find indices val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID) val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA) val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS) val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT) val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES) val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ) val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID) val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS) val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN) val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE) val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE) while (cursor.moveToNext()) { val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex)) if (decryptedData == null) { logger.debug("There was some problem in loading inbox message from DB") continue } val ctMessageDAO = CTMessageDAO().apply { this.id = cursor.getString(idColumnIndex) this.jsonData = JSONObject(decryptedData) this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex)) this.date = cursor.getLong(createdAtColumnIndex) this.expires = cursor.getLong(expiresColumnIndex) this.isRead = cursor.getInt(isReadColumnIndex) this.userId = cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId this.tags = cursor.getString(tagsColumnIndex) this.campaignId = cursor.getString(campaignColumnIndex) this.source = readSource(cursor, sourceColumnIndex) this.indexState = readIndexState(cursor, indexStateColumnIndex) } messageDAOArrayList.add(ctMessageDAO) } }</ID>
+    <ID>UnnecessarySafeCall:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC" )?.use { cursor -&gt; // find indices val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID) val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA) val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS) val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT) val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES) val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ) val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID) val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS) val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN) val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE) val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE) while (cursor.moveToNext()) { val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex)) if (decryptedData == null) { logger.debug("There was some problem in loading inbox message from DB") continue } val ctMessageDAO = CTMessageDAO().apply { this.id = cursor.getString(idColumnIndex) this.jsonData = JSONObject(decryptedData) this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex)) this.date = cursor.getLong(createdAtColumnIndex) this.expires = cursor.getLong(expiresColumnIndex) this.isRead = cursor.getInt(isReadColumnIndex) this.userId = // This seems redundant if you are already filtering by userId cursor.getString(userIdColumnIndex) this.tags = cursor.getString(tagsColumnIndex) this.campaignId = cursor.getString(campaignColumnIndex) this.source = readSource(cursor, sourceColumnIndex) this.indexState = readIndexState(cursor, indexStateColumnIndex) } messageDAOArrayList.add(ctMessageDAO) } }</ID>
     <ID>UnnecessarySafeCall:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.DATA} = ?", arrayOf(id), null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)) } logger.verbose("Fetching PID for check - $pushId") }</ID>
     <ID>UnnecessarySafeCall:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.IS_READ} = 0", null, null, null, null )?.use { cursor -&gt; while (cursor.moveToNext()) { val dataIndex = cursor.getColumnIndex(Column.DATA) if (dataIndex &gt;= 0) { val data = cursor.getString(dataIndex) logger.verbose("Fetching PID - $data") if (data != null) { // this case is practically not possible since we have null check in store pushIds.add(data) } } } }</ID>
     <ID>UnnecessarySafeCall:UninstallTimestampDAOImpl.kt$UninstallTimestampDAOImpl$dbHelper.readableDatabase.query( tName, null, null, null, null, null, "${Column.CREATED_AT} DESC", "1" )?.use { cursor -&gt; if (cursor.moveToFirst()) { timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT)) } }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, null, null, null, null, orderBy )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventLog } else { null } }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, orderBy, null )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
+    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, null, null, null, null, orderBy )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
+    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventLog } else { null } }</ID>
+    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, orderBy, null )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
     <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, projection, selection, selectionArgs, null, null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)) } else { 0 } }</ID>
     <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor -&gt; if (cursor.moveToFirst()) { cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1 } else { false } }</ID>
     <ID>UnnecessarySafeCall:UserProfileDAOImpl.kt$UserProfileDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?", arrayOf(accountId, deviceId), null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { val dataIndex = cursor.getColumnIndex(Column.DATA) if (dataIndex &gt;= 0) { val profileString = cursor.getString(dataIndex) val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString) if (decryptedProfile != null) { op = JSONObject(decryptedProfile) } else { logger.verbose("Failed profile decryption") } } } else { logger.verbose("There was no profile found in DB") } }</ID>
@@ -2142,7 +1718,7 @@
     <ID>UseCheckOrError:GifHeaderParser.kt$GifHeaderParser$throw IllegalStateException("You must call setData() before parseHeader()")</ID>
     <ID>UseCheckOrError:InAppController.kt$InAppController$throw IllegalStateException("Current activity reference not found for PIP")</ID>
     <ID>UseCheckOrError:InAppController.kt$InAppController$throw IllegalStateException("Current activity reference not found")</ID>
-    <ID>UseLet:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent$if (mediaValue != null) contentTypeValue else null</ID>
+    <ID>UseLet:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent$if (mediaValue != null) { contentTypeValue } else { null }</ID>
     <ID>UseOrEmpty:CTHtmlBannerCallbacksBridge.kt$CTHtmlBannerCallbacksBridge$parsed.callToAction ?: ""</ID>
     <ID>UseOrEmpty:CTInAppBaseFragment.kt$CTInAppBaseFragment$parsed.callToAction ?: ""</ID>
     <ID>UseOrEmpty:CTInAppNotificationButton.kt$CTInAppNotificationButton$parcel.readString() ?: ""</ID>
@@ -2188,8 +1764,5 @@
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()</ID>
     <ID>VariableNaming:InAppTimerManager.kt$InAppTimerManager$private val TAG = "[InAppTimerManager:$tagSuffix]:"</ID>
     <ID>VariableNaming:ValidationResult.kt$ValidationResult$var `object`: Any? = null</ID>
-    <ID>WildcardImport:DBAdapter.kt$import com.clevertap.android.sdk.db.dao.*</ID>
-    <ID>WildcardImport:ExoplayerPlayerListener.kt$import com.google.android.exoplayer2.*</ID>
-    <ID>WildcardImport:QueueHeaderBuilder.kt$import com.clevertap.android.sdk.*</ID>
   </CurrentIssues>
 </SmellBaseline>

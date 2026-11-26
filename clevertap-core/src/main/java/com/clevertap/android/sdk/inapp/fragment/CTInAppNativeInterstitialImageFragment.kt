@@ -29,7 +29,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         isTablet = inAppNotification.isTablet && isTablet(),
         resourceProvider = resourceProvider(),
         supportsStreamMedia = true,
-        onActionClick = if (inAppNotification.buttons.isNotEmpty()) {{ handleButtonClickAtIndex(0) }} else null,
+        onActionClick = if (inAppNotification.buttons.isNotEmpty()) {{ handleButtonClickAtIndex(0) }} else { null },
         lockedMediaUrl = activeMediaUrl
     )
 
@@ -119,7 +119,12 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
 
         mediaHandler.setup(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame, gifImageId = R.id.gifImage),
+            InAppMediaConfig(
+                imageViewId = R.id.interstitial_image,
+                clickableMedia = true,
+                videoFrameId = R.id.video_frame,
+                gifImageId = R.id.gifImage
+            ),
             CTInAppNativeButtonClickListener()
         )
 

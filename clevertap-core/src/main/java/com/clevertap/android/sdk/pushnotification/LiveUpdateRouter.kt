@@ -34,7 +34,11 @@ internal object LiveUpdateRouter {
      */
     @JvmStatic
     fun mode(isPtMode: Boolean, hasFactory: Boolean): LiveUpdateMode =
-        if (!isPtMode && hasFactory) LiveUpdateMode.FACTORY else LiveUpdateMode.SDK_RENDER
+        if (!isPtMode && hasFactory) {
+            LiveUpdateMode.FACTORY
+        } else {
+            LiveUpdateMode.SDK_RENDER
+        }
 
     /**
      * Deterministic, positive notification id derived from a stable key (the `wzrk_activityId`) so

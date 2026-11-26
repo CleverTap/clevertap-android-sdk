@@ -10,14 +10,30 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PIPIcons {
     fun muteIcon(muted: Boolean): Int =
-        if (muted) R.drawable.ct_ic_volume_off_tint else R.drawable.ct_ic_volume_on_tint
+        if (muted) {
+            R.drawable.ct_ic_volume_off_tint
+        } else {
+            R.drawable.ct_ic_volume_on_tint
+        }
 
     fun muteContentDescription(muted: Boolean): Int =
-        if (muted) R.string.ct_unmute_button_content_description else R.string.ct_mute_button_content_description
+        if (muted) {
+            R.string.ct_unmute_button_content_description
+        } else {
+            R.string.ct_mute_button_content_description
+        }
 
     fun playPauseIcon(playing: Boolean): Int =
-        if (playing) R.drawable.ct_ic_pause else R.drawable.ct_ic_play
+        if (playing) {
+            R.drawable.ct_ic_pause
+        } else {
+            R.drawable.ct_ic_play
+        }
 
     fun playPauseContentDescription(playing: Boolean): Int =
-        if (playing) R.string.ct_pip_pause_button_content_description else R.string.ct_pip_play_button_content_description
+        if (playing) {
+            R.string.ct_pip_pause_button_content_description
+        } else {
+            R.string.ct_pip_play_button_content_description
+        }
 }

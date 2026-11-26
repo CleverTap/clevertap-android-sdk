@@ -76,7 +76,7 @@ internal class ProgressStyle(
          * pt_progress_max is not applied there.
          */
         internal fun nativePlainBarMax(data: ProgressTemplateData): Int? =
-            if (data.isSegmented) null else data.progressMax?.takeIf { it > 0 }
+            if (data.isSegmented) { null } else { data.progressMax?.takeIf { it > 0 } }
 
         /** pt_progress for native, clamped to the plain-bar max like the fallback bar. */
         internal fun nativeProgress(data: ProgressTemplateData): Int {
@@ -131,7 +131,7 @@ internal class ProgressStyle(
         // every consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
         // The 1.17.0 APIs are looked up once per process (NativeProgressApi); null means unavailable,
         // which is logged once there, so this check costs nothing on later renders.
-        val api = if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) NativeProgressApi.methods else null
+        val api = if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) { NativeProgressApi.methods } else { null }
         val nativeOk = api != null &&
             runCatching { buildNative(api, context, extras, nb, segments, points, trackerIcon, ended) }
                 .onFailure { PTLog.verbose("pt_progress: native ProgressStyle failed, using fallback", it) }
@@ -148,7 +148,12 @@ internal class ProgressStyle(
     }
 
     /** Sets the notification tap intent from the standard deep-link key (wzrk_dl), like BasicStyle. */
-    private fun applyContentIntent(context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder) {
+    private fun applyContentIntent(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: NotificationCompat.Builder
+    ) {
         val deepLink = extras.getString(Constants.DEEP_LINK_KEY)
         PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true, PROGRESS_CONTENT_PENDING_INTENT, deepLink
@@ -156,10 +161,15 @@ internal class ProgressStyle(
     }
 
     /** Adds action buttons from the standard wzrk_acts payload as system actions (all API levels). */
-    private fun applyActionButtons(context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder) {
+    private fun applyActionButtons(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: NotificationCompat.Builder
+    ) {
         val actions = extras.getString(Constants.WZRK_ACTIONS)
             ?.let { runCatching { JSONArray(it) }.getOrNull() } ?: return
-        if (actions.length() == 0) return
+        if (actions.length() == 0) { return }
         renderer.actionButtons = renderer.getActionButtons(context, extras, notificationId, actions)
         // pt_progress renders via native ProgressStyle (16+) or DecoratedCustomViewStyle (fallback),
         // so standard addAction() buttons show on EVERY API level. That's unlike the RemoteViews
@@ -201,7 +211,8 @@ internal class ProgressStyle(
 
         if (segments.isNotEmpty()) {
             val segList = segments.map { seg ->
-                api.segmentCtor.newInstance(seg.length).also { s -> seg.color?.let { api.segmentSetColor.invoke(s, it) } }
+                api.segmentCtor.newInstance(seg.length)
+                    .also { s -> seg.color?.let { api.segmentSetColor.invoke(s, it) } }
             }
             api.setProgressSegments.invoke(progressStyle, segList)
         } else {
@@ -265,10 +276,10 @@ internal class ProgressStyle(
      *   late. A timer counting up is left alone: its `pt_when` is in the past on purpose.
      */
     private fun applyChronometer(extras: Bundle, nb: NotificationCompat.Builder, ended: Boolean) {
-        if (ended) return
+        if (ended) { return }
         val whenMs = extras.getString(PTConstants.PT_WHEN)?.toLongOrNull() ?: return
         val countDown = boolean(extras, PTConstants.PT_COUNTDOWN, def = false)
-        if (countDown && whenMs - System.currentTimeMillis() < COUNTDOWN_MIN_REMAINING_MS) return
+        if (countDown && whenMs - System.currentTimeMillis() < COUNTDOWN_MIN_REMAINING_MS) { return }
         nb.setWhen(whenMs).setUsesChronometer(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             nb.setChronometerCountDown(countDown)
@@ -292,7 +303,7 @@ internal class ProgressStyle(
         // (no longer ongoing/promoted), so drop it from the fallback card on the end event too.
         // Like the native tier, pt_chip_text is only used for pt_chip_type=text.
         val textChip = "text".equals(extras.getString(PTConstants.PT_CHIP_TYPE), ignoreCase = true)
-        val chipText = if (ended || !textChip) null else extras.getString(PTConstants.PT_CHIP_TEXT)
+        val chipText = if (ended || !textChip) { null } else { extras.getString(PTConstants.PT_CHIP_TEXT) }
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
         val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
 
@@ -418,19 +429,31 @@ internal class ProgressStyle(
      */
     private fun trackSpec(context: Context, hasStartIcon: Boolean, hasEndIcon: Boolean): ProgressTrackRenderer.Spec {
         val dm = context.resources.displayMetrics
-        val iconsDp = (if (hasStartIcon) TRACK_ICON_DP else 0f) + (if (hasEndIcon) TRACK_ICON_DP else 0f)
+        val iconsDp = (if (hasStartIcon) { TRACK_ICON_DP } else { 0f }) +
+            (if (hasEndIcon) { TRACK_ICON_DP } else { 0f })
         val estimated = dm.widthPixels - ((TRACK_SIDE_MARGINS_DP + iconsDp) * dm.density).toInt()
         val dark = Utils.isDarkMode(context)
         val (accent, background, titleColor) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Material 3 roles: primary = accent1 tone 40/80, surface container high ≈ neutral1
             // tone 90/20, on-surface-variant = neutral2 tone 30/80.
             fun c(id: Int) = context.getColor(id)
-            if (dark) Triple(c(android.R.color.system_accent1_200), c(android.R.color.system_neutral1_800), c(android.R.color.system_neutral2_200))
-            else Triple(c(android.R.color.system_accent1_600), c(android.R.color.system_neutral1_100), c(android.R.color.system_neutral2_700))
+            if (dark) {
+                Triple(
+                    c(android.R.color.system_accent1_200),
+                    c(android.R.color.system_neutral1_800),
+                    c(android.R.color.system_neutral2_200)
+                )
+            } else {
+                Triple(
+                    c(android.R.color.system_accent1_600),
+                    c(android.R.color.system_neutral1_100),
+                    c(android.R.color.system_neutral2_700)
+                )
+            }
         } else {
             Triple(parseColor(renderer.smallIconColour),
-                if (dark) COLOR_BG_DARK else COLOR_BG_LIGHT,
-                if (dark) COLOR_TITLE_DARK else COLOR_TITLE_LIGHT)
+                if (dark) { COLOR_BG_DARK } else { COLOR_BG_LIGHT },
+                if (dark) { COLOR_TITLE_DARK } else { COLOR_TITLE_LIGHT })
         }
         @Suppress("DEPRECATION") // scaledDensity keeps the titles in step with the user's font size
         return ProgressTrackRenderer.Spec(
@@ -450,7 +473,7 @@ internal class ProgressStyle(
 
     /** Downloads [url] as is; null when missing or when the download fails. */
     private fun loadBitmap(context: Context, url: String?): Bitmap? {
-        if (url.isNullOrEmpty()) return null
+        if (url.isNullOrEmpty()) { return null }
         return try {
             renderer.templateMediaManager.getNotificationBitmap(url, false, context)
         } catch (t: Throwable) {
@@ -465,7 +488,7 @@ internal class ProgressStyle(
      */
     private fun squareCrop(src: Bitmap): Bitmap {
         val size = minOf(src.width, src.height)
-        if (src.width == size && src.height == size) return src
+        if (src.width == size && src.height == size) { return src }
         val x = (src.width - size) / 2
         val y = (src.height - size) / 2
         return try {

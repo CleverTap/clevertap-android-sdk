@@ -169,7 +169,7 @@ public open class CTInboxMessageContent : Parcelable {
         _icon = `in`.readString()
         _iconContentDescription = `in`.readString()
         try {
-            _links = if (`in`.readByte().toInt() == 0x00) null else JSONArray(`in`.readString())
+            _links = if (`in`.readByte().toInt() == 0x00) { null } else { JSONArray(`in`.readString()) }
         } catch (e: JSONException) {
             Logger.v("Unable to init CTInboxMessageContent with Parcel - ${e.localizedMessage}")
         }
@@ -190,7 +190,11 @@ public open class CTInboxMessageContent : Parcelable {
             return null
         }
         return try {
-            if (jsonObject.has(Constants.KEY_BG)) jsonObject.getString(Constants.KEY_BG) else ""
+            if (jsonObject.has(Constants.KEY_BG)) {
+                jsonObject.getString(Constants.KEY_BG)
+            } else {
+                ""
+            }
         } catch (e: JSONException) {
             Logger.v("Unable to get Link Text Color with JSON - ${e.localizedMessage}")
             null
@@ -208,7 +212,11 @@ public open class CTInboxMessageContent : Parcelable {
             return null
         }
         return try {
-            if (jsonObject.has(Constants.KEY_COLOR)) jsonObject.getString(Constants.KEY_COLOR) else ""
+            if (jsonObject.has(Constants.KEY_COLOR)) {
+                jsonObject.getString(Constants.KEY_COLOR)
+            } else {
+                ""
+            }
         } catch (e: JSONException) {
             Logger.v("Unable to get Link Text Color with JSON - ${e.localizedMessage}")
             null
@@ -227,9 +235,13 @@ public open class CTInboxMessageContent : Parcelable {
             return ""
         }
         return try {
-            val copyObject = if (jsonObject.has("copyText")) jsonObject.getJSONObject("copyText") else null
+            val copyObject = if (jsonObject.has("copyText")) { jsonObject.getJSONObject("copyText") } else { null }
             if (copyObject != null) {
-                if (copyObject.has(Constants.KEY_TEXT)) copyObject.getString(Constants.KEY_TEXT) else ""
+                if (copyObject.has(Constants.KEY_TEXT)) {
+                    copyObject.getString(Constants.KEY_TEXT)
+                } else {
+                    ""
+                }
             } else {
                 ""
             }
@@ -273,7 +285,11 @@ public open class CTInboxMessageContent : Parcelable {
             return null
         }
         return try {
-            if (jsonObject.has(Constants.KEY_TEXT)) jsonObject.getString(Constants.KEY_TEXT) else ""
+            if (jsonObject.has(Constants.KEY_TEXT)) {
+                jsonObject.getString(Constants.KEY_TEXT)
+            } else {
+                ""
+            }
         } catch (e: JSONException) {
             Logger.v("Unable to get Link Text with JSON - ${e.localizedMessage}")
             null
@@ -292,12 +308,22 @@ public open class CTInboxMessageContent : Parcelable {
             return null
         }
         return try {
-            val urlObject = (if (jsonObject.has(Constants.KEY_URL)) jsonObject.getJSONObject(Constants.KEY_URL)
-            else null) ?: return null
-            val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) urlObject
-                .getJSONObject(Constants.KEY_ANDROID) else null
+            val urlObject = (if (jsonObject.has(Constants.KEY_URL)) {
+                jsonObject.getJSONObject(Constants.KEY_URL)
+            } else {
+                null
+            }) ?: return null
+            val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) {
+                urlObject.getJSONObject(Constants.KEY_ANDROID)
+            } else {
+                null
+            }
             if (androidObject != null) {
-                if (androidObject.has(Constants.KEY_TEXT)) androidObject.getString(Constants.KEY_TEXT) else ""
+                if (androidObject.has(Constants.KEY_TEXT)) {
+                    androidObject.getString(Constants.KEY_TEXT)
+                } else {
+                    ""
+                }
             } else {
                 ""
             }
@@ -319,7 +345,11 @@ public open class CTInboxMessageContent : Parcelable {
             return null
         }
         return try {
-            if (jsonObject.has(Constants.KEY_TYPE)) jsonObject.getString(Constants.KEY_TYPE) else ""
+            if (jsonObject.has(Constants.KEY_TYPE)) {
+                jsonObject.getString(Constants.KEY_TYPE)
+            } else {
+                ""
+            }
         } catch (e: JSONException) {
             Logger.v("Unable to get Link Type with JSON - ${e.localizedMessage}")
             null
@@ -399,8 +429,8 @@ public open class CTInboxMessageContent : Parcelable {
         // Unboxes like the Java code did: throws (NullPointerException) if the payload had no "action" object.
         val hasUrl = hasUrl ?: throw NullPointerException("CTInboxMessageContent without an action object")
         val hasLinks = hasLinks ?: throw NullPointerException("CTInboxMessageContent without an action object")
-        dest.writeByte((if (hasUrl) 0x01 else 0x00).toByte())
-        dest.writeByte((if (hasLinks) 0x01 else 0x00).toByte())
+        dest.writeByte((if (hasUrl) { 0x01 } else { 0x00 }).toByte())
+        dest.writeByte((if (hasLinks) { 0x01 } else { 0x00 }).toByte())
         dest.writeString(_actionUrl)
         dest.writeString(_icon)
         dest.writeString(_iconContentDescription)
@@ -417,39 +447,82 @@ public open class CTInboxMessageContent : Parcelable {
 
     internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent {
         try {
-            val titleObject = if (contentObject.has(Constants.KEY_TITLE)) contentObject
-                .getJSONObject(Constants.KEY_TITLE) else null
+            val titleObject = if (contentObject.has(Constants.KEY_TITLE)) {
+                contentObject.getJSONObject(Constants.KEY_TITLE)
+            } else {
+                null
+            }
             if (titleObject != null) {
-                this._title = if (titleObject.has(Constants.KEY_TEXT)) titleObject.getString(Constants.KEY_TEXT) else ""
-                this._titleColor = if (titleObject.has(Constants.KEY_COLOR)) titleObject.getString(Constants.KEY_COLOR)
-                else ""
+                this._title = if (titleObject.has(Constants.KEY_TEXT)) {
+                    titleObject.getString(Constants.KEY_TEXT)
+                } else {
+                    ""
+                }
+                this._titleColor = if (titleObject.has(Constants.KEY_COLOR)) {
+                    titleObject.getString(Constants.KEY_COLOR)
+                } else {
+                    ""
+                }
             }
-            val msgObject = if (contentObject.has(Constants.KEY_MESSAGE)) contentObject
-                .getJSONObject(Constants.KEY_MESSAGE) else null
+            val msgObject = if (contentObject.has(Constants.KEY_MESSAGE)) {
+                contentObject.getJSONObject(Constants.KEY_MESSAGE)
+            } else {
+                null
+            }
             if (msgObject != null) {
-                this._message = if (msgObject.has(Constants.KEY_TEXT)) msgObject.getString(Constants.KEY_TEXT) else ""
-                this._messageColor = if (msgObject.has(Constants.KEY_COLOR)) msgObject.getString(Constants.KEY_COLOR)
-                else ""
+                this._message = if (msgObject.has(Constants.KEY_TEXT)) {
+                    msgObject.getString(Constants.KEY_TEXT)
+                } else {
+                    ""
+                }
+                this._messageColor = if (msgObject.has(Constants.KEY_COLOR)) {
+                    msgObject.getString(Constants.KEY_COLOR)
+                } else {
+                    ""
+                }
             }
-            val iconObject = if (contentObject.has(Constants.KEY_ICON)) contentObject
-                .getJSONObject(Constants.KEY_ICON) else null
+            val iconObject = if (contentObject.has(Constants.KEY_ICON)) {
+                contentObject.getJSONObject(Constants.KEY_ICON)
+            } else {
+                null
+            }
             if (iconObject != null) {
-                this._icon = if (iconObject.has(Constants.KEY_URL)) iconObject.getString(Constants.KEY_URL) else ""
+                this._icon = if (iconObject.has(Constants.KEY_URL)) {
+                    iconObject.getString(Constants.KEY_URL)
+                } else {
+                    ""
+                }
                 this._iconContentDescription = iconObject.optString(Constants.KEY_ALT_TEXT, "")
             }
-            val mediaObject = if (contentObject.has(Constants.KEY_MEDIA)) contentObject
-                .getJSONObject(Constants.KEY_MEDIA) else null
+            val mediaObject = if (contentObject.has(Constants.KEY_MEDIA)) {
+                contentObject.getJSONObject(Constants.KEY_MEDIA)
+            } else {
+                null
+            }
             if (mediaObject != null) {
-                this._media = if (mediaObject.has(Constants.KEY_URL)) mediaObject.getString(Constants.KEY_URL) else ""
+                this._media = if (mediaObject.has(Constants.KEY_URL)) {
+                    mediaObject.getString(Constants.KEY_URL)
+                } else {
+                    ""
+                }
                 this._mediaContentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "")
-                this._contentType = if (mediaObject.has(Constants.KEY_CONTENT_TYPE)) mediaObject
-                    .getString(Constants.KEY_CONTENT_TYPE) else ""
-                this._posterUrl = if (mediaObject.has(Constants.KEY_POSTER_URL)) mediaObject
-                    .getString(Constants.KEY_POSTER_URL) else ""
+                this._contentType = if (mediaObject.has(Constants.KEY_CONTENT_TYPE)) {
+                    mediaObject.getString(Constants.KEY_CONTENT_TYPE)
+                } else {
+                    ""
+                }
+                this._posterUrl = if (mediaObject.has(Constants.KEY_POSTER_URL)) {
+                    mediaObject.getString(Constants.KEY_POSTER_URL)
+                } else {
+                    ""
+                }
             }
 
-            val actionObject = if (contentObject.has(Constants.KEY_ACTION)) contentObject
-                .getJSONObject(Constants.KEY_ACTION) else null
+            val actionObject = if (contentObject.has(Constants.KEY_ACTION)) {
+                contentObject.getJSONObject(Constants.KEY_ACTION)
+            } else {
+                null
+            }
             if (actionObject != null) {
                 val hasUrl = actionObject.has(Constants.KEY_HAS_URL) && actionObject
                     .getBoolean(Constants.KEY_HAS_URL)
@@ -457,19 +530,31 @@ public open class CTInboxMessageContent : Parcelable {
                 val hasLinks = actionObject.has(Constants.KEY_HAS_LINKS) && actionObject
                     .getBoolean(Constants.KEY_HAS_LINKS)
                 this.hasLinks = hasLinks
-                val urlObject = if (actionObject.has(Constants.KEY_URL)) actionObject
-                    .getJSONObject(Constants.KEY_URL) else null
+                val urlObject = if (actionObject.has(Constants.KEY_URL)) {
+                    actionObject.getJSONObject(Constants.KEY_URL)
+                } else {
+                    null
+                }
                 if (urlObject != null && hasUrl) {
-                    val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) urlObject
-                        .getJSONObject(Constants.KEY_ANDROID) else null
+                    val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) {
+                        urlObject.getJSONObject(Constants.KEY_ANDROID)
+                    } else {
+                        null
+                    }
                     if (androidObject != null) {
-                        this._actionUrl = if (androidObject.has(Constants.KEY_TEXT)) androidObject
-                            .getString(Constants.KEY_TEXT) else ""
+                        this._actionUrl = if (androidObject.has(Constants.KEY_TEXT)) {
+                            androidObject.getString(Constants.KEY_TEXT)
+                        } else {
+                            ""
+                        }
                     }
                 }
                 if (urlObject != null && hasLinks) {
-                    this._links = if (actionObject.has(Constants.KEY_LINKS)) actionObject
-                        .getJSONArray(Constants.KEY_LINKS) else null
+                    this._links = if (actionObject.has(Constants.KEY_LINKS)) {
+                        actionObject.getJSONArray(Constants.KEY_LINKS)
+                    } else {
+                        null
+                    }
                 }
             }
 
@@ -482,7 +567,8 @@ public open class CTInboxMessageContent : Parcelable {
     public companion object {
 
         @JvmField
-        public val CREATOR: Parcelable.Creator<CTInboxMessageContent> = object : Parcelable.Creator<CTInboxMessageContent> {
+        public val CREATOR: Parcelable.Creator<CTInboxMessageContent> =
+            object : Parcelable.Creator<CTInboxMessageContent> {
             override fun createFromParcel(`in`: Parcel): CTInboxMessageContent = CTInboxMessageContent(`in`)
 
             override fun newArray(size: Int): Array<CTInboxMessageContent?> = arrayOfNulls(size)

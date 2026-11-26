@@ -36,7 +36,9 @@ internal class InboxDeleteCall(
 ) : EndpointCall<Unit> {
 
     override suspend fun execute(): CallResult<Unit> = withContext(dispatcher) {
-        if (messages.isEmpty()) return@withContext CallResult.Success(Unit)
+        if (messages.isEmpty()) {
+            return@withContext CallResult.Success(Unit)
+        }
 
         val body = try {
             val header = queueHeaderBuilder.buildHeader(null)

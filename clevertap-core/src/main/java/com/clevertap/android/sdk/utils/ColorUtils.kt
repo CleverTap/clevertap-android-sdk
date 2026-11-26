@@ -32,7 +32,9 @@ internal fun String?.toValidColorOrFallback(fallback: String): String {
 
     // Validate main input
     val value = this ?: return safeFallback
-    if (!value.startsWith("#")) return safeFallback
+    if (!value.startsWith("#")) {
+        return safeFallback
+    }
 
     return try {
         value.toColorInt()

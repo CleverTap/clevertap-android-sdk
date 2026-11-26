@@ -73,7 +73,7 @@ internal open class CTMessageDAO() {
 
     /** 1 when read, 0 otherwise (the database column's value). */
     var isRead: Int
-        get() = if (read) 1 else 0
+        get() = if (read) { 1 } else { 0 }
         set(value) {
             read = value == 1
         }
@@ -99,9 +99,13 @@ internal open class CTMessageDAO() {
 
     companion object {
 
-        internal fun initWithJSON(inboxMessage: JSONObject, userId: String?, source: InboxMessageSource?): CTMessageDAO? {
+        internal fun initWithJSON(
+            inboxMessage: JSONObject,
+            userId: String?,
+            source: InboxMessageSource?
+        ): CTMessageDAO? {
             return try {
-                val id = if (inboxMessage.has("_id")) inboxMessage.getString("_id") else null
+                val id = if (inboxMessage.has("_id")) { inboxMessage.getString("_id") } else { null }
                 val date: Long = if (inboxMessage.has("date")) {
                     inboxMessage.getInt("date").toLong()
                 } else {
@@ -112,16 +116,16 @@ internal open class CTMessageDAO() {
                 } else {
                     (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000
                 }
-                val cellObject = if (inboxMessage.has("msg")) inboxMessage.getJSONObject("msg") else null
+                val cellObject = if (inboxMessage.has("msg")) { inboxMessage.getJSONObject("msg") } else { null }
                 val tagsList = ArrayList<String>()
                 //Part of "msg" object
-                val tagsArray = if (cellObject?.has("tags") == true) cellObject.getJSONArray("tags") else null
+                val tagsArray = if (cellObject?.has("tags") == true) { cellObject.getJSONArray("tags") } else { null }
                 if (tagsArray != null) {
                     for (i in 0 until tagsArray.length()) {
                         tagsList.add(tagsArray.getString(i))
                     }
                 }
-                val campaignId = if (inboxMessage.has("wzrk_id")) inboxMessage.getString("wzrk_id") else "0_0"
+                val campaignId = if (inboxMessage.has("wzrk_id")) { inboxMessage.getString("wzrk_id") } else { "0_0" }
                 if (campaignId.equals("0_0", ignoreCase = true)) {
                     inboxMessage.put("wzrk_id", campaignId) //For test inbox Notification Viewed
                 }

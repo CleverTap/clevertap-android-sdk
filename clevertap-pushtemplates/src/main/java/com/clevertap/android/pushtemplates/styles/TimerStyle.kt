@@ -14,22 +14,30 @@ import com.clevertap.android.pushtemplates.content.TimerSmallContentView
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class TimerStyle(private val data: TimerTemplateData, renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
+internal class TimerStyle(
+    private val data: TimerTemplateData,
+    renderer: TemplateRenderer
+) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (data.baseContent.notificationBehavior.dismissAfter == null)
+        return if (data.baseContent.notificationBehavior.dismissAfter == null) {
             null
-        else {
-            TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
+        } else {
+            TimerSmallContentView(
+                context,
+                data.baseContent.notificationBehavior.dismissAfter,
+                renderer,
+                data
+            ).remoteView
         }
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (data.baseContent.notificationBehavior.dismissAfter == null)
+        return if (data.baseContent.notificationBehavior.dismissAfter == null) {
             null
-        else {
+        } else {
             TimerBigContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
         }
     }

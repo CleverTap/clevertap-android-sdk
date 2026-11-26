@@ -95,7 +95,9 @@ internal class NestedJsonBuilder {
         index: Int,
         value: Any?
     ) {
-        if (index >= segments.size) return
+        if (index >= segments.size) {
+            return
+        }
 
         val segment = segments[index]
         val isLastSegment = index == segments.size - 1

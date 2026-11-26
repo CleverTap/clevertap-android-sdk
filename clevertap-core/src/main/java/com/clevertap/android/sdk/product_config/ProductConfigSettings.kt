@@ -197,9 +197,10 @@ public open class ProductConfigSettings @Deprecated(
         ) { it.toDouble().toLong() }
 
     private val noOfCallsInAllowedWindow: Int
-        @Synchronized get() = readSetting(PRODUCT_CONFIG_NO_OF_CALLS, DEFAULT_NO_OF_CALLS, "GetNoOfCallsInAllowedWindow") {
-            it.toDouble().toInt()
-        }
+        @Synchronized get() =
+            readSetting(PRODUCT_CONFIG_NO_OF_CALLS, DEFAULT_NO_OF_CALLS, "GetNoOfCallsInAllowedWindow") {
+                it.toDouble().toInt()
+            }
 
     @Synchronized
     private fun setNoOfCallsInAllowedWindow(callsInAllowedWindow: Int) {
@@ -231,7 +232,11 @@ public open class ProductConfigSettings @Deprecated(
     private inline fun <T> readSetting(key: String, default: T, failureLogPrefix: String, parse: (String) -> T): T {
         val value = settingsMap[key]
         return try {
-            if (value.isNullOrEmpty()) default else parse(value)
+            if (value.isNullOrEmpty()) {
+                default
+            } else {
+                parse(value)
+            }
         } catch (e: Exception) {
             config.logger.verbose(logTag, "$failureLogPrefix failed", e)
             default

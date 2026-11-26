@@ -233,8 +233,12 @@ internal class PIPManager(
 
         override fun onActivityStopped(activity: Activity) {
             val s = session ?: return
-            if (s.activityRef.get() != activity) return
-            if (activity.isChangingConfigurations) return
+            if (s.activityRef.get() != activity) {
+                return
+            }
+            if (activity.isChangingConfigurations) {
+                return
+            }
             // Pause video playback while backgrounded (saves battery, stops audio).
             // PIP view stays attached — consistent with how regular in-apps survive background.
             if (s.isPlaying && s.videoPlayerWrapper != null) {
@@ -245,12 +249,16 @@ internal class PIPManager(
 
         override fun onActivityDestroyed(activity: Activity) {
             val s = session ?: return
-            if (s.activityRef.get() != activity) return
+            if (s.activityRef.get() != activity) {
+                return
+            }
             if (activity.isChangingConfigurations) {
                 detachForRotation(s, activity)
             } else {
                 // Activity is being destroyed (finish() or system kill) — clean up PIP
-                if (session != null) cleanupSession()
+                if (session != null) {
+                    cleanupSession()
+                }
             }
         }
 
@@ -319,8 +327,11 @@ internal class PIPManager(
     // ─── Threading ────────────────────────────────────────────────────────────────
 
     private fun runOnMain(block: () -> Unit) {
-        if (Looper.myLooper() == Looper.getMainLooper()) block()
-        else mainHandler.post(block)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            block()
+        } else {
+            mainHandler.post(block)
+        }
     }
 
     private fun ensureMediaExecutor(): ExecutorService {

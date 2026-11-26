@@ -116,7 +116,9 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
         mv.onMediaReady = {
             post {
-                if (width == 0 || height == 0) return@post
+                if (width == 0 || height == 0) {
+                    return@post
+                }
                 cv.bindVideoControls(mv)
                 if (isReattach && s.isExpanded) {
                     positionAndShow(s, cv, isReattach = true)
@@ -186,7 +188,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     /** Animate the active view out, then call [onDone] for final cleanup. */
     fun dismiss(onDone: () -> Unit) {
         val s = session ?: run { onDone(); return }
-        val activeView: View = if (isExpanded) expandedView ?: this else compactView ?: this
+        val activeView: View = if (isExpanded) { expandedView ?: this } else { compactView ?: this }
         PIPAnimator.animateOut(activeView, effectiveAnimConfig(s), onDone)
     }
 
@@ -205,7 +207,9 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
         compactView?.detach()
         expandedView?.detach()
-        if (releaseMedia) mediaView?.release()
+        if (releaseMedia) {
+            mediaView?.release()
+        }
         backCallback?.remove()
     }
 
@@ -302,8 +306,11 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
         // Add border padding AFTER clamping so media area keeps the correct aspect ratio
         val borderPx = if (s.config.borderEnabled && s.config.borderWidthDp > 0
-            && s.config.mediaType != PIPMediaType.VIDEO)
-            s.config.borderWidthDp.dpToPx(context) else 0
+            && s.config.mediaType != PIPMediaType.VIDEO) {
+            s.config.borderWidthDp.dpToPx(context)
+        } else {
+            0
+        }
         if (borderPx > 0) {
             val totalPadding = borderPx * 2
             pipW += totalPadding
@@ -349,8 +356,12 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     private fun repositionCompactIfNeeded() {
         val s = session ?: return
         val cv = compactView ?: return
-        if (cv.visibility != View.VISIBLE) return
-        if (width == 0 || height == 0) return
+        if (cv.visibility != View.VISIBLE) {
+            return
+        }
+        if (width == 0 || height == 0) {
+            return
+        }
         val hMarginPx = s.config.horizontalEdgeMarginPercent.percentOf(width)
         val vMarginPx = s.config.verticalEdgeMarginPercent.percentOf(height)
         val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)

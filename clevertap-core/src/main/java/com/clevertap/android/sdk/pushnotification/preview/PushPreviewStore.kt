@@ -69,11 +69,13 @@ internal class PushPreviewStore(
                 .savePushPreview(key, payload.toJson().toString(), expiresAt, collapseKey)
             // Only a row that reached the disk may stop the next sighting; a failed write
             // (no space, database error) must leave the next sighting free to try again.
-            if (saved) recentlyRemembered[key] = startedAt
+            if (saved) {
+                recentlyRemembered[key] = startedAt
+            }
             val elapsed = clock.currentTimeMillis() - startedAt
             logger.verbose(
                 accountId,
-                "Push preview ${if (saved) "remembered" else "not saved"} in $elapsed ms, " +
+                "Push preview ${if (saved) { "remembered" } else { "not saved" }} in $elapsed ms, " +
                     "key=${key.take(KEY_LOG_CHARS)}, expires=$expiresAt"
             )
         }
@@ -130,7 +132,11 @@ internal class PushPreviewStore(
          */
         fun expiresAtSeconds(wzrkTtlSeconds: Long?, nowSeconds: Long): Long {
             val cap = nowSeconds + MAX_TTL_SECONDS
-            return if (wzrkTtlSeconds != null && wzrkTtlSeconds > nowSeconds) minOf(wzrkTtlSeconds, cap) else cap
+            return if (wzrkTtlSeconds != null && wzrkTtlSeconds > nowSeconds) {
+                minOf(wzrkTtlSeconds, cap)
+            } else {
+                cap
+            }
         }
     }
 }

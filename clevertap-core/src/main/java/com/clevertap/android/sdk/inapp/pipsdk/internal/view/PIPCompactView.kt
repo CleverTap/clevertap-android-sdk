@@ -78,7 +78,7 @@ internal class PIPCompactView(
             setImageResource(R.drawable.ct_ic_close_pip)
             contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
+            visibility = if (cfg.showCloseButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onClose() }
         }
         closeBtn = clsBtn
@@ -113,7 +113,7 @@ internal class PIPCompactView(
             setImageResource(R.drawable.ct_ic_deeplink)
             contentDescription = context.getString(R.string.ct_action_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = if (cfg.action != null) View.VISIBLE else View.GONE
+            visibility = if (cfg.action != null) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onAction() }
         }
         deeplinkBtn = dlBtn
@@ -136,7 +136,7 @@ internal class PIPCompactView(
             setImageResource(R.drawable.ct_ic_expand)
             contentDescription = context.getString(R.string.ct_pip_expand_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
+            visibility = if (cfg.showExpandCollapseButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onExpand() }
         }
         expandBtn = expBtn
@@ -174,11 +174,13 @@ internal class PIPCompactView(
      * Call after media is attached.
      */
     fun bindVideoControls(mv: PIPMediaView) {
-        if (!mv.isVideoType) return
+        if (!mv.isVideoType) {
+            return
+        }
 
         // Show and wire play/pause button (center)
         playPauseBtn?.apply {
-            visibility = if (session.config.showPlayPauseButton) View.VISIBLE else View.GONE
+            visibility = if (session.config.showPlayPauseButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener {
                 mv.togglePlayPause()
                 updatePlayPauseIcon(mv.isPlaying)
@@ -189,7 +191,7 @@ internal class PIPCompactView(
 
         // Show and wire mute button (in bottom-right row)
         muteBtn?.apply {
-            visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
+            visibility = if (session.config.showMuteButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener {
                 mv.toggleMute()
                 updateMuteIcon(mv.isMuted)
@@ -294,8 +296,11 @@ internal class PIPCompactView(
         }
 
         val radiusPx = cfg.cornerRadiusDp.dpToPx(context).toFloat()
-        val borderPx = if (cfg.borderEnabled && cfg.borderWidthDp > 0)
-            cfg.borderWidthDp.dpToPx(context) else 0
+        val borderPx = if (cfg.borderEnabled && cfg.borderWidthDp > 0) {
+            cfg.borderWidthDp.dpToPx(context)
+        } else {
+            0
+        }
 
         background = GradientDrawable().apply {
             setColor(Color.BLACK)

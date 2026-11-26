@@ -60,15 +60,20 @@ internal class TemplateMediaManager(
         icoPath: String?, fallbackToAppIcon: Boolean,
         context: Context?
     ): Bitmap? {
-        if (icoPath.isNullOrEmpty())
-            return if (fallbackToAppIcon)
+        if (icoPath.isNullOrEmpty()) {
+            return if (fallbackToAppIcon) {
                 Utils.getAppIcon(context)
-            else null
+            } else {
+                null
+            }
+        }
 
         return getImageBitmap(icoPath)
-            ?: if (fallbackToAppIcon)
+            ?: if (fallbackToAppIcon) {
                 Utils.getAppIcon(context)
-            else null
+            } else {
+                null
+            }
     }
 
     fun getImageBitmap(imageUrl: String?): Bitmap? {

@@ -19,7 +19,10 @@ import androidx.annotation.RestrictTo
  * @param logger An optional [ILogger] for debugging and tracking purposes.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class InAppImageMemoryAccessObjectV1(private val ctCaches: CTCaches,private val logger: ILogger?) : MemoryAccessObject<Bitmap> {
+internal class InAppImageMemoryAccessObjectV1(
+    private val ctCaches: CTCaches,
+    private val logger: ILogger?
+) : MemoryAccessObject<Bitmap> {
     /**
      * Fetches an image from in-memory cache by key.
      *

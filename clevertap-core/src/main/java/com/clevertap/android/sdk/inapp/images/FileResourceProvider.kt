@@ -75,7 +75,11 @@ internal class FileResourceProvider(
          * Must be called by CleverTapFactory during SDK initialization before any other call.
          */
         @JvmStatic
-        fun initInstance(context: Context, logger: ILogger? = null, networkMonitor: NetworkMonitor): FileResourceProvider {
+        fun initInstance(
+            context: Context,
+            logger: ILogger? = null,
+            networkMonitor: NetworkMonitor
+        ): FileResourceProvider {
             return instance ?: synchronized(this) {
                 instance ?: FileResourceProvider(
                     images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
@@ -204,7 +208,10 @@ internal class FileResourceProvider(
     }
 
 
-    private fun <T> fetchCachedData(cacheKeyAndType: Pair<String?,CtCacheType>, transformationType: MemoryDataTransformationType<T>): T? {
+    private fun <T> fetchCachedData(
+        cacheKeyAndType: Pair<String?,CtCacheType>,
+        transformationType: MemoryDataTransformationType<T>
+    ): T? {
         val cacheKey = cacheKeyAndType.first
         val cacheType = cacheKeyAndType.second
         log("${cacheType.name} data for key $cacheKey requested")
@@ -239,7 +246,8 @@ internal class FileResourceProvider(
         val downloadedData: DownloadedBitmap = inAppRemoteSource.makeApiCallForFile(urlMeta)
         return when (downloadedData.status) {
             DownloadedBitmap.Status.SUCCESS -> {
-                val dataToSave: Pair<T, ByteArray> = dataToSaveBlock(downloadedData)!! // can force unwrap since success case
+                // can force unwrap since success case
+                val dataToSave: Pair<T, ByteArray> = dataToSaveBlock(downloadedData)!!
                 saveData(
                     cacheKey = urlMeta.first,
                     data = dataToSave,

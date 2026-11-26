@@ -107,7 +107,7 @@ internal open class ContentView(
 
         remoteView.setViewVisibility(
             R.id.large_icon,
-            if (shouldHide) View.GONE else View.VISIBLE
+            if (shouldHide) { View.GONE } else { View.VISIBLE }
         )
     }
 
@@ -158,7 +158,7 @@ internal open class ContentView(
         altText: String,
         imageBorderData: ImageBorderData? = null
     ): Boolean {
-        if (imageUrl.isNullOrBlank()) return false
+        if (imageUrl.isNullOrBlank()) { return false }
 
         val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter

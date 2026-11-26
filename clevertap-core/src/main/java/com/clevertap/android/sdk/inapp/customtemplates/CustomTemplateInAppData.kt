@@ -81,7 +81,7 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(templateName)
-        dest.writeByte(if (isAction) 1 else 0)
+        dest.writeByte(if (isAction) { 1 } else { 0 })
         dest.writeString(templateId)
         dest.writeString(templateDescription)
         dest.writeJson(args)
@@ -114,16 +114,30 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
 
         other as CustomTemplateInAppData
 
-        if (templateName != other.templateName) return false
-        if (isAction != other.isAction) return false
-        if (templateId != other.templateId) return false
-        if (templateDescription != other.templateDescription) return false
-        if (args?.toString() != other.args?.toString()) return false
+        if (templateName != other.templateName) {
+            return false
+        }
+        if (isAction != other.isAction) {
+            return false
+        }
+        if (templateId != other.templateId) {
+            return false
+        }
+        if (templateDescription != other.templateDescription) {
+            return false
+        }
+        if (args?.toString() != other.args?.toString()) {
+            return false
+        }
 
         return true
     }

@@ -639,7 +639,9 @@ internal class EvaluationManager(
      * @return A JSONObject containing additional headers, or null if no headers need to be attached.
      */
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
-        if (endpointId != ENDPOINT_A1) return null
+        if (endpointId != ENDPOINT_A1) {
+            return null
+        }
         return HeaderVoteLists.attach(
             Constants.INAPP_SS_EVAL_META,
             Constants.INAPP_SUPPRESSED_META,

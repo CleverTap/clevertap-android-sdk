@@ -190,7 +190,9 @@ internal object PIPConfigFactory {
 
     private fun parseBezier(bezier: String): TimeInterpolator? {
         val parts = bezier.split(",").mapNotNull { it.trim().toFloatOrNull() }
-        if (parts.size != 4) return null
+        if (parts.size != 4) {
+            return null
+        }
         return try {
             PathInterpolator(parts[0], parts[1], parts[2], parts[3])
         } catch (_: Exception) {
@@ -199,7 +201,9 @@ internal object PIPConfigFactory {
     }
 
     private fun parseColor(hex: String): Int? {
-        if (hex.isBlank()) return null
+        if (hex.isBlank()) {
+            return null
+        }
         return try {
             hex.toColorInt()
         } catch (_: IllegalArgumentException) {

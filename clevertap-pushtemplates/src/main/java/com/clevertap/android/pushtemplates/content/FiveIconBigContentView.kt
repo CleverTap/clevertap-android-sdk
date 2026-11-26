@@ -44,7 +44,7 @@ internal class FiveIconBigContentView constructor(
         data.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
-            if (index >= ctaIds.size) return@forEachIndexed
+            if (index >= ctaIds.size) { return@forEachIndexed }
 
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)

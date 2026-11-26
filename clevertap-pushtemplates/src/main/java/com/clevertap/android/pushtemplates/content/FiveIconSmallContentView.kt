@@ -19,10 +19,11 @@ internal class FiveIconSmallContentView(
     data: FiveIconsTemplateData,
     extras: Bundle
 ) : ContentView(context,
-    if (!data.baseContent.textData.title.isNullOrEmpty() || !data.baseContent.textData.message.isNullOrEmpty())
+    if (!data.baseContent.textData.title.isNullOrEmpty() || !data.baseContent.textData.message.isNullOrEmpty()) {
         R.layout.five_cta_collapsed_with_text
-    else
-        R.layout.five_cta_collapsed,
+    } else {
+        R.layout.five_cta_collapsed
+    },
     renderer.templateMediaManager) {
 
     private var imageCounter: Int = 0
@@ -49,7 +50,7 @@ internal class FiveIconSmallContentView(
         data.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
-            if (index >= ctaIds.size) return@forEachIndexed
+            if (index >= ctaIds.size) { return@forEachIndexed }
 
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)

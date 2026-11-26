@@ -72,7 +72,9 @@ internal class PushPreviewDAOImpl(
                 if (cursor.moveToFirst()) {
                     return dbEncryptionHandler.unwrapDbData(cursor.getString(0)).also { data ->
                         // A row that exists but cannot be decrypted is a key problem, not a missing push.
-                        if (data == null) logger.verbose("Push preview row for $previewKey is unreadable")
+                        if (data == null) {
+                            logger.verbose("Push preview row for $previewKey is unreadable")
+                        }
                     }
                 }
             }
@@ -99,7 +101,7 @@ internal class PushPreviewDAOImpl(
             null, null, null, null,
             "${Column.ID} DESC",
             "${MAX_ROWS - 1},1"
-        ).use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else null }
+        ).use { cursor -> if (cursor.moveToFirst()) { cursor.getLong(0) } else { null } }
 
         if (oldestIdToKeep != null) {
             db.delete(TABLE, "${Column.ID} < ?", arrayOf(oldestIdToKeep.toString()))

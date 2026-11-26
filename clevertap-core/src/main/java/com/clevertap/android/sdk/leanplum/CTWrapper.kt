@@ -7,7 +7,9 @@ import androidx.annotation.RestrictTo
 internal class CTWrapper(private val ctProvider: CleverTapProvider) {
 
   fun setUserId(userId: String?) {
-    if (userId.isNullOrEmpty()) return
+    if (userId.isNullOrEmpty()) {
+        return
+    }
 
     val profile = mapOf(Constants.IDENTITY to userId)
 
@@ -24,7 +26,9 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
     info: String?,
     params: Map<String, Any?>?
   ) {
-    if (event == null) return
+    if (event == null) {
+        return
+    }
 
     val properties =
       params?.mapValues(::mapNotSupportedValues)?.toMutableMap()
@@ -102,7 +106,9 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
    * LP doesn't allow iterables in params.
    */
   fun advanceTo(state: String?, info: String?, params: Map<String, Any?>?) {
-    if (state == null) return
+    if (state == null) {
+        return
+    }
 
     val event = Constants.STATE_PREFIX + state
     val properties =

@@ -96,7 +96,9 @@ internal class ExoplayerHandle : InAppVideoPlayerHandle {
             return
         }
 
-        playerView = (LayoutInflater.from(context).inflate(R.layout.ct_exo_inapp_styled_player_view, null) as StyledPlayerView).apply {
+        playerView = (
+            LayoutInflater.from(context).inflate(R.layout.ct_exo_inapp_styled_player_view, null) as StyledPlayerView
+        ).apply {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
@@ -151,10 +153,17 @@ internal class ExoplayerHandle : InAppVideoPlayerHandle {
         val minimalMuteButton = playerView?.findViewById<ImageButton>(R.id.exo_minimal_mute)
         val clickListener = View.OnClickListener {
             isMuted = !isMuted
-            player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
-            val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
-            val descRes = if (isMuted) R.string.ct_unmute_button_content_description
-                          else R.string.ct_mute_button_content_description
+            player?.volume = if (isMuted) {
+                InAppVideoPlayerHandle.VOLUME_MUTED
+            } else {
+                InAppVideoPlayerHandle.VOLUME_UNMUTED
+            }
+            val iconRes = if (isMuted) { R.drawable.ct_ic_volume_off } else { R.drawable.ct_ic_volume_on }
+            val descRes = if (isMuted) {
+                R.string.ct_unmute_button_content_description
+            } else {
+                R.string.ct_mute_button_content_description
+            }
             muteButton.setImageResource(iconRes)
             muteButton.contentDescription = muteButton.context.getString(descRes)
             minimalMuteButton?.setImageResource(iconRes)
@@ -165,9 +174,12 @@ internal class ExoplayerHandle : InAppVideoPlayerHandle {
 
         // Sync icon with current mute state — important after rotation where a fresh
         // PlayerView is created but isMuted may already be false from a prior user toggle.
-        val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
-        val descRes = if (isMuted) R.string.ct_unmute_button_content_description
-                      else R.string.ct_mute_button_content_description
+        val iconRes = if (isMuted) { R.drawable.ct_ic_volume_off } else { R.drawable.ct_ic_volume_on }
+        val descRes = if (isMuted) {
+            R.string.ct_unmute_button_content_description
+        } else {
+            R.string.ct_mute_button_content_description
+        }
         muteButton.setImageResource(iconRes)
         muteButton.contentDescription = muteButton.context.getString(descRes)
         minimalMuteButton?.setImageResource(iconRes)
@@ -191,10 +203,11 @@ internal class ExoplayerHandle : InAppVideoPlayerHandle {
     }
 
     private fun setFullscreenIcon(isFullScreen: Boolean) {
-        val iconRes = if (isFullScreen)
+        val iconRes = if (isFullScreen) {
             com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_exit
-        else
+        } else {
             com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_enter
+        }
         playerView?.findViewById<ImageButton>(R.id.exo_fullscreen)?.setImageResource(iconRes)
         playerView?.findViewById<ImageButton>(R.id.exo_minimal_fullscreen)?.setImageResource(iconRes)
     }

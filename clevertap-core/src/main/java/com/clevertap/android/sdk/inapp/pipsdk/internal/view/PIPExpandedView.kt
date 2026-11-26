@@ -95,7 +95,7 @@ internal class PIPExpandedView(
             contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
 
-            visibility = if (showCloseButton) View.VISIBLE else View.GONE
+            visibility = if (showCloseButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onClose() }
         }
         controlsOverlay.addView(
@@ -131,7 +131,7 @@ internal class PIPExpandedView(
             contentDescription = context.getString(R.string.ct_action_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
 
-            visibility = if (hasAction) View.VISIBLE else View.GONE
+            visibility = if (hasAction) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onAction() }
         }
         bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
@@ -155,7 +155,7 @@ internal class PIPExpandedView(
             contentDescription = context.getString(R.string.ct_pip_collapse_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
 
-            visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
+            visibility = if (showExpandCollapseButton) { View.VISIBLE } else { View.GONE }
             setOnClickListener { onCollapse() }
         }
         bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
@@ -189,9 +189,9 @@ internal class PIPExpandedView(
         val isVideo = mv.isVideoType
 
         // Center play/pause — video-only
-        playPauseBtn?.visibility = if (isVideo && showPlayPauseButton) View.VISIBLE else View.GONE
+        playPauseBtn?.visibility = if (isVideo && showPlayPauseButton) { View.VISIBLE } else { View.GONE }
         // Bottom-right mute — video-only
-        muteBtn?.visibility = if (isVideo && showMuteButton) View.VISIBLE else View.GONE
+        muteBtn?.visibility = if (isVideo && showMuteButton) { View.VISIBLE } else { View.GONE }
 
         if (isVideo) {
             updatePlayPauseIcon(mv.isPlaying)

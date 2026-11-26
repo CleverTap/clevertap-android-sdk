@@ -77,7 +77,11 @@ internal object UriHelper {
 
     private fun valueForKey(key: String, sanitizer: UrlQuerySanitizer, truncate: Boolean): String? = try {
         val value = sanitizer.getValue(key)
-        if (value != null && truncate) value.take(Constants.MAX_KEY_LENGTH) else value
+        if (value != null && truncate) {
+            value.take(Constants.MAX_KEY_LENGTH)
+        } else {
+            value
+        }
     } catch (t: Throwable) {
         Logger.v("Couldn't parse the URI", t)
         null

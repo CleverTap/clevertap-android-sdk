@@ -46,7 +46,11 @@ public open class CleverTapDisplayUnit private constructor(
                 contentsValue = null
             }
             customExtrasValue = parcel.readHashMap(null) as HashMap<String, String>?
-            jsonObjectValue = if (parcel.readByte().toInt() == 0x00) null else JSONObject(checkNotNull(parcel.readString()))
+            jsonObjectValue = if (parcel.readByte().toInt() == 0x00) {
+                null
+            } else {
+                JSONObject(checkNotNull(parcel.readString()))
+            }
             errorValue = parcel.readString()
         } catch (e: Exception) {
             val error = "Error Creating Display Unit from parcel : ${e.localizedMessage}"
@@ -248,7 +252,8 @@ public open class CleverTapDisplayUnit private constructor(
     public companion object {
 
         @JvmField
-        public val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> = object : Parcelable.Creator<CleverTapDisplayUnit> {
+        public val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> =
+            object : Parcelable.Creator<CleverTapDisplayUnit> {
             override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnit = CleverTapDisplayUnit(parcel)
 
             override fun newArray(size: Int): Array<CleverTapDisplayUnit?> = arrayOfNulls(size)
@@ -277,7 +282,11 @@ public open class CleverTapDisplayUnit private constructor(
                 } else {
                     null
                 }
-                val bgColor = if (jsonObject.has(Constants.KEY_BG)) jsonObject.getString(Constants.KEY_BG) else ""
+                val bgColor = if (jsonObject.has(Constants.KEY_BG)) {
+                    jsonObject.getString(Constants.KEY_BG)
+                } else {
+                    ""
+                }
 
                 val contentArrayList = ArrayList<CleverTapDisplayUnitContent>()
                 if (jsonObject.has(Constants.KEY_CONTENT)) {

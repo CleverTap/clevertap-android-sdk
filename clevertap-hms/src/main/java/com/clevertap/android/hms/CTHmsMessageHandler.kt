@@ -34,7 +34,7 @@ public open class CTHmsMessageHandler internal constructor(
         var isSuccess = false
         // The parser contract is @NonNull; Java passed null through and the parser's own catch
         // turned the resulting NPE into a null bundle. Skip the call instead (same outcome: false).
-        val messageBundle = if (remoteMessage != null) mParser.toBundle(remoteMessage) else null
+        val messageBundle = if (remoteMessage != null) { mParser.toBundle(remoteMessage) } else { null }
         if (messageBundle != null) {
             try {
                 isSuccess = PushNotificationHandler

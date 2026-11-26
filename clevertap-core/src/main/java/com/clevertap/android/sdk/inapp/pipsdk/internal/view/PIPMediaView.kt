@@ -75,7 +75,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         removeAllViews()
         this.session = session
 
-        if (reloadFallbackIfVideoFailed(session, resourceProvider, mediaExecutor)) return
+        if (reloadFallbackIfVideoFailed(session, resourceProvider, mediaExecutor)) {
+            return
+        }
 
         if (renderer == null) {
             renderer = createRenderer(session.config.mediaType, resourceProvider, mediaExecutor, session)
@@ -102,7 +104,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     ): Boolean {
         val videoFailedToImage = session.config.mediaType == PIPMediaType.VIDEO
                 && session.videoPlayerWrapper == null
-        if (!videoFailedToImage) return false
+        if (!videoFailedToImage) {
+            return false
+        }
 
         FallbackImageLoader.load(
             FallbackLoadRequest(
@@ -191,8 +195,11 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
 
                 override fun onPlayPauseToggled(isPlaying: Boolean) {
                     session.isPlaying = isPlaying
-                    if (isPlaying) session.config.callbacks?.onPlaybackStarted()
-                    else session.config.callbacks?.onPlaybackPaused()
+                    if (isPlaying) {
+                        session.config.callbacks?.onPlaybackStarted()
+                    } else {
+                        session.config.callbacks?.onPlaybackPaused()
+                    }
                     onPlayStateChanged?.invoke(isPlaying)
                 }
 

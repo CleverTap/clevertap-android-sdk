@@ -64,7 +64,7 @@ internal class PushPreviewPayload private constructor(
 
         /** Null when the stored JSON carries no preview field (corrupt row). */
         fun fromJson(json: JSONObject): PushPreviewPayload? =
-            fromLookup { key -> if (json.has(key)) json.optString(key) else null }
+            fromLookup { key -> if (json.has(key)) { json.optString(key) } else { null } }
 
         /**
          * A real preview field is under 4 KB, the FCM payload cap. A tapped intent can carry
@@ -77,10 +77,12 @@ internal class PushPreviewPayload private constructor(
             val fields = LinkedHashMap<String, String>(KEYS.size)
             for (key in KEYS) {
                 val value = valueOf(key) ?: continue
-                if (value.length > MAX_FIELD_LENGTH) return null
+                if (value.length > MAX_FIELD_LENGTH) {
+                    return null
+                }
                 fields[key] = value
             }
-            return if (fields.isEmpty()) null else PushPreviewPayload(fields)
+            return if (fields.isEmpty()) { null } else { PushPreviewPayload(fields) }
         }
     }
 }

@@ -51,7 +51,9 @@ internal abstract class VerticalImageContentView(
                         BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
                         borderColor, borderWidth
                     )
-                } else null
+                } else {
+                    null
+                }
             }
             ButtonStyle.GRADIENT_RADIAL -> {
                 val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
@@ -61,7 +63,9 @@ internal abstract class VerticalImageContentView(
                         color1, color2, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
                         borderColor, borderWidth
                     )
-                } else null
+                } else {
+                    null
+                }
             }
             ButtonStyle.SOLID -> {
                 val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
@@ -70,7 +74,9 @@ internal abstract class VerticalImageContentView(
                         bgColor, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
                         borderWidth
                     )
-                } else null
+                } else {
+                    null
+                }
             }
         }
         bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
@@ -85,7 +91,7 @@ internal abstract class VerticalImageContentView(
         isCollapsed: Boolean
     ) {
         val btnExtras = extras.clone() as Bundle
-        val actionId = if (isCollapsed) PTConstants.PT_VT_C2A_COLLAPSED_KEY else PTConstants.PT_VT_C2A_KEY
+        val actionId = if (isCollapsed) { PTConstants.PT_VT_C2A_COLLAPSED_KEY } else { PTConstants.PT_VT_C2A_KEY }
 
         btnExtras.putString(
             PT_ACTION_ID,

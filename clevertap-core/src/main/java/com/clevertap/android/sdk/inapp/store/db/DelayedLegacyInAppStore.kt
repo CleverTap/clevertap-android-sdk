@@ -34,7 +34,9 @@ internal class DelayedLegacyInAppStore(
 ) {
     @WorkerThread
     fun saveDelayedInAppsBatch(delayedInApps: List<JSONObject>): Boolean {
-        if (delayedInApps.isEmpty()) return true
+        if (delayedInApps.isEmpty()) {
+            return true
+        }
 
         val dataList = mutableListOf<DelayedLegacyInAppData>()
         var encryptionFailureCount = 0

@@ -17,7 +17,11 @@ import com.clevertap.android.sdk.Constants
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class IconsStyle(private val data: IconsTemplateData, renderer: TemplateRenderer, private val extras: Bundle) : Style(data.baseContent, renderer) {
+internal class IconsStyle(
+    private val data: IconsTemplateData,
+    renderer: TemplateRenderer,
+    private val extras: Bundle
+) : Style(data.baseContent, renderer) {
 
     lateinit var iconsSmallContentView: IconsContentView
         private set
