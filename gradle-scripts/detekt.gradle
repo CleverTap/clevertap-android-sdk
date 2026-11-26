@@ -33,8 +33,16 @@ def detektClassLoader = plugins.findPlugin("io.gitlab.arturbosch.detekt").class.
 def detektTaskType = detektClassLoader.loadClass("io.gitlab.arturbosch.detekt.Detekt")
 def detektBaselineTaskType = detektClassLoader.loadClass("io.gitlab.arturbosch.detekt.DetektCreateBaselineTask")
 
+// Vendored third-party code (GIF format decoders, ported as-is): not ours to restyle.
+def vendoredSources = [
+        "**/com/clevertap/android/sdk/gif/GifDecoder.kt",
+        "**/com/clevertap/android/sdk/gif/GifHeaderParser.kt",
+        "**/com/clevertap/android/pushtemplates/media/GifDecoder.kt",
+]
+
 tasks.withType(detektTaskType).configureEach {
     jvmTarget = "1.8"                    // matches the modules' Kotlin jvmTarget
+    exclude(vendoredSources)
     reports {
         html.required.set(true)
         xml.required.set(true)           // machine-readable, used for the burn-down list
@@ -46,4 +54,5 @@ tasks.withType(detektTaskType).configureEach {
 
 tasks.withType(detektBaselineTaskType).configureEach {
     jvmTarget = "1.8"
+    exclude(vendoredSources)
 }
