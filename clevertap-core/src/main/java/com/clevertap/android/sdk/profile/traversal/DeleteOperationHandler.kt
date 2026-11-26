@@ -96,16 +96,19 @@ internal class DeleteOperationHandler(
                 key,
                 value,
                 "",
-                mutableMapOf()
-            ) { target, source, _, _ -> deleteNestedFields(target, source) }
+                mutableMapOf(),
+                deleteNestedFields
+            )
         }
     }
 
-    private fun deleteNestedFields(target: JSONObject, source: JSONObject?) {
-        if (source != null) {
-            handleDeleteRecursive(target, source)
+    /** Recursive step for array-element deletes: only a nested object source deletes anything. */
+    private val deleteNestedFields: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit =
+        { target, source, _, _ ->
+            if (source != null) {
+                handleDeleteRecursive(target, source)
+            }
         }
-    }
 
     /**
      * Deletes specific fields from array elements.

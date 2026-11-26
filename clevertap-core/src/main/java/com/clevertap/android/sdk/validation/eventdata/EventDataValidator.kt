@@ -70,53 +70,36 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         maxKVPairCount: Int?,
         errors: MutableList<ValidationResult>
     ) {
-        checkLimit(
-            actual = metrics.maxDepth,
-            limit = maxDepth,
-            error = ValidationError.DEPTH_LIMIT_EXCEEDED,
-            errors = errors
-        )
+        maxDepth?.let { limit ->
+            checkLimit(metrics.maxDepth, limit, ValidationError.DEPTH_LIMIT_EXCEEDED, errors)
+        }
 
-        checkLimit(
-            actual = metrics.maxArrayKeyCount,
-            limit = maxArrayKeyCount,
-            error = ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED,
-            errors = errors
-        )
+        maxArrayKeyCount?.let { limit ->
+            checkLimit(metrics.maxArrayKeyCount, limit, ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED, errors)
+        }
 
-        checkLimit(
-            actual = metrics.maxObjectKeyCount,
-            limit = maxObjectKeyCount,
-            error = ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED,
-            errors = errors
-        )
+        maxObjectKeyCount?.let { limit ->
+            checkLimit(metrics.maxObjectKeyCount, limit, ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED, errors)
+        }
 
-        checkLimit(
-            actual = metrics.maxArrayLength,
-            limit = maxArrayLength,
-            error = ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED,
-            errors = errors
-        )
+        maxArrayLength?.let { limit ->
+            checkLimit(metrics.maxArrayLength, limit, ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED, errors)
+        }
 
-        checkLimit(
-            actual = metrics.maxKVPairCount,
-            limit = maxKVPairCount,
-            error = ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED,
-            errors = errors
-        )
+        maxKVPairCount?.let { limit ->
+            checkLimit(metrics.maxKVPairCount, limit, ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED, errors)
+        }
     }
 
-    /** Adds [error] to [errors] when a configured [limit] is exceeded by [actual]. */
+    /** Adds [error] to [errors] when [actual] exceeds the configured [limit]. */
     private fun checkLimit(
         actual: Int,
-        limit: Int?,
+        limit: Int,
         error: ValidationError,
         errors: MutableList<ValidationResult>
     ) {
-        limit?.let {
-            if (actual > it) {
-                errors.add(ValidationResultFactory.create(error, actual.toString(), it.toString()))
-            }
+        if (actual > limit) {
+            errors.add(ValidationResultFactory.create(error, actual.toString(), limit.toString()))
         }
     }
 

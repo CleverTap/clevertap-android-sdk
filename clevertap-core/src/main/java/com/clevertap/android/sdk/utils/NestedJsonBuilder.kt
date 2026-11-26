@@ -147,14 +147,20 @@ internal class NestedJsonBuilder {
                 current.put(segment.key, convertValue(value))
             } else {
                 // Whether the next segment has an array index or not, it lives in a nested object
-                var nested = current.optJSONObject(segment.key)
-                if (nested == null) {
-                    nested = JSONObject()
-                    current.put(segment.key, nested)
-                }
-                setValueRecursive(nested, segments, index + 1, value)
+                setValueRecursive(childObject(parent = current, key = segment.key), segments, index + 1, value)
             }
         }
+    }
+
+    /** Returns the object at [key] in [parent], creating and storing an empty one if absent. */
+    @Throws(JSONException::class)
+    private fun childObject(parent: JSONObject, key: String): JSONObject {
+        var nested = parent.optJSONObject(key)
+        if (nested == null) {
+            nested = JSONObject()
+            parent.put(key, nested)
+        }
+        return nested
     }
 
     @Throws(JSONException::class)

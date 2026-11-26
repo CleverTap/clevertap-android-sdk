@@ -335,7 +335,7 @@ internal class DisplayUnitResponse(
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
         val content = ArrayList<JSONObject>()
         val cgStubs = ArrayList<JSONObject>()
-        splitCgStubs(appLaunched = appLaunched, content = content, cgStubs = cgStubs)
+        splitCgStubs(appLaunched = appLaunched, content = content, stubs = cgStubs)
         val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
 
         // The `App Launched` event the batch is evaluated against — properties + location sourced exactly as
@@ -346,20 +346,10 @@ internal class DisplayUnitResponse(
 
         // 1. Cap-filter content AND CG stubs by whenTriggers + whenLimits. Fail-closed on a malformed rule
         //    (drop that set — it can't be cap-checked) but contained so regular `adUnit_notifs` still delivers.
-        val eligibleContent = retainWithinLimits(
-            evaluator = evaluator,
-            units = content,
-            eventProperties = eventProperties,
-            userLocation = userLocation,
-            failureMessage = "ND App-Launched whenLimits filter failed; dropping content",
-        )
-        val eligibleStubs = retainWithinLimits(
-            evaluator = evaluator,
-            units = cgStubs,
-            eventProperties = eventProperties,
-            userLocation = userLocation,
-            failureMessage = "ND App-Launched whenLimits filter failed for CG stubs",
-        )
+        val eligibleContent = retainWithinLimits(evaluator, content, eventProperties, userLocation,
+            failureMessage = "ND App-Launched whenLimits filter failed; dropping content")
+        val eligibleStubs = retainWithinLimits(evaluator, cgStubs, eventProperties, userLocation,
+            failureMessage = "ND App-Launched whenLimits filter failed for CG stubs")
 
         // 2. Priority arbitration: deliver all ties at the top priority band; ack only the CG stubs that
         //    would have shown (in the reached bands). Mirrors the server's priority-flag-ON behaviour.
@@ -374,12 +364,12 @@ internal class DisplayUnitResponse(
         return trimToGlobalCap(selection.winners)
     }
 
-    /** Splits the App-Launched batch into deliverable [content] and CG-suppression [cgStubs], in order. */
-    private fun splitCgStubs(appLaunched: JSONArray, content: MutableList<JSONObject>, cgStubs: MutableList<JSONObject>) {
+    /** Splits the App-Launched batch into deliverable [content] and CG-suppression [stubs], in order. */
+    private fun splitCgStubs(appLaunched: JSONArray, content: MutableList<JSONObject>, stubs: MutableList<JSONObject>) {
         for (i in 0 until appLaunched.length()) {
             val entry = appLaunched.optJSONObject(i) ?: continue
             if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
-                cgStubs.add(entry)
+                stubs.add(entry)
             } else {
                 content.add(entry)
             }
@@ -414,17 +404,9 @@ internal class DisplayUnitResponse(
             return emptyList()
         }
         return try {
-            evaluator.retainAppLaunchedWithinLimits(
-                content = units,
-                eventProperties = eventProperties,
-                userLocation = userLocation
-            )
+            evaluator.retainAppLaunchedWithinLimits(units, eventProperties, userLocation)
         } catch (t: Throwable) {
-            logger.verbose(
-                config.accountId,
-                "${Constants.FEATURE_DISPLAY_UNIT}$failureMessage",
-                t
-            )
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}$failureMessage", t)
             emptyList()
         }
     }
