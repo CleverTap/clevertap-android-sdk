@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
+import androidx.annotation.RestrictTo
 
 /**
  * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
@@ -24,7 +25,8 @@ import com.clevertap.android.sdk.Utils
  * If the deep link is to a third-party application or a URL, then the Notification Clicked event will NO LONGER be tracked.
  */
 @Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
-open class CTPushNotificationReceiver : BroadcastReceiver() {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public open class CTPushNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 

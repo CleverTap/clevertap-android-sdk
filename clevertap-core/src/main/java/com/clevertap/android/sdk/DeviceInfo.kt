@@ -34,10 +34,8 @@ import java.util.UUID
 import kotlin.math.roundToLong
 import org.json.JSONObject
 
-// Public (restricted) because already-Kotlin public types (e.g. inapp.TriggerManager) take it in
-// their signatures.
-@RestrictTo(Scope.LIBRARY_GROUP)
-open class DeviceInfo internal constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class DeviceInfo internal constructor(
     val context: Context,
     private val config: CleverTapInstanceConfig,
     @Suppress("UNUSED_PARAMETER") cleverTapID: String?,
@@ -380,7 +378,7 @@ open class DeviceInfo internal constructor(
         get() = if (customLocale.isNullOrEmpty()) deviceLocale else customLocale
 
     /** Returns the pending device validation results and clears them. */
-    fun drainValidationResults(): List<ValidationResult> {
+    internal fun drainValidationResults(): List<ValidationResult> {
         val pending = ArrayList(validationResults)
         validationResults.clear()
         return pending

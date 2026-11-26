@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class PushProviders internal constructor(
+internal class PushProviders internal constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val baseDatabaseManager: BaseDatabaseManager,

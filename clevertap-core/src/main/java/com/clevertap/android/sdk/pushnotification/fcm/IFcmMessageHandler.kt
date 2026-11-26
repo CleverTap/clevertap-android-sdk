@@ -8,7 +8,7 @@ import com.google.firebase.messaging.RemoteMessage
  * interface to handle the Firebase notification service receiver callbacks
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-interface IFcmMessageHandler {
+public interface IFcmMessageHandler {
 
     /**
      * Creates notification from Firebase Remote message
@@ -16,7 +16,7 @@ interface IFcmMessageHandler {
      * @param message            - Firebase Remote message
      * @return true if everything is fine & notification is rendered successfully
      */
-    fun createNotification(applicationContext: Context?, message: RemoteMessage?): Boolean
+    public fun createNotification(applicationContext: Context?, message: RemoteMessage?): Boolean
 
     /**
      * Processes new token from Firebase
@@ -24,6 +24,6 @@ interface IFcmMessageHandler {
      * @param token              - fcm token received from Firebase SDK
      * @return true if the token is sent to Clevertap's server
      */
-    fun onNewToken(applicationContext: Context?, token: String?): Boolean
+    public fun onNewToken(applicationContext: Context?, token: String?): Boolean
 
 }

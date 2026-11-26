@@ -1,8 +1,10 @@
 package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.checkers.Checker
+import androidx.annotation.RestrictTo
 
-class CarouselTemplateValidator(private var validator: Validator) : TemplateValidator(validator.keys) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CarouselTemplateValidator(private var validator: Validator) : TemplateValidator(validator.keys) {
 
     override fun validate(): Boolean {
         return validator.validate() && super.validateKeys()// All check must be true

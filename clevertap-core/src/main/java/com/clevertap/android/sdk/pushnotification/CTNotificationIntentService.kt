@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
+import androidx.annotation.RestrictTo
 
 /**
  * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
@@ -28,7 +29,8 @@ import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
  */
 @Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
 @Suppress("DEPRECATION")
-open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
 
     @Deprecated("Deprecated in Java")
     override fun onHandleIntent(intent: Intent?) {
@@ -107,10 +109,10 @@ open class CTNotificationIntentService : IntentService("CTNotificationIntentServ
         }
     }
 
-    companion object {
+    public companion object {
 
-        const val MAIN_ACTION: String = "com.clevertap.PUSH_EVENT"
+        public const val MAIN_ACTION: String = "com.clevertap.PUSH_EVENT"
 
-        const val TYPE_BUTTON_CLICK: String = "com.clevertap.ACTION_BUTTON_CLICK"
+        public const val TYPE_BUTTON_CLICK: String = "com.clevertap.ACTION_BUTTON_CLICK"
     }
 }

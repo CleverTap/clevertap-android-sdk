@@ -1,8 +1,10 @@
 package com.clevertap.android.pushtemplates.checkers
 
 import com.clevertap.android.pushtemplates.PTLog
+import androidx.annotation.RestrictTo
 
-class StringSizeChecker(var entity: String?, var size: Int, var errorMsg: String) :
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class StringSizeChecker(var entity: String?, var size: Int, var errorMsg: String) :
     SizeChecker<String>(entity, size, errorMsg) {
 
     override fun check(): Boolean {

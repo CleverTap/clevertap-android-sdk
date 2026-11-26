@@ -3,7 +3,7 @@ package com.clevertap.android.sdk
 /**
  * A listener for notification permission.
  */
-fun interface PushPermissionResponseListener {
+public fun interface PushPermissionResponseListener {
 
     /**
      * This is called when user either grants allow/dismiss permission for notifications for Android 13+
@@ -11,5 +11,5 @@ fun interface PushPermissionResponseListener {
      * @param accepted This boolean will return true if notification permission is granted and will return
      *                 false if permission is denied.
      */
-    fun onPushPermissionResponse(accepted: Boolean)
+    public fun onPushPermissionResponse(accepted: Boolean)
 }

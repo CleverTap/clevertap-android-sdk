@@ -18,7 +18,7 @@ import org.json.JSONObject
  * `@RestrictTo(LIBRARY_GROUP)` in Java.
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+public open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
     instance: CleverTapAPI?,
     host: InAppWebInteraction?
 ) {
@@ -27,7 +27,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
 
     private val hostWr: WeakReference<InAppWebInteraction> = WeakReference(host)
 
-    constructor(instance: CleverTapAPI?) : this(instance, null) {
+    public constructor(instance: CleverTapAPI?) : this(instance, null) {
         instance?.let { it.coreState.coreMetaData.isWebInterfaceInitializedExternally = true }
     }
 
@@ -36,7 +36,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * for Android 13 and above
      */
     @JavascriptInterface
-    open fun promptPushPermission(shouldShowFallbackSettings: Boolean) {
+    public open fun promptPushPermission(shouldShowFallbackSettings: Boolean) {
         withCleverTap { cleverTapAPI ->
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             dismissInAppNotification()
@@ -48,7 +48,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * Method to be called from WebView Javascript to dismiss the InApp notification
      */
     @JavascriptInterface
-    open fun dismissInAppNotification() {
+    public open fun dismissInAppNotification() {
         withCleverTap {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             hostWr.get()?.didDismiss(null)
@@ -62,7 +62,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param value [String] value of profile property value
      */
     @JavascriptInterface
-    open fun addMultiValueForKey(key: String?, value: String?) {
+    public open fun addMultiValueForKey(key: String?, value: String?) {
         withCleverTap { it.addMultiValueForKey(key, value) }
     }
 
@@ -74,7 +74,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param value [Double] value of increment
      */
     @JavascriptInterface
-    open fun incrementValue(key: String?, value: Double) {
+    public open fun incrementValue(key: String?, value: Double) {
         withCleverTap { it.incrementValue(key, value) }
     }
 
@@ -86,7 +86,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param value [Double] value of decrement
      */
     @JavascriptInterface
-    open fun decrementValue(key: String?, value: Double) {
+    public open fun decrementValue(key: String?, value: Double) {
         withCleverTap { it.decrementValue(key, value) }
     }
 
@@ -97,7 +97,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param values Stringified [JSONArray] of profile property values
      */
     @JavascriptInterface
-    open fun addMultiValuesForKey(key: String?, values: String?) {
+    public open fun addMultiValuesForKey(key: String?, values: String?) {
         withCleverTap { cleverTapAPI ->
             withMultiValues(key, values) { validKey, valueList ->
                 cleverTapAPI.addMultiValuesForKey(validKey, valueList)
@@ -116,7 +116,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      *                      [HashMap]<String,Object>
      */
     @JavascriptInterface
-    open fun pushChargedEvent(chargeDetails: String?, items: String?) {
+    public open fun pushChargedEvent(chargeDetails: String?, items: String?) {
         withCleverTap { cleverTapAPI ->
             if (chargeDetails == null) {
                 Logger.v("chargeDetails passed to CTWebInterface is null")
@@ -147,7 +147,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param eventName [String] value of event name
      */
     @JavascriptInterface
-    open fun pushEvent(eventName: String?) {
+    public open fun pushEvent(eventName: String?) {
         withCleverTap { it.pushEvent(eventName) }
     }
 
@@ -158,7 +158,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param eventActions Stringified [JSONObject] of event properties
      */
     @JavascriptInterface
-    open fun pushEvent(eventName: String?, eventActions: String?) {
+    public open fun pushEvent(eventName: String?, eventActions: String?) {
         withCleverTap { cleverTapAPI ->
             if (eventActions == null) {
                 Logger.v("eventActions passed to CTWebInterface is null")
@@ -178,7 +178,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param profile Stringified [JSONObject] of profile properties
      */
     @JavascriptInterface
-    open fun pushProfile(profile: String?) {
+    public open fun pushProfile(profile: String?) {
         withCleverTap { cleverTapAPI ->
             withProfile(profile) { cleverTapAPI.pushProfile(it) }
         }
@@ -191,7 +191,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param value [String] value of profile property value
      */
     @JavascriptInterface
-    open fun removeMultiValueForKey(key: String?, value: String?) {
+    public open fun removeMultiValueForKey(key: String?, value: String?) {
         withCleverTap { cleverTapAPI ->
             if (key == null) {
                 Logger.v("Key passed to CTWebInterface is null")
@@ -212,7 +212,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param values Stringified [JSONArray] of profile property values
      */
     @JavascriptInterface
-    open fun removeMultiValuesForKey(key: String?, values: String?) {
+    public open fun removeMultiValuesForKey(key: String?, values: String?) {
         withCleverTap { cleverTapAPI ->
             withMultiValues(key, values) { validKey, valueList ->
                 cleverTapAPI.removeMultiValuesForKey(validKey, valueList)
@@ -226,7 +226,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param key [String] value of profile property key
      */
     @JavascriptInterface
-    open fun removeValueForKey(key: String?) {
+    public open fun removeValueForKey(key: String?) {
         withCleverTap { cleverTapAPI ->
             if (key == null) {
                 Logger.v("Key passed to CTWebInterface is null")
@@ -243,7 +243,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param values Stringified [JSONArray] of profile property values
      */
     @JavascriptInterface
-    open fun setMultiValueForKey(key: String?, values: String?) {
+    public open fun setMultiValueForKey(key: String?, values: String?) {
         withCleverTap { cleverTapAPI ->
             withMultiValues(key, values) { validKey, valueList ->
                 cleverTapAPI.setMultiValuesForKey(validKey, valueList)
@@ -258,7 +258,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param profile Stringified [JSONObject] of profile properties
      */
     @JavascriptInterface
-    open fun onUserLogin(profile: String?) {
+    public open fun onUserLogin(profile: String?) {
         withCleverTap { cleverTapAPI ->
             withProfile(profile) { cleverTapAPI.onUserLogin(it) }
         }
@@ -274,7 +274,7 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * @param buttonId     A string that will be stored as param to the "Notification Clicked" event
      */
     @JavascriptInterface
-    open fun triggerInAppAction(actionJson: String?, callToAction: String?, buttonId: String?) {
+    public open fun triggerInAppAction(actionJson: String?, callToAction: String?, buttonId: String?) {
         if (cleverTapWr.get() == null) {
             Logger.d("CTWebInterface CleverTap Instance is null.")
             return
@@ -312,10 +312,10 @@ open class CTWebInterface @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal c
      * Retrieve the version code of the CleverTap SDK.
      */
     @JavascriptInterface
-    open fun getSdkVersion(): Int = BuildConfig.VERSION_CODE
+    public open fun getSdkVersion(): Int = BuildConfig.VERSION_CODE
 
     /** Kotlin property syntax, equivalent to [getSdkVersion]. */
-    val sdkVersion: Int
+    public val sdkVersion: Int
         @JvmSynthetic @JvmName("ktGetSdkVersion") inline get() = getSdkVersion()
 
     /** Runs [action] with the CleverTap instance, or logs that it is gone. */

@@ -28,8 +28,8 @@ import java.util.Locale
  * The API is model-light (primitives) so it stays decoupled from the ND content/target model, which is
  * parsed elsewhere.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-class NdFCManager internal constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class NdFCManager internal constructor(
     private val config: CleverTapInstanceConfig,
     private val storeRegistry: StoreRegistry,
     private val impressionManager: ImpressionManager,

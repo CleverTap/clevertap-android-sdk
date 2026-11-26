@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle
 
-open class PushNotificationHandler private constructor() : ActionButtonClickHandler {
+public open class PushNotificationHandler private constructor() : ActionButtonClickHandler {
 
     private object SingletonNotificationHandler {
 
@@ -70,10 +70,10 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
         return true
     }
 
-    companion object {
+    public companion object {
 
         @JvmStatic
-        fun getPushNotificationHandler(): NotificationHandler = SingletonNotificationHandler.INSTANCE
+        public fun getPushNotificationHandler(): NotificationHandler = SingletonNotificationHandler.INSTANCE
 
         /**
          * Merges the single nested `data` JSON object of a Live Update push into the top-level
@@ -94,7 +94,7 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
         }
 
         @JvmStatic
-        fun isForPushTemplates(extras: Bundle?): Boolean {
+        public fun isForPushTemplates(extras: Bundle?): Boolean {
             val ptId = extras?.getString("pt_id")
             return !ptId.isNullOrEmpty() && ptId != "0"
         }

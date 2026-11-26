@@ -12,14 +12,14 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
  * published artifacts (push templates, hms) built against the former Java class call it statically.
  */
 @RestrictTo(Scope.LIBRARY_GROUP)
-object PushNotificationUtil {
+public object PushNotificationUtil {
 
     @JvmStatic
-    fun getAccountIdFromNotificationBundle(message: Bundle?): String =
+    public fun getAccountIdFromNotificationBundle(message: Bundle?): String =
         message?.getString(WZRK_ACCT_ID_KEY, "") ?: ""
 
     @JvmStatic
-    fun getPushIdFromNotificationBundle(message: Bundle?): String =
+    public fun getPushIdFromNotificationBundle(message: Bundle?): String =
         message?.getString(WZRK_PUSH_ID, "") ?: ""
 
     /**
@@ -28,9 +28,9 @@ object PushNotificationUtil {
      * @return list
      */
     @JvmStatic
-    fun getDefaultPushTypes(): ArrayList<PushType> = arrayListOf(FCM)
+    public fun getDefaultPushTypes(): ArrayList<PushType> = arrayListOf(FCM)
 
     @JvmStatic
-    fun buildPushNotificationRenderedListenerKey(accountId: String?, pushId: String?): String =
+    public fun buildPushNotificationRenderedListenerKey(accountId: String?, pushId: String?): String =
         "${accountId}_$pushId"
 }

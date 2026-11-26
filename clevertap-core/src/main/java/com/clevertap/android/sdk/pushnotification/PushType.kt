@@ -11,7 +11,7 @@ import java.util.Objects
  *
  * The two class names are nullable: wrapper SDKs build a [PushType] from maps where they may be absent.
  */
-open class PushType(
+public open class PushType(
     type: String,
     prefKey: String,
     className: String?,
@@ -20,40 +20,40 @@ open class PushType(
 
     private val _ctProviderClassName: String? = className
 
-    open fun getCtProviderClassName(): String? = _ctProviderClassName
+    public open fun getCtProviderClassName(): String? = _ctProviderClassName
 
     /** Kotlin property syntax, equivalent to [getCtProviderClassName]. */
-    val ctProviderClassName: String?
+    public val ctProviderClassName: String?
         @JvmSynthetic @JvmName("ktGetCtProviderClassName") inline get() = getCtProviderClassName()
 
     private val _messagingSDKClassName: String? = messagingSDKClassName
 
-    open fun getMessagingSDKClassName(): String? = _messagingSDKClassName
+    public open fun getMessagingSDKClassName(): String? = _messagingSDKClassName
 
     /** Kotlin property syntax, equivalent to [getMessagingSDKClassName]. */
-    val messagingSDKClassName: String?
+    public val messagingSDKClassName: String?
         @JvmSynthetic @JvmName("ktGetMessagingSDKClassName") inline get() = getMessagingSDKClassName()
 
     private val _tokenPrefKey: String = prefKey
 
-    open fun getTokenPrefKey(): String = _tokenPrefKey
+    public open fun getTokenPrefKey(): String = _tokenPrefKey
 
     /** Kotlin property syntax, equivalent to [getTokenPrefKey]. */
-    val tokenPrefKey: String
+    public val tokenPrefKey: String
         @JvmSynthetic @JvmName("ktGetTokenPrefKey") inline get() = getTokenPrefKey()
 
     private val _type: String = type
 
-    open fun getType(): String = _type
+    public open fun getType(): String = _type
 
     /** Kotlin property syntax, equivalent to [getType]. */
-    val type: String
+    public val type: String
         @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
     override fun toString(): String = " [PushType:$_type] "
 
     // Method to convert PushType to JSONObject
-    open fun toJSONObject(): JSONObject? = try {
+    public open fun toJSONObject(): JSONObject? = try {
         JSONObject().apply {
             put("ctProviderClassName", _ctProviderClassName)
             put("messagingSDKClassName", _messagingSDKClassName)
@@ -78,11 +78,11 @@ open class PushType(
     override fun hashCode(): Int =
         Objects.hash(_ctProviderClassName, _messagingSDKClassName, _tokenPrefKey, _type)
 
-    companion object {
+    public companion object {
 
         // Static method to convert JSONObject to PushType
         @JvmStatic
-        fun fromJSONObject(jsonObject: JSONObject?): PushType? {
+        public fun fromJSONObject(jsonObject: JSONObject?): PushType? {
             jsonObject ?: return null
             return try {
                 PushType(

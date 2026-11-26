@@ -1,6 +1,8 @@
 package com.clevertap.android.pushtemplates
+import androidx.annotation.RestrictTo
 
-enum class PTScaleType {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class PTScaleType {
     FIT_CENTER,
     CENTER_CROP;
 

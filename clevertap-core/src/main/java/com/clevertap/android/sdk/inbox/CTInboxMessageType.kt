@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inbox
 
-enum class CTInboxMessageType(private val inboxMessageType: String) {
+public enum class CTInboxMessageType(private val inboxMessageType: String) {
 
     SimpleMessage("simple"),
     IconMessage("message-icon"),
@@ -9,7 +9,7 @@ enum class CTInboxMessageType(private val inboxMessageType: String) {
 
     override fun toString(): String = inboxMessageType
 
-    companion object {
+    public companion object {
 
         internal fun fromString(type: String): CTInboxMessageType? = entries.firstOrNull { it.inboxMessageType == type }
     }

@@ -16,8 +16,8 @@ import com.clevertap.android.sdk.Logger
  * The SDK attaches this receiver's intent only when the client-supplied factory did not set its own
  * delete intent, so client dismiss handling is never clobbered.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-class CTLiveUpdateDismissReceiver : BroadcastReceiver() {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CTLiveUpdateDismissReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         try {

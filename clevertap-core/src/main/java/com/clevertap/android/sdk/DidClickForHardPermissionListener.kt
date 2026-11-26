@@ -9,7 +9,7 @@ import androidx.annotation.RestrictTo
  * Kept JVM- and Kotlin-public (but restricted) because public SDK activities implement it.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-interface DidClickForHardPermissionListener {
+internal interface DidClickForHardPermissionListener {
     fun didClickForHardPermissionWithFallbackSettings(fallbackToSettings: Boolean)
     fun didCancelPermissionRequest()
 }

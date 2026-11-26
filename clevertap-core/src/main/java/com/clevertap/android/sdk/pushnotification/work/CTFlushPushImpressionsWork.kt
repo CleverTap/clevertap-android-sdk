@@ -7,8 +7,10 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.flushPushImpressionsOnPostAsyncSafely
+import androidx.annotation.RestrictTo
 
-class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     val tag = "CTFlushPushImpressionsWork"
 

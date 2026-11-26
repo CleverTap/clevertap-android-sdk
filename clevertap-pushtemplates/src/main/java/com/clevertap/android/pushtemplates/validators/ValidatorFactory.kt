@@ -5,23 +5,23 @@ import com.clevertap.android.pushtemplates.checkers.*
 import org.json.JSONArray
 import androidx.annotation.RestrictTo
 
-const val PT_TITLE = "PT_TITLE"
-const val PT_MSG = "PT_MSG"
-const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
-const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
-const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
-const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
-const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
-const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
-const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
-const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
-const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
-const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
-const val PT_BIG_IMG = "PT_BIG_IMG"
-const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
-const val PT_ACTIONS = "PT_ACTIONS"
+internal const val PT_TITLE = "PT_TITLE"
+internal const val PT_MSG = "PT_MSG"
+internal const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
+internal const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
+internal const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
+internal const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
+internal const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
+internal const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
+internal const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
+internal const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
+internal const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
+internal const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
+internal const val PT_BIG_IMG = "PT_BIG_IMG"
+internal const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
+internal const val PT_ACTIONS = "PT_ACTIONS"
 
-fun Iterable<Checker<out Any>>.and(): Boolean {
+internal fun Iterable<Checker<out Any>>.and(): Boolean {
     var and = true
     for (element in this) {
         and =
@@ -30,7 +30,7 @@ fun Iterable<Checker<out Any>>.and(): Boolean {
     return and
 }
 
-fun Iterable<Checker<out Any>>.or(): Boolean {
+internal fun Iterable<Checker<out Any>>.or(): Boolean {
     for (element in this) {
         if (element.check()) {
             return true

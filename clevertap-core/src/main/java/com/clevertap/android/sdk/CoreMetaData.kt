@@ -13,50 +13,50 @@ import org.json.JSONObject
  * This class stores run time state of CleverTap's instance
  */
 @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
-open class CoreMetaData : CleverTapMetaData() {
+public open class CoreMetaData : CleverTapMetaData() {
 
     private var appInboxActivityReference: WeakReference<Activity?>? = null
 
-    var appInstallTime: Long = 0
+    public var appInstallTime: Long = 0
 
     private var appLaunchPushed = false
 
     private val appLaunchPushedLock = Any()
 
-    var currentSessionId: Int = 0
+    public var currentSessionId: Int = 0
 
     private var currentUserOptedOut = false
 
     private var allowSystemEvents = true
 
-    var isFirstRequestInSession: Boolean = false
+    public var isFirstRequestInSession: Boolean = false
 
     //Session
-    var isFirstSession: Boolean = false
+    public var isFirstSession: Boolean = false
 
-    var geofenceSDKVersion: Int = 0
+    public var geofenceSDKVersion: Int = 0
 
-    var isInstallReferrerDataSent: Boolean = false
+    public var isInstallReferrerDataSent: Boolean = false
 
-    var isBgPing: Boolean = false
+    public var isBgPing: Boolean = false
 
-    var isLocationForGeofence: Boolean = false
+    public var isLocationForGeofence: Boolean = false
 
-    var isProductConfigRequested: Boolean = false
+    public var isProductConfigRequested: Boolean = false
 
     //Session
-    var lastSessionLength: Int = 0
+    public var lastSessionLength: Int = 0
 
-    var locationFromUser: Location? = null
+    public var locationFromUser: Location? = null
 
-    var isOffline: Boolean = false
+    public var isOffline: Boolean = false
 
     /**
      * Flag indicating whether the [CTWebInterface] is initialized from outside of the SDK.
      *
      * When this flag is true, it means that the [CTWebInterface] has been initialized externally, typically by the application.
      */
-    var isWebInterfaceInitializedExternally: Boolean = false
+    public var isWebInterfaceInitializedExternally: Boolean = false
 
     /**
      * Last notification received on device from CleverTap in an active session of a process(before process is killed)
@@ -67,7 +67,7 @@ open class CoreMetaData : CleverTapMetaData() {
     // Concurrent because modules register from their own threads while the network thread reads it
     private val customSdkVersions: MutableMap<String, Int> = ConcurrentHashMap()
 
-    var referrerClickTime: Long = 0
+    public var referrerClickTime: Long = 0
 
     private var sourceValue: String? = null
     private var mediumValue: String? = null
@@ -75,49 +75,49 @@ open class CoreMetaData : CleverTapMetaData() {
 
     private var wzrkParamsValue: JSONObject? = null
 
-    var isRelaxNetwork: Boolean = false
+    public var isRelaxNetwork: Boolean = false
 
     private var freshAppLaunchSent = false
     private val freshAppLaunchLock = Any()
 
     // Setter wraps the activity in a WeakReference; getter returns null once it is collected.
-    var appInboxActivity: Activity?
+    public var appInboxActivity: Activity?
         get() = appInboxActivityReference?.get()
         set(activity) {
             appInboxActivityReference = WeakReference(activity)
         }
 
-    var screenName: String? = null
+    public var screenName: String? = null
         private set
 
-    fun setCurrentScreenName(currentScreenName: String?) {
+    public fun setCurrentScreenName(currentScreenName: String?) {
         screenName = currentScreenName
     }
 
     @Synchronized
-    fun clearCampaign() {
+    public fun clearCampaign() {
         campaignValue = null
     }
 
     @Synchronized
-    fun clearMedium() {
+    public fun clearMedium() {
         mediumValue = null
     }
 
     @Synchronized
-    fun clearSource() {
+    public fun clearSource() {
         sourceValue = null
     }
 
     @Synchronized
-    fun clearWzrkParams() {
+    public fun clearWzrkParams() {
         wzrkParamsValue = null
     }
 
     // only set if not already set during the session
     @get:Synchronized
     @set:Synchronized
-    var campaign: String?
+    public var campaign: String?
         get() = campaignValue
         set(campaign) {
             if (campaignValue == null) {
@@ -125,21 +125,21 @@ open class CoreMetaData : CleverTapMetaData() {
             }
         }
 
-    fun getCustomSdkVersion(customSdkName: String): Int =
+    public fun getCustomSdkVersion(customSdkName: String): Int =
         customSdkVersions[customSdkName] ?: sharedCustomSdkVersions[customSdkName] ?: 0
 
-    fun setCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
+    public fun setCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
         customSdkVersions[customSdkName] = customSdkVersion
     }
 
     // Instance versions override the shared ones registered by modules.
-    val allCustomSdkVersions: MutableMap<String, Int>
+    public val allCustomSdkVersions: MutableMap<String, Int>
         get() = HashMap(sharedCustomSdkVersions).apply { putAll(customSdkVersions) }
 
     // only set if not already set during the session
     @get:Synchronized
     @set:Synchronized
-    var medium: String?
+    public var medium: String?
         get() = mediumValue
         set(medium) {
             if (mediumValue == null) {
@@ -151,7 +151,7 @@ open class CoreMetaData : CleverTapMetaData() {
     // only set if not already set during the session
     @get:Synchronized
     @set:Synchronized
-    var source: String?
+    public var source: String?
         get() = sourceValue
         set(source) {
             if (sourceValue == null) {
@@ -162,7 +162,7 @@ open class CoreMetaData : CleverTapMetaData() {
     // only set if not already set during the session
     @get:Synchronized
     @set:Synchronized
-    var wzrkParams: JSONObject?
+    public var wzrkParams: JSONObject?
         get() = wzrkParamsValue
         set(wzrkParams) {
             if (wzrkParamsValue == null) {
@@ -170,17 +170,17 @@ open class CoreMetaData : CleverTapMetaData() {
             }
         }
 
-    fun inCurrentSession(): Boolean = currentSessionId > 0
+    public fun inCurrentSession(): Boolean = currentSessionId > 0
 
-    var isAppLaunchPushed: Boolean
+    public var isAppLaunchPushed: Boolean
         get() = synchronized(appLaunchPushedLock) { appLaunchPushed }
         set(pushed) = synchronized(appLaunchPushedLock) { appLaunchPushed = pushed }
 
-    var isCurrentUserOptedOut: Boolean
+    public var isCurrentUserOptedOut: Boolean
         get() = synchronized(optOutFlagLock) { currentUserOptedOut }
         set(enable) = synchronized(optOutFlagLock) { currentUserOptedOut = enable }
 
-    var enabledSystemEvents: Boolean
+    public var enabledSystemEvents: Boolean
         get() = synchronized(optOutFlagLock) { allowSystemEvents }
         set(enable) = synchronized(optOutFlagLock) { allowSystemEvents = enable }
 
@@ -190,7 +190,7 @@ open class CoreMetaData : CleverTapMetaData() {
      * 1. App has been foregrounded (initialAppEnteredForegroundTime > 0)
      * 2. This instance has NOT yet sent fl:true
      */
-    val isFreshAppLaunch: Boolean
+    public val isFreshAppLaunch: Boolean
         get() = synchronized(freshAppLaunchLock) {
             getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent
         }
@@ -198,14 +198,14 @@ open class CoreMetaData : CleverTapMetaData() {
     /**
      * Marks that this instance has sent the fresh app launch flag.
      */
-    fun setFreshAppLaunchSent() {
+    public fun setFreshAppLaunchSent() {
         synchronized(freshAppLaunchLock) {
             freshAppLaunchSent = true
         }
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
-    companion object {
+    public companion object {
 
         private var appForeground = false
 
@@ -219,13 +219,13 @@ open class CoreMetaData : CleverTapMetaData() {
         private var initialAppEnteredForegroundTime = 0
 
         @JvmStatic
-        fun getCurrentActivity(): Activity? = currentActivity?.get()
+        public fun getCurrentActivity(): Activity? = currentActivity?.get()
 
         @JvmStatic
-        fun getInitialAppEnteredForegroundTime(): Int = initialAppEnteredForegroundTime
+        public fun getInitialAppEnteredForegroundTime(): Int = initialAppEnteredForegroundTime
 
         @JvmStatic
-        fun setCurrentActivity(activity: Activity?) {
+        public fun setCurrentActivity(activity: Activity?) {
             when {
                 activity == null -> currentActivity = null
                 !activity.localClassName.contains("InAppNotificationActivity") ->
@@ -234,26 +234,26 @@ open class CoreMetaData : CleverTapMetaData() {
         }
 
         @JvmStatic
-        fun getCurrentActivityName(): String? = getCurrentActivity()?.localClassName
+        public fun getCurrentActivityName(): String? = getCurrentActivity()?.localClassName
 
         @JvmStatic
-        fun isAppForeground(): Boolean = appForeground
+        public fun isAppForeground(): Boolean = appForeground
 
         @JvmStatic
-        fun setAppForeground(isForeground: Boolean) {
+        public fun setAppForeground(isForeground: Boolean) {
             appForeground = isForeground
         }
 
         @JvmStatic
-        fun setInitialAppEnteredForegroundTime(time: Int) {
+        public fun setInitialAppEnteredForegroundTime(time: Int) {
             initialAppEnteredForegroundTime = time
         }
 
         @JvmStatic
-        fun getActivityCount(): Int = activityCount
+        public fun getActivityCount(): Int = activityCount
 
         @JvmStatic
-        fun setSharedCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
+        public fun setSharedCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
             // Shared versions reach af for every instance, so they must not replace a built-in af field
             if (customSdkName in CTJsonConverter.RESERVED_AF_KEYS) {
                 Logger.v("Ignoring SDK version for reserved af key $customSdkName")
@@ -263,12 +263,12 @@ open class CoreMetaData : CleverTapMetaData() {
         }
 
         @JvmStatic
-        fun setActivityCount(count: Int) {
+        public fun setActivityCount(count: Int) {
             activityCount = count
         }
 
         @JvmStatic
-        fun incrementActivityCount() {
+        public fun incrementActivityCount() {
             activityCount++
         }
     }

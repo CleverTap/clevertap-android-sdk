@@ -11,25 +11,25 @@ import java.util.concurrent.TimeUnit
  * constructor.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface Clock {
+internal interface Clock {
 
   /**
    * Gets current time in milliseconds.
    *
    * @return The current time in milliseconds.
    */
-  public fun currentTimeMillis(): Long
+  fun currentTimeMillis(): Long
 
   /**
    * Gets current time in seconds.
    *
    * @return The current time in seconds.
    */
-  public fun currentTimeSeconds(): Long {
+  fun currentTimeSeconds(): Long {
     return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis())
   }
 
-  public fun currentTimeSecondsInt(): Int {
+  fun currentTimeSecondsInt(): Int {
     return (currentTimeMillis() / 1000).toInt()
   }
 
@@ -38,11 +38,11 @@ public interface Clock {
    *
    * @return New instance of Date.
    */
-  public fun newDate(): Date
+  fun newDate(): Date
 
-  public companion object {
+  companion object {
     @JvmField
-    public val SYSTEM: Clock = object : Clock {
+    val SYSTEM: Clock = object : Clock {
       override fun currentTimeMillis(): Long {
         return System.currentTimeMillis()
       }

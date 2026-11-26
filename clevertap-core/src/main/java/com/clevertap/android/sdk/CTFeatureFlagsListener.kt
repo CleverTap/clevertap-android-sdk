@@ -7,7 +7,7 @@ package com.clevertap.android.sdk
  * </p>
  */
 @Deprecated("This interface has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-fun interface CTFeatureFlagsListener {
+public fun interface CTFeatureFlagsListener {
 
     /**
      * Receives a callback whenever feature flags get updated [com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController]
@@ -17,5 +17,5 @@ fun interface CTFeatureFlagsListener {
      * </p>
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
-    fun featureFlagsUpdated()
+    public fun featureFlagsUpdated()
 }

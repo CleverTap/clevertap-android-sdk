@@ -15,11 +15,11 @@ import com.huawei.hms.push.RemoteMessage
 /**
  * implementation of [IFcmMessageHandler] and [IPushAmpHandler] for huawei notification message
  */
-open class CTHmsMessageHandler internal constructor(
+public open class CTHmsMessageHandler internal constructor(
     private val mParser: INotificationParser<RemoteMessage>
 ) : IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
 
-    constructor() : this(HmsNotificationParser())
+    public constructor() : this(HmsNotificationParser())
 
     /**
      * {@inheritDoc}

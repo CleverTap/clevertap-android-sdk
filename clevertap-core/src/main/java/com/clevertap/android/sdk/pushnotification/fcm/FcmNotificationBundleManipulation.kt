@@ -3,13 +3,15 @@ package com.clevertap.android.sdk.pushnotification.fcm
 import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import com.google.firebase.messaging.RemoteMessage
+import androidx.annotation.RestrictTo
 
 /**
  * Class responsible for manipulating the FCM notification bundle.
  *
  * @param messageBundle The bundle containing the FCM notification data.
  */
-class FcmNotificationBundleManipulation(private val messageBundle: Bundle) :
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class FcmNotificationBundleManipulation(private val messageBundle: Bundle) :
     INotificationBundleManipulation<RemoteMessage> {
 
     /**

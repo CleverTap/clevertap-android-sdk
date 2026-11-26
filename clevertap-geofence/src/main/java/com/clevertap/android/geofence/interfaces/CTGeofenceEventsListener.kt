@@ -5,7 +5,7 @@ import org.json.JSONObject
 /**
  * Callback interface to get geofence enter/exit events from OS.
  */
-interface CTGeofenceEventsListener {
+public interface CTGeofenceEventsListener {
 
     /**
      * This method will be invoked when a user enters geofence. Given below is the JSON structure
@@ -25,7 +25,7 @@ interface CTGeofenceEventsListener {
      *
      * @param geofenceEnteredEventProperties [JSONObject] containing geofence event details
      */
-    fun onGeofenceEnteredEvent(geofenceEnteredEventProperties: JSONObject)
+    public fun onGeofenceEnteredEvent(geofenceEnteredEventProperties: JSONObject)
 
     /**
      * This method will be invoked when a user exits geofence. Given below is the JSON structure
@@ -45,5 +45,5 @@ interface CTGeofenceEventsListener {
      *
      * @param geofenceExitedEventProperties [JSONObject] containing geofence event details
      */
-    fun onGeofenceExitedEvent(geofenceExitedEventProperties: JSONObject)
+    public fun onGeofenceExitedEvent(geofenceExitedEventProperties: JSONObject)
 }

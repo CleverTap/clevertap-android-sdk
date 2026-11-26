@@ -7,7 +7,7 @@ package com.clevertap.android.sdk
  * the main thread. Post to the main thread yourself if the callback touches
  * UI.
  */
-fun interface FetchInboxCallback {
+public fun interface FetchInboxCallback {
 
     /**
      * @param success `true` if messages were fetched and applied to
@@ -15,5 +15,5 @@ fun interface FetchInboxCallback {
      *                throttled, disabled for this session, or failed due to
      *                a network/server error.
      */
-    fun onInboxFetched(success: Boolean)
+    public fun onInboxFetched(success: Boolean)
 }

@@ -55,13 +55,13 @@ import org.json.JSONObject
  * its JVM signature and Kotlin call sites still compile to static calls.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-object Utils {
+public object Utils {
     private const val TAG = "Utils"
 
     private val normalizedNameExcludePattern: Pattern = Pattern.compile("\\s+")
 
     @JvmStatic
-    fun containsIgnoreCase(collection: Collection<String?>?, key: String?): Boolean {
+    public fun containsIgnoreCase(collection: Collection<String?>?, key: String?): Boolean {
         if (collection == null || key == null) {
             return false
         }
@@ -70,7 +70,7 @@ object Utils {
 
     @JvmStatic
     @Suppress("DEPRECATION")
-    fun convertBundleObjectToHashMap(b: Bundle): HashMap<String, Any> {
+    public fun convertBundleObjectToHashMap(b: Bundle): HashMap<String, Any> {
         // Bundle values may be null; the Java map accepted them as-is.
         val map = HashMap<String, Any?>()
         for (s in b.keySet()) {
@@ -84,7 +84,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(
+    public fun convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(
         jsonArray: JSONArray?
     ): ArrayList<HashMap<String, Any>> {
         val hashMapArrayList = ArrayList<HashMap<String, Any>>()
@@ -102,7 +102,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun convertJSONArrayToArrayList(array: JSONArray?): ArrayList<String> {
+    public fun convertJSONArrayToArrayList(array: JSONArray?): ArrayList<String> {
         val listData = ArrayList<String>()
         if (array == null) {
             return listData
@@ -118,7 +118,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun convertJSONObjectToHashMap(b: JSONObject): HashMap<String, Any> {
+    public fun convertJSONObjectToHashMap(b: JSONObject): HashMap<String, Any> {
         val map = HashMap<String, Any>()
         for (s in b.keys()) {
             try {
@@ -134,7 +134,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun convertToTitleCase(text: String?): String? {
+    public fun convertToTitleCase(text: String?): String? {
         if (text.isNullOrEmpty()) {
             return text
         }
@@ -162,18 +162,18 @@ object Utils {
 
     // used by inapp.
     @JvmStatic
-    fun getBitmapFromURL(srcUrl: String): Bitmap? {
+    public fun getBitmapFromURL(srcUrl: String): Bitmap? {
         val bitmapDownloadRequest = BitmapDownloadRequest(srcUrl)
         return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP, bitmapDownloadRequest).bitmap
     }
 
     @JvmStatic
-    fun getNowInMillis(): Long = System.currentTimeMillis()
+    public fun getNowInMillis(): Long = System.currentTimeMillis()
 
     @JvmStatic
     @SuppressLint("MissingPermission")
     @Suppress("DEPRECATION")
-    fun getDeviceNetworkType(context: Context): String {
+    public fun getDeviceNetworkType(context: Context): String {
         // Fall back to network type
         val teleMan = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
             ?: return "Unavailable"
@@ -224,14 +224,14 @@ object Utils {
     }
 
     @JvmStatic
-    fun getMemoryConsumption(): Long {
+    public fun getMemoryConsumption(): Long {
         val free = Runtime.getRuntime().freeMemory()
         val total = Runtime.getRuntime().totalMemory()
         return total - free
     }
 
     @JvmStatic
-    fun getDownloadedBitmapPostFallbackIconCheck(
+    public fun getDownloadedBitmapPostFallbackIconCheck(
         fallbackToAppIcon: Boolean, context: Context?,
         ic: DownloadedBitmap
     ): DownloadedBitmap = when {
@@ -246,7 +246,7 @@ object Utils {
      */
     @JvmStatic
     @Throws(NullPointerException::class)
-    fun getNotificationBitmapWithTimeoutAndSize(
+    public fun getNotificationBitmapWithTimeoutAndSize(
         icoPath: String?, fallbackToAppIcon: Boolean,
         context: Context?, config: CleverTapInstanceConfig?, timeoutMillis: Long, sizeBytes: Int
     ): DownloadedBitmap {
@@ -262,7 +262,7 @@ object Utils {
 
     @JvmStatic
     @Throws(NullPointerException::class)
-    fun getNotificationBitmapWithTimeout(
+    public fun getNotificationBitmapWithTimeout(
         icoPath: String?, fallbackToAppIcon: Boolean,
         context: Context?, config: CleverTapInstanceConfig?, timeoutMillis: Long
     ): DownloadedBitmap {
@@ -356,7 +356,7 @@ object Utils {
      */
     @JvmStatic
     @RequiresApi(26)
-    fun getNotificationGifURI(
+    internal fun getNotificationGifURI(
         url: String?,
         context: Context,
         config: CleverTapInstanceConfig,
@@ -382,7 +382,7 @@ object Utils {
      * @param config The CleverTap instance configuration containing logger and account information
      */
     @JvmStatic
-    fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock) {
+    internal fun cleanupOldGIFs(context: Context, config: CleverTapInstanceConfig, clock: Clock) {
         val cacheDir: File? = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE)
         try {
             if (cacheDir == null || !cacheDir.exists()) {
@@ -428,7 +428,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun getThumbnailImage(context: Context?, image: String?): Int =
+    public fun getThumbnailImage(context: Context?, image: String?): Int =
         context?.resources?.getIdentifier(image, "drawable", context.packageName) ?: -1
 
     /**
@@ -438,19 +438,19 @@ object Utils {
      * @param permission The fully qualified Android permission name
      */
     @JvmStatic
-    fun hasPermission(context: Context, permission: String): Boolean = try {
+    public fun hasPermission(context: Context, permission: String): Boolean = try {
         PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission)
     } catch (t: Throwable) {
         false
     }
 
     @JvmStatic
-    fun isActivityDead(activity: Activity?): Boolean =
+    public fun isActivityDead(activity: Activity?): Boolean =
         activity == null || activity.isFinishing || activity.isDestroyed
 
     @JvmStatic
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun isServiceAvailable(context: Context, clazz: Class<*>?): Boolean {
+    public fun isServiceAvailable(context: Context, clazz: Class<*>?): Boolean {
         if (clazz == null) {
             return false
         }
@@ -473,7 +473,7 @@ object Utils {
 
     @JvmStatic
     @Throws(JSONException::class)
-    fun optionalStringKey(o: JSONObject, k: String): String? =
+    public fun optionalStringKey(o: JSONObject, k: String): String? =
         if (o.has(k) && !o.isNull(k)) o.getString(k) else null
 
     /**
@@ -482,7 +482,7 @@ object Utils {
      * @param runnable - task to be run
      */
     @JvmStatic
-    fun runOnUiThread(runnable: Runnable?) {
+    public fun runOnUiThread(runnable: Runnable?) {
         runnable ?: return
         if (Looper.myLooper() == Looper.getMainLooper()) {
             //run if already on the UI thread
@@ -494,7 +494,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun setPackageNameFromResolveInfoList(context: Context, launchIntent: Intent) {
+    public fun setPackageNameFromResolveInfoList(context: Context, launchIntent: Intent) {
         val resolveInfoList: List<android.content.pm.ResolveInfo> =
             context.packageManager.queryIntentActivities(launchIntent, 0) ?: return
         val appPackageName = context.packageName
@@ -509,7 +509,7 @@ object Utils {
      */
     @JvmStatic
     @Throws(JSONException::class)
-    fun stringToBundle(content: String?): Bundle {
+    public fun stringToBundle(content: String?): Bundle {
         val bundle = Bundle()
         if (content.isNullOrEmpty()) {
             return bundle
@@ -522,7 +522,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun validateCTID(cleverTapID: String?): Boolean {
+    public fun validateCTID(cleverTapID: String?): Boolean {
         val error = when {
             cleverTapID == null ->
                 "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."
@@ -543,7 +543,7 @@ object Utils {
 
     @JvmStatic
     @Throws(NullPointerException::class)
-    fun drawableToBitmap(drawable: Drawable): Bitmap {
+    public fun drawableToBitmap(drawable: Drawable): Bitmap {
         if (drawable is BitmapDrawable) {
             return drawable.bitmap
         }
@@ -583,14 +583,14 @@ object Utils {
     }
 
     @JvmStatic
-    fun getSCDomain(domain: String): String {
+    public fun getSCDomain(domain: String): String {
         // Pattern#split(input, limit) matches the former String#split(regex, limit).
         val parts = Pattern.compile("\\.").split(domain, 2)
         return "${parts[0]}.$AUTH.${parts[1]}"
     }
 
     @JvmStatic
-    fun isRenderFallback(remoteMessage: RemoteMessage, context: Context?): Boolean {
+    public fun isRenderFallback(remoteMessage: RemoteMessage, context: Context?): Boolean {
         // Boolean.parseBoolean semantics: only a case-insensitive "true" is true.
         val renderRateKillSwitch = "true".equals(remoteMessage.data[Constants.WZRK_TSR_FB], ignoreCase = true) //tsrfb
         val renderRateFallback =
@@ -600,7 +600,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun navigateToAndroidSettingsForNotifications(context: Context) {
+    public fun navigateToAndroidSettingsForNotifications(context: Context) {
         val intent = Intent().apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
@@ -617,7 +617,7 @@ object Utils {
 
     @JvmStatic
     @WorkerThread
-    fun isMainProcess(context: Context, mainProcessName: String?): Boolean = try {
+    public fun isMainProcess(context: Context, mainProcessName: String?): Boolean = try {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
         // Java dereferenced both without null checks; that failure is caught below.
         val processInfos = checkNotNull(am?.runningAppProcesses) { "running app processes unavailable" }
@@ -631,7 +631,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun toJSONObjectList(jsonArray: JSONArray): MutableList<JSONObject> =
+    public fun toJSONObjectList(jsonArray: JSONArray): MutableList<JSONObject> =
         (0 until jsonArray.length()).mapNotNullTo(ArrayList()) { jsonArray.optJSONObject(it) }
 
     /**
@@ -642,7 +642,7 @@ object Utils {
      * @return The haversine distance between the two locations, in kilometers.
      */
     @JvmStatic
-    fun haversineDistance(coordinateA: Location, coordinateB: Location): Double {
+    public fun haversineDistance(coordinateA: Location, coordinateB: Location): Double {
         // The Earth radius ranges from a maximum of about 6378 km (equatorial)
         // to a minimum of about 6357 km (polar).
         // A globally-average value is usually considered to be 6371 km (6371e3).
@@ -675,7 +675,7 @@ object Utils {
      */
     @JvmStatic
     @Throws(IOException::class)
-    fun readAssetFile(context: Context, fileName: String): String? {
+    public fun readAssetFile(context: Context, fileName: String): String? {
         val assetManager = context.assets
         assetManager.open(fileName).use { inputStream ->
             // Read the entire content of the file into a String
@@ -689,7 +689,7 @@ object Utils {
      * @param name The event/property name
      */
     @JvmStatic
-    fun getNormalizedName(name: String?): String? {
+    public fun getNormalizedName(name: String?): String? {
         name ?: return null
         // lowercase with English locale for consistent behavior with the backend and across different device locales
         return normalizedNameExcludePattern.matcher(name).replaceAll("").lowercase(Locale.ENGLISH)
@@ -703,6 +703,6 @@ object Utils {
      * @see getNormalizedName
      */
     @JvmStatic
-    fun areNamesNormalizedEqual(name: String?, other: String?): Boolean =
+    public fun areNamesNormalizedEqual(name: String?, other: String?): Boolean =
         getNormalizedName(name) == getNormalizedName(other)
 }

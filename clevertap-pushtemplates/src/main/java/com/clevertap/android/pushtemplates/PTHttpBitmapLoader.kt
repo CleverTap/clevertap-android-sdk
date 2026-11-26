@@ -7,9 +7,11 @@ import com.clevertap.android.sdk.bitmap.BitmapDownloader
 import com.clevertap.android.sdk.bitmap.BitmapInputStreamDecoder
 import com.clevertap.android.sdk.bitmap.HttpUrlConnectionParams
 import com.clevertap.android.sdk.network.DownloadedBitmap
+import androidx.annotation.RestrictTo
 
 
-object PTHttpBitmapLoader {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal object PTHttpBitmapLoader {
     private const val CONNECT_TIMEOUT_MS = 1000
     private const val READ_TIMEOUT_MS = 5000
 

@@ -2,7 +2,7 @@ package com.clevertap.android.sdk
 
 import android.util.Log
 
-class Logger internal constructor(private var debugLevel: Int) : ILogger {
+public class Logger internal constructor(private var debugLevel: Int) : ILogger {
 
     override fun debug(message: String?) {
         if (isDebugEnabled) {
@@ -76,14 +76,14 @@ class Logger internal constructor(private var debugLevel: Int) : ILogger {
         }
     }
 
-    fun setDebugLevel(level: Int) {
+    public fun setDebugLevel(level: Int) {
         debugLevel = level
     }
 
     private val isInstanceInfoEnabled: Boolean
         get() = debugLevel >= CleverTapAPI.LogLevel.INFO.intValue()
 
-    companion object {
+    public companion object {
 
         /** Logcat truncates longer entries, so instance debug/verbose logs are split into chunks. */
         private const val MAX_LOG_CHUNK_LENGTH = 4000
@@ -92,28 +92,28 @@ class Logger internal constructor(private var debugLevel: Int) : ILogger {
          * Logs to Debug if the debug level is greater than 1.
          */
         @JvmStatic
-        fun d(message: String?) {
+        public fun d(message: String?) {
             if (isDebugEnabled) {
                 Log.d(Constants.CLEVERTAP_LOG_TAG, message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun d(suffix: String?, message: String?) {
+        public fun d(suffix: String?, message: String?) {
             if (isDebugEnabled) {
                 Log.d(tagWith(suffix), message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun d(suffix: String?, message: String?, t: Throwable?) {
+        public fun d(suffix: String?, message: String?, t: Throwable?) {
             if (isDebugEnabled) {
                 Log.d(tagWith(suffix), message, t)
             }
         }
 
         @JvmStatic
-        fun d(message: String?, t: Throwable?) {
+        public fun d(message: String?, t: Throwable?) {
             if (isDebugEnabled) {
                 Log.d(Constants.CLEVERTAP_LOG_TAG, message, t)
             }
@@ -123,28 +123,28 @@ class Logger internal constructor(private var debugLevel: Int) : ILogger {
          * Logs to Info if the debug level is greater than or equal to 1.
          */
         @JvmStatic
-        fun i(message: String?) {
+        public fun i(message: String?) {
             if (isInfoEnabled) {
                 Log.i(Constants.CLEVERTAP_LOG_TAG, message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun i(suffix: String?, message: String?) {
+        public fun i(suffix: String?, message: String?) {
             if (isInfoEnabled) {
                 Log.i(tagWith(suffix), message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun i(suffix: String?, message: String?, t: Throwable?) {
+        public fun i(suffix: String?, message: String?, t: Throwable?) {
             if (isInfoEnabled) {
                 Log.i(tagWith(suffix), message, t)
             }
         }
 
         @JvmStatic
-        fun i(message: String?, t: Throwable?) {
+        public fun i(message: String?, t: Throwable?) {
             if (isInfoEnabled) {
                 Log.i(Constants.CLEVERTAP_LOG_TAG, message, t)
             }
@@ -154,28 +154,28 @@ class Logger internal constructor(private var debugLevel: Int) : ILogger {
          * Logs to Verbose if the debug level is greater than 2.
          */
         @JvmStatic
-        fun v(message: String?) {
+        public fun v(message: String?) {
             if (isVerboseEnabled) {
                 Log.v(Constants.CLEVERTAP_LOG_TAG, message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun v(suffix: String?, message: String?) {
+        public fun v(suffix: String?, message: String?) {
             if (isVerboseEnabled) {
                 Log.v(tagWith(suffix), message.requireMessage())
             }
         }
 
         @JvmStatic
-        fun v(suffix: String?, message: String?, t: Throwable?) {
+        public fun v(suffix: String?, message: String?, t: Throwable?) {
             if (isVerboseEnabled) {
                 Log.v(tagWith(suffix), message, t)
             }
         }
 
         @JvmStatic
-        fun v(message: String?, t: Throwable?) {
+        public fun v(message: String?, t: Throwable?) {
             if (isVerboseEnabled) {
                 Log.v(Constants.CLEVERTAP_LOG_TAG, message, t)
             }

@@ -3,7 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import org.json.JSONObject
 
-class MockDeviceInfo(
+internal class MockDeviceInfo(
     context: Context?, config: CleverTapInstanceConfig?, cleverTapID: String?,
     coreMetaData: CoreMetaData?
 ) : DeviceInfo(

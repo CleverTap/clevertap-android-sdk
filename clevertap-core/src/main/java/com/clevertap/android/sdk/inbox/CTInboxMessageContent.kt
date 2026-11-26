@@ -11,17 +11,17 @@ import org.json.JSONObject
 /**
  * Public model class for the "msg" object from notification inbox payload
  */
-open class CTInboxMessageContent : Parcelable {
+public open class CTInboxMessageContent : Parcelable {
 
     private var _actionUrl: String? = null
 
     /**
      * Return the action URL of the body of the inbox message
      */
-    open fun getActionUrl(): String? = _actionUrl
+    public open fun getActionUrl(): String? = _actionUrl
 
     /** Kotlin property syntax, equivalent to [getActionUrl]. */
-    val actionUrl: String?
+    public val actionUrl: String?
         @JvmSynthetic @JvmName("ktGetActionUrl") inline get() = getActionUrl()
 
     private var _contentType: String? = null
@@ -29,10 +29,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the content type of the media
      */
-    open fun getContentType(): String? = _contentType
+    public open fun getContentType(): String? = _contentType
 
     /** Kotlin property syntax, equivalent to [getContentType]. */
-    val contentType: String?
+    public val contentType: String?
         @JvmSynthetic @JvmName("ktGetContentType") inline get() = getContentType()
 
     private var hasLinks: Boolean? = null
@@ -44,10 +44,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the URL as String for the icon in case of Icon Message template
      */
-    open fun getIcon(): String? = _icon
+    public open fun getIcon(): String? = _icon
 
     /** Kotlin property syntax, equivalent to [getIcon]. */
-    val icon: String?
+    public val icon: String?
         @JvmSynthetic @JvmName("ktGetIcon") inline get() = getIcon()
 
     private var _iconContentDescription: String? = null
@@ -55,10 +55,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the content description for the icon in case of an Icon Message template.
      */
-    open fun getIconContentDescription(): String? = _iconContentDescription
+    public open fun getIconContentDescription(): String? = _iconContentDescription
 
     /** Kotlin property syntax, equivalent to [getIconContentDescription]. */
-    val iconContentDescription: String?
+    public val iconContentDescription: String?
         @JvmSynthetic @JvmName("ktGetIconContentDescription") inline get() = getIconContentDescription()
 
     private var _links: JSONArray? = null
@@ -66,10 +66,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns a JSONArray of Call to Action buttons
      */
-    open fun getLinks(): JSONArray? = _links
+    public open fun getLinks(): JSONArray? = _links
 
     /** Kotlin property syntax, equivalent to [getLinks]. */
-    val links: JSONArray?
+    public val links: JSONArray?
         @JvmSynthetic @JvmName("ktGetLinks") inline get() = getLinks()
 
     private var _media: String? = null
@@ -77,10 +77,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the media URL of the inbox message
      */
-    open fun getMedia(): String? = _media
+    public open fun getMedia(): String? = _media
 
     /** Kotlin property syntax, equivalent to [getMedia]. */
-    val media: String?
+    public val media: String?
         @JvmSynthetic @JvmName("ktGetMedia") inline get() = getMedia()
 
     private var _mediaContentDescription: String? = null
@@ -88,10 +88,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the content description of the media in the inbox message.
      */
-    open fun getMediaContentDescription(): String? = _mediaContentDescription
+    public open fun getMediaContentDescription(): String? = _mediaContentDescription
 
     /** Kotlin property syntax, equivalent to [getMediaContentDescription]. */
-    val mediaContentDescription: String?
+    public val mediaContentDescription: String?
         @JvmSynthetic @JvmName("ktGetMediaContentDescription") inline get() = getMediaContentDescription()
 
     private var _message: String? = null
@@ -99,10 +99,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the message section of the inbox message
      */
-    open fun getMessage(): String? = _message
+    public open fun getMessage(): String? = _message
 
     /** Kotlin property syntax, equivalent to [getMessage]. */
-    val message: String?
+    public val message: String?
         @JvmSynthetic @JvmName("ktGetMessage") inline get() = getMessage()
 
     private var _messageColor: String? = null
@@ -110,10 +110,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the hexcode value of the message color as String
      */
-    open fun getMessageColor(): String? = _messageColor
+    public open fun getMessageColor(): String? = _messageColor
 
     /** Kotlin property syntax, equivalent to [getMessageColor]. */
-    val messageColor: String?
+    public val messageColor: String?
         @JvmSynthetic @JvmName("ktGetMessageColor") inline get() = getMessageColor()
 
     private var _posterUrl: String? = null
@@ -121,14 +121,14 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns URL for the thumbnail of the video
      */
-    open fun getPosterUrl(): String? = _posterUrl
+    public open fun getPosterUrl(): String? = _posterUrl
 
-    open fun setPosterUrl(posterUrl: String?) {
+    public open fun setPosterUrl(posterUrl: String?) {
         this._posterUrl = posterUrl
     }
 
     /** Kotlin property syntax, equivalent to [getPosterUrl] / [setPosterUrl]. */
-    var posterUrl: String?
+    public var posterUrl: String?
         @JvmSynthetic @JvmName("ktGetPosterUrl") inline get() = getPosterUrl()
         @JvmSynthetic @JvmName("ktSetPosterUrl") inline set(value) = setPosterUrl(value)
 
@@ -137,10 +137,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the title section of the inbox message
      */
-    open fun getTitle(): String? = _title
+    public open fun getTitle(): String? = _title
 
     /** Kotlin property syntax, equivalent to [getTitle]. */
-    val title: String?
+    public val title: String?
         @JvmSynthetic @JvmName("ktGetTitle") inline get() = getTitle()
 
     private var _titleColor: String? = null
@@ -148,10 +148,10 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the hexcode value of the title color as String
      */
-    open fun getTitleColor(): String? = _titleColor
+    public open fun getTitleColor(): String? = _titleColor
 
     /** Kotlin property syntax, equivalent to [getTitleColor]. */
-    val titleColor: String?
+    public val titleColor: String?
         @JvmSynthetic @JvmName("ktGetTitleColor") inline get() = getTitleColor()
 
     internal constructor()
@@ -185,7 +185,7 @@ open class CTInboxMessageContent : Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    open fun getLinkBGColor(jsonObject: JSONObject?): String? {
+    public open fun getLinkBGColor(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
             return null
         }
@@ -203,7 +203,7 @@ open class CTInboxMessageContent : Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    open fun getLinkColor(jsonObject: JSONObject?): String? {
+    public open fun getLinkColor(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
             return null
         }
@@ -222,7 +222,7 @@ open class CTInboxMessageContent : Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    open fun getLinkCopyText(jsonObject: JSONObject?): String {
+    public open fun getLinkCopyText(jsonObject: JSONObject?): String {
         if (jsonObject == null) {
             return ""
         }
@@ -242,7 +242,7 @@ open class CTInboxMessageContent : Parcelable {
     /**
      * Returns the Key Value pair with for the JSONObject of Link provided
      */
-    open fun getLinkKeyValue(jsonObject: JSONObject?): HashMap<String, String>? {
+    public open fun getLinkKeyValue(jsonObject: JSONObject?): HashMap<String, String>? {
         if (jsonObject == null || !jsonObject.has(Constants.KEY_KV)) {
             return null
         }
@@ -268,7 +268,7 @@ open class CTInboxMessageContent : Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    open fun getLinkText(jsonObject: JSONObject?): String? {
+    public open fun getLinkText(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
             return null
         }
@@ -287,7 +287,7 @@ open class CTInboxMessageContent : Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    open fun getLinkUrl(jsonObject: JSONObject?): String? {
+    public open fun getLinkUrl(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
             return null
         }
@@ -314,7 +314,7 @@ open class CTInboxMessageContent : Parcelable {
      * @return String "copy" for Copy Text
      * String "url" for URLs
      */
-    open fun getLinktype(jsonObject: JSONObject?): String? {
+    public open fun getLinktype(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
             return null
         }
@@ -326,7 +326,7 @@ open class CTInboxMessageContent : Parcelable {
         }
     }
 
-    open fun isFallbackSettingsEnabled(jsonObject: JSONObject?): Boolean {
+    public open fun isFallbackSettingsEnabled(jsonObject: JSONObject?): Boolean {
         if (jsonObject == null) {
             return false
         }
@@ -348,7 +348,7 @@ open class CTInboxMessageContent : Parcelable {
      * @return true if the media type is audio
      * false if the media type is not an audio
      */
-    open fun mediaIsAudio(): Boolean {
+    public open fun mediaIsAudio(): Boolean {
         val contentType = this.getContentType()
         return contentType != null && this._media != null && contentType.startsWith("audio")
     }
@@ -359,7 +359,7 @@ open class CTInboxMessageContent : Parcelable {
      * @return true if the media type is GIF
      * false if the media type is not an GIF
      */
-    open fun mediaIsGIF(): Boolean {
+    public open fun mediaIsGIF(): Boolean {
         val contentType = this.getContentType()
         return contentType != null && this._media != null && contentType == "image/gif"
     }
@@ -370,7 +370,7 @@ open class CTInboxMessageContent : Parcelable {
      * @return true if the media type is image
      * false if the media type is not an image
      */
-    open fun mediaIsImage(): Boolean {
+    public open fun mediaIsImage(): Boolean {
         val contentType = this.getContentType()
         return contentType != null && this._media != null && contentType.startsWith("image") &&
                 contentType != "image/gif"
@@ -382,12 +382,12 @@ open class CTInboxMessageContent : Parcelable {
      * @return true if the media type is video
      * false if the media type is not a video
      */
-    open fun mediaIsVideo(): Boolean {
+    public open fun mediaIsVideo(): Boolean {
         val contentType = this.getContentType()
         return contentType != null && this._media != null && contentType.startsWith("video")
     }
 
-    open fun mediaIsStreamable(): Boolean = mediaIsAudio() || mediaIsVideo()
+    public open fun mediaIsStreamable(): Boolean = mediaIsAudio() || mediaIsVideo()
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(_title)
@@ -479,10 +479,10 @@ open class CTInboxMessageContent : Parcelable {
         return this
     }
 
-    companion object {
+    public companion object {
 
         @JvmField
-        val CREATOR: Parcelable.Creator<CTInboxMessageContent> = object : Parcelable.Creator<CTInboxMessageContent> {
+        public val CREATOR: Parcelable.Creator<CTInboxMessageContent> = object : Parcelable.Creator<CTInboxMessageContent> {
             override fun createFromParcel(`in`: Parcel): CTInboxMessageContent = CTInboxMessageContent(`in`)
 
             override fun newArray(size: Int): Array<CTInboxMessageContent?> = arrayOfNulls(size)

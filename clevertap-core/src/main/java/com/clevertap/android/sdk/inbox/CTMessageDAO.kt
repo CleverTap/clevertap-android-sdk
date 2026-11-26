@@ -12,8 +12,8 @@ import java.util.regex.Pattern
 /**
  * Message Data Access Object class interfacing with Database
  */
-@RestrictTo(Scope.LIBRARY)
-open class CTMessageDAO() {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class CTMessageDAO() {
 
     var campaignId: String? = null
 

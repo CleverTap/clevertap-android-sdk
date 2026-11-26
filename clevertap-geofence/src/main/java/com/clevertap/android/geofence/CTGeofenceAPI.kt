@@ -26,12 +26,12 @@ import java.util.concurrent.Future
  * requested by applications. It implements [GeofenceCallback] to communicate with CleverTap SDK
  * for location pings and update of new geofence list.
  */
-open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallback {
+public open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallback {
 
-    fun interface OnGeofenceApiInitializedListener {
+    public fun interface OnGeofenceApiInitializedListener {
 
         @Suppress("FunctionName")
-        fun OnGeofenceApiInitialized()
+        public fun OnGeofenceApiInitialized()
     }
 
     private var mAccountId: String? = null
@@ -78,7 +78,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
      * [CTGeofenceTaskManager]
      */
     @Suppress("unused")
-    open fun deactivate() {
+    public open fun deactivate() {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
             return
         }
@@ -116,38 +116,38 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
         })
     }
 
-    open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener? {
+    public open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener? {
         return mCtGeofenceEventsListener
     }
 
-    open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?) {
+    public open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?) {
         this.mCtGeofenceEventsListener = ctGeofenceEventsListener
     }
 
     /** Kotlin property syntax, equivalent to [getCtGeofenceEventsListener] / [setCtGeofenceEventsListener]. */
-    var ctGeofenceEventsListener: CTGeofenceEventsListener?
+    public var ctGeofenceEventsListener: CTGeofenceEventsListener?
         @JvmSynthetic @JvmName("ktGetCtGeofenceEventsListener") inline get() = getCtGeofenceEventsListener()
         @JvmSynthetic @JvmName("ktSetCtGeofenceEventsListener") inline set(value) = setCtGeofenceEventsListener(value)
 
-    open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener? {
+    public open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener? {
         return mCtLocationUpdatesListener
     }
 
-    open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?) {
+    public open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?) {
         this.mCtLocationUpdatesListener = ctLocationUpdatesListener
     }
 
     /** Kotlin property syntax, equivalent to [getCtLocationUpdatesListener] / [setCtLocationUpdatesListener]. */
-    var ctLocationUpdatesListener: CTLocationUpdatesListener?
+    public var ctLocationUpdatesListener: CTLocationUpdatesListener?
         @JvmSynthetic @JvmName("ktGetCtLocationUpdatesListener") inline get() = getCtLocationUpdatesListener()
         @JvmSynthetic @JvmName("ktSetCtLocationUpdatesListener") inline set(value) = setCtLocationUpdatesListener(value)
 
-    open fun getGeofenceSettings(): CTGeofenceSettings? {
+    public open fun getGeofenceSettings(): CTGeofenceSettings? {
         return ctGeofenceSettings
     }
 
     /** Kotlin property syntax, equivalent to [getGeofenceSettings]. */
-    val geofenceSettings: CTGeofenceSettings?
+    public val geofenceSettings: CTGeofenceSettings?
         @JvmSynthetic @JvmName("ktGetGeofenceSettings") inline get() = getGeofenceSettings()
 
     /**
@@ -233,7 +233,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
      * default settings will be applied.
      * @param cleverTapAPI       NonNull instance of  [CleverTapAPI].
      */
-    open fun init(ctGeofenceSettings: CTGeofenceSettings?, cleverTapAPI: CleverTapAPI?) {
+    public open fun init(ctGeofenceSettings: CTGeofenceSettings?, cleverTapAPI: CleverTapAPI?) {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
             return
         }
@@ -253,7 +253,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
      *
      * @throws IllegalStateException if Geofence SDK is not initialized before calling this method
      */
-    open fun initBackgroundLocationUpdates() {
+    public open fun initBackgroundLocationUpdates() {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
             return
         }
@@ -304,7 +304,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
      * @param onGeofenceApiInitializedListener instance of [OnGeofenceApiInitializedListener]
      */
     @Suppress("unused")
-    open fun setOnGeofenceApiInitializedListener(
+    public open fun setOnGeofenceApiInitializedListener(
         onGeofenceApiInitializedListener: OnGeofenceApiInitializedListener?
     ) {
         this.onGeofenceApiInitializedListener = onGeofenceApiInitializedListener
@@ -508,8 +508,8 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
         initBackgroundLocationUpdates()
     }
 
-    companion object {
-        const val GEOFENCE_LOG_TAG: String = "CTGeofence"
+    public companion object {
+        public const val GEOFENCE_LOG_TAG: String = "CTGeofence"
 
         private var ctGeofenceAPI: CTGeofenceAPI? = null
 
@@ -522,7 +522,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
          * @return The singleton instance of [CTGeofenceAPI]
          */
         @JvmStatic
-        fun getInstance(context: Context): CTGeofenceAPI {
+        public fun getInstance(context: Context): CTGeofenceAPI {
             synchronized(CTGeofenceAPI::class.java) {
                 if (ctGeofenceAPI == null) {
                     ctGeofenceAPI = CTGeofenceAPI(context)
@@ -532,7 +532,7 @@ open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallbac
         }
 
         @JvmStatic
-        fun getLogger(): Logger {
+        public fun getLogger(): Logger {
             return logger
         }
     }

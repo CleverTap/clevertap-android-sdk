@@ -11,9 +11,9 @@ import org.json.JSONObject
  * <code>Use [CleverTapAPI.getCleverTapID] with an [OnInitCleverTapIDListener] instead</code>
  */
 @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
-interface SyncListener {
+public interface SyncListener {
 
-    fun profileDataUpdated(updates: JSONObject?)
+    public fun profileDataUpdated(updates: JSONObject?)
 
     /**
      * Notifies Listener when deviceID is generated successfully.
@@ -23,5 +23,5 @@ interface SyncListener {
      *                    <p><br><span style="color:red;background:#ffcc99" >&#9888; Callback will be received on main
      *                    thread, so avoid doing any lengthy operations from this callback </span></p>
      */
-    fun profileDidInitialize(CleverTapID: String?)
+    public fun profileDidInitialize(CleverTapID: String?)
 }

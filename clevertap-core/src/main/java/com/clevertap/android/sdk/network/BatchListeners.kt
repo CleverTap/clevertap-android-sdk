@@ -7,8 +7,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface BatchListener {
-    public fun onBatchSent(batch: JSONArray, success: Boolean)
+internal interface BatchListener {
+    fun onBatchSent(batch: JSONArray, success: Boolean)
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

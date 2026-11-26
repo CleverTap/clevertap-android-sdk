@@ -3,8 +3,10 @@ package com.clevertap.android.sdk
 import android.content.Context
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.task.CTExecutorFactory
+import androidx.annotation.RestrictTo
 
-class CTPreferenceCache {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class CTPreferenceCache {
 
     fun isFirstTimeRequest() = firstTimeRequest
     fun setFirstTimeRequest(fTR : Boolean) {
