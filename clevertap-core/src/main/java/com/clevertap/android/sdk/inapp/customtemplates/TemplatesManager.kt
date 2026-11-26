@@ -31,31 +31,64 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
             val templates = mutableSetOf<CustomTemplate>()
 
             for (producer in templateProducers) {
-                for (producedTemplate in producer.defineTemplates(ctInstanceConfig)) {
-
-                    if (producedTemplate.isSystemDefined) {
-                        throw CustomTemplateException(
-                            "Cannot define system template with a name \"${producedTemplate.name}\"."
-                        )
-                    }
-                    if (systemTemplates.contains(producedTemplate)) {
-                        throw CustomTemplateException(
-                            "CustomTemplate with a name \"${producedTemplate.name}\" is a system template."
-                        )
-                    }
-                    if (templates.contains(producedTemplate)) {
-                        throw CustomTemplateException(
-                            "CustomTemplate with a name \"${producedTemplate.name}\" is already registered."
-                        )
-                    }
-
-                    templates.add(producedTemplate)
-                }
+                addProducedTemplates(
+                    producer = producer,
+                    ctInstanceConfig = ctInstanceConfig,
+                    systemTemplates = systemTemplates,
+                    templates = templates
+                )
             }
 
             templates.addAll(systemTemplates)
 
             return TemplatesManager(templates, ctInstanceConfig.logger)
+        }
+
+        /**
+         * Adds every template defined by [producer] to [templates].
+         *
+         * @throws CustomTemplateException for a template that cannot be registered, see [registrationError]
+         */
+        private fun addProducedTemplates(
+            producer: TemplateProducer,
+            ctInstanceConfig: CleverTapInstanceConfig,
+            systemTemplates: Set<CustomTemplate>,
+            templates: MutableSet<CustomTemplate>
+        ) {
+            for (producedTemplate in producer.defineTemplates(ctInstanceConfig)) {
+                val registrationError = registrationError(
+                    producedTemplate = producedTemplate,
+                    systemTemplates = systemTemplates,
+                    registeredTemplates = templates
+                )
+                if (registrationError != null) {
+                    throw CustomTemplateException(registrationError)
+                }
+                templates.add(producedTemplate)
+            }
+        }
+
+        /**
+         * Why [producedTemplate] cannot be registered (it is system-defined, clashes with a system template
+         * or is already in [registeredTemplates]), or null if it can.
+         */
+        private fun registrationError(
+            producedTemplate: CustomTemplate,
+            systemTemplates: Set<CustomTemplate>,
+            registeredTemplates: Set<CustomTemplate>
+        ): String? {
+            return when {
+                producedTemplate.isSystemDefined ->
+                    "Cannot define system template with a name \"${producedTemplate.name}\"."
+
+                systemTemplates.contains(producedTemplate) ->
+                    "CustomTemplate with a name \"${producedTemplate.name}\" is a system template."
+
+                registeredTemplates.contains(producedTemplate) ->
+                    "CustomTemplate with a name \"${producedTemplate.name}\" is already registered."
+
+                else -> null
+            }
         }
 
         fun clearRegisteredProducers() {
