@@ -44,7 +44,7 @@ public class CTInAppNotification : Parcelable {
     public var maxPerSession: Int = 0
         private set
 
-    private var _buttons = ArrayList<CTInAppNotificationButton>()
+    private val _buttons = ArrayList<CTInAppNotificationButton>()
 
     public val buttons: List<CTInAppNotificationButton>
         get() = _buttons
@@ -138,7 +138,7 @@ public class CTInAppNotification : Parcelable {
     internal var isJsEnabled: Boolean = false
         private set
 
-    private var _mediaList = ArrayList<CTInAppNotificationMedia>()
+    private val _mediaList = ArrayList<CTInAppNotificationMedia>()
 
     internal val mediaList: List<CTInAppNotificationMedia>
         get() = _mediaList
@@ -217,16 +217,14 @@ public class CTInAppNotification : Parcelable {
         message = parcel.readString()
         messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK)
         try {
-            _buttons =
-                parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
-                    ?: ArrayList()
+            parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
+                ?.let { _buttons.addAll(it) }
         } catch (_: Throwable) {
             // no-op
         }
         try {
-            _mediaList =
-                parcel.createTypedArrayList<CTInAppNotificationMedia>(CTInAppNotificationMedia.CREATOR)
-                    ?: ArrayList()
+            parcel.createTypedArrayList<CTInAppNotificationMedia>(CTInAppNotificationMedia.CREATOR)
+                ?.let { _mediaList.addAll(it) }
         } catch (_: Throwable) {
             // no-op
         }
@@ -547,23 +545,33 @@ public class CTInAppNotification : Parcelable {
                 if (html != null) {
                     when (position) {
                         't' -> {
-                            if (aspectRatio != -1.0 || (widthPercentage == 100 && heightPercentage <= 30)) {
+                            if (aspectRatio != -1.0 ||
+                                (widthPercentage == FULL_SIZE_PERCENT && heightPercentage <= BANNER_MAX_HEIGHT_PERCENT)
+                            ) {
                                 inAppType = CTInAppType.CTInAppTypeHeaderHTML
                             }
                         }
 
                         'b' -> {
-                            if (aspectRatio != -1.0 || (widthPercentage == 100 && heightPercentage <= 30)) {
+                            if (aspectRatio != -1.0 ||
+                                (widthPercentage == FULL_SIZE_PERCENT && heightPercentage <= BANNER_MAX_HEIGHT_PERCENT)
+                            ) {
                                 inAppType = CTInAppType.CTInAppTypeFooterHTML
                             }
                         }
 
                         'c' -> {
-                            if (widthPercentage == 90 && heightPercentage == 85) {
+                            if (
+                                widthPercentage == HTML_INTERSTITIAL_WIDTH_PERCENT &&
+                                heightPercentage == HTML_INTERSTITIAL_HEIGHT_PERCENT
+                            ) {
                                 inAppType = CTInAppType.CTInAppTypeInterstitialHTML
-                            } else if (widthPercentage == 100 && heightPercentage == 100) {
+                            } else if (widthPercentage == FULL_SIZE_PERCENT && heightPercentage == FULL_SIZE_PERCENT) {
                                 inAppType = CTInAppType.CTInAppTypeCoverHTML
-                            } else if (widthPercentage == 90 && heightPercentage == 50) {
+                            } else if (
+                                widthPercentage == HTML_INTERSTITIAL_WIDTH_PERCENT &&
+                                heightPercentage == HTML_HALF_INTERSTITIAL_HEIGHT_PERCENT
+                            ) {
                                 inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML
                             }
                         }
@@ -644,6 +652,13 @@ public class CTInAppNotification : Parcelable {
         public const val HTML_DEFAULT_ASPECT_RATIO: Double = -1.0
 
         private const val EMPTY_JSON = "{}"
+
+        // HTML in-app size presets (percent of the screen) that select the CTInAppType.
+        private const val FULL_SIZE_PERCENT = 100
+        private const val BANNER_MAX_HEIGHT_PERCENT = 30
+        private const val HTML_INTERSTITIAL_WIDTH_PERCENT = 90
+        private const val HTML_INTERSTITIAL_HEIGHT_PERCENT = 85
+        private const val HTML_HALF_INTERSTITIAL_HEIGHT_PERCENT = 50
 
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInAppNotification> =

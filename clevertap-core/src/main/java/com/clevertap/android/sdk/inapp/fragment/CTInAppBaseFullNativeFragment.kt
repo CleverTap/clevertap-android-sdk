@@ -15,6 +15,9 @@ import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 import androidx.annotation.RestrictTo
 
+/** Density the server-side button radius is expressed for. */
+private const val REFERENCE_DPI = 480.0f
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment() {
 
@@ -35,7 +38,7 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
 
             if (inAppNotificationButton.borderRadius.isNotEmpty()) {
                 val buttonRadius = inAppNotificationButton.borderRadius.toFloatOrNull() ?: 0f
-                val radiusDp: Float = buttonRadius * (480.0f / getDPI()) * 2
+                val radiusDp: Float = buttonRadius * (REFERENCE_DPI / getDPI()) * 2
                 shapeDrawable = ShapeDrawable(
                     RoundRectShape(
                         floatArrayOf(

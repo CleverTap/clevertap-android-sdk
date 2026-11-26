@@ -46,7 +46,7 @@ internal class InAppTimerManager(
     companion object {
         private const val PARALLEL_SCHEDULERS = 20
     }
-    private val TAG = "[InAppTimerManager:$tagSuffix]:"
+    private val logTag = "[InAppTimerManager:$tagSuffix]:"
 
     private val activeJobs = ConcurrentHashMap<String, Job>()
     private val cancelledJobs = ConcurrentHashMap<String, CancelledJobData>()
@@ -92,7 +92,7 @@ internal class InAppTimerManager(
         synchronized(scheduleLock) {
             // Keep existing active job if present
             activeJobs[id]?.takeIf { it.isActive }?.let {
-                logger.verbose(accountId, "$TAG Timer with id'$id' already scheduled, keeping existing")
+                logger.verbose(accountId, "$logTag Timer with id'$id' already scheduled, keeping existing")
                 return it
             }
 
@@ -106,14 +106,14 @@ internal class InAppTimerManager(
                     cancelledJobs.remove(id)
 
                 } catch (e: CancellationException) {
-                    logger.verbose(accountId, "$TAG Cancelled timer with id: $id")
+                    logger.verbose(accountId, "$logTag Cancelled timer with id: $id")
                     cancelledJobs.putIfAbsent(
                         id,
                         CancelledJobData(delayInMs, scheduledAt, callback)
                     )
                     ensureActive() // rethrow cancellation
                 } catch (e: Exception) {
-                    logger.verbose(accountId, "$TAG Error in timer with id: $id", e)
+                    logger.verbose(accountId, "$logTag Error in timer with id: $id", e)
                     callback(TimerResult.Error(id, e))
                     cancelledJobs.remove(id)
                 } finally {
@@ -123,7 +123,7 @@ internal class InAppTimerManager(
                 activeJobs[id] = it
                 logger.verbose(
                     accountId,
-                    "$TAG Scheduled timer with id '$id' for ${delayInMs}ms delay"
+                    "$logTag Scheduled timer with id '$id' for ${delayInMs}ms delay"
                 )
             }
         }
@@ -135,7 +135,7 @@ internal class InAppTimerManager(
         return activeJobs[id]?.let { job ->
             job.cancel()
             activeJobs.remove(id)
-            logger.verbose(accountId, "$TAG Cancelled timer with id: $id")
+            logger.verbose(accountId, "$logTag Cancelled timer with id: $id")
             true
         } ?: false
     }
@@ -147,18 +147,18 @@ internal class InAppTimerManager(
         val cancelledCount = activeJobs.size
         val jobsToCancel = activeJobs.values.toList()
         jobsToCancel.forEach { it.cancelAndJoin() }
-        logger.verbose(accountId, "$TAG Cancelled $cancelledCount timers")
+        logger.verbose(accountId, "$logTag Cancelled $cancelledCount timers")
     }
 
     internal suspend fun cleanup() {
-        logger.verbose(accountId, "$TAG cleaning up timer state")
+        logger.verbose(accountId, "$logTag cleaning up timer state")
 
         cancelAllTimers()
 
         activeJobs.clear()
         cancelledJobs.clear()
 
-        logger.verbose(accountId, "$TAG cleanup complete")
+        logger.verbose(accountId, "$logTag cleanup complete")
     }
 
     /**
@@ -184,7 +184,7 @@ internal class InAppTimerManager(
      * App came to foreground - reschedule cancelled timers with remaining time
      */
     fun onAppForeground() {
-        logger.verbose(accountId, "$TAG Handling foreground - rescheduling cancelled timers")
+        logger.verbose(accountId, "$logTag Handling foreground - rescheduling cancelled timers")
 
         val currentTime = clock.currentTimeMillis()
         val toReschedule = mutableListOf<RescheduleData>()
@@ -199,7 +199,7 @@ internal class InAppTimerManager(
 
             logger.verbose(
                 accountId,
-                "$TAG Id $id - Original delay: ${originalDelayInMs}ms, " +
+                "$logTag Id $id - Original delay: ${originalDelayInMs}ms, " +
                         "Elapsed: ${elapsedTime}ms, Remaining: ${remainingTime}ms"
             )
 
@@ -217,7 +217,7 @@ internal class InAppTimerManager(
             rescheduledCount++
             logger.verbose(
                 accountId,
-                "$TAG Rescheduled ${data.id} with ${data.remainingTimeInMs}ms remaining"
+                "$logTag Rescheduled ${data.id} with ${data.remainingTimeInMs}ms remaining"
             )
         }
 
@@ -227,17 +227,17 @@ internal class InAppTimerManager(
             val cancelledData = cancelledJobs.remove(id)
             discardedCount++
             cancelledData?.callback?.invoke(TimerResult.Discarded(id))
-            logger.verbose(accountId, "$TAG Discarded expired timer: $id")
+            logger.verbose(accountId, "$logTag Discarded expired timer: $id")
         }
 
         logger.verbose(
             accountId,
-            "$TAG Foreground handling complete - Rescheduled: $rescheduledCount, Discarded: $discardedCount"
+            "$logTag Foreground handling complete - Rescheduled: $rescheduledCount, Discarded: $discardedCount"
         )
     }
 
     private fun logCoroutineInfo(msg: String) {
-        logger.verbose(accountId, "$TAG Running on: [${Thread.currentThread().name}] | $msg")
+        logger.verbose(accountId, "$logTag Running on: [${Thread.currentThread().name}] | $msg")
     }
 
     /**

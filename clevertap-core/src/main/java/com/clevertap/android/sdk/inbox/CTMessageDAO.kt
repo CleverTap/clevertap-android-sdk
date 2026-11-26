@@ -37,7 +37,7 @@ internal open class CTMessageDAO() {
 
     private var read = false
 
-    private var tagsList: MutableList<String> = ArrayList()
+    private val tagsList: MutableList<String> = ArrayList()
 
     var userId: String? = null
 
@@ -114,7 +114,7 @@ internal open class CTMessageDAO() {
                 val expires: Long = if (inboxMessage.has("wzrk_ttl")) {
                     inboxMessage.getInt("wzrk_ttl").toLong()
                 } else {
-                    (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000
+                    (System.currentTimeMillis() + Constants.ONE_DAY_IN_MILLIS) / 1000
                 }
                 val cellObject = if (inboxMessage.has("msg")) { inboxMessage.getJSONObject("msg") } else { null }
                 val tagsList = ArrayList<String>()
@@ -139,7 +139,7 @@ internal open class CTMessageDAO() {
                     it.date = date
                     it.expires = expires
                     it.userId = userId
-                    it.tagsList = tagsList
+                    it.tagsList.addAll(tagsList)
                     it.campaignId = campaignId
                     it.wzrkParams = wzrkParams
                     it.source = source

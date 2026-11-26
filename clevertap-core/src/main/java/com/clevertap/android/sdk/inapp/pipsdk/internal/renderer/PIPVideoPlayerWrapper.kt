@@ -31,6 +31,10 @@ import androidx.annotation.RestrictTo
  * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
  * so the PlayerView is created with `useController = false`.
  */
+/** Load-error retry back-off: 2 s per failed attempt, capped at 16 s. */
+private const val RETRY_DELAY_STEP_MS = 2000L
+private const val MAX_RETRY_DELAY_MS = 16_000L
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPVideoPlayerWrapper {
 
@@ -314,7 +318,7 @@ internal class PIPVideoPlayerWrapper {
                 && exception is HttpDataSource.HttpDataSourceException
                 && exception !is HttpDataSource.InvalidResponseCodeException
             ) {
-                return min(loadErrorInfo.errorCount * 2000L, 16_000L)
+                return min(loadErrorInfo.errorCount * RETRY_DELAY_STEP_MS, MAX_RETRY_DELAY_MS)
             }
             return super.getRetryDelayMsFor(loadErrorInfo)
         }

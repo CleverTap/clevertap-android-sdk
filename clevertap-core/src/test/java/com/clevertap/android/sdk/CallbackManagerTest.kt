@@ -46,7 +46,7 @@ class CallbackManagerTest : BaseTestCase() {
         }
         val ibSpy = spyk<CTInboxListener>(ib)
         callbackManager.inboxListener = ibSpy
-        callbackManager._notifyInboxMessagesDidUpdate()
+        callbackManager.notifyInboxMessagesDidUpdate()
 
         verify(atLeast = 1) {
             ibSpy.inboxMessagesDidUpdate()
@@ -291,7 +291,7 @@ class CallbackManagerTest : BaseTestCase() {
             override fun inboxMessagesDidUpdate() {}
         })
         callbackManager.inboxListener = inboxListenerSpy
-        callbackManager._notifyInboxInitialized()
+        callbackManager.notifyInboxInitialized()
         verify(exactly = 1) { inboxListenerSpy.inboxDidInitialize() }
     }
 

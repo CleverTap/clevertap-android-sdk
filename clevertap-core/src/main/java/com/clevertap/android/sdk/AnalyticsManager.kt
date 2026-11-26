@@ -34,6 +34,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import androidx.annotation.RestrictTo
 
+/** The same install referrer received again within this window is ignored. */
+private const val INSTALL_REFERRER_DEDUP_SECONDS = 10
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class AnalyticsManager(
     private val context: Context,
@@ -480,7 +483,7 @@ internal open class AnalyticsManager(
             val now = (System.currentTimeMillis() / 1000).toInt()
 
             val lastSeen = installReferrerMap[url]
-            if (lastSeen != null && now - lastSeen < 10) {
+            if (lastSeen != null && now - lastSeen < INSTALL_REFERRER_DEDUP_SECONDS) {
                 config.logger
                     .verbose(
                         config.accountId,

@@ -69,7 +69,7 @@ internal open class CallbackManager(
 
     override var batchListener: BatchListener? = null
 
-    override fun _notifyInboxMessagesDidUpdate() {
+    override fun notifyInboxMessagesDidUpdate() {
         if (inboxListener != null) {
             runOnUiThread {
                 inboxListener?.inboxMessagesDidUpdate()
@@ -156,7 +156,7 @@ internal open class CallbackManager(
         }
     }
 
-    override fun _notifyInboxInitialized() {
+    override fun notifyInboxInitialized() {
         inboxListener?.inboxDidInitialize()
     }
 

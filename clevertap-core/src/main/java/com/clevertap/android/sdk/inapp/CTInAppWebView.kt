@@ -28,6 +28,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     companion object {
         private const val JAVASCRIPT_INTERFACE_NAME: String = "CleverTap"
         private const val DEFAULT_ASPECT_RATIO = -1.0
+        private const val WEB_VIEW_ID = 188293
     }
 
     @JvmField
@@ -53,7 +54,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         setBackgroundColor(0x00000000)
         // set the text zoom in order to ignore device font size changes
         settings.textZoom = 100
-        id = 188293
+        id = WEB_VIEW_ID
         lockDownLocalAccess()
     }
 

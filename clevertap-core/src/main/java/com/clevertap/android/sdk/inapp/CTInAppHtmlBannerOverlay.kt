@@ -62,6 +62,8 @@ internal class CTInAppHtmlBannerOverlay(
     }
 
     companion object {
+        private const val DISMISS_FADE_DURATION_MS = 250L
+
         fun canDisplay(type: CTInAppType?): Boolean {
             return type == CTInAppType.CTInAppTypeFooterHTML || type == CTInAppType.CTInAppTypeHeaderHTML
         }
@@ -216,7 +218,7 @@ internal class CTInAppHtmlBannerOverlay(
                 animatingDismiss = true
                 root.animate()
                     .alpha(0f)
-                    .setDuration(250)
+                    .setDuration(DISMISS_FADE_DURATION_MS)
                     .withEndAction(this::finishDismiss)
                     .start()
             } else {

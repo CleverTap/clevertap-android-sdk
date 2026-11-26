@@ -75,13 +75,13 @@ class CTInboxControllerTest : BaseTestCase() {
 
             // then
             verify { ctLockManager.inboxControllerLock }
-            verify { spyController._deleteMessagesForIds(messageIDs) }
-            verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+            verify { spyController.deleteMessagesForIds(messageIDs) }
+            verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }
 
     @Test
-    fun `deleteInboxMessagesForIDs should call _deleteMessagesForIds and notify callback manager when some messages are valid`() {
+    fun `deleteInboxMessagesForIDs should call deleteMessagesForIds and notify callback manager when some messages are valid`() {
         // Given
         controller = CTInboxController(
             cleverTapInstanceConfig,
@@ -107,8 +107,8 @@ class CTInboxControllerTest : BaseTestCase() {
 
             // Then
             verify { ctLockManager.inboxControllerLock }
-            verify { spyController._deleteMessagesForIds(messageIDs) }
-            verify { callbackManager._notifyInboxMessagesDidUpdate() }
+            verify { spyController.deleteMessagesForIds(messageIDs) }
+            verify { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }
 
@@ -127,7 +127,7 @@ class CTInboxControllerTest : BaseTestCase() {
         messageIDs = arrayListOf("msg_3", "msg_4")
 
         //When
-        val result = controller._deleteMessagesForIds(messageIDs)
+        val result = controller.deleteMessagesForIds(messageIDs)
 
         //Then
         assertFalse(result)
@@ -154,7 +154,7 @@ class CTInboxControllerTest : BaseTestCase() {
             )
 
             // When
-            val result = controller._deleteMessagesForIds(messageIDs)
+            val result = controller.deleteMessagesForIds(messageIDs)
 
             // Then
             verify { dbAdapter.getMessages(userId) }
@@ -245,7 +245,7 @@ class CTInboxControllerTest : BaseTestCase() {
             // Then
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._markReadForMessagesWithIds(messageIDs) }
-            verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+            verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }
 
@@ -277,7 +277,7 @@ class CTInboxControllerTest : BaseTestCase() {
             // Then
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._markReadForMessagesWithIds(messageIDs) }
-            verify(exactly = 2) { callbackManager._notifyInboxMessagesDidUpdate() }
+            verify(exactly = 2) { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }
 
@@ -337,7 +337,7 @@ class CTInboxControllerTest : BaseTestCase() {
 
         controller.processV2Response(listOf(getCtMsgDao("m1", userId)), InboxV2DeliverySource.A1)
 
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test

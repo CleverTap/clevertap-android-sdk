@@ -71,7 +71,7 @@ class InboxV2ResponseTest {
 
         verify(exactly = 0) { controllerManager.initializeInboxSync() }
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test
@@ -91,7 +91,7 @@ class InboxV2ResponseTest {
         verify(ordering = Ordering.ORDERED) {
             controllerManager.initializeInboxSync()
             controller.processV2Response(any(), any())
-            callbackManager._notifyInboxMessagesDidUpdate()
+            callbackManager.notifyInboxMessagesDidUpdate()
         }
         verify(exactly = 0) { controllerManager.initializeInbox() }
     }
@@ -103,7 +103,7 @@ class InboxV2ResponseTest {
         response.processResponse(validResponseJson())
 
         verify { controller.processV2Response(any(), any()) }
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test
@@ -113,7 +113,7 @@ class InboxV2ResponseTest {
         response.processResponse(broken)
 
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test
@@ -180,7 +180,7 @@ class InboxV2ResponseTest {
 
         assertEquals(1, captured.captured.size)
         assertEquals("m1", captured.captured.single().id)
-        verify { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test
@@ -188,7 +188,7 @@ class InboxV2ResponseTest {
         response.processResponse(JSONObject().put("unrelated", 1), "stringBody", mockk<Context>())
 
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 
     @Test
@@ -196,6 +196,6 @@ class InboxV2ResponseTest {
         response.processResponse(null, "stringBody", mockk<Context>())
 
         verify(exactly = 0) { controller.processV2Response(any(), any()) }
-        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+        verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
     }
 }

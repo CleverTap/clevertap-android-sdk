@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.IOException
+import java.net.HttpURLConnection
 
 /**
  * HTTP + parse for `POST /inbox/v2/getMessages`.
@@ -61,7 +62,7 @@ internal class InboxFetchCall(
         try {
             ctApiProvider().sendInboxFetch(body).use { response ->
                 when (response.code) {
-                    200 -> {
+                    HttpURLConnection.HTTP_OK -> {
                         val raw = response.readBody()
                             ?: return@use CallResult.NetworkFailure(IOException("empty body"))
                         logger.verbose("InboxV2", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")

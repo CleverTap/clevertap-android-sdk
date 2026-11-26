@@ -171,12 +171,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView
     ) {
         layoutParams.setMargins(
-            getScaledPixels(140),
-            getScaledPixels(140),
-            getScaledPixels(140),
-            getScaledPixels(140)
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN)
         )
-        layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(210)
+        layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(HALF_MOBILE_ON_TABLET_WIDTH_INSET)
         layoutParams.height = (layoutParams.width * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
@@ -199,12 +199,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView
     ) {
         layoutParams.setMargins(
-            getScaledPixels(140),
-            getScaledPixels(100),
-            getScaledPixels(140),
-            getScaledPixels(100)
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_MARGIN)
         )
-        layoutParams.height = relativeLayout.measuredHeight - getScaledPixels(130)
+        layoutParams.height = relativeLayout.measuredHeight - getScaledPixels(HALF_MOBILE_ON_TABLET_HEIGHT_INSET)
         layoutParams.width = (layoutParams.height * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
         layoutParams.gravity = Gravity.CENTER
         relativeLayout.setLayoutParams(layoutParams)
@@ -238,21 +238,25 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectHeight = ((relativeLayout.measuredWidth - getScaledPixels(200)) * INTERSTITIAL_ASPECT_RATIO).toInt()
-        val requiredHeight = fl.measuredHeight - getScaledPixels(280)
+        val aspectHeight = (
+            (relativeLayout.measuredWidth - getScaledPixels(MOBILE_ON_TABLET_WIDTH_INSET)) *
+                INTERSTITIAL_ASPECT_RATIO
+        ).toInt()
+        val requiredHeight = fl.measuredHeight - getScaledPixels(MOBILE_ON_TABLET_FRAME_INSET)
 
         if (aspectHeight > requiredHeight) {
             layoutParams.height = requiredHeight
             layoutParams.width = (requiredHeight / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.height = aspectHeight
-            layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(
-                200
-            )
+            layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(MOBILE_ON_TABLET_WIDTH_INSET)
         }
 
         layoutParams.setMargins(
-            getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140)
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN)
         )
 
         relativeLayout.setLayoutParams(layoutParams)
@@ -266,7 +270,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView
     ) {
         val aspectHeight = (relativeLayout.measuredWidth * INTERSTITIAL_ASPECT_RATIO).toInt()
-        val requiredHeight = fl.measuredHeight - getScaledPixels(80)
+        val requiredHeight = fl.measuredHeight - getScaledPixels(TABLET_FRAME_INSET)
 
         if (aspectHeight > requiredHeight) {
             layoutParams.height = requiredHeight
@@ -296,19 +300,26 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectWidth = ((relativeLayout.measuredHeight - getScaledPixels(120)) * INTERSTITIAL_ASPECT_RATIO).toInt()
-        val requiredWidth = fl.measuredWidth - getScaledPixels(280)
+        val aspectWidth = (
+            (relativeLayout.measuredHeight - getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_HEIGHT_INSET)) *
+                INTERSTITIAL_ASPECT_RATIO
+        ).toInt()
+        val requiredWidth = fl.measuredWidth - getScaledPixels(MOBILE_ON_TABLET_FRAME_INSET)
 
         if (aspectWidth > requiredWidth) {
             layoutParams.width = requiredWidth
             layoutParams.height = (requiredWidth / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.width = aspectWidth
-            layoutParams.height = (relativeLayout.measuredHeight - getScaledPixels(120))
+            layoutParams.height =
+                (relativeLayout.measuredHeight - getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_HEIGHT_INSET))
         }
 
         layoutParams.setMargins(
-            getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100)
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_MARGIN),
+            getScaledPixels(MOBILE_ON_TABLET_LANDSCAPE_MARGIN)
         )
         layoutParams.gravity = Gravity.CENTER
         relativeLayout.setLayoutParams(layoutParams)
@@ -323,7 +334,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView
     ) {
         val aspectWidth = (relativeLayout.measuredHeight * INTERSTITIAL_ASPECT_RATIO).toInt()
-        val requiredWidth = fl.measuredWidth - getScaledPixels(80)
+        val requiredWidth = fl.measuredWidth - getScaledPixels(TABLET_FRAME_INSET)
 
         if (aspectWidth > requiredWidth) {
             layoutParams.width = requiredWidth
@@ -340,6 +351,16 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     companion object {
         internal const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
         internal const val INTERSTITIAL_ASPECT_RATIO = 1.78f
+
+        // Insets (in dp, scaled by getScaledPixels) used when the in-app is drawn on a tablet.
+        private const val MOBILE_ON_TABLET_MARGIN = 140
+        private const val MOBILE_ON_TABLET_LANDSCAPE_MARGIN = 100
+        private const val HALF_MOBILE_ON_TABLET_WIDTH_INSET = 210
+        private const val HALF_MOBILE_ON_TABLET_HEIGHT_INSET = 130
+        private const val MOBILE_ON_TABLET_WIDTH_INSET = 200
+        private const val MOBILE_ON_TABLET_LANDSCAPE_HEIGHT_INSET = 120
+        private const val MOBILE_ON_TABLET_FRAME_INSET = 280
+        private const val TABLET_FRAME_INSET = 80
 
         /**
          * Returns the height the half-interstitial card must be reduced to so that it fits the

@@ -33,7 +33,7 @@ internal class GifHeader {
 
     var frameCount = 0
 
-    var frames: MutableList<GifFrame> = ArrayList()
+    val frames: MutableList<GifFrame> = ArrayList()
 
     var gct: IntArray? = null
 

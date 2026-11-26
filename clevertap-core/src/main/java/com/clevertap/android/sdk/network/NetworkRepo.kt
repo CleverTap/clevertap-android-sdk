@@ -14,7 +14,7 @@ internal class NetworkRepo(
     val config: CleverTapInstanceConfig,
     val generateRandomDelay: () -> Int = {
         val randomGen = SecureRandom()
-        (randomGen.nextInt(10) + 1) * 1000
+        (randomGen.nextInt(MAX_RANDOM_DELAY_SECONDS) + 1) * 1000
     },
     val clock: Clock = Clock.SYSTEM
 ) {
@@ -26,6 +26,15 @@ internal class NetworkRepo(
         const val KEY_FIRST_TS: String = "comms_first_ts"
         const val PUSH_DELAY_MS: Int = 1000
         const val MAX_DELAY_FREQUENCY: Int = 1000 * 60 * 10
+
+        /** Upper bound (exclusive) of the random 1–10 s delay. */
+        private const val MAX_RANDOM_DELAY_SECONDS = 10
+
+        /** Retries that use the fixed 1 s delay before backing off. */
+        private const val FAST_RETRY_COUNT = 10
+
+        /** Lifetime of a mute stored under the legacy (seconds) key. */
+        private const val LEGACY_MUTE_DURATION_SECONDS = 24 * 60 * 60
     }
 
     fun getFirstRequestTs() : Int {
@@ -96,7 +105,7 @@ internal class NetworkRepo(
         @Suppress("DEPRECATION")
         val legacyMuteTs = getMuted()
         if (legacyMuteTs > 0) {
-            val legacyExpiryMs = (legacyMuteTs + 24 * 60 * 60) * 1000L
+            val legacyExpiryMs = (legacyMuteTs + LEGACY_MUTE_DURATION_SECONDS) * 1000L
             if (now < legacyExpiryMs) {
                 // Migrate to new format so this path is only hit once
                 setMuteExpiry(legacyExpiryMs)
@@ -209,7 +218,7 @@ internal class NetworkRepo(
         config.logger.debug(config.accountId, "Network retry #$networkRetryCount")
 
         //Retry with delay as 1s for first 10 retries
-        if (networkRetryCount < 10) {
+        if (networkRetryCount < FAST_RETRY_COUNT) {
             config.logger.debug(
                 config.accountId,
                 "Failure count is $networkRetryCount. Setting delay frequency to 1s"

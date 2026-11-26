@@ -26,6 +26,9 @@ import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
 import androidx.annotation.RestrictTo
 
+/** Length of the supported sound file extensions (".mp3", ".ogg", ".wav"). */
+private const val SOUND_EXTENSION_LENGTH = 4
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNotification {
 
@@ -234,7 +237,7 @@ internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNot
                     o == true || o == "true" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     o is String && o.isNotEmpty() -> {
                         val sound = if (o.contains(".mp3") || o.contains(".ogg") || o.contains(".wav")) {
-                            o.substring(0, o.length - 4)
+                            o.substring(0, o.length - SOUND_EXTENSION_LENGTH)
                         } else {
                             o
                         }

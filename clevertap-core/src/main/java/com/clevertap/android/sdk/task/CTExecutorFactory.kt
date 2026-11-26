@@ -15,6 +15,8 @@ public object CTExecutorFactory {
 
     private const val TAG_RESOURCE_DOWNLOADER = "Resource Downloader"
 
+    private const val RESOURCE_DOWNLOADER_THREAD_COUNT = 8
+
     // Use ConcurrentHashMap instead of synchronized HashMap
     private val executorMap = ConcurrentHashMap<String, CTExecutors>()
 
@@ -34,7 +36,7 @@ public object CTExecutorFactory {
     }
 
     @JvmStatic
-    public fun executorResourceDownloader(): CTExecutors = executorResourceDownloader(8)
+    public fun executorResourceDownloader(): CTExecutors = executorResourceDownloader(RESOURCE_DOWNLOADER_THREAD_COUNT)
 
     @JvmStatic
     public fun executorResourceDownloader(ioPoolSize: Int): CTExecutors {
