@@ -40,12 +40,11 @@ internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
         fenceList: List<CTGeofence>?,
         onSuccessListener: OnSuccessListener<Void>
     ) {
-        if (fenceList == null || fenceList.isEmpty()) {
+        if (fenceList.isNullOrEmpty()) {
             return
         }
 
         val googleFenceList = getGoogleGeofences(fenceList)
-        var aVoid: Void? = null
 
         try {
             // should get same pendingIntent on each app launch or else instance will leak
@@ -58,7 +57,7 @@ internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
             val addGeofenceTask: Task<Void> = geofencingClient
                 .addGeofences(getGeofencingRequest(googleFenceList), geofencePendingIntent!!)
             // blocking task
-            aVoid = Tasks.await(addGeofenceTask)
+            Tasks.await(addGeofenceTask)
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence registered successfully")
         } catch (e: Exception) {
             CTGeofenceAPI.getLogger().debug(
@@ -66,7 +65,8 @@ internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
                 "Failed to add geofences for monitoring", e
             )
         } finally {
-            onSuccessListener.onSuccess(aVoid)
+            // Tasks.await on a Task<Void> only ever yields null
+            onSuccessListener.onSuccess(null)
         }
     }
 
@@ -83,15 +83,14 @@ internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
         fenceIdList: List<String>?,
         onSuccessListener: OnSuccessListener<Void>
     ) {
-        if (fenceIdList == null || fenceIdList.isEmpty()) {
+        if (fenceIdList.isNullOrEmpty()) {
             return
         }
 
-        var aVoid: Void? = null
         try {
             val removeGeofenceTask: Task<Void> = geofencingClient.removeGeofences(fenceIdList)
             // blocking task
-            aVoid = Tasks.await(removeGeofenceTask)
+            Tasks.await(removeGeofenceTask)
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence removed successfully")
         } catch (e: Exception) {
             CTGeofenceAPI.getLogger().debug(
@@ -99,7 +98,8 @@ internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
                 "Failed to remove registered geofences", e
             )
         } finally {
-            onSuccessListener.onSuccess(aVoid)
+            // Tasks.await on a Task<Void> only ever yields null
+            onSuccessListener.onSuccess(null)
         }
     }
 

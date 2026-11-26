@@ -69,13 +69,11 @@ internal abstract class VerticalImageContentView(
             }
             ButtonStyle.SOLID -> {
                 val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
-                if (bgColor != null) {
+                bgColor?.let {
                     NotificationBitmapUtils.createSolidBitmap(
-                        bgColor, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
+                        it, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
                         borderWidth
                     )
-                } else {
-                    null
                 }
             }
         }
