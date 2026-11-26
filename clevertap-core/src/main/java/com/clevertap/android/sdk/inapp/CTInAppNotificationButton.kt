@@ -31,11 +31,11 @@ public class CTInAppNotificationButton : Parcelable {
     }
 
     private constructor(parcel: Parcel) {
-        text = parcel.readString() ?: ""
+        text = parcel.readString().orEmpty()
         textColor = parcel.readString() ?: Constants.BLUE
         backgroundColor = parcel.readString() ?: Constants.WHITE
         borderColor = parcel.readString() ?: Constants.WHITE
-        borderRadius = parcel.readString() ?: ""
+        borderRadius = parcel.readString().orEmpty()
         action = parcel.readParcelable<CTInAppAction?>(CTInAppAction::class.java.getClassLoader())
     }
 

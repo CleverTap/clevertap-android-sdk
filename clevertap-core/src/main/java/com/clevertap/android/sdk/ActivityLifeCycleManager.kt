@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk
 
-import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -58,7 +57,7 @@ internal open class ActivityLifeCycleManager(
     }
 
     //Lifecycle
-    fun activityResumed(activity: Activity?) {
+    fun activityResumed() {
         config.logger.verbose(config.accountId, "App in foreground")
         sessionManager.checkTimeoutSession()
 

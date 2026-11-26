@@ -22,8 +22,8 @@ import com.clevertap.android.sdk.validation.pipeline.RemovalReason
 internal class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNormalizationResult> {
 
     override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult {
-        val original = input?: ""
-        var cleaned = input?.trim() ?: ""
+        val original = input.orEmpty()
+        var cleaned = input?.trim().orEmpty()
         val modifications = mutableSetOf<KeyModification>()
 
         if (cleaned.isEmpty()) {

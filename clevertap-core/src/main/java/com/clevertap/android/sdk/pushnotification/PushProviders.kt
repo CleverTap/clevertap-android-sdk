@@ -170,7 +170,7 @@ internal class PushProviders internal constructor(
                 // fall through to normal rendering
             }
 
-            val notifMessage = iNotificationRenderer.getMessage(extras) ?: ""
+            val notifMessage = iNotificationRenderer.getMessage(extras).orEmpty()
             // A Live Update rendered by a self-validating template renderer (pt_progress, whose
             // validator makes the message optional) may legitimately have an empty message, so it
             // must NOT be treated as a silent push. The core renderer can't validate that: it would
@@ -331,7 +331,7 @@ internal class PushProviders internal constructor(
         }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
         task.execute("customHandlePushAmplification") {
-            val notifMessage = extras.getString(Constants.NOTIF_MSG) ?: ""
+            val notifMessage = extras.getString(Constants.NOTIF_MSG).orEmpty()
             if (notifMessage.isEmpty()) {
                 //silent notification
                 config.logger.verbose(config.accountId, "Push notification message is empty, not rendering")
@@ -448,7 +448,7 @@ internal class PushProviders internal constructor(
             return
         }
 
-        val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "") ?: ""
+        val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "").orEmpty()
         val pingFrequency = getPingFrequency(context)
 
         // no running work and nothing to create
@@ -504,7 +504,7 @@ internal class PushProviders internal constructor(
     }
 
     private fun stopWorker() {
-        val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "") ?: ""
+        val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "").orEmpty()
         if (existingWorkName.isNotEmpty()) {
             try {
                 val workManager = CTWorkManagerAccessor.getInstance(context)

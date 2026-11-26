@@ -131,7 +131,7 @@ internal class Media3Handle: InboxVideoPlayerHandle {
         }
     }
 
-    override fun playerVolume(): Float = player?.let { ep -> ep.volume } ?: 0f
+    override fun playerVolume(): Float = player?.volume ?: 0f
 
     override fun setPlayerVolume(volume: Float) {
         player?.volume = volume

@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk
 
-import android.app.Activity
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
@@ -100,11 +99,10 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             override fun triggerLocation() {
             }
         }
-        val mockActivity = mockk<Activity>()
         val geofenceCallbackSpy = spyk(geofenceCallback)
         coreState.coreMetaData.isAppLaunchPushed = true
         coreState.callbackManager.geofenceCallback = geofenceCallbackSpy
-        activityLifeCycleManager.activityResumed(mockActivity)
+        activityLifeCycleManager.activityResumed()
         verify { coreState.sessionManager.checkTimeoutSession() }
         verify(exactly = 0) { coreState.analyticsManager.pushAppLaunchedEvent() }
         verify(exactly = 0) { coreState.analyticsManager.fetchFeatureFlags() }
@@ -124,7 +122,6 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             override fun triggerLocation() {
             }
         }
-        val mockActivity = mockk<Activity>()
         val installReferrerClient = mockk<InstallReferrerClient>()
         val installReferrerClientBuilder = mockk<InstallReferrerClient.Builder>()
         val geofenceCallbackSpy = spyk(geofenceCallback)
@@ -151,7 +148,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
                         FakeClock()
                     )
                 } returns Unit
-                activityLifeCycleManager.activityResumed(mockActivity)
+                activityLifeCycleManager.activityResumed()
                 verify { Utils.cleanupOldGIFs(any(), any(), any()) }
             }
 
@@ -177,11 +174,10 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
 
     @Test
     fun `subsequent activityResumed calls within the same launch do not re-submit V2 fetch`() {
-        val mockActivity = mockk<Activity>(relaxed = true)
         coreState.coreMetaData.isAppLaunchPushed = true
 
-        activityLifeCycleManager.activityResumed(mockActivity)
-        activityLifeCycleManager.activityResumed(mockActivity)
+        activityLifeCycleManager.activityResumed()
+        activityLifeCycleManager.activityResumed()
 
         verify(exactly = 0) { inboxV2Bridge.submit(any(), any()) }
     }

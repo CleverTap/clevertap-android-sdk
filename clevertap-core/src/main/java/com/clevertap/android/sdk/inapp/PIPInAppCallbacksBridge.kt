@@ -75,7 +75,7 @@ internal class PIPInAppCallbacksBridge(
     override fun onAction() {
         val onClick = inAppNotification.pipConfigJson?.optJSONObject("onClick")
         val action = CTInAppAction.createFromJson(onClick) ?: return
-        val callToAction = onClick?.optString("c2a", "") ?: ""
+        val callToAction = onClick?.optString("c2a", "").orEmpty()
         logger.debug(LOG_TAG, "PIP onAction for campaign: ${inAppNotification.campaignId}, type: ${action.type}")
         // Last parameter (activityContext) is null — here's why:
         //

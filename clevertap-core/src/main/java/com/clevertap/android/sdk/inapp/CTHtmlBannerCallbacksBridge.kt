@@ -60,7 +60,7 @@ internal class CTHtmlBannerCallbacksBridge(
         pendingDismissData = inAppListener.inAppNotificationActionTriggered(
             notification,
             parsed.action,
-            parsed.callToAction ?: "",
+            parsed.callToAction.orEmpty(),
             parsed.additionalData,
             overlay?.activity
         )

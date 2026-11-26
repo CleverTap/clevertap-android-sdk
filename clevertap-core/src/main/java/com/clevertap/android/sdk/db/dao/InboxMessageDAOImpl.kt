@@ -32,7 +32,7 @@ internal class InboxMessageDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, "${Column.USER_ID} = ?", arrayOf(userId), 
                 null, null, "${Column.CREATED_AT} DESC"
-            )?.use { cursor ->
+            ).use { cursor ->
                 // find indices
                 val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID)
                 val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA)
@@ -351,7 +351,7 @@ internal class InboxMessageDAOImpl(
                 selection,
                 selectionArgs,
                 null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 val idIndex = cursor.getColumnIndexOrThrow(Column.ID)
                 while (cursor.moveToNext()) {
                     cursor.getString(idIndex)?.let { result.add(it) }

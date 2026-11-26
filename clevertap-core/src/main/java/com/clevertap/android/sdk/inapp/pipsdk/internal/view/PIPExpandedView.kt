@@ -14,7 +14,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
-import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import androidx.annotation.RestrictTo
 
 /**
@@ -179,7 +178,6 @@ internal class PIPExpandedView(
      */
     fun bindMedia(
         mv: PIPMediaView,
-        session: PIPSession,
         onReady: () -> Unit,
     ) {
         mediaContainer.layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)

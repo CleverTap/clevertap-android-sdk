@@ -408,9 +408,7 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
     @Synchronized
     fun setData(header: GifHeader, buffer: ByteBuffer, sampleSize: Int) {
         var sampleSize = sampleSize
-        if (sampleSize <= 0) {
-            throw IllegalArgumentException("Sample size must be >=0, not: $sampleSize")
-        }
+        require(sampleSize > 0) { "Sample size must be >=0, not: $sampleSize" }
         // Make sure sample size is a power of 2.
         sampleSize = Integer.highestOneBit(sampleSize)
         this.status = STATUS_OK

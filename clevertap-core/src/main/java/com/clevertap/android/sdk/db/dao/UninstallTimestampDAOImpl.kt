@@ -47,7 +47,7 @@ internal class UninstallTimestampDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, null, null, null, null, 
                 "${Column.CREATED_AT} DESC", "1"
-            )?.use { cursor ->
+            ).use { cursor ->
                 if (cursor.moveToFirst()) {
                     timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
                 }

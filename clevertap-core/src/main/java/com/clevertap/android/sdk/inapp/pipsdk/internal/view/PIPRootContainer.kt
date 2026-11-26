@@ -242,7 +242,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         // Move shared media view from compact → expanded
         cv.removeView(mv)
 
-        ev.bindMedia(mv, s) {
+        ev.bindMedia(mv) {
             // Restart GIF animation after reparenting (no-op for video/image)
             mv.onContainerChanged()
             // onReady fires from post{} after layout — media container is correctly sized

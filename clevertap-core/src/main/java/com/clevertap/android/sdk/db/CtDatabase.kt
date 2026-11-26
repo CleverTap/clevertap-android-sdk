@@ -124,7 +124,7 @@ internal class DatabaseHelper internal constructor(
         val fallbackKey = Constants.FALLBACK_ID_TAG + ":" + accountId
 
         return StorageHelper.getString(context, baseKey, null)
-            ?: StorageHelper.getString(context, fallbackKey, "") ?: ""
+            ?: StorageHelper.getString(context, fallbackKey, "").orEmpty()
     }
 
     /**

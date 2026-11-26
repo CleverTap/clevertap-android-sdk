@@ -36,7 +36,7 @@ internal class Media3Handle : InAppVideoPlayerHandle {
     private var playerView: PlayerView? = null
 
     private var playerViewLayoutParamsNormal: ViewGroup.LayoutParams? = null
-    private var playerViewLayoutParamsFullScreen =
+    private val playerViewLayoutParamsFullScreen =
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

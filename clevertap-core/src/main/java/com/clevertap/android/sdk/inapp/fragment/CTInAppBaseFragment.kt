@@ -161,7 +161,7 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         action: CTInAppAction, callToAction: String?, additionalData: Bundle?
     ) {
         val parsed = InAppActionParser.parse(action, callToAction, additionalData, config)
-        val actionData = notifyActionTriggered(parsed.action, parsed.callToAction ?: "", parsed.additionalData)
+        val actionData = notifyActionTriggered(parsed.action, parsed.callToAction.orEmpty(), parsed.additionalData)
         didDismiss(actionData)
     }
 

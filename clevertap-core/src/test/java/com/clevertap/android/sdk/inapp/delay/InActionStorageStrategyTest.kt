@@ -1,8 +1,6 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ILogger
-import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -13,14 +11,11 @@ import kotlin.test.assertTrue
 
 class InActionStorageStrategyTest {
 
-    private lateinit var mockLogger: ILogger
     private lateinit var strategy: InActionStorageStrategy
-    private val accountId = "test_account_id"
 
     @Before
     fun setUp() {
-        mockLogger = mockk(relaxed = true)
-        strategy = InActionStorageStrategy(mockLogger, accountId)
+        strategy = InActionStorageStrategy()
     }
 
     // ==================== PREPARE FOR SCHEDULING TESTS ====================

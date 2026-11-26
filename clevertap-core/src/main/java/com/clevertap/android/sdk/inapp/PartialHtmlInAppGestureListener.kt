@@ -67,9 +67,13 @@ internal class PartialHtmlInAppGestureListener(
                 onSwipeDismiss()
             }
 
-            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationRepeat(animation: Animation?) {
+                // No-op: only the end of the dismiss animation matters
+            }
 
-            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {
+                // No-op: only the end of the dismiss animation matters
+            }
         })
         webView.startAnimation(animSet)
         return true

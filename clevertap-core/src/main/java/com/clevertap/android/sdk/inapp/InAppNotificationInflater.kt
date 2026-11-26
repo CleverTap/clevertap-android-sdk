@@ -62,7 +62,7 @@ internal class InAppNotificationInflater(
 
     private fun processCustomTemplate(inApp: CTInAppNotification) {
         val customTemplateData = inApp.customTemplateData
-        val fileUrls = customTemplateData?.getFileArgsUrls(templatesManager) ?: emptyList()
+        val fileUrls = customTemplateData?.getFileArgsUrls(templatesManager).orEmpty()
         val storePair = Pair(
             storeRegistry.filesStore, storeRegistry.inAppAssetsStore
         )

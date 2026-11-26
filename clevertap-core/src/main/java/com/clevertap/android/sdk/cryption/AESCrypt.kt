@@ -35,9 +35,7 @@ internal class AESCrypt(accountID: String) : Crypt() {
             mode = Cipher.ENCRYPT_MODE,
             password = keyPassword,
             text = plainText.toByteArray(StandardCharsets.UTF_8)
-        )?.let { encryptedBytes ->
-            encryptedBytes.contentToString()
-        }
+        )?.contentToString()
 
     }
 
