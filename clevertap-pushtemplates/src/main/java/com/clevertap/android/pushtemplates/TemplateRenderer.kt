@@ -61,6 +61,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
+
+/** Length of a sound file extension (".mp3", ".ogg", ".wav") stripped to get the raw resource name. */
+private const val SOUND_FILE_EXTENSION_LENGTH = 4
+
 public class TemplateRenderer @JvmOverloads constructor(
     context: Context,
     private val extras: Bundle,
@@ -74,7 +78,7 @@ public class TemplateRenderer @JvmOverloads constructor(
     internal var smallIconColour : String? = null
 
     internal var actionButtons = emptyList<ActionButton>()
-    internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
+    internal val actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     public enum class LogLevel(private val value: Int) {
@@ -88,11 +92,11 @@ public class TemplateRenderer @JvmOverloads constructor(
 
     init {
         // Parse JSON early to ensure small_icon_colour, title and message can be accessed
-        val pt_json = extras.getString(PT_JSON)
+        val ptJson = extras.getString(PT_JSON)
         var newExtras: Bundle? = null
         try {
-            if (pt_json.isNotNullAndEmpty()) {
-                newExtras = Utils.fromJson(JSONObject(pt_json))
+            if (ptJson.isNotNullAndEmpty()) {
+                newExtras = Utils.fromJson(JSONObject(ptJson))
             }
         } catch (e: JSONException) {
             PTLog.verbose("Failed to parse push template JSON", e)
@@ -340,7 +344,7 @@ public class TemplateRenderer @JvmOverloads constructor(
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     } else if (s.isNotEmpty()) {
                         if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
-                            s = s.substring(0, s.length - 4)
+                            s = s.substring(0, s.length - SOUND_FILE_EXTENSION_LENGTH)
                         }
                         soundUri = Uri
                             .parse(

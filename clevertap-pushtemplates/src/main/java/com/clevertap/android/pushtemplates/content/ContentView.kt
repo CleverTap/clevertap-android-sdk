@@ -65,28 +65,28 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewTitle(pt_title: String?) {
-        if (pt_title.isNotNullAndEmpty()) {
+    fun setCustomContentViewTitle(title: String?) {
+        if (title.isNotNullAndEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.title,
-                    Html.fromHtml(pt_title, Html.FROM_HTML_MODE_LEGACY)
+                    Html.fromHtml(title, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                remoteView.setTextViewText(R.id.title, Html.fromHtml(pt_title))
+                remoteView.setTextViewText(R.id.title, Html.fromHtml(title))
             }
         }
     }
 
-    fun setCustomContentViewMessage(pt_msg: String?) {
-        if (pt_msg.isNotNullAndEmpty()) {
+    fun setCustomContentViewMessage(message: String?) {
+        if (message.isNotNullAndEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.msg,
-                    Html.fromHtml(pt_msg, Html.FROM_HTML_MODE_LEGACY)
+                    Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg))
+                remoteView.setTextViewText(R.id.msg, Html.fromHtml(message))
             }
         }
     }
@@ -309,14 +309,14 @@ internal open class ContentView(
         }
     }
 
-   fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
-        if (pt_msg_summary.isNotNullAndEmpty()) {
+   fun setCustomContentViewMessageSummary(messageSummary: String?) {
+        if (messageSummary.isNotNullAndEmpty()) {
             if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 remoteView.setTextViewText(
-                    R.id.msg, Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
+                    R.id.msg, Html.fromHtml(messageSummary, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
+                remoteView.setTextViewText(R.id.msg, Html.fromHtml(messageSummary))
             }
         }
     }

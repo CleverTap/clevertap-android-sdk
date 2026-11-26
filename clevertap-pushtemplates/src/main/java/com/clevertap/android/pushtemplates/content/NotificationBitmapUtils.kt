@@ -53,8 +53,8 @@ internal object NotificationBitmapUtils {
         val sinA = sin(rad).toFloat()
         val cosA = cos(rad).toFloat()
         val shader = LinearGradient(
-            w * (0.5f - 0.5f * sinA), h * (0.5f + 0.5f * cosA),
-            w * (0.5f + 0.5f * sinA), h * (0.5f - 0.5f * cosA),
+            w * (GRADIENT_CENTER - GRADIENT_CENTER * sinA), h * (GRADIENT_CENTER + GRADIENT_CENTER * cosA),
+            w * (GRADIENT_CENTER + GRADIENT_CENTER * sinA), h * (GRADIENT_CENTER - GRADIENT_CENTER * cosA),
             color1, color2, Shader.TileMode.CLAMP
         )
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
@@ -121,6 +121,9 @@ internal object NotificationBitmapUtils {
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         }
     }
+
+    /** Centre of the unit square (and half its diagonal projection) for the linear gradient end points. */
+    private const val GRADIENT_CENTER = 0.5f
 
     /** Chronometer/button backgrounds fall back to this when the payload omits a border width. */
     private const val BORDER_STROKE_RATIO = 0.10f
