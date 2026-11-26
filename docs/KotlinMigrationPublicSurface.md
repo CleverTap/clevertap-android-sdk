@@ -266,6 +266,37 @@ signatures, mangled/removed members on `@RestrictTo` classes, and new Kotlin par
     `PushType`s (flutter `Utils.mapToPushType`, RN `pushTypeFromReadableMap`) already return early
     on null, Leanplum passes literals.
 
+### Kotlin public surface + explicit API (SDK-6380)
+
+The Kotlin types that existed before the Java migration were curated with the same buckets as the
+Java ones. Public API classes in the BCV dumps went from 390 to 140.
+
+- **`internal` is JVM-public.** Every Kotlin `internal` declaration - classes, objects, interfaces
+  and top-level functions/properties - also carries `@RestrictTo(LIBRARY_GROUP)`, so lint's
+  `RestrictedApi` flags any Java/Kotlin caller outside `com.clevertap.*` (enforced by
+  `./gradlew apiInteropCheck`).
+- **Explicit API mode** (`kotlin { explicitApi() }`) is on for all SDK modules: a public
+  declaration without an explicit visibility/return type is a compile error.
+- **Now internal (Kotlin callers lose them; Java still links):** the in-app engine (triggers,
+  evaluation, stores, caches, PIP config, video handles, `JsonTemplatesProducer`), network/db/crypto/
+  validation/profile-traversal/utils internals, `CTXtensions`, `CTPreferenceCache`, `CTWorkManager`,
+  live-update internals, `PushProviders`, `DeviceInfo`, `BaseCallbackManager`, `CTMessageDAO`, push
+  templates' `PTScaleType`, checkers and validators.
+- **Now public + `@RestrictTo`** (lint warning outside the SDK, still callable):
+  `CTNotificationIntentService`, `CTPushNotificationReceiver` (deprecated; manifest declarations are
+  unaffected), `ILogger`, the bitmap download pipeline, executors, push-handler interfaces;
+  `SCDomainListener`/`NotificationRenderedListener` stay reachable for the Signed Call SDK.
+- **Hidden members of wrapper-used types** (no SDK module, released push templates or wrapper calls
+  them): `LocalDataStore.processProfileTree` (2), `Utils.getNotificationGifURI`/`cleanupOldGIFs`.
+- **Java-friendliness added (additive):** `@JvmStatic` on `CTInAppType.fromString`,
+  `InAppActionType.fromString`, `CTInAppNotification.defaultTtl`; `@JvmOverloads` on
+  `TemplateContext.triggerActionArgument` and the `TemplateRenderer` constructor.
+- **Known, kept:** `UserEventLog` and `CTInboxImageData` are public `data class`es (their `copy`
+  default-arg bridges are the 2 findings left in `config/api-interop/baseline.txt`); changing the
+  class kind would itself break the API.
+- `LeanplumCT` stays public API (Leanplum-migration facade used by customers; documented outside
+  this repo).
+
 ### Possible latent bugs found during conversion (behaviour deliberately preserved)
 
 - `LocalDataStore` static `EXECUTOR_THREAD_ID` written cross-thread without `volatile`.
