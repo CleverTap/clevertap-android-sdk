@@ -230,18 +230,18 @@ internal class NetworkRepo(
             //Retry with delay as 1s if region is null in case of eu1
             config.logger.debug(config.accountId, "Setting delay frequency to 1s")
             return PUSH_DELAY_MS
+        }
+
+        //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
+        val delayBy = currentDelay + generateRandomDelay()
+        return if (delayBy < MAX_DELAY_FREQUENCY) {
+            config.logger.debug(
+                config.accountId,
+                "Setting delay frequency to $currentDelay"
+            )
+            delayBy
         } else {
-            //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
-            val  delayBy = currentDelay + generateRandomDelay()
-            if (delayBy < MAX_DELAY_FREQUENCY) {
-                config.logger.debug(
-                    config.accountId,
-                    "Setting delay frequency to $currentDelay"
-                )
-                return delayBy
-            } else {
-                return PUSH_DELAY_MS
-            }
+            PUSH_DELAY_MS
         }
     }
 }

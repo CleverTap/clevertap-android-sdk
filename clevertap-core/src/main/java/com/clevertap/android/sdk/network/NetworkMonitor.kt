@@ -82,20 +82,7 @@ internal class NetworkMonitor constructor(
     private fun calculateCurrentNetworkState(): NetworkState {
         return try {
             val cm: ConnectivityManager = connectivityManager ?: return NetworkState.UNDETECTED
-            val activeNetwork: Network = cm.activeNetwork ?: return NetworkState.DISCONNECTED
-            val capabilities: NetworkCapabilities = cm.getNetworkCapabilities(activeNetwork)
-                ?: return NetworkState.UNDETECTED
-            val hasInternet: Boolean = capabilities.hasInternet()
-            val networkType: NetworkType = getNetworkTypeFromCapabilities(capabilities)
-
-            if (!hasInternet) {
-                NetworkState.DISCONNECTED
-            } else {
-                NetworkState(
-                    isAvailable = true,
-                    networkType = networkType,
-                )
-            }
+            activeNetworkState(cm)
         } catch (_: SecurityException) {
             logger.debug(
                 accountId,
@@ -105,6 +92,25 @@ internal class NetworkMonitor constructor(
         } catch (e: Exception) {
             logger.debug(accountId, "Network state calculation failed: ${e.message}")
             NetworkState.UNDETECTED
+        }
+    }
+
+    // Called inside calculateCurrentNetworkState's try, which handles a missing permission
+    @SuppressLint("MissingPermission")
+    private fun activeNetworkState(cm: ConnectivityManager): NetworkState {
+        val activeNetwork: Network = cm.activeNetwork ?: return NetworkState.DISCONNECTED
+        val capabilities: NetworkCapabilities = cm.getNetworkCapabilities(activeNetwork)
+            ?: return NetworkState.UNDETECTED
+        val hasInternet: Boolean = capabilities.hasInternet()
+        val networkType: NetworkType = getNetworkTypeFromCapabilities(capabilities)
+
+        return if (!hasInternet) {
+            NetworkState.DISCONNECTED
+        } else {
+            NetworkState(
+                isAvailable = true,
+                networkType = networkType,
+            )
         }
     }
 

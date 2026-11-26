@@ -99,9 +99,7 @@ internal class ContentFetchManager(
         for (i in 0 until contentFetchItems.length()) {
             val item = contentFetchItems.opt(i) ?: continue
             try {
-                val event = getMetaData(packageName).apply {
-                    put(Constants.KEY_EVT_DATA, item)
-                }
+                val event = buildContentFetchEvent(packageName = packageName, item = item)
                 payload.put(event)
                 logger.verbose(TAG, "Added content fetch item: $item")
             } catch (e: Exception) {
@@ -110,6 +108,12 @@ internal class ContentFetchManager(
         }
 
         return payload
+    }
+
+    private fun buildContentFetchEvent(packageName: String, item: Any): JSONObject {
+        return getMetaData(packageName).apply {
+            put(Constants.KEY_EVT_DATA, item)
+        }
     }
 
     private fun getMetaData(packageName: String): JSONObject {

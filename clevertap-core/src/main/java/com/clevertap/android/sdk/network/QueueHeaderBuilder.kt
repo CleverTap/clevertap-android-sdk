@@ -185,17 +185,21 @@ internal class QueueHeaderBuilder(
 
     private fun addReferrerInfo(header: JSONObject) {
         try {
-            val ref = JSONObject().apply {
-                coreMetaData.source?.let { put("us", it) }
-                coreMetaData.medium?.let { put("um", it) }
-                coreMetaData.campaign?.let { put("uc", it) }
-            }
+            val ref = buildReferrer()
 
             if (ref.length() > 0) {
                 header.put("ref", ref)
             }
         } catch (e: JSONException) {
             logger.verbose(config.accountId, "Failed to attach ref", e)
+        }
+    }
+
+    private fun buildReferrer(): JSONObject {
+        return JSONObject().apply {
+            coreMetaData.source?.let { put("us", it) }
+            coreMetaData.medium?.let { put("um", it) }
+            coreMetaData.campaign?.let { put("uc", it) }
         }
     }
 
