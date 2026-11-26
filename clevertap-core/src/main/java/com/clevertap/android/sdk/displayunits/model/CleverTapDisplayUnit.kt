@@ -117,6 +117,11 @@ public open class CleverTapDisplayUnit private constructor(
         return contents[contentIndex].getMetaData()?.let { HashMap(it) } ?: HashMap()
     }
 
+    /**
+     * Returns the error recorded while building this Display Unit from JSON or from a [Parcel].
+     *
+     * @return the error message, or `null` if it was built successfully
+     */
     public open fun getError(): String? = errorValue
 
     /** Kotlin property syntax, equivalent to [getError]. */
@@ -251,6 +256,7 @@ public open class CleverTapDisplayUnit private constructor(
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CleverTapDisplayUnit] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> =
             object : Parcelable.Creator<CleverTapDisplayUnit> {

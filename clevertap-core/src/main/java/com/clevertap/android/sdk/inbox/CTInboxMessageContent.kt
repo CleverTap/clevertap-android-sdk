@@ -123,6 +123,11 @@ public open class CTInboxMessageContent : Parcelable {
      */
     public open fun getPosterUrl(): String? = _posterUrl
 
+    /**
+     * Overrides the URL of the video thumbnail.
+     *
+     * @param posterUrl the thumbnail URL, or `null`
+     */
     public open fun setPosterUrl(posterUrl: String?) {
         this._posterUrl = posterUrl
     }
@@ -356,6 +361,14 @@ public open class CTInboxMessageContent : Parcelable {
         }
     }
 
+    /**
+     * Returns whether the given link asks to open the app's notification settings when the push
+     * permission was already denied (the link's `fbSettings` flag).
+     *
+     * @param jsonObject of Link
+     * @return the `fbSettings` value, or `false` if [jsonObject] is `null`, has no such key, or it is
+     * not a boolean
+     */
     public open fun isFallbackSettingsEnabled(jsonObject: JSONObject?): Boolean {
         if (jsonObject == null) {
             return false
@@ -417,6 +430,11 @@ public open class CTInboxMessageContent : Parcelable {
         return contentType != null && this._media != null && contentType.startsWith("video")
     }
 
+    /**
+     * Method to check whether media in the [CTInboxMessageContent] object can be streamed.
+     *
+     * @return `true` if the media is audio or video ([mediaIsAudio] or [mediaIsVideo])
+     */
     public open fun mediaIsStreamable(): Boolean = mediaIsAudio() || mediaIsVideo()
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
@@ -566,6 +584,7 @@ public open class CTInboxMessageContent : Parcelable {
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CTInboxMessageContent] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInboxMessageContent> =
             object : Parcelable.Creator<CTInboxMessageContent> {

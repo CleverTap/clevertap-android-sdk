@@ -15,6 +15,14 @@ public open class CTInboxMessage : Parcelable {
 
     private var _actionUrl: String? = null
 
+    /**
+     * Returns the message action URL.
+     *
+     * Legacy field: it is only restored from a [Parcel] and is never set from the inbox payload, so it
+     * is `null` for messages returned by the SDK. Read the value from [getInboxMessageContents] instead.
+     *
+     * @return always `null` for SDK-built messages
+     */
     public open fun getActionUrl(): String? = _actionUrl
 
     /** Kotlin property syntax, equivalent to [getActionUrl]. */
@@ -23,6 +31,13 @@ public open class CTInboxMessage : Parcelable {
 
     private var _bgColor: String? = null
 
+    /**
+     * Returns the background color of the message as set on the CleverTap dashboard, as a hex string
+     * such as `#FFFFFF`.
+     *
+     * @return the background color, an empty string if the payload has none, or `null` if the payload
+     * has no `msg` object
+     */
     public open fun getBgColor(): String? = _bgColor
 
     /** Kotlin property syntax, equivalent to [getBgColor]. */
@@ -31,6 +46,14 @@ public open class CTInboxMessage : Parcelable {
 
     private var _body: String? = null
 
+    /**
+     * Returns the message body.
+     *
+     * Legacy field: it is only restored from a [Parcel] and is never set from the inbox payload, so it
+     * is `null` for messages returned by the SDK. Read the value from [getInboxMessageContents] instead.
+     *
+     * @return always `null` for SDK-built messages
+     */
     public open fun getBody(): String? = _body
 
     /** Kotlin property syntax, equivalent to [getBody]. */
@@ -39,6 +62,11 @@ public open class CTInboxMessage : Parcelable {
 
     private var _campaignId: String? = null
 
+    /**
+     * Returns the id of the campaign that sent this message (the payload's `wzrk_id`).
+     *
+     * @return the campaign id, or `"0_0"` when the payload has none
+     */
     public open fun getCampaignId(): String? = _campaignId
 
     /** Kotlin property syntax, equivalent to [getCampaignId]. */
@@ -60,6 +88,11 @@ public open class CTInboxMessage : Parcelable {
 
     private var _data: JSONObject = JSONObject()
 
+    /**
+     * Returns the raw JSON payload this message was built from.
+     *
+     * @return the message JSON; never `null`
+     */
     public open fun getData(): JSONObject = _data
 
     /** Kotlin property syntax, equivalent to [getData]. */
@@ -68,6 +101,11 @@ public open class CTInboxMessage : Parcelable {
 
     private var _date: Long = 0
 
+    /**
+     * Returns when the message was created, in Unix epoch seconds.
+     *
+     * @return the payload's `date`, or the time the message was parsed when the payload has none
+     */
     public open fun getDate(): Long = _date
 
     /** Kotlin property syntax, equivalent to [getDate]. */
@@ -76,6 +114,13 @@ public open class CTInboxMessage : Parcelable {
 
     private var _expires: Long = 0
 
+    /**
+     * Returns when the message expires: the payload's `wzrk_ttl`, in Unix epoch seconds. When the
+     * payload has no `wzrk_ttl`, the SDK uses the parse time plus 24 hours, computed in
+     * milliseconds.
+     *
+     * @return the expiry time
+     */
     public open fun getExpires(): Long = _expires
 
     /** Kotlin property syntax, equivalent to [getExpires]. */
@@ -84,6 +129,14 @@ public open class CTInboxMessage : Parcelable {
 
     private var _imageUrl: String? = null
 
+    /**
+     * Returns the message image URL.
+     *
+     * Legacy field: it is only restored from a [Parcel] and is never set from the inbox payload, so it
+     * is `null` for messages returned by the SDK. Read the value from [getInboxMessageContents] instead.
+     *
+     * @return always `null` for SDK-built messages
+     */
     public open fun getImageUrl(): String? = _imageUrl
 
     /** Kotlin property syntax, equivalent to [getImageUrl]. */
@@ -147,6 +200,14 @@ public open class CTInboxMessage : Parcelable {
 
     private var _title: String? = null
 
+    /**
+     * Returns the message title.
+     *
+     * Legacy field: it is only restored from a [Parcel] and is never set from the inbox payload, so it
+     * is `null` for messages returned by the SDK. Read the value from [getInboxMessageContents] instead.
+     *
+     * @return always `null` for SDK-built messages
+     */
     public open fun getTitle(): String? = _title
 
     /** Kotlin property syntax, equivalent to [getTitle]. */
@@ -155,6 +216,11 @@ public open class CTInboxMessage : Parcelable {
 
     private var _type: CTInboxMessageType? = null
 
+    /**
+     * Returns the template of this message.
+     *
+     * @return the message type, or `null` if the payload has no `msg` object or an unknown type
+     */
     public open fun getType(): CTInboxMessageType? = _type
 
     /** Kotlin property syntax, equivalent to [getType]. */
@@ -320,6 +386,12 @@ public open class CTInboxMessage : Parcelable {
     public val wzrkParams: JSONObject
         @JvmSynthetic @JvmName("ktGetWzrkParams") inline get() = getWzrkParams()
 
+    /**
+     * Returns whether the message has been marked as read.
+     *
+     * @return `true` if the message is read
+     * @see com.clevertap.android.sdk.CleverTapAPI.markReadInboxMessage
+     */
     public open fun isRead(): Boolean = read
 
     /** Kotlin property syntax, equivalent to [isRead]. */
@@ -366,6 +438,7 @@ public open class CTInboxMessage : Parcelable {
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CTInboxMessage] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInboxMessage> = object : Parcelable.Creator<CTInboxMessage> {
             override fun createFromParcel(`in`: Parcel): CTInboxMessage = CTInboxMessage(`in`)
@@ -373,6 +446,11 @@ public open class CTInboxMessage : Parcelable {
             override fun newArray(size: Int): Array<CTInboxMessage?> = arrayOfNulls(size)
         }
 
+        /**
+         * Returns [CREATOR], for callers that need a getter.
+         *
+         * @return the [Parcelable.Creator] of [CTInboxMessage]
+         */
         @JvmStatic
         public fun getCREATOR(): Parcelable.Creator<CTInboxMessage> = CREATOR
     }
