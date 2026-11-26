@@ -1946,6 +1946,36 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createVerticalImageTemplateData should style the collapsed image like the expanded one`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "12"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "6"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns "https://example.com/collapsed.jpg"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns "Collapsed Alt"
+
+        // When
+        val data = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        val collapsedBorder = data.collapsedMediaData!!.imageBorderData
+        assertTrue(collapsedBorder.isActive)
+        assertEquals(12f, collapsedBorder.cornerRadiusPercent)
+        assertEquals(6f, collapsedBorder.borderWidthValue)
+        assertEquals(android.graphics.Color.RED, collapsedBorder.borderColor)
+        assertEquals(data.mediaData.imageBorderData, collapsedBorder)
+    }
+
+    @Test
     fun `createVerticalImageTemplateData should create collapsedMediaData when collapsed gif is provided`() {
         // Given
         setupBasicMockBundle()

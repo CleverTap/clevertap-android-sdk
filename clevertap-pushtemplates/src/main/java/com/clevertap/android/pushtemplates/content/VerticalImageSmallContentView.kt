@@ -14,6 +14,10 @@ internal class VerticalImageSmallContentView(
     extras: Bundle
 ) : VerticalImageContentView(context, renderer, R.layout.vertical_image_small, extras) {
 
+    /** The collapsed thumbnail is far smaller than the expanded picture, so it has its own reference. */
+    override val imageStyleReferenceDimen: Int
+        get() = R.dimen.pt_image_style_reference_vertical_collapsed
+
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
@@ -32,8 +36,7 @@ internal class VerticalImageSmallContentView(
                 mediaData.scaleType,
                 mediaData.bigImage.altText,
                 mediaData.gif.numberOfFrames,
-                // No image styling on the collapsed view.
-                imageBorderData = null
+                mediaData.imageBorderData
             )
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)

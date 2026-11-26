@@ -5,6 +5,9 @@
 * Adds support for Android 17, making it compliant with Android 17 requirements. Details [here](https://developer.android.com/about/versions/17/summary)
 * Supports CleverTap Android SDK v9.0.0.
 
+#### Enhancements
+* Applies the image corner radius and border to the collapsed image of the `Image with CTA` template on Android 12 (API 31) and above.
+
 ### Version 2.7.0 (October 15, 2026)
 
 #### New Features
