@@ -14,15 +14,23 @@ import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.store.preference.CTPreference
 import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_INAPP = 1
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_IMPRESSION = 2
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_LEGACY_INAPP = 3
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_INAPP_ASSETS = 4
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_FILES = 5
 
 // Native Display (ND) frequency caps (SDK-6055)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_ND = 6
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_ND_IMPRESSION = 7
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val STORE_TYPE_ND_COUNTS = 8
 
 /**

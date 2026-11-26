@@ -19,30 +19,55 @@ import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.Random
 import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val BASIC_CONTENT_PENDING_INTENT = 1
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val MANUAL_CAROUSEL_CONTENT_PENDING_INTENT = 3
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT = 4
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT = 5
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val MANUAL_CAROUSEL_DISMISS_PENDING_INTENT = 6
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CONTENT_PENDING_INTENT = 7
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CLICK1_PENDING_INTENT = 8
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CLICK2_PENDING_INTENT = 9
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CLICK3_PENDING_INTENT = 10
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CLICK4_PENDING_INTENT = 11
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val RATING_CLICK5_PENDING_INTENT = 12
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val FIVE_ICON_CONTENT_PENDING_INTENT = 13
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PRODUCT_DISPLAY_CONTENT_PENDING_INTENT = 20
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 21
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 22
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PRODUCT_DISPLAY_DL3_PENDING_INTENT = 23
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PRODUCT_DISPLAY_DISMISS_PENDING_INTENT = 28
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 29
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val TIMER_CONTENT_PENDING_INTENT = 30
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val INPUT_BOX_CONTENT_PENDING_INTENT = 31
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val INPUT_BOX_REPLY_PENDING_INTENT = 32
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PROGRESS_CONTENT_PENDING_INTENT = 35
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

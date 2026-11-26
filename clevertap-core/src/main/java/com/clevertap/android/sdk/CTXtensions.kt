@@ -28,12 +28,15 @@ import org.json.JSONObject
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
 
+@get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal val Context.targetSdkVersion
     get() = applicationContext.applicationInfo.targetSdkVersion
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
     if (VERSION.SDK_INT >= VERSION_CODES.O) {
         areAppNotificationsEnabled() && try {
@@ -50,6 +53,7 @@ internal fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
         areAppNotificationsEnabled()
     }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
@@ -84,6 +88,7 @@ internal fun Context.areAppNotificationsEnabled() = try {
  */
 @RequiresApi(VERSION_CODES.O)
 @WorkerThread
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun NotificationManager.getOrCreateChannel(
     msgChannel: String?,
     context: Context,
@@ -225,6 +230,7 @@ private fun NotificationManager.createDefaultFallbackChannel(context: Context): 
  * @param context The application context.
  */
 @WorkerThread
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
     logTag: String,
     caller: String,
@@ -261,6 +267,7 @@ internal fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
  * @param index The index to be checked.
  * @return `true` if the JSONArray is null or the index is out of bounds, `false` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray?.isInvalidIndex(index: Int): Boolean {
     return this == null || index < 0 || index >= this.length()
 }
@@ -269,6 +276,7 @@ internal fun JSONArray?.isInvalidIndex(index: Int): Boolean {
  * Extension function to check if a SharedPreferences file has data.
  * @return `true` if the SharedPreferences file has data, `false` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun SharedPreferences.hasData(): Boolean {
     return all.isNotEmpty()
 }
@@ -278,6 +286,7 @@ internal fun SharedPreferences.hasData(): Boolean {
  *
  * @return The original JSONArray or an empty JSONArray.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray?.orEmptyArray(): JSONArray {
     return this ?: JSONArray()
 }
@@ -288,6 +297,7 @@ internal fun JSONArray?.orEmptyArray(): JSONArray {
  * @return A List of elements of type [T] extracted from the JSONArray.
  * @reified T The expected type of elements in the list.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal inline fun <reified T> JSONArray.toList(): MutableList<T> {
     val list = mutableListOf<T>()
     for (index in 0 until length()) {
@@ -305,6 +315,7 @@ internal inline fun <reified T> JSONArray.toList(): MutableList<T> {
  * @param foreach Lambda function to be executed for each element of type [T].
  * @reified T The expected type of elements in the JSONArray.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
     for (index in 0 until length()) {
         val element = get(index)
@@ -322,11 +333,13 @@ internal inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit
  *         The first value of the Pair is `true` if the JSONArray is not null and not empty, `false` otherwise.
  *         The second value of the Pair is the non-empty JSONArray if it exists, or `null` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject.safeGetJSONArrayOrNullIfEmpty(key: String): Pair<Boolean, JSONArray?> {
     val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
     return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean, List<JSONObject>> {
     val array = optJSONArray(key)
     return if (array != null) {
@@ -344,6 +357,7 @@ internal fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean,
  *         The first value of the Pair is `true` if the JSONArray is not null, `false` otherwise.
  *         The second value of the Pair is the non-null JSONArray if it exists, or `null` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
     val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
     return Pair(list.length() >= 0, list.takeIf { it.length() >= 0 })
@@ -354,6 +368,7 @@ internal fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?>
  *
  * @param other The JSONObject to copy key-value pairs from.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject.copyFrom(other: JSONObject) {
     for (key in other.keys()) {
         this.put(key, other.opt(key))
@@ -363,6 +378,7 @@ internal fun JSONObject.copyFrom(other: JSONObject) {
 /**
  * Copies all key-value pairs from this JSONObject to a new JSONObject.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject.copy(): JSONObject {
     val json = JSONObject()
     json.copyFrom(this)
@@ -374,6 +390,7 @@ internal fun JSONObject.copy(): JSONObject {
  *
  * @return `true` if the JSONObject is not null and not empty, `false` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
 
 /**
@@ -396,6 +413,7 @@ internal fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
  * // Result: World
  * ```
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
     return if (this != null && other != null) {
         this + separator + other
@@ -410,10 +428,12 @@ internal fun String?.concatIfNotNull(other: String?, separator: String = ""): St
  *
  * @return `true` if the Location is valid, `false` otherwise.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Location.isValid(): Boolean {
     return this.latitude in -90.0..90.0 && this.longitude in -180.0..180.0
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun String?.toJsonOrNull(): JSONObject? {
     return this?.let {
         try {
@@ -425,6 +445,7 @@ internal fun String?.toJsonOrNull(): JSONObject? {
 }
 
 @OptIn(ExperimentalContracts::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun String?.isNotNullAndBlank(): Boolean {
     contract { returns(true) implies (this@isNotNullAndBlank != null) }
     return isNullOrBlank().not()
@@ -466,6 +487,7 @@ public fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets,
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal inline fun <reified T> JSONArray.partition(
     predicate: (T) -> Boolean
 ): Pair<JSONArray, JSONArray> {

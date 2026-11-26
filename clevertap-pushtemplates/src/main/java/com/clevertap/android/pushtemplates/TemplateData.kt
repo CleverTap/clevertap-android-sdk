@@ -52,18 +52,21 @@ internal data class ImageBorderData(
 /**
  * Image styling needs the RemoteViews outline and margin setters added in API 31.
  */
+@get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal val useNativeImageStyling: Boolean
     get() = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 
 /**
  * CENTER_CROP images are styled by the views, FIT_CENTER images by baking into the bitmap.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun PTScaleType.usesNativeImageStyling(): Boolean =
     useNativeImageStyling && this == PTScaleType.CENTER_CROP
 
 /**
  * Styling to bake into the bitmap, or null when the views draw it or the OS is below API 31.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? {
     return if (this != null && useNativeImageStyling && !scaleType.usesNativeImageStyling()) {
         this

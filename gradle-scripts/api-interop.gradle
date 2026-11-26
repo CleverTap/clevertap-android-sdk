@@ -19,7 +19,8 @@
 //   OBJECT_INSTANCE     public `object` member without a static bridge: Java must call X.INSTANCE.f()
 //   MANGLED_NAME        name mangled by the Kotlin compiler (inline/value class parameter) - not
 //                       callable from Java
-//   INTERNAL_NO_RESTRICT  Kotlin `internal` top-level declaration without @RestrictTo: `internal` is
+//   INTERNAL_NO_RESTRICT  Kotlin `internal` top-level class/object/interface/function/property without
+//                       @RestrictTo (functions: @RestrictTo, const val: @RestrictTo, val/var: @get:/@set:): `internal` is
 //                       JVM-public, so Java clients can compile against it unless lint's RestrictedApi
 //                       flags it via @RestrictTo
 
@@ -107,19 +108,25 @@ def collectFindings = {
                 def lines = f.readLines("UTF-8")
                 lines.eachWithIndex { line, i ->
                     def decl = (line =~ /^internal\s+(?:(?:abstract|open|sealed|data|enum|annotation|value|fun|inline)\s+)*(?:class|object|interface)\s+(\w+)/)
-                    if (decl.find()) {
+                    // top-level internal functions/properties compile to public static members of the
+                    // file facade (FooKt) - Java can call them too. Key = declaration up to its params/type.
+                    def member = (line =~ /^internal\s+(?:(?:inline|suspend|operator|infix|tailrec|const|lateinit)\s+)*(?:fun|val|var)\b([^(:=]*)/)
+                    def memberMatched = !decl.find() && member.find()
+                    decl.reset()
+                    if (decl.find() || memberMatched) {
+                        def what = memberMatched ? member.group(1).trim().replaceAll(/\s+/, " ") : decl.group(1)
                         // look back over the annotation/KDoc block directly above the declaration
                         int j = i - 1
                         boolean restricted = false
                         while (j >= 0 && (lines[j].trim().startsWith("@") || lines[j].trim().startsWith("*") ||
                                 lines[j].trim().startsWith("/**") || lines[j].trim().startsWith("*/") ||
                                 lines[j].trim().startsWith("//") || lines[j].trim().endsWith(")"))) {
-                            if (lines[j].contains("@RestrictTo")) restricted = true
+                            if (lines[j] =~ /@(?:get:|set:|field:)?RestrictTo\(/) restricted = true
                             j--
                         }
                         if (!restricted) {
                             def rel = rootDir.toPath().relativize(f.toPath()).toString()
-                            findings << "INTERNAL_NO_RESTRICT ${module} ${rel}:${decl.group(1)}"
+                            findings << "INTERNAL_NO_RESTRICT ${module} ${rel}:${what}"
                         }
                     }
                 }

@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.profile.traversal
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Creates a deep copy of a JSONArray.
@@ -10,6 +11,7 @@ import org.json.JSONObject
  *
  * @return A new JSONArray with the same contents
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray.deepCopy(): JSONArray {
     return JSONArray(this.toString())
 }
@@ -20,6 +22,7 @@ internal fun JSONArray.deepCopy(): JSONArray {
  * @param value The string value to find
  * @return true if the array contains the string
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray.containsString(value: String): Boolean {
     return (0 until this.length()).any { i ->
         val item = this.get(i)
@@ -32,6 +35,7 @@ internal fun JSONArray.containsString(value: String): Boolean {
  *
  * @return true if any element is a delete marker
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray.hasDeleteMarkerElements(): Boolean {
     return (0 until this.length()).any { i ->
         val element = this.opt(i)
@@ -44,6 +48,7 @@ internal fun JSONArray.hasDeleteMarkerElements(): Boolean {
  *
  * @return true if array contains JSONObject elements
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun JSONArray.hasJsonObjectElements(): Boolean {
     return (0 until this.length()).any { i ->
         val element = this.opt(i)

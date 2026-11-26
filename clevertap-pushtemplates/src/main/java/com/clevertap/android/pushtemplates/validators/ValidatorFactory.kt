@@ -5,22 +5,38 @@ import com.clevertap.android.pushtemplates.checkers.*
 import org.json.JSONArray
 import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_TITLE = "PT_TITLE"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_MSG = "PT_MSG"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_BIG_IMG = "PT_BIG_IMG"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val PT_ACTIONS = "PT_ACTIONS"
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Iterable<Checker<out Any>>.and(): Boolean {
     var and = true
     for (element in this) {
@@ -30,6 +46,7 @@ internal fun Iterable<Checker<out Any>>.and(): Boolean {
     return and
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun Iterable<Checker<out Any>>.or(): Boolean {
     for (element in this) {
         if (element.check()) {

@@ -10,6 +10,7 @@ import kotlin.math.max
 import kotlin.time.Duration.Companion.days
 import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
 /**
  * Implementation of [FileResourcesRepo] that manages the preloading, caching, and cleanup of file resources.

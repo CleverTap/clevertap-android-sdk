@@ -65,6 +65,7 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun View.setContentDescriptionOrDefault(contentDescription: String, defaultDescription: String) {
     this.contentDescription = contentDescription.ifBlank { defaultDescription }
     this.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
