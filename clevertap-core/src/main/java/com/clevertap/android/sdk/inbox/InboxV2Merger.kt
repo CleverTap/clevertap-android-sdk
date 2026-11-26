@@ -60,15 +60,18 @@ internal object InboxV2Merger {
                 dao.id in pendingDeletes -> toDelete.add(dao.id)
                 isExpired(dao, nowSec) -> toDelete.add(dao.id)
                 !videoSupported && dao.containsVideoOrAudio() -> toDelete.add(dao.id)
-                else -> {
-                    if (dao.id in pendingReads) {
-                        dao.isRead = 1
-                    }
-                    kept.add(dao)
-                }
+                else -> kept.add(applyPendingRead(dao, pendingReads))
             }
         }
         return CleanupResult(toDelete, kept)
+    }
+
+    /** Marks [dao] read if a local read of it is still pending, and returns it. */
+    private fun applyPendingRead(dao: CTMessageDAO, pendingReads: Set<String>): CTMessageDAO {
+        if (dao.id in pendingReads) {
+            dao.isRead = 1
+        }
+        return dao
     }
 
     private fun isExpired(dao: CTMessageDAO, nowSec: Long): Boolean {

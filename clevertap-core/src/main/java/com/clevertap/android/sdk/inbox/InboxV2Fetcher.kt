@@ -66,7 +66,14 @@ internal class InboxV2Fetcher(
             throttle.recordFetch()
         }
 
-        val result: CallResult<Unit> = when (raw) {
+        val result: CallResult<Unit> = handleEndpointResult(raw)
+        logger.verbose("InboxV2", "fetch finished — ${result::class.simpleName}")
+        return result
+    }
+
+    /** Applies a successful response or a server disable, and maps [raw] to the fetch result. */
+    private fun handleEndpointResult(raw: CallResult<JSONObject>): CallResult<Unit> {
+        return when (raw) {
             is CallResult.Success -> {
                 inboxV2Response.processResponse(raw.data)
                 CallResult.Success(Unit)
@@ -80,7 +87,5 @@ internal class InboxV2Fetcher(
             is CallResult.NetworkFailure -> raw
             CallResult.Throttled -> CallResult.Throttled
         }
-        logger.verbose("InboxV2", "fetch finished — ${result::class.simpleName}")
-        return result
     }
 }

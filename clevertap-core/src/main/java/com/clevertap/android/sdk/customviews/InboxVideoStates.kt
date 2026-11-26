@@ -46,14 +46,19 @@ internal class InboxVideoStates {
             return
         }
         for (messageId in saved.keySet()) {
-            val state = saved.getBundle(messageId) ?: continue
-            val mediaUrl = state.getString(KEY_MEDIA_URL) ?: continue
-            states[messageId] = VideoState(
-                mediaUrl = mediaUrl,
-                positionMs = state.getLong(KEY_POSITION_MS),
-                volume = state.getFloat(KEY_VOLUME)
-            )
+            val state = saved.getBundle(messageId)?.let(::videoStateOf) ?: continue
+            states[messageId] = state
         }
+    }
+
+    /** The [VideoState] saved in [state], or null if it has no media url. */
+    private fun videoStateOf(state: Bundle): VideoState? {
+        val mediaUrl = state.getString(KEY_MEDIA_URL) ?: return null
+        return VideoState(
+            mediaUrl = mediaUrl,
+            positionMs = state.getLong(KEY_POSITION_MS),
+            volume = state.getFloat(KEY_VOLUME)
+        )
     }
 
     private companion object {

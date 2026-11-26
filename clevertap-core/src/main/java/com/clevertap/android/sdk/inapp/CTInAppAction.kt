@@ -65,18 +65,22 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
             && json.has(Constants.KEY_KV)
         ) {
             val keyValuesJson = json.optJSONObject(Constants.KEY_KV)
-            val map = keyValues ?: HashMap()
             if (keyValuesJson != null) {
-                var value: String?
-                for (key in keyValuesJson.keys()) {
-                    value = keyValuesJson.optString(key)
-                    if (value.isNotEmpty()) {
-                        map[key] = value
-                    }
-                }
-                keyValues = map
+                keyValues = mergeKeyValues(keyValuesJson)
             }
         }
+    }
+
+    /** The current [keyValues] (or a new map) with every non-empty value of [keyValuesJson] added. */
+    private fun mergeKeyValues(keyValuesJson: JSONObject): HashMap<String, String> {
+        val map = keyValues ?: HashMap()
+        for (key in keyValuesJson.keys()) {
+            val value = keyValuesJson.optString(key)
+            if (value.isNotEmpty()) {
+                map[key] = value
+            }
+        }
+        return map
     }
 
     override fun equals(other: Any?): Boolean {

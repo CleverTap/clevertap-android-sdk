@@ -32,14 +32,24 @@ internal object LiveUpdatePayloadSurfacer {
             val keys = json.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
-                if (existingKeys.contains(key)) continue      // root-wins
-                val value = json.get(key)
-                if (value === JSONObject.NULL) continue        // skip JSON null
-                out[key] = if (value is String) { value } else { value.toString() }
+                val value = surfacedValue(json = json, key = key, existingKeys = existingKeys) ?: continue
+                out[key] = value
             }
         } catch (t: Throwable) {
             // Malformed data -> nothing to surface.
         }
         return out
+    }
+
+    /** The string value to surface for [key], or null if a root key wins or the value is JSON null. */
+    private fun surfacedValue(json: JSONObject, key: String, existingKeys: Set<String>): String? {
+        if (existingKeys.contains(key)) {
+            return null // root-wins
+        }
+        val value = json.get(key)
+        if (value === JSONObject.NULL) {
+            return null // skip JSON null
+        }
+        return if (value is String) { value } else { value.toString() }
     }
 }

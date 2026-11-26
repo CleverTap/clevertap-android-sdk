@@ -131,24 +131,13 @@ internal class MediaPlayerRecyclerView : RecyclerView {
         val mediaUrl = targetHolder.mediaUrl
 
         // Case 2 : Found viewholder is same with surface and player attached
-        playingHolder?.let { ph ->
-            // The row can be rebound to another message, so also compare the message and media
-            val samePlayingVideo = playingVideo?.messageId == messageId && playingVideo?.mediaUrl == mediaUrl
-            if (ph.itemView == targetHolder.itemView && samePlayingVideo) {
-                val measured = ph.itemView.getGlobalVisibleRect(rect)
-                val visibleHeight = if (measured) {
-                    rect.height()
-                } else {
-                    0
-                }
-                val play = visibleHeight >= MIN_VISIBLE_HEIGHT_TO_PLAY
-                if (play && ph.shouldAutoPlay()) {
-                    handle.setPlayWhenReady(true)
-                } else {
-                    handle.setPlayWhenReady(false)
-                }
-                return
-            }
+        val alreadyPlaying = updatePlayWhenReadyIfAlreadyPlaying(
+            targetHolder = targetHolder,
+            messageId = messageId,
+            mediaUrl = mediaUrl
+        )
+        if (alreadyPlaying) {
+            return
         }
 
         // Case 3: Video has to be played in a different view holder, so move the player there
@@ -157,6 +146,35 @@ internal class MediaPlayerRecyclerView : RecyclerView {
             // A late playVideo() after onStop must not start a player
             return
         }
+        attachPlayerTo(targetHolder = targetHolder, messageId = messageId, mediaUrl = mediaUrl)
+    }
+
+    /**
+     * If [targetHolder] already shows the playing video, plays or pauses it by how much of the row is
+     * visible and returns true; otherwise does nothing and returns false.
+     */
+    private fun updatePlayWhenReadyIfAlreadyPlaying(
+        targetHolder: CTInboxBaseMessageViewHolder,
+        messageId: String?,
+        mediaUrl: String?
+    ): Boolean {
+        val ph = playingHolder ?: return false
+        // The row can be rebound to another message, so also compare the message and media
+        val samePlayingVideo = playingVideo?.messageId == messageId && playingVideo?.mediaUrl == mediaUrl
+        if (ph.itemView != targetHolder.itemView || !samePlayingVideo) {
+            return false
+        }
+        val play = visibleHeightOf(ph.itemView) >= MIN_VISIBLE_HEIGHT_TO_PLAY
+        if (play && ph.shouldAutoPlay()) {
+            handle.setPlayWhenReady(true)
+        } else {
+            handle.setPlayWhenReady(false)
+        }
+        return true
+    }
+
+    /** Creates the player if needed and moves it into [targetHolder], restoring the saved volume and position. */
+    private fun attachPlayerTo(targetHolder: CTInboxBaseMessageViewHolder, messageId: String?, mediaUrl: String?) {
         initPlayer()
         val savedState = states.stateOf(messageId, mediaUrl)
         val volume = savedState?.volume ?: MUTED_VOLUME
@@ -229,23 +247,34 @@ internal class MediaPlayerRecyclerView : RecyclerView {
         var bestHolder: CTInboxBaseMessageViewHolder? = null
         var bestHeight = 0
         for (i in 0 until childCount) {
-            val holder = getChildViewHolder(getChildAt(i)) as? CTInboxBaseMessageViewHolder ?: continue
-            // A row that is animating out of the list has no adapter position any more
-            if (holder.bindingAdapterPosition == NO_POSITION || !holder.needsMediaPlayer()) {
-                continue
-            }
-            val measured = holder.itemView.getGlobalVisibleRect(rect)
-            val height = if (measured) {
-                rect.height()
-            } else {
-                0
-            }
+            val holder = mediaHolderAt(i) ?: continue
+            val height = visibleHeightOf(holder.itemView)
             if (height > bestHeight) {
                 bestHeight = height
                 bestHolder = holder
             }
         }
         return bestHolder
+    }
+
+    /** The view holder of child [index] if it is a bound row that needs the media player, else null. */
+    private fun mediaHolderAt(index: Int): CTInboxBaseMessageViewHolder? {
+        val holder = getChildViewHolder(getChildAt(index)) as? CTInboxBaseMessageViewHolder ?: return null
+        // A row that is animating out of the list has no adapter position any more
+        if (holder.bindingAdapterPosition == NO_POSITION || !holder.needsMediaPlayer()) {
+            return null
+        }
+        return holder
+    }
+
+    /** Height of the on-screen part of [itemView], 0 if none of it is visible. */
+    private fun visibleHeightOf(itemView: View): Int {
+        val measured = itemView.getGlobalVisibleRect(rect)
+        return if (measured) {
+            rect.height()
+        } else {
+            0
+        }
     }
 
     /** Creates the player and its view if they do not exist; a no-op while they are alive. */

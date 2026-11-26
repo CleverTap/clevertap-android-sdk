@@ -15,11 +15,12 @@ import androidx.annotation.RestrictTo
 internal class FcmNotificationParser : INotificationParser<RemoteMessage> {
 
     override fun toBundle(message: RemoteMessage): Bundle? = try {
-        Bundle().apply {
-            for ((key, value) in message.data) {
-                putString(key, value)
-            }
-        }.also { Logger.d(LOG_TAG, "${FCM_LOG_TAG}Found Valid Notification Message ") }
+        val bundle = Bundle()
+        for ((key, value) in message.data) {
+            bundle.putString(key, value)
+        }
+        Logger.d(LOG_TAG, "${FCM_LOG_TAG}Found Valid Notification Message ")
+        bundle
     } catch (e: Throwable) {
         Logger.d(LOG_TAG, "${FCM_LOG_TAG}Invalid Notification Message ", e)
         null

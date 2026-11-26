@@ -59,23 +59,38 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
         val inAppArguments = args ?: return
 
         for (arg in customTemplate.args) {
-            when (arg.type) {
-                FILE -> {
-                    inAppArguments.getStringOrNull(arg.name)?.let { fileUrl ->
-                        filesList.add(fileUrl)
-                    }
-                }
+            addFileArgUrls(
+                arg = arg,
+                inAppArguments = inAppArguments,
+                templatesManager = templatesManager,
+                filesList = filesList
+            )
+        }
+    }
 
-                ACTION -> {
-                    inAppArguments.optJSONObject(arg.name)?.let { actionJson ->
-                        createFromJson(actionJson)?.getFileArgsUrls(
-                            templatesManager, filesList
-                        )
-                    }
+    /** Adds the url of a file [arg], or (recursively) the file urls of an action [arg], to [filesList]. */
+    private fun addFileArgUrls(
+        arg: TemplateArgument,
+        inAppArguments: JSONObject,
+        templatesManager: TemplatesManager,
+        filesList: MutableList<String>
+    ) {
+        when (arg.type) {
+            FILE -> {
+                inAppArguments.getStringOrNull(arg.name)?.let { fileUrl ->
+                    filesList.add(fileUrl)
                 }
-
-                else -> continue
             }
+
+            ACTION -> {
+                inAppArguments.optJSONObject(arg.name)?.let { actionJson ->
+                    createFromJson(actionJson)?.getFileArgsUrls(
+                        templatesManager, filesList
+                    )
+                }
+            }
+
+            else -> Unit
         }
     }
 

@@ -59,12 +59,11 @@ internal object InAppActionParser {
             val parts = callToActionUrlParam.split(Constants.URL_PARAM_DL_SEPARATOR)
             if (parts.size == 2) {
                 // Decode it here as it is not decoded by UriHelper
-                try {
-                    // Extract the actual callToAction value
-                    callToActionUrlParam = URLDecoder.decode(parts[0], "UTF-8")
-                } catch (e: Exception) {
-                    config.logger.debug("Error parsing c2a param", e)
-                }
+                callToActionUrlParam = decodeCallToAction(
+                    encoded = parts[0],
+                    fallback = callToActionUrlParam,
+                    config = config
+                )
                 // use the url from the callToAction param
                 resolvedAction = CTInAppAction.createOpenUrlAction(parts[1])
             }
@@ -73,5 +72,15 @@ internal object InAppActionParser {
         resolvedCallToAction = resolvedCallToAction ?: callToActionUrlParam
 
         return ParsedAction(resolvedAction, resolvedCallToAction, urlActionData)
+    }
+
+    /** Extracts the actual callToAction value; on a decoding error logs it and returns [fallback]. */
+    private fun decodeCallToAction(encoded: String, fallback: String, config: CleverTapInstanceConfig): String {
+        return try {
+            URLDecoder.decode(encoded, "UTF-8")
+        } catch (e: Exception) {
+            config.logger.debug("Error parsing c2a param", e)
+            fallback
+        }
     }
 }

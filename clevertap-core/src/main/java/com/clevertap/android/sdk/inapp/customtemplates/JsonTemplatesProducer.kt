@@ -149,48 +149,67 @@ internal open class JsonTemplatesProducer(
             val typeString = argumentJson.getString("type")
             if (typeString == "object") {
                 builder.mapArgument(key, jsonArgToMap(argumentJson.getJSONObject("value")))
-                continue
+            } else {
+                addTemplateArgument(builder = builder, key = key, argumentJson = argumentJson, typeString = typeString)
+            }
+        }
+    }
+
+    /**
+     * Add a single non-object argument of [typeString] type to a template [builder]
+     *
+     * @throws JSONException If [argumentJson] does not have a required field or a field is of incorrect type
+     * @throws CustomTemplateException if [argumentJson] contains fields with invalid values
+     */
+    private fun addTemplateArgument(
+        builder: CustomTemplate.TemplateBuilder,
+        key: String,
+        argumentJson: JSONObject,
+        typeString: String
+    ) {
+        val argumentType = TemplateArgumentType.fromString(typeString)
+            ?: throw CustomTemplateException("Unsupported argument type: \"$typeString\"")
+
+        when (argumentType) {
+            BOOLEAN -> {
+                val value = argumentJson.getBoolean("value")
+                builder.booleanArgument(key, value)
             }
 
-            val argumentType = TemplateArgumentType.fromString(typeString)
-                ?: throw CustomTemplateException("Unsupported argument type: \"$typeString\"")
-
-            when (argumentType) {
-                BOOLEAN -> {
-                    val value = argumentJson.getBoolean("value")
-                    builder.booleanArgument(key, value)
-                }
-
-                NUMBER -> {
-                    val value = argumentJson.getDouble("value")
-                    builder.doubleArgument(key, value)
-                }
-
-                STRING -> {
-                    val value = argumentJson.getString("value")
-                    builder.stringArgument(key, value)
-                }
-
-                FILE -> {
-                    if (argumentJson.has("value")) {
-                        throw CustomTemplateException(
-                            "File arguments should not specify a value. Remove value from argument: \"$key\""
-                        )
-                    }
-
-                    builder.fileArgument(key)
-                }
-
-                ACTION -> {
-                    if (argumentJson.has("value")) {
-                        throw CustomTemplateException(
-                            "Action arguments should not specify a value. Remove value from argument: \"$key\""
-                        )
-                    }
-
-                    builder.actionArgument(key)
-                }
+            NUMBER -> {
+                val value = argumentJson.getDouble("value")
+                builder.doubleArgument(key, value)
             }
+
+            STRING -> {
+                val value = argumentJson.getString("value")
+                builder.stringArgument(key, value)
+            }
+
+            FILE -> {
+                requireNoValue(argumentJson) {
+                    "File arguments should not specify a value. Remove value from argument: \"$key\""
+                }
+
+                builder.fileArgument(key)
+            }
+
+            ACTION -> {
+                requireNoValue(argumentJson) {
+                    "Action arguments should not specify a value. Remove value from argument: \"$key\""
+                }
+
+                builder.actionArgument(key)
+            }
+        }
+    }
+
+    /**
+     * @throws CustomTemplateException with [message] if [argumentJson] specifies a value
+     */
+    private inline fun requireNoValue(argumentJson: JSONObject, message: () -> String) {
+        if (argumentJson.has("value")) {
+            throw CustomTemplateException(message())
         }
     }
 
@@ -209,41 +228,55 @@ internal open class JsonTemplatesProducer(
             val typeString = argumentJson.getString("type")
             if (typeString == "object") {
                 builder.mapArgument(key, jsonArgToMap(argumentJson.getJSONObject("value")))
-                continue
+            } else {
+                addFunctionArgument(builder = builder, key = key, argumentJson = argumentJson, typeString = typeString)
+            }
+        }
+    }
+
+    /**
+     * Add a single non-object argument of [typeString] type to a function [builder]
+     *
+     * @throws JSONException If [argumentJson] does not have a required field or a field is of incorrect type
+     * @throws CustomTemplateException if [argumentJson] contains fields with invalid values
+     */
+    private fun addFunctionArgument(
+        builder: CustomTemplate.FunctionBuilder,
+        key: String,
+        argumentJson: JSONObject,
+        typeString: String
+    ) {
+        val type = argumentTypeFromStringOrThrow(typeString)
+        when (type) {
+            BOOLEAN -> {
+                val value = argumentJson.getBoolean("value")
+                builder.booleanArgument(key, value)
             }
 
-            val type = argumentTypeFromStringOrThrow(typeString)
-            when (type) {
-                BOOLEAN -> {
-                    val value = argumentJson.getBoolean("value")
-                    builder.booleanArgument(key, value)
-                }
+            NUMBER -> {
+                val value = argumentJson.getDouble("value")
+                builder.doubleArgument(key, value)
+            }
 
-                NUMBER -> {
-                    val value = argumentJson.getDouble("value")
-                    builder.doubleArgument(key, value)
-                }
+            STRING -> {
+                val value = argumentJson.getString("value")
+                builder.stringArgument(key, value)
+            }
 
-                STRING -> {
-                    val value = argumentJson.getString("value")
-                    builder.stringArgument(key, value)
-                }
-
-                FILE -> {
-                    if (argumentJson.has("value")) {
-                        throw CustomTemplateException(
-                            "File arguments should not specify a value. Remove value from argument: \"$key\""
-                        )
-                    }
-
-                    builder.fileArgument(key)
-                }
-
-                ACTION -> {
+            FILE -> {
+                if (argumentJson.has("value")) {
                     throw CustomTemplateException(
-                        "Function templates cannot have action arguments. Remove argument: \"$key\""
+                        "File arguments should not specify a value. Remove value from argument: \"$key\""
                     )
                 }
+
+                builder.fileArgument(key)
+            }
+
+            ACTION -> {
+                throw CustomTemplateException(
+                    "Function templates cannot have action arguments. Remove argument: \"$key\""
+                )
             }
         }
     }

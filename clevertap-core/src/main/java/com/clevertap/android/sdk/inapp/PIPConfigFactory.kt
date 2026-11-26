@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import androidx.core.graphics.toColorInt
 import androidx.annotation.RestrictTo
+import org.json.JSONObject
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PIPConfigFactory {
@@ -36,65 +37,38 @@ internal object PIPConfigFactory {
             return null
         }
 
-        val media = inAppNotification.getInAppMediaForOrientation(Configuration.ORIENTATION_PORTRAIT)
-        if (media == null || media.mediaUrl.isBlank()) {
-            logger.debug(LOG_TAG, "No media found for PIP")
-            return null
-        }
-
-        val mediaType = when {
-            media.isVideo() -> PIPMediaType.VIDEO
-            media.isGIF() -> PIPMediaType.GIF
-            media.isImage() -> PIPMediaType.IMAGE
-            else -> {
-                logger.debug(LOG_TAG, "Unsupported media type: ${media.contentType}")
-                return null
-            }
-        }
+        val (media, mediaType) = resolvePipMedia(inAppNotification, logger) ?: return null
 
         // Accessibility: media alt text
         val contentDesc = media.contentDescription.takeIf { it.isNotBlank() }.orEmpty()
 
-        // Fallback URL from raw JSON media object
-        val rawMediaJson = inAppNotification.jsonDescription.optJSONObject("media")
-        val fallbackUrl = rawMediaJson?.optString("fallback_url", "")?.takeIf { it.isNotBlank() }
+        val fallbackUrl = parseFallbackUrl(inAppNotification)
 
-        // Position
-        val position = pipJson.optString("position", "").takeIf { it.isNotBlank() }
-            ?.let { mapPosition(it) } ?: PIPPosition.BOTTOM_RIGHT
+        val position = parsePosition(pipJson)
 
         // Margins (percentage of screen)
         val margins = pipJson.optJSONObject("margins")
-        val verticalMargin = margins?.optInt("vertical", PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT)
-            ?: PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT
-        val horizontalMargin = margins?.optInt("horizontal", PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT)
-            ?: PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT
+        val verticalMargin = optMarginPercent(margins, "vertical")
+        val horizontalMargin = optMarginPercent(margins, "horizontal")
 
         // Width
         val widthPercent = pipJson.optInt("width", PIPConfig.DEFAULT_WIDTH_PERCENT)
 
         // Aspect ratio
         val arJson = pipJson.optJSONObject("aspectRatio")
-        val arNum = arJson?.optDouble("numerator", PIPConfig.DEFAULT_ASPECT_RATIO_NUMERATOR)?.takeIf { it > 0.0 }
-            ?: PIPConfig.DEFAULT_ASPECT_RATIO_NUMERATOR
-        val arDen = arJson?.optDouble("denominator", PIPConfig.DEFAULT_ASPECT_RATIO_DENOMINATOR)?.takeIf { it > 0.0 }
-            ?: PIPConfig.DEFAULT_ASPECT_RATIO_DENOMINATOR
+        val arNum = optAspectRatioPart(arJson, "numerator", PIPConfig.DEFAULT_ASPECT_RATIO_NUMERATOR)
+        val arDen = optAspectRatioPart(arJson, "denominator", PIPConfig.DEFAULT_ASPECT_RATIO_DENOMINATOR)
 
         // Controls visibility
         val ctrl = pipJson.optJSONObject("controls")
-        val dragEnabled = ctrl?.optBoolean("drag", true) ?: true
-        val showPlayPause = ctrl?.optBoolean("playPause", true) ?: true
-        val showMute = ctrl?.optBoolean("mute", true) ?: true
-        val showExpandCollapse = ctrl?.optBoolean("expandCollapse", true) ?: true
+        val dragEnabled = optControlEnabled(ctrl, "drag")
+        val showPlayPause = optControlEnabled(ctrl, "playPause")
+        val showMute = optControlEnabled(ctrl, "mute")
+        val showExpandCollapse = optControlEnabled(ctrl, "expandCollapse")
 
-        // Animation
-        val animConfig = pipJson.optJSONObject("animation")?.let { mapAnimationConfig(it) }
-            ?: PIPAnimationConfig()
+        val animConfig = parseAnimationConfig(pipJson)
 
-        // Action
-        val action = pipJson.optJSONObject("onClick")
-            ?.let { CTInAppAction.createFromJson(it) }
-            ?.takeIf { it.type != null }
+        val action = parseAction(pipJson)
 
         // Corner radius
         val cornerRadiusDp = pipJson.optInt("cornerRadius", 0)
@@ -102,8 +76,7 @@ internal object PIPConfigFactory {
         // Border
         val borderJson = pipJson.optJSONObject("border")
         val borderEnabled = borderJson?.optBoolean("enabled", false) ?: false
-        val borderColor = borderJson?.optString("color", "")
-            ?.let { parseColor(it) } ?: Color.BLACK
+        val borderColor = parseBorderColor(borderJson)
         val borderWidthDp = borderJson?.optInt("width", 0) ?: 0
 
         // Close button: `close: true` in PIP JSON means show close button
@@ -141,19 +114,86 @@ internal object PIPConfigFactory {
         }
     }
 
-    private fun mapPosition(position: String): PIPPosition? {
-        return when (position.lowercase()) {
-            "top-left" -> PIPPosition.TOP_LEFT
-            "top-center" -> PIPPosition.TOP_CENTER
-            "top-right" -> PIPPosition.TOP_RIGHT
-            "center-left" -> PIPPosition.LEFT_CENTER
-            "center" -> PIPPosition.CENTER
-            "center-right" -> PIPPosition.RIGHT_CENTER
-            "bottom-left" -> PIPPosition.BOTTOM_LEFT
-            "bottom-center" -> PIPPosition.BOTTOM_CENTER
-            "bottom-right" -> PIPPosition.BOTTOM_RIGHT
-            else -> null
+    /**
+     * Returns the portrait media and its PIP media type, or `null` (after logging why) when there is
+     * no usable media or its type is not supported.
+     */
+    private fun resolvePipMedia(
+        inAppNotification: CTInAppNotification,
+        logger: ILogger
+    ): Pair<CTInAppNotificationMedia, PIPMediaType>? {
+        val media = inAppNotification.getInAppMediaForOrientation(Configuration.ORIENTATION_PORTRAIT)
+        if (media == null || media.mediaUrl.isBlank()) {
+            logger.debug(LOG_TAG, "No media found for PIP")
+            return null
         }
+
+        val mediaType = when {
+            media.isVideo() -> PIPMediaType.VIDEO
+            media.isGIF() -> PIPMediaType.GIF
+            media.isImage() -> PIPMediaType.IMAGE
+            else -> {
+                logger.debug(LOG_TAG, "Unsupported media type: ${media.contentType}")
+                return null
+            }
+        }
+        return media to mediaType
+    }
+
+    /** Fallback URL from raw JSON media object. */
+    private fun parseFallbackUrl(inAppNotification: CTInAppNotification): String? {
+        val rawMediaJson = inAppNotification.jsonDescription.optJSONObject("media")
+        return rawMediaJson?.optString("fallback_url", "")?.takeIf { it.isNotBlank() }
+    }
+
+    private fun parsePosition(pipJson: JSONObject): PIPPosition {
+        return pipJson.optString("position", "").takeIf { it.isNotBlank() }
+            ?.let { mapPosition(it) } ?: PIPPosition.BOTTOM_RIGHT
+    }
+
+    private fun parseAnimationConfig(pipJson: JSONObject): PIPAnimationConfig {
+        return pipJson.optJSONObject("animation")?.let { mapAnimationConfig(it) }
+            ?: PIPAnimationConfig()
+    }
+
+    private fun parseAction(pipJson: JSONObject): CTInAppAction? {
+        return pipJson.optJSONObject("onClick")
+            ?.let { CTInAppAction.createFromJson(it) }
+            ?.takeIf { it.type != null }
+    }
+
+    private fun parseBorderColor(borderJson: JSONObject?): Int {
+        return borderJson?.optString("color", "")
+            ?.let { parseColor(it) } ?: Color.BLACK
+    }
+
+    private fun optMarginPercent(margins: JSONObject?, key: String): Int {
+        return margins?.optInt(key, PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT)
+            ?: PIPConfig.DEFAULT_EDGE_MARGIN_PERCENT
+    }
+
+    private fun optAspectRatioPart(aspectRatio: JSONObject?, key: String, default: Double): Double {
+        return aspectRatio?.optDouble(key, default)?.takeIf { it > 0.0 } ?: default
+    }
+
+    private fun optControlEnabled(controls: JSONObject?, key: String): Boolean {
+        return controls?.optBoolean(key, true) ?: true
+    }
+
+    private val POSITIONS_BY_NAME = mapOf(
+        "top-left" to PIPPosition.TOP_LEFT,
+        "top-center" to PIPPosition.TOP_CENTER,
+        "top-right" to PIPPosition.TOP_RIGHT,
+        "center-left" to PIPPosition.LEFT_CENTER,
+        "center" to PIPPosition.CENTER,
+        "center-right" to PIPPosition.RIGHT_CENTER,
+        "bottom-left" to PIPPosition.BOTTOM_LEFT,
+        "bottom-center" to PIPPosition.BOTTOM_CENTER,
+        "bottom-right" to PIPPosition.BOTTOM_RIGHT,
+    )
+
+    private fun mapPosition(position: String): PIPPosition? {
+        return POSITIONS_BY_NAME[position.lowercase()]
     }
 
     private fun mapAnimationConfig(animJson: org.json.JSONObject): PIPAnimationConfig? {
@@ -172,15 +212,19 @@ internal object PIPConfigFactory {
             animJson.optString("bezier", ""),
         )
 
-        val moveInDirection = when (animJson.optString("moveInDirection", "").lowercase()) {
+        val moveInDirection = mapMoveInDirection(animJson.optString("moveInDirection", ""))
+
+        return PIPAnimationConfig(type, durationMs, interpolator, moveInDirection)
+    }
+
+    private fun mapMoveInDirection(direction: String): PIPAnimationConfig.MoveInDirection? {
+        return when (direction.lowercase()) {
             "left" -> PIPAnimationConfig.MoveInDirection.LEFT
             "right" -> PIPAnimationConfig.MoveInDirection.RIGHT
             "top" -> PIPAnimationConfig.MoveInDirection.TOP
             "bottom" -> PIPAnimationConfig.MoveInDirection.BOTTOM
             else -> null
         }
-
-        return PIPAnimationConfig(type, durationMs, interpolator, moveInDirection)
     }
 
     private fun mapEasing(easing: String, bezier: String): TimeInterpolator {

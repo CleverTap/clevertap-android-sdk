@@ -52,11 +52,7 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
      */
     @VisibleForTesting
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
-        // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
-        if (!Utils.areNamesNormalizedEqual(event.eventName, trigger.eventName)
-            && (event.profileAttrName == null ||
-                !Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))
-        ) {
+        if (!matchEventOrProfileAttrName(trigger, event)) {
             return false
         }
 
@@ -77,6 +73,16 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
         }
 
         return true
+    }
+
+    /**
+     * Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both
+     * profileAttrName's are not null and equal.
+     */
+    private fun matchEventOrProfileAttrName(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+        return Utils.areNamesNormalizedEqual(event.eventName, trigger.eventName)
+            || (event.profileAttrName != null &&
+                Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))
     }
 
     @WorkerThread
@@ -134,22 +140,36 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
      */
     @VisibleForTesting
     internal fun matchGeoRadius(event: EventAdapter, trigger: TriggerAdapter): Boolean {
-        if (event.userLocation != null && event.userLocation.isValid()) {
-            // GeoRadius conditions are OR-ed
-            for (i in 0 until trigger.geoRadiusCount) {
-                val triggerRadius = trigger.geoRadiusAtIndex(i)
-                val expected = Location("")
-                expected.latitude = triggerRadius!!.latitude
-                expected.longitude = triggerRadius.longitude
-
-                try {
-                    if (evaluateDistance(triggerRadius.radius, expected, event.userLocation)) {
-                        return true
-                    }
-                } catch (e: Exception) {
-                    Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")
-                }
+        val userLocation = event.userLocation
+        if (userLocation == null || !userLocation.isValid()) {
+            return false
+        }
+        // GeoRadius conditions are OR-ed
+        for (i in 0 until trigger.geoRadiusCount) {
+            if (matchGeoRadiusAtIndex(event = event, userLocation = userLocation, trigger = trigger, index = i)) {
+                return true
             }
+        }
+        return false
+    }
+
+    private fun matchGeoRadiusAtIndex(
+        event: EventAdapter,
+        userLocation: Location,
+        trigger: TriggerAdapter,
+        index: Int
+    ): Boolean {
+        val triggerRadius = trigger.geoRadiusAtIndex(index)
+        val expected = Location("")
+        expected.latitude = triggerRadius!!.latitude
+        expected.longitude = triggerRadius.longitude
+
+        try {
+            if (evaluateDistance(triggerRadius.radius, expected, userLocation)) {
+                return true
+            }
+        } catch (e: Exception) {
+            Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")
         }
         return false
     }
@@ -234,22 +254,28 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
                 actual.value
             )
 
-            expected.numberValue() != null -> {
-                val actualNumber =
-                    actual.numberValue()?.toDouble() ?: actual.stringValueCleaned()?.toDoubleOrNull()
-                    ?: return false
-                expected.numberValue()!!.toDouble() == actualNumber
-            }
+            expected.numberValue() != null -> expectedNumberEqualsActual(expected, actual)
 
-            actual.numberValue() != null -> {
-                val expectedNumber =
-                    expected.stringValueCleaned()?.toDoubleOrNull() ?: return false
-                actual.numberValue()!!.toDouble() == expectedNumber
-            }
+            actual.numberValue() != null -> actualNumberEqualsExpected(expected, actual)
 
             actual.stringValue() != null -> expected.stringValueCleaned() == actual.stringValueCleaned()
             else -> false
         }
+    }
+
+    /** Equality when [expected] holds a number; [actual] may be a number or a numeric string. */
+    private fun expectedNumberEqualsActual(expected: TriggerValue, actual: TriggerValue): Boolean {
+        val actualNumber =
+            actual.numberValue()?.toDouble() ?: actual.stringValueCleaned()?.toDoubleOrNull()
+            ?: return false
+        return expected.numberValue()!!.toDouble() == actualNumber
+    }
+
+    /** Equality when [actual] holds a number and [expected] does not; [expected] may be a numeric string. */
+    private fun actualNumberEqualsExpected(expected: TriggerValue, actual: TriggerValue): Boolean {
+        val expectedNumber =
+            expected.stringValueCleaned()?.toDoubleOrNull() ?: return false
+        return actual.numberValue()!!.toDouble() == expectedNumber
     }
 
     @VisibleForTesting
@@ -263,25 +289,33 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
             actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        expected.listValue()?.firstOrNull()?.let {
-            when (it) {
-                is String -> {
-                    it.toDoubleOrNull()
-                }
-
-                is Number -> {
-                    it.toDouble()
-                }
-
-                else -> null
-            }
-        }?.also { return if (isLessThan) { actualNumber < it } else { actualNumber > it } }
+        val expectedFirstListNumber = firstListElementAsDouble(expected)
+        if (expectedFirstListNumber != null) {
+            return compareLessThanGreaterThan(actualNumber, expectedFirstListNumber, isLessThan)
+        }
 
         val expectedNumber =
             expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        return if (isLessThan) { actualNumber < expectedNumber } else { actualNumber > expectedNumber }
+        return compareLessThanGreaterThan(actualNumber, expectedNumber, isLessThan)
+    }
+
+    /** The first element of [value]'s list as a double, or `null` if there is none or it is not numeric. */
+    private fun firstListElementAsDouble(value: TriggerValue): Double? {
+        return when (val first = value.listValue()?.firstOrNull()) {
+            is String -> first.toDoubleOrNull()
+            is Number -> first.toDouble()
+            else -> null
+        }
+    }
+
+    private fun compareLessThanGreaterThan(actual: Double, expected: Double, isLessThan: Boolean): Boolean {
+        return if (isLessThan) {
+            actual < expected
+        } else {
+            actual > expected
+        }
     }
 
     /**
@@ -299,24 +333,41 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
             actual.stringValue() != null && expected.stringValue() != null -> actual.stringValueCleaned()!!
                 .contains(expected.stringValueCleaned()!!)
 
-            expected.isList() && actual.stringValue() != null -> expected.listValueWithCleanedStringIfPresent()!!
-                .asSequence()
-                .filterNotNull()
-                .filterIsInstance<String>()
-                .any { actual.stringValueCleaned()!!.contains(it) }
+            expected.isList() && actual.stringValue() != null -> actualStringContainsAnyExpected(expected, actual)
 
-            expected.isList() && actual.isList() -> {
-                val actualSet = actual.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().toSet()
-                expected.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().any {
-                    actualSet.contains(it)
-                }
-            }
+            actual.isList() -> actualListContainsExpected(expected, actual)
 
-            actual.isList() && expected.stringValue() != null ->
+            else -> false
+        }
+    }
+
+    /** Contains-check for an [actual] list against an [expected] list or string. */
+    private fun actualListContainsExpected(expected: TriggerValue, actual: TriggerValue): Boolean {
+        return when {
+            expected.isList() -> actualListContainsAnyExpected(expected, actual)
+
+            expected.stringValue() != null ->
                 actual.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().toSet()
                     .contains(expected.stringValueCleaned())
 
             else -> false
+        }
+    }
+
+    /** `true` if the [actual] string contains any of the strings in the [expected] list. */
+    private fun actualStringContainsAnyExpected(expected: TriggerValue, actual: TriggerValue): Boolean {
+        return expected.listValueWithCleanedStringIfPresent()!!
+            .asSequence()
+            .filterNotNull()
+            .filterIsInstance<String>()
+            .any { actual.stringValueCleaned()!!.contains(it) }
+    }
+
+    /** `true` if the [actual] list contains any of the strings in the [expected] list. */
+    private fun actualListContainsAnyExpected(expected: TriggerValue, actual: TriggerValue): Boolean {
+        val actualSet = actual.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().toSet()
+        return expected.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().any {
+            actualSet.contains(it)
         }
     }
 
@@ -366,10 +417,10 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
     }
 
     private fun checkGivenElementEqualsAnyElementInList(list: List<*>, elementToCheckForEquality: Any?): Boolean {
-        when (elementToCheckForEquality) {
+        return when (elementToCheckForEquality) {
             is String -> {
                 // Check for equality in strings
-                return list.asSequence().filterIsInstance<String>()
+                list.asSequence().filterIsInstance<String>()
                     .any { it == elementToCheckForEquality.trim().lowercase() }
                         || list.asSequence().filterIsInstance<Number>()
                     .any { it.toDouble() == elementToCheckForEquality.trim().lowercase().toDoubleOrNull() }
@@ -378,18 +429,18 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
             is Number -> {
                 // Check for equality in numbers
                 val numberToCheck = elementToCheckForEquality.toDouble()
-                return list.asSequence().filterIsInstance<Number>().any { it.toDouble() == numberToCheck }
+                list.asSequence().filterIsInstance<Number>().any { it.toDouble() == numberToCheck }
                         || list.asSequence().filterIsInstance<String>()
                     .any { it.trim().lowercase().toDoubleOrNull() == numberToCheck }
             }
 
             is Boolean -> {
                 // Check for equality in booleans
-                return list.asSequence().filterIsInstance<String>().any { it == elementToCheckForEquality.toString() }
+                list.asSequence().filterIsInstance<String>().any { it == elementToCheckForEquality.toString() }
             }
             else -> {
                 // Handle other cases or return false if the type is not supported
-                return false
+                false
             }
         }
     }
