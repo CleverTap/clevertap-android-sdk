@@ -65,9 +65,9 @@ internal open class CTInboxController @WorkerThread constructor(
                 )
             }
             synchronized(ctLockManager.inboxControllerLock) {
-                val update = _deleteMessageWithId(message.messageId)
+                val update = deleteMessageWithId(message.messageId)
                 if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate()
+                    callbackManager.notifyInboxMessagesDidUpdate()
                 }
             }
             if (v2Dao != null) {
@@ -103,9 +103,9 @@ internal open class CTInboxController @WorkerThread constructor(
                 dbAdapter.addPendingDeletes(pendingRows, userId)
             }
             synchronized(ctLockManager.inboxControllerLock) {
-                val update = _deleteMessagesForIds(messageIDs)
+                val update = deleteMessagesForIds(messageIDs)
                 if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate()
+                    callbackManager.notifyInboxMessagesDidUpdate()
                 }
             }
             if (inboxDeleteCoordinator != null && v2Messages.isNotEmpty()) {
@@ -138,9 +138,9 @@ internal open class CTInboxController @WorkerThread constructor(
             // A null message failed inside the task in Java as well (logged by the executor).
             val message = checkNotNull(message) { "markReadInboxMessage: no message" }
             synchronized(ctLockManager.inboxControllerLock) {
-                val read = _markReadForMessageWithId(message.messageId)
+                val read = markReadForMessageWithId(message.messageId)
                 if (read) {
-                    callbackManager._notifyInboxMessagesDidUpdate()
+                    callbackManager.notifyInboxMessagesDidUpdate()
                 }
             }
             null
@@ -156,7 +156,7 @@ internal open class CTInboxController @WorkerThread constructor(
             synchronized(ctLockManager.inboxControllerLock) {
                 val read = _markReadForMessagesWithIds(messageIDs)
                 if (read) {
-                    callbackManager._notifyInboxMessagesDidUpdate()
+                    callbackManager.notifyInboxMessagesDidUpdate()
                 }
             }
             null
@@ -325,7 +325,7 @@ internal open class CTInboxController @WorkerThread constructor(
     }
 
     @AnyThread
-    fun _deleteMessageWithId(messageId: String?): Boolean {
+    fun deleteMessageWithId(messageId: String?): Boolean {
         val messageDAO = findMessageById(messageId) ?: return false
         synchronized(messagesLock) {
             messagesList.remove(messageDAO)
@@ -340,7 +340,7 @@ internal open class CTInboxController @WorkerThread constructor(
     }
 
     @AnyThread
-    fun _deleteMessagesForIds(messageIDs: List<String>): Boolean {
+    fun deleteMessagesForIds(messageIDs: List<String>): Boolean {
         val messageDAOList = messageIDs.mapNotNull { findMessageById(it) }
         if (messageDAOList.isEmpty()) {
             return false
@@ -359,7 +359,7 @@ internal open class CTInboxController @WorkerThread constructor(
     }
 
     @AnyThread
-    fun _markReadForMessageWithId(messageId: String?): Boolean {
+    fun markReadForMessageWithId(messageId: String?): Boolean {
         val messageDAO = findMessageById(messageId) ?: return false
 
         val isV2 = messageDAO.source == InboxMessageSource.V2
@@ -374,7 +374,7 @@ internal open class CTInboxController @WorkerThread constructor(
         }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         //  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
-        task.addOnSuccessListener { callbackManager._notifyInboxMessagesDidUpdate() }
+        task.addOnSuccessListener { callbackManager.notifyInboxMessagesDidUpdate() }
         task.addOnFailureListener { e -> Logger.d("Failed to update message read state for id:$messageId", e) }
 
         task.execute("RunMarkMessageRead", Callable<Void?> {
@@ -414,7 +414,7 @@ internal open class CTInboxController @WorkerThread constructor(
         }
 
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.addOnSuccessListener { callbackManager._notifyInboxMessagesDidUpdate() }
+        task.addOnSuccessListener { callbackManager.notifyInboxMessagesDidUpdate() }
         task.addOnFailureListener { e -> Logger.d("Failed to update message read state for ids:$messageIDs", e) }
 
         task.execute("RunMarkMessagesReadForIDs", Callable<Void?> {
@@ -473,7 +473,7 @@ internal open class CTInboxController @WorkerThread constructor(
                 }
             }
 
-            toDelete.forEach { _deleteMessageWithId(it.id) }
+            toDelete.forEach { deleteMessageWithId(it.id) }
         }
     }
 

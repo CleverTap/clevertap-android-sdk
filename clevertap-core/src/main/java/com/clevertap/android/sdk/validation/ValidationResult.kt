@@ -11,5 +11,5 @@ internal class ValidationResult(
     var errorDesc: String? = null
 ) {
 
-    var `object`: Any? = null
+    var value: Any? = null
 }

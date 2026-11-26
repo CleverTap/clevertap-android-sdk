@@ -17,9 +17,9 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseCallbackManager {
 
-    abstract fun _notifyInboxInitialized()
+    abstract fun notifyInboxInitialized()
 
-    abstract fun _notifyInboxMessagesDidUpdate()
+    abstract fun notifyInboxMessagesDidUpdate()
 
     internal abstract var failureFlushListener: FailureFlushListener?
 

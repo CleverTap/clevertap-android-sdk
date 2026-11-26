@@ -79,14 +79,14 @@ internal class InboxV2Response(
             val messages = response.getJSONArray(Constants.INBOX_V2_JSON_RESPONSE_KEY)
             logger.verbose(config.accountId, "InboxV2: ${messages.length()} message(s) in inbox_notifs_v2")
             logger.verbose(config.accountId, "InboxV2: processing messages from server $messages ")
-            _processInboxMessages(messages, source)
+            processInboxMessages(messages, source)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "InboxV2: Failed to parse response", t)
         }
     }
 
     @WorkerThread
-    private fun _processInboxMessages(messages: JSONArray, source: InboxV2DeliverySource) {
+    private fun processInboxMessages(messages: JSONArray, source: InboxV2DeliverySource) {
         synchronized(inboxControllerLock) {
             if (controllerManager.ctInboxController == null) {
                 controllerManager.initializeInboxSync()
@@ -96,7 +96,7 @@ internal class InboxV2Response(
             val updated = controller.processV2Response(parsed, source)
             logger.verbose(config.accountId, "InboxV2: applied — updated=$updated")
             if (updated) {
-                callbackManager._notifyInboxMessagesDidUpdate()
+                callbackManager.notifyInboxMessagesDidUpdate()
             }
         }
     }
