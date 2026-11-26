@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.response
 
 import android.content.Context
+import android.location.Location
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -10,6 +11,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
@@ -140,22 +142,26 @@ internal class DisplayUnitResponse(
             // Advanced-rule metadata bundle for local evaluation. Full replace, including an empty array
             // (the bundle is always the complete current set, so [] means "clear").
             if (response.has(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)) {
-                val ssArray = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)
-                val ndStore: NdStore? = stores.ndStore
-                if (ndStore != null && ssArray != null) {
-                    val meta = Utils.toJSONObjectList(ssArray)
-                    ndStore.storeServerSideNdMetaData(meta)
-                    logger.verbose(
-                        config.accountId,
-                        "${Constants.FEATURE_DISPLAY_UNIT}Stored ${meta.size} ND SS metadata entries",
-                    )
-                }
+                storeSsMetaData(response = response, stores = stores)
             }
             // Note: App-Launched CG-suppression acks are raised in the content pass (deliverContent →
             // appLaunchedWithinWhenLimits), gated on the same whenLimits as real content so the CG arm is
             // counted only when the campaign would actually have shown.
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to process ND meta", t)
+        }
+    }
+
+    private fun storeSsMetaData(response: JSONObject, stores: StoreRegistry) {
+        val ssArray = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)
+        val ndStore: NdStore? = stores.ndStore
+        if (ndStore != null && ssArray != null) {
+            val meta = Utils.toJSONObjectList(ssArray)
+            ndStore.storeServerSideNdMetaData(meta)
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Stored ${meta.size} ND SS metadata entries",
+            )
         }
     }
 
@@ -227,8 +233,13 @@ internal class DisplayUnitResponse(
         }
 
         // Frequency-cap gate FIRST — caps are applied to the new content before any content-fetch merge.
-        // Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores).
-        val gated = ArrayList(
+        val gated = applyFcapGate(parsed)
+        writeToCache(cache = cache, gated = gated, source = source)
+    }
+
+    /** Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores). */
+    private fun applyFcapGate(parsed: List<CleverTapDisplayUnit>): ArrayList<CleverTapDisplayUnit> {
+        return ArrayList(
             if (storeRegistry == null) {
                 parsed
             } else {
@@ -240,7 +251,13 @@ internal class DisplayUnitResponse(
                 )
             },
         )
+    }
 
+    private fun writeToCache(
+        cache: DisplayUnitCache,
+        gated: ArrayList<CleverTapDisplayUnit>,
+        source: CTResponseSource,
+    ) {
         // A /content re-feed carries only the personalized subset of display units. The cache is a REPLACE,
         // so applying the subset as-is would wipe the units delivered by /a1. Merge the (already cap-filtered)
         // subset by unitID into the current set instead; /a1 stays authoritative and keeps REPLACE. Skip
@@ -318,6 +335,47 @@ internal class DisplayUnitResponse(
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
         val content = ArrayList<JSONObject>()
         val cgStubs = ArrayList<JSONObject>()
+        splitCgStubs(appLaunched = appLaunched, content = content, cgStubs = cgStubs)
+        val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
+
+        // The `App Launched` event the batch is evaluated against — properties + location sourced exactly as
+        // in-app does (InAppController.onAppLaunchServerSideInAppsResponse): appLaunchedFields + user location.
+        // Guarded: a malformed appLaunchedFields must not abort content delivery.
+        val eventProperties = readAppLaunchedEventProperties()
+        val userLocation = try { coreMetaData?.locationFromUser } catch (t: Throwable) { null }
+
+        // 1. Cap-filter content AND CG stubs by whenTriggers + whenLimits. Fail-closed on a malformed rule
+        //    (drop that set — it can't be cap-checked) but contained so regular `adUnit_notifs` still delivers.
+        val eligibleContent = retainWithinLimits(
+            evaluator = evaluator,
+            units = content,
+            eventProperties = eventProperties,
+            userLocation = userLocation,
+            failureMessage = "ND App-Launched whenLimits filter failed; dropping content",
+        )
+        val eligibleStubs = retainWithinLimits(
+            evaluator = evaluator,
+            units = cgStubs,
+            eventProperties = eventProperties,
+            userLocation = userLocation,
+            failureMessage = "ND App-Launched whenLimits filter failed for CG stubs",
+        )
+
+        // 2. Priority arbitration: deliver all ties at the top priority band; ack only the CG stubs that
+        //    would have shown (in the reached bands). Mirrors the server's priority-flag-ON behaviour.
+        val selection = evaluator.selectTopPriorityBand(content = eligibleContent, stubs = eligibleStubs)
+
+        // 3. Ack the would-have-shown CG stubs. Fully guarded (recordCgSuppressed writes SharedPreferences).
+        if (selection.cgAcks.isNotEmpty()) {
+            ackCgStubs(evaluator = evaluator, cgAcks = selection.cgAcks)
+        }
+
+        // 4. Winners + remaining global-budget trim.
+        return trimToGlobalCap(selection.winners)
+    }
+
+    /** Splits the App-Launched batch into deliverable [content] and CG-suppression [cgStubs], in order. */
+    private fun splitCgStubs(appLaunched: JSONArray, content: MutableList<JSONObject>, cgStubs: MutableList<JSONObject>) {
         for (i in 0 until appLaunched.length()) {
             val entry = appLaunched.optJSONObject(i) ?: continue
             if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
@@ -326,12 +384,10 @@ internal class DisplayUnitResponse(
                 content.add(entry)
             }
         }
-        val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
+    }
 
-        // The `App Launched` event the batch is evaluated against — properties + location sourced exactly as
-        // in-app does (InAppController.onAppLaunchServerSideInAppsResponse): appLaunchedFields + user location.
-        // Guarded: a malformed appLaunchedFields must not abort content delivery.
-        val eventProperties: Map<String, Any> = try {
+    private fun readAppLaunchedEventProperties(): Map<String, Any> {
+        return try {
             deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) }.orEmpty()
         } catch (t: Throwable) {
             logger.verbose(
@@ -341,62 +397,44 @@ internal class DisplayUnitResponse(
             )
             emptyMap()
         }
-        val userLocation = try { coreMetaData?.locationFromUser } catch (t: Throwable) { null }
+    }
 
-        // 1. Cap-filter content AND CG stubs by whenTriggers + whenLimits. Fail-closed on a malformed rule
-        //    (drop that set — it can't be cap-checked) but contained so regular `adUnit_notifs` still delivers.
-        val eligibleContent = if (content.isEmpty()) {
+    /**
+     * Cap-filters [units] by whenTriggers + whenLimits. Fail-closed: if the filter throws, logs
+     * [failureMessage] and drops the whole set.
+     */
+    private fun retainWithinLimits(
+        evaluator: NdEvaluationManager,
+        units: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?,
+        failureMessage: String,
+    ): List<JSONObject> {
+        if (units.isEmpty()) {
+            return emptyList()
+        }
+        return try {
+            evaluator.retainAppLaunchedWithinLimits(
+                content = units,
+                eventProperties = eventProperties,
+                userLocation = userLocation
+            )
+        } catch (t: Throwable) {
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}$failureMessage",
+                t
+            )
             emptyList()
-        } else {
-            try {
-                evaluator.retainAppLaunchedWithinLimits(
-                    content = content,
-                    eventProperties = eventProperties,
-                    userLocation = userLocation
-                )
-            } catch (t: Throwable) {
-                logger.verbose(
-                    config.accountId,
-                    "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content",
-                    t
-                )
-                emptyList()
-            }
         }
-        val eligibleStubs = if (cgStubs.isEmpty()) {
-            emptyList()
-        } else {
-            try {
-                evaluator.retainAppLaunchedWithinLimits(
-                    content = cgStubs,
-                    eventProperties = eventProperties,
-                    userLocation = userLocation
-                )
-            } catch (t: Throwable) {
-                logger.verbose(
-                    config.accountId,
-                    "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs",
-                    t
-                )
-                emptyList()
-            }
+    }
+
+    private fun ackCgStubs(evaluator: NdEvaluationManager, cgAcks: List<JSONObject>) {
+        try {
+            cgAcks.forEach { evaluator.recordCgSuppressed(it) }
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG ack failed; skipping acks", t)
         }
-
-        // 2. Priority arbitration: deliver all ties at the top priority band; ack only the CG stubs that
-        //    would have shown (in the reached bands). Mirrors the server's priority-flag-ON behaviour.
-        val selection = evaluator.selectTopPriorityBand(content = eligibleContent, stubs = eligibleStubs)
-
-        // 3. Ack the would-have-shown CG stubs. Fully guarded (recordCgSuppressed writes SharedPreferences).
-        if (selection.cgAcks.isNotEmpty()) {
-            try {
-                selection.cgAcks.forEach { evaluator.recordCgSuppressed(it) }
-            } catch (t: Throwable) {
-                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG ack failed; skipping acks", t)
-            }
-        }
-
-        // 4. Winners + remaining global-budget trim.
-        return trimToGlobalCap(selection.winners)
     }
 
     /**
@@ -428,24 +466,28 @@ internal class DisplayUnitResponse(
     private fun parseDisplayUnitsFromJson(messages: JSONArray): List<CleverTapDisplayUnit> {
         val list = ArrayList<CleverTapDisplayUnit>()
         for (i in 0 until messages.length()) {
-            try {
-                val json = messages.getJSONObject(i)
-                val unit = CleverTapDisplayUnit.toDisplayUnit(json)
-                if (unit.error.isNullOrEmpty()) {
-                    list.add(unit)
-                } else {
-                    logger.verbose(
-                        config.accountId,
-                        "${Constants.FEATURE_DISPLAY_UNIT}Failed to convert JsonArray item at index:$i to Display Unit",
-                    )
-                }
-            } catch (e: Exception) {
-                logger.verbose(
-                    config.accountId,
-                    "${Constants.FEATURE_DISPLAY_UNIT}Failed to parse Display Unit at index $i: ${e.localizedMessage}",
-                )
-            }
+            addDisplayUnit(messages = messages, index = i, list = list)
         }
         return list
+    }
+
+    private fun addDisplayUnit(messages: JSONArray, index: Int, list: MutableList<CleverTapDisplayUnit>) {
+        try {
+            val json = messages.getJSONObject(index)
+            val unit = CleverTapDisplayUnit.toDisplayUnit(json)
+            if (unit.error.isNullOrEmpty()) {
+                list.add(unit)
+            } else {
+                logger.verbose(
+                    config.accountId,
+                    "${Constants.FEATURE_DISPLAY_UNIT}Failed to convert JsonArray item at index:$index to Display Unit",
+                )
+            }
+        } catch (e: Exception) {
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to parse Display Unit at index $index: ${e.localizedMessage}",
+            )
+        }
     }
 }

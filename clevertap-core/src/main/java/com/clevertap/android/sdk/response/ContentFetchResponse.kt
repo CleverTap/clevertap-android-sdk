@@ -30,38 +30,47 @@ internal class ContentFetchResponse(
     ) {
         logger.verbose(config.accountId, "Processing Content Fetch response...")
 
+        val body = processableBodyOrNull(jsonBody = jsonBody, responseContext = responseContext) ?: return
+
+        try {
+            logger.verbose(config.accountId, "Processing Content Fetch response")
+            val contentFetchArray = body.getJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)
+            processContentFetchItems(contentFetchArray, context)
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "Failed to parse content fetch response", t)
+        }
+    }
+
+    /**
+     * Returns [jsonBody] if it carries a content_fetch directive this instance should act on,
+     * otherwise logs why it is skipped and returns null.
+     */
+    private fun processableBodyOrNull(jsonBody: JSONObject?, responseContext: ResponseContext): JSONObject? {
         // Recursion guard: a /content response is re-fed through this same decorator chain. A
         // content_fetch nested inside it would trigger another fetch, unbounded. Only /a1 may open
         // a fetch.
         if (responseContext.source == CTResponseSource.CONTENT_FETCH) {
             logger.verbose(config.accountId,
                            "Ignoring content_fetch from a content fetch response (recursion guard)")
-            return
+            return null
         }
 
         if (config.isAnalyticsOnly) {
             logger.verbose(config.accountId,
                            "CleverTap instance is configured to analytics only, not processing Content Fetch response")
-            return
+            return null
         }
 
         if (jsonBody == null) {
             logger.verbose(config.accountId, "Can't parse Content Fetch Response, JSON response object is null")
-            return
+            return null
         }
 
         if (!jsonBody.has(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)) {
             logger.verbose(config.accountId, "JSON object doesn't contain the content_fetch key")
-            return
+            return null
         }
-
-        try {
-            logger.verbose(config.accountId, "Processing Content Fetch response")
-            val contentFetchArray = jsonBody.getJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)
-            processContentFetchItems(contentFetchArray, context)
-        } catch (t: Throwable) {
-            logger.verbose(config.accountId, "Failed to parse content fetch response", t)
-        }
+        return jsonBody
     }
 
     private fun processContentFetchItems(contentFetchArray: JSONArray, context: Context) {
