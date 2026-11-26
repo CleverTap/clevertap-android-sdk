@@ -174,32 +174,26 @@ open class CTInboxMessage : Parcelable {
             this._expires = if (jsonObject.has(Constants.KEY_WZRK_TTL)) jsonObject.getLong(Constants.KEY_WZRK_TTL)
             else System.currentTimeMillis() + 1000 * 60 * 60 * 24
             this.read = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ)
-            val tagsArray = if (jsonObject.has(Constants.KEY_TAGS)) jsonObject.getJSONArray(Constants.KEY_TAGS)
-            else null
-            if (tagsArray != null) {
+            if (jsonObject.has(Constants.KEY_TAGS)) {
+                val tagsArray = jsonObject.getJSONArray(Constants.KEY_TAGS)
                 for (i in 0 until tagsArray.length()) {
                     this._tags.add(tagsArray.getString(i))
                 }
             }
-            val cellObject = if (jsonObject.has(Constants.KEY_MSG)) jsonObject.getJSONObject(Constants.KEY_MSG)
-            else null
-            if (cellObject != null) {
+            if (jsonObject.has(Constants.KEY_MSG)) {
+                val cellObject = jsonObject.getJSONObject(Constants.KEY_MSG)
                 this._type = if (cellObject.has(Constants.KEY_TYPE)) CTInboxMessageType
                     .fromString(cellObject.getString(Constants.KEY_TYPE)) else CTInboxMessageType.fromString("")
                 this._bgColor = if (cellObject.has(Constants.KEY_BG)) cellObject.getString(Constants.KEY_BG) else ""
-                val contentArray = if (cellObject.has(Constants.KEY_CONTENT)) cellObject
-                    .getJSONArray(Constants.KEY_CONTENT) else null
-                if (contentArray != null) {
+                if (cellObject.has(Constants.KEY_CONTENT)) {
+                    val contentArray = cellObject.getJSONArray(Constants.KEY_CONTENT)
                     for (i in 0 until contentArray.length()) {
-                        val ctInboxMessageContent = CTInboxMessageContent()
-                            .initWithJSON(contentArray.getJSONObject(i))
-                        this._inboxMessageContents.add(ctInboxMessageContent)
+                        this._inboxMessageContents.add(CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i)))
                     }
                 }
 
-                val customKVJsonArray: JSONArray? = if (cellObject.has(Constants.KEY_CUSTOM_KV)) cellObject
-                    .getJSONArray(Constants.KEY_CUSTOM_KV) else null
-                if (customKVJsonArray != null) {
+                if (cellObject.has(Constants.KEY_CUSTOM_KV)) {
+                    val customKVJsonArray = cellObject.getJSONArray(Constants.KEY_CUSTOM_KV)
                     for (i in 0 until customKVJsonArray.length()) {
                         val customKVJSONObject = customKVJsonArray.getJSONObject(i)
                         if (customKVJSONObject.has(Constants.KEY_KEY)) {
@@ -218,7 +212,7 @@ open class CTInboxMessage : Parcelable {
             this._wzrkParams = if (jsonObject.has(Constants.KEY_WZRK_PARAMS)) jsonObject
                 .getJSONObject(Constants.KEY_WZRK_PARAMS) else null
         } catch (e: JSONException) {
-            Logger.v("Unable to init CTInboxMessage with JSON - " + e.localizedMessage)
+            Logger.v("Unable to init CTInboxMessage with JSON - ${e.localizedMessage}")
         }
     }
 
@@ -236,10 +230,10 @@ open class CTInboxMessage : Parcelable {
             _expires = `in`.readLong()
             _messageId = `in`.readString() ?: _messageId
             if (`in`.readByte().toInt() != 0x00) {
-                _data = JSONObject(`in`.readString()!!)
+                _data = JSONObject(`in`.readNonNullString())
             }
             if (`in`.readByte().toInt() != 0x00) {
-                _customData = JSONObject(`in`.readString()!!)
+                _customData = JSONObject(`in`.readNonNullString())
             }
             read = `in`.readByte().toInt() != 0x00
             _type = `in`.readValue(CTInboxMessageType::class.java.classLoader) as CTInboxMessageType?
@@ -254,34 +248,28 @@ open class CTInboxMessage : Parcelable {
             }
             _orientation = `in`.readString()
             _campaignId = `in`.readString()
-            _wzrkParams = if (`in`.readByte().toInt() == 0x00) null else JSONObject(`in`.readString()!!)
+            _wzrkParams = if (`in`.readByte().toInt() == 0x00) null else JSONObject(`in`.readNonNullString())
         } catch (e: JSONException) {
-            Logger.v("Unable to parse CTInboxMessage from parcel - " + e.localizedMessage)
+            Logger.v("Unable to parse CTInboxMessage from parcel - ${e.localizedMessage}")
         }
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     /**
      * Returns an ArrayList of CTInboxMessageData(url, contentDescription) of the Carousel Images
      *
      * @return ArrayList of CTInboxImageData
      */
-    open fun getCarouselImagesData(): ArrayList<CTInboxImageData> {
-        val carouselImages = ArrayList<CTInboxImageData>()
-        for (ctInboxMessageContent in getInboxMessageContents()) {
-            carouselImages.add(
-                // CTInboxImageData takes non-null values; a null here threw from Java as well.
-                CTInboxImageData(
-                    ctInboxMessageContent.getMedia()!!,
-                    ctInboxMessageContent.getMediaContentDescription()!!
-                )
+    open fun getCarouselImagesData(): ArrayList<CTInboxImageData> =
+        getInboxMessageContents().mapTo(ArrayList()) { content ->
+            // CTInboxImageData takes non-null values; Java callers got this NullPointerException too.
+            CTInboxImageData(
+                content.getMedia() ?: throw NullPointerException("Carousel content without media"),
+                content.getMediaContentDescription()
+                    ?: throw NullPointerException("Carousel content without media alt text")
             )
         }
-        return carouselImages
-    }
 
     /** Kotlin property syntax, equivalent to [getCarouselImagesData]. */
     val carouselImagesData: ArrayList<CTInboxImageData>
@@ -292,13 +280,7 @@ open class CTInboxMessage : Parcelable {
      *
      * @return ArrayList of Strings
      */
-    open fun getCarouselImages(): ArrayList<String?> {
-        val carouselImages = ArrayList<String?>()
-        for (ctInboxMessageContent in getInboxMessageContents()) {
-            carouselImages.add(ctInboxMessageContent.getMedia())
-        }
-        return carouselImages
-    }
+    open fun getCarouselImages(): ArrayList<String?> = getInboxMessageContents().mapTo(ArrayList()) { it.getMedia() }
 
     /** Kotlin property syntax, equivalent to [getCarouselImages]. */
     val carouselImages: ArrayList<String?>
@@ -309,17 +291,13 @@ open class CTInboxMessage : Parcelable {
      *
      * @return JSONObject of wzrk_* parameters
      */
-    open fun getWzrkParams(): JSONObject {
-        return _wzrkParams ?: JSONObject()
-    }
+    open fun getWzrkParams(): JSONObject = _wzrkParams ?: JSONObject()
 
     /** Kotlin property syntax, equivalent to [getWzrkParams]. */
     val wzrkParams: JSONObject
         @JvmSynthetic @JvmName("ktGetWzrkParams") inline get() = getWzrkParams()
 
-    open fun isRead(): Boolean {
-        return read
-    }
+    open fun isRead(): Boolean = read
 
     /** Kotlin property syntax, equivalent to [isRead]. */
     val isRead: Boolean
@@ -359,22 +337,20 @@ open class CTInboxMessage : Parcelable {
         }
     }
 
+    /** A string this class wrote behind a 0x01 flag; Java handed a null one to JSONObject, which threw. */
+    private fun Parcel.readNonNullString(): String =
+        readString() ?: throw NullPointerException("Malformed CTInboxMessage parcel")
+
     companion object {
 
         @JvmField
         val CREATOR: Parcelable.Creator<CTInboxMessage> = object : Parcelable.Creator<CTInboxMessage> {
-            override fun createFromParcel(`in`: Parcel): CTInboxMessage {
-                return CTInboxMessage(`in`)
-            }
+            override fun createFromParcel(`in`: Parcel): CTInboxMessage = CTInboxMessage(`in`)
 
-            override fun newArray(size: Int): Array<CTInboxMessage?> {
-                return arrayOfNulls(size)
-            }
+            override fun newArray(size: Int): Array<CTInboxMessage?> = arrayOfNulls(size)
         }
 
         @JvmStatic
-        fun getCREATOR(): Parcelable.Creator<CTInboxMessage> {
-            return CREATOR
-        }
+        fun getCREATOR(): Parcelable.Creator<CTInboxMessage> = CREATOR
     }
 }

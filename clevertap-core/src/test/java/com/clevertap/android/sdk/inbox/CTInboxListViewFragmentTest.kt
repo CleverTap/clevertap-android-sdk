@@ -225,7 +225,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didClick_with_out_of_range_position_is_a_silent_noop() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         // Positions that a stale click could deliver after a list refresh
@@ -238,7 +238,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didClick_with_empty_list_does_not_throw() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
 
         ctInboxListViewFragmentSpy.didClick(null, 0, 0, null, Constants.APP_INBOX_ITEM_INDEX)
 
@@ -248,7 +248,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_didShow_forwards_the_exact_message_to_the_listener() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.listener = listener
         val message = CTInboxMessage(jsonObj)
 
         ctInboxListViewFragmentSpy.didShow(null, message)

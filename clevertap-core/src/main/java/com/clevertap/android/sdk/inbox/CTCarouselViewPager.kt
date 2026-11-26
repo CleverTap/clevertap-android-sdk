@@ -88,19 +88,17 @@ internal open class CTCarouselViewPager : ViewPager {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        var heightSpec = heightMeasureSpec
-        var height = 0
+        var tallestChild = 0
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-            val h = child.measuredHeight
-            if (h > height) {
-                height = h
-            }
+            tallestChild = maxOf(tallestChild, child.measuredHeight)
         }
 
-        if (height != 0) {
-            heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        val heightSpec = if (tallestChild != 0) {
+            MeasureSpec.makeMeasureSpec(tallestChild, MeasureSpec.EXACTLY)
+        } else {
+            heightMeasureSpec
         }
 
         super.onMeasure(widthMeasureSpec, heightSpec)

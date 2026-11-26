@@ -14,20 +14,14 @@ internal open class CTInboxTabAdapter(fm: FragmentManager, size: Int) :
 
     private val fragmentList: Array<Fragment?> = arrayOfNulls(size)
 
-    private val fragmentTitleList: MutableList<String?> = ArrayList()
+    private val fragmentTitleList = mutableListOf<String?>()
 
-    override fun getCount(): Int {
-        return fragmentList.size
-    }
+    override fun getCount(): Int = fragmentList.size
 
-    override fun getItem(position: Int): Fragment {
-        // Every slot is filled through addFragment() before the adapter is attached.
-        return fragmentList[position]!!
-    }
+    override fun getItem(position: Int): Fragment =
+        checkNotNull(fragmentList[position]) { "Every slot is filled through addFragment() before the adapter is attached" }
 
-    override fun getPageTitle(position: Int): CharSequence? {
-        return fragmentTitleList[position]
-    }
+    override fun getPageTitle(position: Int): CharSequence? = fragmentTitleList[position]
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         val ret = super.instantiateItem(container, position)

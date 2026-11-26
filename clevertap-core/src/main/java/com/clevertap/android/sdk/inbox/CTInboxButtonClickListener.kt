@@ -11,88 +11,49 @@ import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_CONTENT_PAGE_INDEX
 import org.json.JSONObject
 
 /**
- * Custom OnClickListener to handle both "onMessage" and "onLink" clicks
+ * Custom OnClickListener to handle both "onMessage" and "onLink" clicks.
+ *
+ * With a [viewPager] (carousels) a click opens the page on screen; otherwise it is a button click
+ * when [buttonText] and [buttonObject] are given, and a message body click when they are not.
  */
-internal class CTInboxButtonClickListener : View.OnClickListener {
-
-    private var buttonObject: JSONObject? = null
-
-    private val buttonText: String?
-
-    private val fragment: CTInboxListViewFragment?
-
-    private val inboxMessage: CTInboxMessage
-
-    private val position: Int
-
-    private var viewPager: ViewPager? = null
-
-    private val isBodyClick: Boolean
-
-    private val buttonIndex: Int
-
-    constructor(
-        position: Int, inboxMessage: CTInboxMessage, buttonText: String?, jsonObject: JSONObject?,
-        fragment: CTInboxListViewFragment?, isInboxMessageBodyClick: Boolean, buttonIndex: Int
-    ) {
-        this.position = position
-        this.inboxMessage = inboxMessage
-        this.buttonText = buttonText
-        this.fragment = fragment // be sure to pass this as a Weak Ref
-        this.buttonObject = jsonObject
-        this.isBodyClick = isInboxMessageBodyClick
-        this.buttonIndex = buttonIndex
-    }
-
-    constructor(
-        position: Int, inboxMessage: CTInboxMessage, buttonText: String?,
-        fragment: CTInboxListViewFragment?, viewPager: ViewPager?, isInboxMessageBodyClick: Boolean, buttonIndex: Int
-    ) {
-        this.position = position
-        this.inboxMessage = inboxMessage
-        this.buttonText = buttonText
-        this.fragment = fragment // be sure to pass this as a Weak Ref
-        this.viewPager = viewPager
-        this.isBodyClick = isInboxMessageBodyClick
-        this.buttonIndex = buttonIndex
-    }
+internal class CTInboxButtonClickListener(
+    private val position: Int,
+    private val inboxMessage: CTInboxMessage,
+    private val fragment: CTInboxListViewFragment?, // be sure to pass this as a Weak Ref
+    private val buttonIndex: Int,
+    private val buttonText: String? = null,
+    private val buttonObject: JSONObject? = null,
+    private val viewPager: ViewPager? = null
+) : View.OnClickListener {
 
     override fun onClick(v: View) {
-        val viewPager = viewPager
+        val fragment = fragment ?: return
         if (viewPager != null) { //Handles viewpager clicks
-            if (fragment != null) {
-                fragment.handleViewPagerClick(position, viewPager.currentItem)
-            }
-        } else { //Handles item and button clicks for non-carousel templates
-            val buttonObject = buttonObject
-            if (buttonText != null && buttonObject != null) {
-                if (fragment != null) {
-                    if (inboxMessage.inboxMessageContents[0].getLinktype(buttonObject)!!
-                            .equals(Constants.COPY_TYPE, ignoreCase = true)
-                    ) { //Copy to clipboard feature
-                        if (fragment.activity != null) {
-                            copyToClipboard(fragment.activity!!)
-                        }
-                    }
-
-                    fragment.handleClick(
-                        this.position,
-                        APP_INBOX_ITEM_CONTENT_PAGE_INDEX,
-                        buttonText,
-                        buttonObject,
-                        getKeyValues(inboxMessage),
-                        buttonIndex
-                    )
-                }
-            } else {
-                if (fragment != null) {
-                    fragment.handleClick(this.position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX, null, null, null, buttonIndex)
-                }
-            }
+            fragment.handleViewPagerClick(position, viewPager.currentItem)
+            return
         }
+        //Handles item and button clicks for non-carousel templates
+        if (buttonText == null || buttonObject == null) {
+            fragment.handleClick(position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX, null, null, null, buttonIndex)
+            return
+        }
+        // A link without a readable type threw from Java as well.
+        val linkType = checkNotNull(inboxMessage.inboxMessageContents[0].getLinktype(buttonObject))
+        if (linkType.equals(Constants.COPY_TYPE, ignoreCase = true)) { //Copy to clipboard feature
+            fragment.activity?.let { copyToClipboard(it, buttonObject) }
+        }
+
+        fragment.handleClick(
+            position,
+            APP_INBOX_ITEM_CONTENT_PAGE_INDEX,
+            buttonText,
+            buttonObject,
+            keyValues(buttonObject),
+            buttonIndex
+        )
     }
 
-    private fun copyToClipboard(context: Context) {
+    private fun copyToClipboard(context: Context, buttonObject: JSONObject) {
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
         val clipData = ClipData.newPlainText(
             buttonText,
@@ -104,20 +65,13 @@ internal class CTInboxButtonClickListener : View.OnClickListener {
         }
     }
 
-    /**
-     * Returns Custom Key Value pairs if present in the payload
-     *
-     * @param inboxMessage - InboxMessage object
-     * @return HashMap<String, String>
-     */
-    private fun getKeyValues(inboxMessage: CTInboxMessage?): HashMap<String, String>? {
-        // inboxMessageContents and its elements are non-null in Kotlin; the Java null checks on
-        // them are folded away.
-        if (inboxMessage != null &&
-            Constants.KEY_KV.equals(inboxMessage.inboxMessageContents[0].getLinktype(buttonObject), ignoreCase = true)
-        ) {
-            return inboxMessage.inboxMessageContents[0].getLinkKeyValue(buttonObject)
+    /** Custom key value pairs of the button, if it is a key-value link. */
+    private fun keyValues(buttonObject: JSONObject): HashMap<String, String>? {
+        val content = inboxMessage.inboxMessageContents[0]
+        return if (Constants.KEY_KV.equals(content.getLinktype(buttonObject), ignoreCase = true)) {
+            content.getLinkKeyValue(buttonObject)
+        } else {
+            null
         }
-        return null
     }
 }

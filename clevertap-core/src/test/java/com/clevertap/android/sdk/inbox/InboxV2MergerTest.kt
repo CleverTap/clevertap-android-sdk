@@ -15,7 +15,7 @@ class InboxV2MergerTest {
     }.apply {
         this.id = id
         this.expires = expires
-        setRead(read)
+        isRead = read
     }
 
     private fun videoDaoFor(

@@ -43,17 +43,24 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
         fun messageDidShow(ctInboxActivity: CTInboxActivity?, inboxMessage: CTInboxMessage?, data: Bundle?)
     }
 
-    internal var inboxTabAdapter: CTInboxTabAdapter? = null
-
     internal var styleConfig: CTInboxStyleConfig? = null
-
-    internal var tabLayout: TabLayout? = null
-
-    internal var viewPager: ViewPager? = null
 
     private var config: CleverTapInstanceConfig? = null
 
-    private var listenerWeakReference: WeakReference<InboxActivityListener>? = null
+    private var listenerWeakReference = WeakReference<InboxActivityListener>(null)
+
+    /** Reading it logs when no listener is attached (or it has been garbage collected). */
+    internal var listener: InboxActivityListener?
+        get() = listenerWeakReference.get().also {
+            if (it == null) {
+                // Only the lists read this, and they exist only once onCreate has set the config.
+                val config = checkNotNull(config) { "CTInboxActivity has no config" }
+                config.logger.verbose(config.accountId, "InboxActivityListener is null for notification inbox ")
+            }
+        }
+        set(value) {
+            listenerWeakReference = WeakReference(value)
+        }
 
     private var cleverTapAPI: CleverTapAPI? = null
 
@@ -72,9 +79,7 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState != null) {
-            videoStates.restore(savedInstanceState.getBundle(VIDEO_STATES_KEY))
-        }
+        savedInstanceState?.let { videoStates.restore(it.getBundle(VIDEO_STATES_KEY)) }
         try {
             val extras = intent.extras ?: throw IllegalArgumentException()
             @Suppress("DEPRECATION")
@@ -84,13 +89,15 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
                 @Suppress("DEPRECATION")
                 config = configBundle.getParcelable("config")
             }
-            val cleverTapAPI = instanceWithConfig(applicationContext, config)
-            this.cleverTapAPI = cleverTapAPI
-            if (cleverTapAPI != null) {
-                setListener(cleverTapAPI)
+            val config = config
+            val instance = instanceWithConfig(applicationContext, config)
+            cleverTapAPI = instance
+            // a non-null instance implies a non-null config
+            if (instance != null && config != null) {
+                listener = instance
                 pushPermissionHandler = PushPermissionHandler(
-                    config!!, // a non-null instance implies a non-null config
-                    cleverTapAPI.coreState.callbackManager.pushPermissionResponseListenerList
+                    config,
+                    instance.coreState.callbackManager.pushPermissionResponseListenerList
                 )
             }
             orientation = resources.configuration.orientation
@@ -101,19 +108,19 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
 
         setContentView(R.layout.inbox_activity)
 
-        val coreMetaData = cleverTapAPI!!.coreState.coreMetaData
-        coreMetaData.appInboxActivity = this
+        // Java dereferenced these without a check: the screen cannot run without them.
+        val cleverTapAPI = checkNotNull(cleverTapAPI) { "No CleverTap instance for the inbox" }
+        cleverTapAPI.coreState.coreMetaData.appInboxActivity = this
+        val config = checkNotNull(config) { "A CleverTap instance implies its config" }
+        val styleConfig = checkNotNull(styleConfig) { "No inbox style config" }
 
-        val styleConfig = styleConfig!!
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         toolbar.title = styleConfig.navBarTitle
         toolbar.setTitleTextColor(Color.parseColor(styleConfig.navBarTitleColor))
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.navBarColor))
         val drawable = ResourcesCompat.getDrawable(resources, R.drawable.ct_ic_arrow_back_white_24dp, null)
-        if (drawable != null) {
-            @Suppress("DEPRECATION")
-            drawable.setColorFilter(Color.parseColor(styleConfig.backButtonColor), PorterDuff.Mode.SRC_IN)
-        }
+        @Suppress("DEPRECATION")
+        drawable?.setColorFilter(Color.parseColor(styleConfig.backButtonColor), PorterDuff.Mode.SRC_IN)
         toolbar.navigationIcon = drawable
         toolbar.navigationContentDescription = getString(R.string.ct_inbox_back_button_content_description)
         toolbar.setNavigationOnClickListener { finish() }
@@ -121,12 +128,11 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
         val linearLayout = findViewById<LinearLayout>(R.id.inbox_linear_layout)
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.inboxBackgroundColor))
         val tabLayout = linearLayout.findViewById<TabLayout>(R.id.tab_layout)
-        this.tabLayout = tabLayout
         val viewPager = linearLayout.findViewById<ViewPager>(R.id.view_pager)
-        this.viewPager = viewPager
-        val bundle = Bundle()
-        bundle.putParcelable("config", config)
-        bundle.putParcelable("styleConfig", styleConfig)
+        val bundle = Bundle().apply {
+            putParcelable("config", config)
+            putParcelable("styleConfig", styleConfig)
+        }
 
         if (!styleConfig.isUsingTabs) {
             viewPager.visibility = View.GONE
@@ -139,52 +145,50 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
             // On recreation (rotation, process restore) the FragmentManager restores the
             // previously added fragment before this code runs — adding again would stack
             // a duplicate list (and a duplicate video player) into the same container.
-            if (supportFragmentManager.findFragmentByTag(getFragmentTag()) == null) {
+            val fragmentTag = "${config.accountId}:CT_INBOX_LIST_VIEW_FRAGMENT"
+            if (supportFragmentManager.findFragmentByTag(fragmentTag) == null) {
                 val listView = CTInboxListViewFragment()
                 listView.arguments = bundle
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.list_view_fragment, listView, getFragmentTag())
+                    .add(R.id.list_view_fragment, listView, fragmentTag)
                     .commit()
             }
-        } else {
-            viewPager.visibility = View.VISIBLE
-            val tabs = styleConfig.getTabs()
-            val inboxTabAdapter = CTInboxTabAdapter(supportFragmentManager, tabs.size + 1)
-            this.inboxTabAdapter = inboxTabAdapter
-            tabLayout.visibility = View.VISIBLE
-            tabLayout.tabGravity = TabLayout.GRAVITY_FILL
-            tabLayout.tabMode = TabLayout.MODE_FIXED
-            tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.selectedTabIndicatorColor))
-            tabLayout.setTabTextColors(
-                Color.parseColor(styleConfig.unselectedTabColor),
-                Color.parseColor(styleConfig.selectedTabColor)
-            )
-            tabLayout.setBackgroundColor(Color.parseColor(styleConfig.tabBackgroundColor))
-
-            val allBundle = bundle.clone() as Bundle
-            allBundle.putInt("position", 0)
-            val all = CTInboxListViewFragment()
-            all.arguments = allBundle
-            inboxTabAdapter.addFragment(all, styleConfig.firstTabTitle, 0)
-
-            for (i in tabs.indices) {
-                val filter = tabs[i]
-                val pos = i + 1
-                val tabBundle = bundle.clone() as Bundle
-                tabBundle.putInt("position", pos)
-                tabBundle.putString("filter", filter)
-                val frag = CTInboxListViewFragment()
-                frag.arguments = tabBundle
-                inboxTabAdapter.addFragment(frag, filter, pos)
-                viewPager.offscreenPageLimit = pos
-            }
-
-            viewPager.adapter = inboxTabAdapter
-            inboxTabAdapter.notifyDataSetChanged()
-            viewPager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
-            viewPager.addOnPageChangeListener(createPageSettledListener(viewPager, inboxTabAdapter))
-            tabLayout.setupWithViewPager(viewPager)
+            return
         }
+
+        viewPager.visibility = View.VISIBLE
+        val tabs = styleConfig.getTabs()
+        val inboxTabAdapter = CTInboxTabAdapter(supportFragmentManager, tabs.size + 1)
+        tabLayout.visibility = View.VISIBLE
+        tabLayout.tabGravity = TabLayout.GRAVITY_FILL
+        tabLayout.tabMode = TabLayout.MODE_FIXED
+        tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.selectedTabIndicatorColor))
+        tabLayout.setTabTextColors(
+            Color.parseColor(styleConfig.unselectedTabColor),
+            Color.parseColor(styleConfig.selectedTabColor)
+        )
+        tabLayout.setBackgroundColor(Color.parseColor(styleConfig.tabBackgroundColor))
+
+        val all = CTInboxListViewFragment()
+        all.arguments = (bundle.clone() as Bundle).apply { putInt("position", 0) }
+        inboxTabAdapter.addFragment(all, styleConfig.firstTabTitle, 0)
+
+        tabs.forEachIndexed { i, filter ->
+            val pos = i + 1
+            val frag = CTInboxListViewFragment()
+            frag.arguments = (bundle.clone() as Bundle).apply {
+                putInt("position", pos)
+                putString("filter", filter)
+            }
+            inboxTabAdapter.addFragment(frag, filter, pos)
+            viewPager.offscreenPageLimit = pos
+        }
+
+        viewPager.adapter = inboxTabAdapter
+        inboxTabAdapter.notifyDataSetChanged()
+        viewPager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
+        viewPager.addOnPageChangeListener(createPageSettledListener(viewPager, inboxTabAdapter))
+        tabLayout.setupWithViewPager(viewPager)
     }
 
     override fun onResume() {
@@ -211,12 +215,13 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
     }
 
     override fun onDestroy() {
-        val coreMetaData = cleverTapAPI!!.coreState.coreMetaData
-        coreMetaData.appInboxActivity = null
+        // Java dereferenced these without a check (they are missing when onCreate bailed out early).
+        val cleverTapAPI = checkNotNull(cleverTapAPI) { "No CleverTap instance for the inbox" }
+        cleverTapAPI.coreState.coreMetaData.appInboxActivity = null
 
-        if (styleConfig!!.isUsingTabs) {
-            val allFragments = supportFragmentManager.fragments
-            for (fragment in allFragments) {
+        val styleConfig = checkNotNull(styleConfig) { "No inbox style config" }
+        if (styleConfig.isUsingTabs) {
+            for (fragment in supportFragmentManager.fragments) {
                 if (fragment is CTInboxListViewFragment) {
                     Logger.v("Removing fragment - $fragment")
                     supportFragmentManager.fragments.remove(fragment)
@@ -244,16 +249,15 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
     }
 
     override fun messageDidClick(
-        contentPageIndex: Int, inboxMessage: CTInboxMessage?, data: Bundle?,
+        contentPageIndex: Int, inboxMessage: CTInboxMessage, data: Bundle?,
         keyValue: HashMap<String, String>?, buttonIndex: Int
     ) {
         didClick(data, contentPageIndex, inboxMessage, keyValue, buttonIndex)
     }
 
-    override fun messageDidShow(inboxMessage: CTInboxMessage?, data: Bundle?) {
+    override fun messageDidShow(inboxMessage: CTInboxMessage, data: Bundle?) {
         Logger.v(
-            "CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" +
-                    inboxMessage!!.messageId + "]"
+            "CTInboxActivity:messageDidShow() called with: data = [$data], inboxMessage = [${inboxMessage.messageId}]"
         )
         didShow(data, inboxMessage)
     }
@@ -261,49 +265,21 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
     internal fun didClick(
         data: Bundle?,
         contentPageIndex: Int,
-        inboxMessage: CTInboxMessage?,
+        inboxMessage: CTInboxMessage,
         keyValue: HashMap<String, String>?,
         buttonIndex: Int
     ) {
-        val listener = getListener()
         listener?.messageDidClick(this, contentPageIndex, inboxMessage, data, keyValue, buttonIndex)
     }
 
-    internal fun didShow(data: Bundle?, inboxMessage: CTInboxMessage?) {
-        Logger.v(
-            "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" +
-                    inboxMessage!!.messageId + "]"
-        )
-        val listener = getListener()
+    internal fun didShow(data: Bundle?, inboxMessage: CTInboxMessage) {
+        Logger.v("CTInboxActivity:didShow() called with: data = [$data], inboxMessage = [${inboxMessage.messageId}]")
         listener?.messageDidShow(this, inboxMessage, data)
-    }
-
-    internal fun getListener(): InboxActivityListener? {
-        var listener: InboxActivityListener? = null
-        try {
-            listener = listenerWeakReference!!.get()
-        } catch (t: Throwable) {
-            // no-op
-        }
-        if (listener == null) {
-            config!!.logger
-                .verbose(config!!.accountId, "InboxActivityListener is null for notification inbox ")
-        }
-        return listener
-    }
-
-    internal fun setListener(listener: InboxActivityListener?) {
-        listenerWeakReference = WeakReference(listener)
-    }
-
-    private fun getFragmentTag(): String {
-        return config!!.accountId + ":CT_INBOX_LIST_VIEW_FRAGMENT"
     }
 
     companion object {
 
-        @JvmField
-        var orientation: Int = 0
+        internal var orientation: Int = 0
 
         internal const val VIDEO_STATES_KEY = "videoStates"
 
@@ -312,25 +288,19 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
          * onPageSelected() fires while the page is still animating, when rows still measure zero
          * visible height - only SCROLL_STATE_IDLE means settled.
          */
-        @JvmStatic
         internal fun createPageSettledListener(
             pager: ViewPager,
             adapter: CTInboxTabAdapter
-        ): ViewPager.OnPageChangeListener {
-            return object : ViewPager.SimpleOnPageChangeListener() {
-                override fun onPageScrollStateChanged(state: Int) {
-                    if (state != ViewPager.SCROLL_STATE_IDLE) {
-                        return
-                    }
-                    val position = pager.currentItem
-                    if (position < 0 || position >= adapter.count) {
-                        return
-                    }
-                    val fragment = adapter.getItem(position)
-                    if (fragment is CTInboxListViewFragment) {
-                        fragment.onPageSettled()
-                    }
+        ): ViewPager.OnPageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state != ViewPager.SCROLL_STATE_IDLE) {
+                    return
                 }
+                val position = pager.currentItem
+                if (position !in 0 until adapter.count) {
+                    return
+                }
+                (adapter.getItem(position) as? CTInboxListViewFragment)?.onPageSettled()
             }
         }
 

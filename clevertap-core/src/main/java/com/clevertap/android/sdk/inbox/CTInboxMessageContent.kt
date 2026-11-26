@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inbox
 
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import org.json.JSONArray
@@ -172,15 +171,13 @@ open class CTInboxMessageContent : Parcelable {
         try {
             _links = if (`in`.readByte().toInt() == 0x00) null else JSONArray(`in`.readString())
         } catch (e: JSONException) {
-            Logger.v("Unable to init CTInboxMessageContent with Parcel - " + e.localizedMessage)
+            Logger.v("Unable to init CTInboxMessageContent with Parcel - ${e.localizedMessage}")
         }
         _contentType = `in`.readString()
         _posterUrl = `in`.readString()
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     /**
      * Returns the background color for the JSONObject of Link provided
@@ -195,7 +192,7 @@ open class CTInboxMessageContent : Parcelable {
         return try {
             if (jsonObject.has(Constants.KEY_BG)) jsonObject.getString(Constants.KEY_BG) else ""
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Text Color with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -213,7 +210,7 @@ open class CTInboxMessageContent : Parcelable {
         return try {
             if (jsonObject.has(Constants.KEY_COLOR)) jsonObject.getString(Constants.KEY_COLOR) else ""
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Text Color with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -237,7 +234,7 @@ open class CTInboxMessageContent : Parcelable {
                 ""
             }
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Text with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Text with JSON - ${e.localizedMessage}")
             ""
         }
     }
@@ -251,20 +248,16 @@ open class CTInboxMessageContent : Parcelable {
         }
         return try {
             val keyValues = jsonObject.getJSONObject(Constants.KEY_KV)
-            val keys = keyValues.keys()
             val keyValuesMap = HashMap<String, String>()
-            var key: String
-            var value: String
-            while (keys.hasNext()) {
-                key = keys.next()
-                value = keyValues.getString(key)
-                if (!TextUtils.isEmpty(key)) {
+            for (key in keyValues.keys()) {
+                val value = keyValues.getString(key)
+                if (key.isNotEmpty()) {
                     keyValuesMap[key] = value
                 }
             }
-            if (keyValuesMap.isNotEmpty()) keyValuesMap else null
+            keyValuesMap.ifEmpty { null }
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Key Value with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Key Value with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -282,7 +275,7 @@ open class CTInboxMessageContent : Parcelable {
         return try {
             if (jsonObject.has(Constants.KEY_TEXT)) jsonObject.getString(Constants.KEY_TEXT) else ""
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Text with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Text with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -309,7 +302,7 @@ open class CTInboxMessageContent : Parcelable {
                 ""
             }
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link URL with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link URL with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -328,7 +321,7 @@ open class CTInboxMessageContent : Parcelable {
         return try {
             if (jsonObject.has(Constants.KEY_TYPE)) jsonObject.getString(Constants.KEY_TYPE) else ""
         } catch (e: JSONException) {
-            Logger.v("Unable to get Link Type with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get Link Type with JSON - ${e.localizedMessage}")
             null
         }
     }
@@ -344,7 +337,7 @@ open class CTInboxMessageContent : Parcelable {
                 false
             }
         } catch (e: JSONException) {
-            Logger.v("Unable to get fallback settings key with JSON - " + e.localizedMessage)
+            Logger.v("Unable to get fallback settings key with JSON - ${e.localizedMessage}")
             false
         }
     }
@@ -394,9 +387,7 @@ open class CTInboxMessageContent : Parcelable {
         return contentType != null && this._media != null && contentType.startsWith("video")
     }
 
-    open fun mediaIsStreamable(): Boolean {
-        return mediaIsAudio() || mediaIsVideo()
-    }
+    open fun mediaIsStreamable(): Boolean = mediaIsAudio() || mediaIsVideo()
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(_title)
@@ -405,9 +396,11 @@ open class CTInboxMessageContent : Parcelable {
         dest.writeString(_messageColor)
         dest.writeString(_media)
         dest.writeString(_mediaContentDescription)
-        // Unboxes like the Java code did: throws if the payload had no "action" object.
-        dest.writeByte((if (hasUrl!!) 0x01 else 0x00).toByte())
-        dest.writeByte((if (hasLinks!!) 0x01 else 0x00).toByte())
+        // Unboxes like the Java code did: throws (NullPointerException) if the payload had no "action" object.
+        val hasUrl = hasUrl ?: throw NullPointerException("CTInboxMessageContent without an action object")
+        val hasLinks = hasLinks ?: throw NullPointerException("CTInboxMessageContent without an action object")
+        dest.writeByte((if (hasUrl) 0x01 else 0x00).toByte())
+        dest.writeByte((if (hasLinks) 0x01 else 0x00).toByte())
         dest.writeString(_actionUrl)
         dest.writeString(_icon)
         dest.writeString(_iconContentDescription)
@@ -481,7 +474,7 @@ open class CTInboxMessageContent : Parcelable {
             }
 
         } catch (e: JSONException) {
-            Logger.v("Unable to init CTInboxMessageContent with JSON - " + e.localizedMessage)
+            Logger.v("Unable to init CTInboxMessageContent with JSON - ${e.localizedMessage}")
         }
         return this
     }
@@ -490,13 +483,9 @@ open class CTInboxMessageContent : Parcelable {
 
         @JvmField
         val CREATOR: Parcelable.Creator<CTInboxMessageContent> = object : Parcelable.Creator<CTInboxMessageContent> {
-            override fun createFromParcel(`in`: Parcel): CTInboxMessageContent {
-                return CTInboxMessageContent(`in`)
-            }
+            override fun createFromParcel(`in`: Parcel): CTInboxMessageContent = CTInboxMessageContent(`in`)
 
-            override fun newArray(size: Int): Array<CTInboxMessageContent?> {
-                return arrayOfNulls(size)
-            }
+            override fun newArray(size: Int): Array<CTInboxMessageContent?> = arrayOfNulls(size)
         }
     }
 }
