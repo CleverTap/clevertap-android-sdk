@@ -16,7 +16,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope
@@ -40,6 +39,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
 import com.clevertap.android.sdk.inbox.CTInboxActivity
+import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener
@@ -72,10 +72,7 @@ import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import java.lang.ref.WeakReference
-import java.util.ArrayList
 import java.util.Collections
-import java.util.HashMap
-import java.util.LinkedHashMap
 import java.util.concurrent.Future
 import org.json.JSONException
 import org.json.JSONObject
@@ -122,9 +119,7 @@ open class CleverTapAPI internal constructor(
         DEBUG(2),
         VERBOSE(3);
 
-        fun intValue(): Int {
-            return value
-        }
+        fun intValue(): Int = value
     }
 
     /**
@@ -136,9 +131,9 @@ open class CleverTapAPI internal constructor(
     @set:JvmName("setCoreState")
     internal var coreState: CoreState = coreState
 
-    private var inboxMessageButtonListener: WeakReference<InboxMessageButtonListener?>? = null
+    private var inboxMessageButtonListener = WeakReference<InboxMessageButtonListener?>(null)
 
-    private var inboxMessageListener: WeakReference<InboxMessageListener?>? = null
+    private var inboxMessageListener = WeakReference<InboxMessageListener?>(null)
 
     // Initialize
     private constructor(
@@ -156,11 +151,11 @@ open class CleverTapAPI internal constructor(
 
     init {
         clevertapClock = clock
-        configLogger.verbose(config.accountId + ":async_deviceID", "CoreState is set")
+        configLogger.verbose("${config.accountId}:async_deviceID", "CoreState is set")
         asyncStartup()
         Logger.i(
-            "CleverTap SDK initialized with accountId: " + config.accountId + " accountToken: " + config
-                .accountToken + " accountRegion: " + config.accountRegion
+            "CleverTap SDK initialized with accountId: ${config.accountId} accountToken: ${config.accountToken} " +
+                "accountRegion: ${config.accountRegion}"
         )
     }
 
@@ -169,8 +164,7 @@ open class CleverTapAPI internal constructor(
         // same per-account serial queue, so these startup tasks — and every later app call — are
         // ordered behind device-id resolution. See the ordering contract in
         // CleverTapFactory.getCoreState().
-        var task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("CleverTapAPI#initializeDeviceInfo") {
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("CleverTapAPI#initializeDeviceInfo") {
             if (config.isDefaultInstance) {
                 ManifestValidator.validate(context, coreState.deviceInfo, coreState.pushProviders)
             }
@@ -182,8 +176,7 @@ open class CleverTapAPI internal constructor(
             coreState.config.setCreatedPostAppLaunch()
         }
 
-        task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("setStatesAsync") {
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("setStatesAsync") {
             coreState.sessionManager.updateLastVisitTime()
             coreState.sessionManager.updateUserLastVisitTs()
             coreState.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
@@ -192,8 +185,7 @@ open class CleverTapAPI internal constructor(
             null
         }
 
-        task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("saveConfigtoSharedPrefs") {
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("saveConfigtoSharedPrefs") {
             val configJson = config.toJSONString()
             if (configJson == null) {
                 Logger.v("Unable to save config to SharedPrefs, config Json is null")
@@ -202,8 +194,7 @@ open class CleverTapAPI internal constructor(
             StorageHelper.putString(context, config.accountId, "instance", configJson)
             null
         }
-        task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("recordDeviceIDErrors") {
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("recordDeviceIDErrors") {
             if (coreState.deviceInfo.deviceID != null) {
                 coreState.loginController.recordDeviceIDErrors()
             }
@@ -215,13 +206,8 @@ open class CleverTapAPI internal constructor(
      * Retrieve a [CustomTemplateContext] for a template that is currently displaying. If the provided template
      * name is not of a currently active template this method returns `null`.
      */
-    open fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? {
-        @Suppress("SENSELESS_COMPARISON")
-        if (coreState == null || coreState.templatesManager == null) {
-            return null
-        }
-        return coreState.templatesManager.getActiveContextForTemplate(templateName)
-    }
+    open fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? =
+        coreState.templatesManager.getActiveContextForTemplate(templateName)
 
     /**
      * Sync all currently registered templates (through [registerCustomInAppTemplates] to the
@@ -229,7 +215,6 @@ open class CleverTapAPI internal constructor(
      * only be called from a debug build of the application and the current logged-in user must be marked as a
      * test profile through the web dashboard.
      */
-    @Suppress("SENSELESS_COMPARISON")
     open fun syncRegisteredInAppTemplates() {
         if (!isDevelopmentMode) {
             configLogger.debug(
@@ -239,28 +224,12 @@ open class CleverTapAPI internal constructor(
             return
         }
 
-        if (coreState == null) {
-            configLogger.debug("CustomTemplates", "coreState is null, templates cannot be synced")
-            return
-        }
-
-        if (coreState.networkManager == null) {
-            configLogger.debug("CustomTemplates", "networkManager is null, templates cannot be synced")
-            return
-        }
-
-        if (coreState.templatesManager == null) {
-            configLogger.debug("CustomTemplates", "templateManager is null, templates cannot be synced")
-            return
-        }
-
         val templatesManager = coreState.templatesManager
         val networkManager = coreState.networkManager
 
         getCleverTapID { _ ->
             // getCleverTapID is executed on the main thread
-            val task = coreState.executors.postAsyncSafelyTask<Void?>()
-            task.execute("DefineTemplates") {
+            coreState.executors.postAsyncSafelyTask<Void?>().execute("DefineTemplates") {
                 networkManager.defineTemplates(templatesManager.getAllRegisteredTemplates())
                 null
             }
@@ -308,7 +277,7 @@ open class CleverTapAPI internal constructor(
      * @param value String
      */
     open fun addMultiValueForKey(key: String?, value: String?) {
-        addMultiValuesForKey(key, ArrayList(Collections.singletonList(value)))
+        addMultiValuesForKey(key, arrayListOf(value))
     }
 
     /**
@@ -335,11 +304,7 @@ open class CleverTapAPI internal constructor(
      * @param message [CTInboxMessage] public object of inbox message
      */
     open fun deleteInboxMessage(message: CTInboxMessage?) {
-        if (coreState.controllerManager.ctInboxController != null) {
-            coreState.controllerManager.ctInboxController!!.deleteInboxMessage(message)
-        } else {
-            configLogger.debug(accountId, "Notification Inbox not initialized")
-        }
+        inboxControllerOrLog()?.deleteInboxMessage(message)
     }
 
     /**
@@ -348,8 +313,7 @@ open class CleverTapAPI internal constructor(
      * @param messageId String - messageId of [CTInboxMessage] public object of inbox message
      */
     open fun deleteInboxMessage(messageId: String?) {
-        val message = getInboxMessageForId(messageId)
-        deleteInboxMessage(message)
+        deleteInboxMessage(getInboxMessageForId(messageId))
     }
 
     /**
@@ -358,12 +322,8 @@ open class CleverTapAPI internal constructor(
      * @param messageIDs [ArrayList] with String values - list of messageIDs of [CTInboxMessage] public object of inbox message
      */
     open fun deleteInboxMessagesForIDs(messageIDs: ArrayList<out String?>?) {
-        if (coreState.controllerManager.ctInboxController != null) {
-            @Suppress("UNCHECKED_CAST")
-            coreState.controllerManager.ctInboxController!!.deleteInboxMessagesForIDs(messageIDs as ArrayList<String>?)
-        } else {
-            configLogger.debug(accountId, "Notification Inbox not initialized")
-        }
+        @Suppress("UNCHECKED_CAST")
+        inboxControllerOrLog()?.deleteInboxMessagesForIDs(messageIDs as ArrayList<String>?)
     }
 
     /**
@@ -371,7 +331,7 @@ open class CleverTapAPI internal constructor(
      * Personalization is enabled by default
      */
     open fun disablePersonalization() {
-        this.coreState.config.enablePersonalization(false)
+        coreState.config.enablePersonalization(false)
     }
 
     /**
@@ -423,7 +383,7 @@ open class CleverTapAPI internal constructor(
      * Personalization is enabled by default
      */
     open fun enablePersonalization() {
-        this.coreState.config.enablePersonalization(true)
+        coreState.config.enablePersonalization(true)
     }
 
     /**
@@ -462,14 +422,9 @@ open class CleverTapAPI internal constructor(
     open fun setSCDomainListener(scDomainListener: SCDomainListener?) {
         coreState.callbackManager.scDomainListener = scDomainListener
 
-        @Suppress("SENSELESS_COMPARISON")
-        if (coreState.networkManager != null) {
-            val networkManager = coreState.networkManager
-            val domain = networkManager.getDomain(EventGroup.REGULAR)
-            if (domain != null) {
-                scDomainListener!!.onSCDomainAvailable(getSCDomain(domain))
-            }
-        }
+        val domain = coreState.networkManager.getDomain(EventGroup.REGULAR) ?: return
+        // Java dereferenced the listener here too: a null listener with a known domain is an NPE.
+        scDomainListener!!.onSCDomainAvailable(getSCDomain(domain))
     }
 
     open fun getAccountId(): String = coreState.config.accountId
@@ -485,12 +440,11 @@ open class CleverTapAPI internal constructor(
      */
     open fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>? {
         val cache = coreState.controllerManager.displayUnitCache
-        if (cache != null) {
-            return cache.getAllDisplayUnits()
+        if (cache == null) {
+            configLogger.verbose(accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to get all Display Units")
+            return null
         }
-        configLogger
-            .verbose(accountId, Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units")
-        return null
+        return cache.getAllDisplayUnits()
     }
 
     /** Kotlin property syntax, equivalent to [getAllDisplayUnits]. */
@@ -504,18 +458,12 @@ open class CleverTapAPI internal constructor(
      */
     open fun getAllInboxMessages(): ArrayList<CTInboxMessage> {
         Logger.d("CleverTapAPI:getAllInboxMessages: called")
-        val inboxMessageArrayList = ArrayList<CTInboxMessage>()
         synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController != null) {
-                val messageDAOArrayList = coreState.controllerManager.ctInboxController!!.messages
-                for (messageDAO in messageDAOArrayList) {
-                    Logger.v("CTMessage Dao - " + messageDAO.toJSON().toString())
-                    inboxMessageArrayList.add(CTInboxMessage(messageDAO.toJSON()))
-                }
-                return inboxMessageArrayList
-            } else {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
-                return inboxMessageArrayList //return empty list to avoid null pointer exceptions
+            //return empty list to avoid null pointer exceptions
+            val inboxController = inboxControllerOrLog() ?: return ArrayList()
+            return inboxController.messages.mapTo(ArrayList()) { messageDAO ->
+                Logger.v("CTMessage Dao - ${messageDAO.toJSON()}")
+                CTInboxMessage(messageDAO.toJSON())
             }
         }
     }
@@ -640,14 +588,7 @@ open class CleverTapAPI internal constructor(
      * getUserEventLogCount() provides user-specific event counts.
      */
     @Deprecated("since v7.1.0. Use getUserEventLogCount(String) instead. getUserEventLogCount() provides user-specific event counts.")
-    open fun getCount(event: String?): Int {
-        val eventDetail = coreState.localDataStore.getEventDetail(event)
-        if (eventDetail != null) {
-            return eventDetail.count
-        }
-
-        return -1
-    }
+    open fun getCount(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.count ?: -1
 
     /**
      * Retrieves the count of logged events for a specific event name associated with the current
@@ -682,9 +623,7 @@ open class CleverTapAPI internal constructor(
      * getUserEventLog() provides user-specific event log.
      */
     @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log.")
-    open fun getDetails(event: String?): EventDetail? {
-        return coreState.localDataStore.getEventDetail(event)
-    }
+    open fun getDetails(event: String?): EventDetail? = coreState.localDataStore.getEventDetail(event)
 
     /**
      * Retrieves user-specific event log associated with the current user/
@@ -719,9 +658,8 @@ open class CleverTapAPI internal constructor(
      * Implement CleverTapAPI.DevicePushTokenRefreshListener to get a callback once the token is
      * available
      */
-    open fun getDevicePushToken(type: PushType?): String? {
-        return coreState.pushProviders.getCachedToken(type!!)
-    }
+    // Java dereferenced a null type too (NPE); the parameter stays nullable for Kotlin source compatibility.
+    open fun getDevicePushToken(type: PushType?): String? = coreState.pushProviders.getCachedToken(type!!)
 
     /**
      * The DevicePushTokenRefreshListener.
@@ -745,9 +683,9 @@ open class CleverTapAPI internal constructor(
      * @param requestTokenListener The [RequestDevicePushTokenListener] object
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
-    open fun setRequestDevicePushTokenListener(requestTokenListener: RequestDevicePushTokenListener?) {
+    open fun setRequestDevicePushTokenListener(requestTokenListener: RequestDevicePushTokenListener) {
         try {
-            Logger.v(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json")
+            Logger.v(LOG_TAG, "${FCM_LOG_TAG}Requesting FCM token using googleservices.json")
             FirebaseMessaging
                 .getInstance()
                 .token
@@ -759,23 +697,20 @@ open class CleverTapAPI internal constructor(
                         if (!task.isSuccessful) {
                             Logger.v(
                                 LOG_TAG,
-                                FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                "${FCM_LOG_TAG}FCM token using googleservices.json failed",
                                 task.exception
                             )
-                            requestTokenListener!!.onDevicePushToken(null, FCM)
+                            requestTokenListener.onDevicePushToken(null, FCM)
                             return
                         }
-                        val token = if (task.result != null) task.result else null
-                        Logger.v(
-                            LOG_TAG,
-                            FCM_LOG_TAG + "FCM token using googleservices.json - " + token
-                        )
-                        requestTokenListener!!.onDevicePushToken(token, FCM)
+                        val token = task.result
+                        Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token")
+                        requestTokenListener.onDevicePushToken(token, FCM)
                     }
                 })
         } catch (t: Throwable) {
-            Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t)
-            requestTokenListener!!.onDevicePushToken(null, FCM)
+            Logger.v(LOG_TAG, "${FCM_LOG_TAG}Error requesting FCM token", t)
+            requestTokenListener.onDevicePushToken(null, FCM)
         }
     }
 
@@ -789,14 +724,14 @@ open class CleverTapAPI internal constructor(
      */
     open fun getDisplayUnitForId(unitID: String?): CleverTapDisplayUnit? {
         val cache = coreState.controllerManager.displayUnitCache
-        if (cache != null) {
-            return cache.getDisplayUnitForID(unitID)
+        if (cache == null) {
+            configLogger.verbose(
+                accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to get Display Unit for id: $unitID"
+            )
+            return null
         }
-        configLogger.verbose(
-            accountId,
-            Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID
-        )
-        return null
+        return cache.getDisplayUnitForID(unitID)
     }
 
     /**
@@ -808,14 +743,7 @@ open class CleverTapAPI internal constructor(
      * It provides user-specific event log with first occurrence timestamp.
      */
     @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with first occurrence timestamp.")
-    open fun getFirstTime(event: String?): Int {
-        val eventDetail = coreState.localDataStore.getEventDetail(event)
-        if (eventDetail != null) {
-            return eventDetail.firstTime
-        }
-
-        return -1
-    }
+    open fun getFirstTime(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.firstTime ?: -1
 
     /**
      * The GeofenceCallback used by clevertap-geofence-sdk to handle geofence responses from CleverTap.
@@ -863,15 +791,10 @@ open class CleverTapAPI internal constructor(
      */
     @WorkerThread
     open fun getUserEventLogHistory(): Map<String, UserEventLog> {
-        val history: MutableMap<String, UserEventLog> = LinkedHashMap()
         if (!config.isPersonalizationEnabled) {
-            return history
+            return LinkedHashMap()
         }
-        val logs = coreState.localDataStore.readUserEventLogs()
-        for (log in logs) {
-            history[log.eventName] = log
-        }
-        return history
+        return coreState.localDataStore.readUserEventLogs().associateByTo(LinkedHashMap()) { it.eventName }
     }
 
     /** Kotlin property syntax, equivalent to [getUserEventLogHistory]. */
@@ -928,15 +851,8 @@ open class CleverTapAPI internal constructor(
      *
      * @return int - count of all inbox messages
      */
-    open fun getInboxMessageCount(): Int {
-        synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController != null) {
-                return coreState.controllerManager.ctInboxController!!.count()
-            } else {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
-                return -1
-            }
-        }
+    open fun getInboxMessageCount(): Int = synchronized(coreState.cTLockManager.inboxControllerLock) {
+        inboxControllerOrLog()?.count() ?: -1
     }
 
     /** Kotlin property syntax, equivalent to [getInboxMessageCount]. */
@@ -951,14 +867,8 @@ open class CleverTapAPI internal constructor(
      */
     open fun getInboxMessageForId(messageId: String?): CTInboxMessage? {
         Logger.d("CleverTapAPI:getInboxMessageForId() called with: messageId = [$messageId]")
-        synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController != null) {
-                val message = coreState.controllerManager.ctInboxController!!.getMessageForId(messageId)
-                return if (message != null) CTInboxMessage(message.toJSON()) else null
-            } else {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
-                return null
-            }
+        return synchronized(coreState.cTLockManager.inboxControllerLock) {
+            inboxControllerOrLog()?.getMessageForId(messageId)?.let { CTInboxMessage(it.toJSON()) }
         }
     }
 
@@ -967,15 +877,8 @@ open class CleverTapAPI internal constructor(
      *
      * @return int - count of all unread messages
      */
-    open fun getInboxMessageUnreadCount(): Int {
-        synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController != null) {
-                return coreState.controllerManager.ctInboxController!!.unreadCount()
-            } else {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
-                return -1
-            }
-        }
+    open fun getInboxMessageUnreadCount(): Int = synchronized(coreState.cTLockManager.inboxControllerLock) {
+        inboxControllerOrLog()?.unreadCount() ?: -1
     }
 
     /** Kotlin property syntax, equivalent to [getInboxMessageUnreadCount]. */
@@ -991,14 +894,7 @@ open class CleverTapAPI internal constructor(
      * It provides user-specific event log with last occurrence timestamp.
      */
     @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with last occurrence timestamp.")
-    open fun getLastTime(event: String?): Int {
-        val eventDetail = coreState.localDataStore.getEventDetail(event)
-        if (eventDetail != null) {
-            return eventDetail.lastTime
-        }
-
-        return -1
-    }
+    open fun getLastTime(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.lastTime ?: -1
 
     /**
      * The current device location / the user profile location in CleverTap.
@@ -1116,9 +1012,7 @@ open class CleverTapAPI internal constructor(
     /**
      * Returns the token for a particular push type
      */
-    open fun getPushToken(pushType: PushType): String? {
-        return coreState.pushProviders.getCachedToken(pushType)
-    }
+    open fun getPushToken(pushType: PushType): String? = coreState.pushProviders.getCachedToken(pushType)
 
     /**
      * Returns the number of screens which have been displayed by the app
@@ -1160,9 +1054,7 @@ open class CleverTapAPI internal constructor(
         if (currentSession == 0) {
             return -1
         }
-
-        val now = clevertapClock.currentTimeSecondsInt()
-        return now - currentSession
+        return clevertapClock.currentTimeSecondsInt() - currentSession
     }
 
     /** Kotlin property syntax, equivalent to [getTimeElapsed]. */
@@ -1177,14 +1069,7 @@ open class CleverTapAPI internal constructor(
      * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
-    open fun getTotalVisits(): Int {
-        val ed = coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)
-        if (ed != null) {
-            return ed.count
-        }
-
-        return 0
-    }
+    open fun getTotalVisits(): Int = coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
 
     /** Kotlin property syntax, equivalent to [getTotalVisits]. */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
@@ -1220,12 +1105,10 @@ open class CleverTapAPI internal constructor(
      *
      * @return The [UTMDetail] object
      */
-    open fun getUTMDetails(): UTMDetail {
-        val ud = UTMDetail()
-        ud.source = coreState.coreMetaData.source
-        ud.medium = coreState.coreMetaData.medium
-        ud.campaign = coreState.coreMetaData.campaign
-        return ud
+    open fun getUTMDetails(): UTMDetail = UTMDetail().apply {
+        source = coreState.coreMetaData.source
+        medium = coreState.coreMetaData.medium
+        campaign = coreState.coreMetaData.campaign
     }
 
     /** Kotlin property syntax, equivalent to [getUTMDetails]. */
@@ -1238,18 +1121,10 @@ open class CleverTapAPI internal constructor(
      * @return ArrayList of [CTInboxMessage] of unread Inbox Messages
      */
     open fun getUnreadInboxMessages(): ArrayList<CTInboxMessage> {
-        val inboxMessageArrayList = ArrayList<CTInboxMessage>()
         synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController != null) {
-                val messageDAOArrayList = coreState.controllerManager.ctInboxController!!.unreadMessages
-                for (messageDAO in messageDAOArrayList) {
-                    inboxMessageArrayList.add(CTInboxMessage(messageDAO.toJSON()))
-                }
-                return inboxMessageArrayList
-            } else {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
-                return inboxMessageArrayList //return empty list to avoid null pointer exceptions
-            }
+            //return empty list to avoid null pointer exceptions
+            val inboxController = inboxControllerOrLog() ?: return ArrayList()
+            return inboxController.unreadMessages.mapTo(ArrayList()) { CTInboxMessage(it.toJSON()) }
         }
     }
 
@@ -1294,9 +1169,7 @@ open class CleverTapAPI internal constructor(
                 accountId,
                 "Notification Inbox not initialized — call initializeInbox() first"
             )
-            if (callback != null) {
-                coreState.inboxV2Bridge.submitFailure(callback)
-            }
+            callback?.let { coreState.inboxV2Bridge.submitFailure(it) }
             return
         }
         coreState.inboxV2Bridge.submit(FetchTrigger.USER_INITIATED, callback)
@@ -1322,11 +1195,7 @@ open class CleverTapAPI internal constructor(
      */
     //marks the message as read
     open fun markReadInboxMessage(message: CTInboxMessage?) {
-        if (coreState.controllerManager.ctInboxController != null) {
-            coreState.controllerManager.ctInboxController!!.markReadInboxMessage(message)
-        } else {
-            configLogger.debug(accountId, "Notification Inbox not initialized")
-        }
+        inboxControllerOrLog()?.markReadInboxMessage(message)
     }
 
     /**
@@ -1335,8 +1204,7 @@ open class CleverTapAPI internal constructor(
      * @param messageId String - messageId of [CTInboxMessage] public object of inbox message
      */
     open fun markReadInboxMessage(messageId: String?) {
-        val message = getInboxMessageForId(messageId)
-        markReadInboxMessage(message)
+        markReadInboxMessage(getInboxMessageForId(messageId))
     }
 
     /**
@@ -1345,12 +1213,8 @@ open class CleverTapAPI internal constructor(
      * @param messageIDs [ArrayList] with String values - list of messageIDs of [CTInboxMessage] public object of inbox message
      */
     open fun markReadInboxMessagesForIDs(messageIDs: ArrayList<out String?>?) {
-        if (coreState.controllerManager.ctInboxController != null) {
-            @Suppress("UNCHECKED_CAST")
-            coreState.controllerManager.ctInboxController!!.markReadInboxMessagesForIDs(messageIDs as ArrayList<String>?)
-        } else {
-            configLogger.debug(accountId, "Notification Inbox not initialized")
-        }
+        @Suppress("UNCHECKED_CAST")
+        inboxControllerOrLog()?.markReadInboxMessagesForIDs(messageIDs as ArrayList<String>?)
     }
 
     override fun messageDidClick(
@@ -1361,34 +1225,30 @@ open class CleverTapAPI internal constructor(
         keyValue: HashMap<String, String>?,
         buttonIndex: Int
     ) {
+        // CTInboxActivity always passes the clicked message; Java threw an NPE for null as well.
         coreState.analyticsManager.pushInboxMessageStateEvent(true, inboxMessage!!, data)
 
         Logger.v("clicked inbox notification.")
         //notify the onInboxItemClicked callback if the listener is set.
-        val messageListener = inboxMessageListener
-        if (messageListener != null && messageListener.get() != null) {
-            messageListener.get()!!.onInboxItemClicked(inboxMessage, contentPageIndex, buttonIndex)
-        }
+        inboxMessageListener.get()?.onInboxItemClicked(inboxMessage, contentPageIndex, buttonIndex)
 
-        if (keyValue != null && !keyValue.isEmpty()) {
+        if (!keyValue.isNullOrEmpty()) {
             Logger.v("clicked button of an inbox notification.")
             //notify the onInboxButtonClick callback if the listener is set.
-            val buttonListener = inboxMessageButtonListener
-            if (buttonListener != null && buttonListener.get() != null) {
-                buttonListener.get()!!.onInboxButtonClick(keyValue)
-            }
+            inboxMessageButtonListener.get()?.onInboxButtonClick(keyValue)
         }
     }
 
     //Session
 
     override fun messageDidShow(ctInboxActivity: CTInboxActivity?, inboxMessage: CTInboxMessage?, data: Bundle?) {
-        val task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("handleMessageDidShow") {
-            Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage!!.messageId + "]")
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("handleMessageDidShow") {
+            // Nothing to record without a message (Java failed this task with an NPE instead).
+            val messageId = inboxMessage?.messageId ?: return@execute null
+            Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [$messageId]")
 
-            val message = getInboxMessageForId(inboxMessage.messageId)
-            if (!message!!.isRead) {
+            val message = getInboxMessageForId(messageId) ?: return@execute null
+            if (!message.isRead) {
                 // Use the freshly-fetched `message` for analytics. The viewholder's
                 // markItemAsRead mutates `inboxMessage.setRead(true)` on the UI thread
                 // before this async body runs, which would trip the T2.3 cross-device
@@ -1625,7 +1485,7 @@ open class CleverTapAPI internal constructor(
      * @param eventName The name of the event
      */
     open fun pushEvent(eventName: String?) {
-        if (eventName == null || eventName.trim().isEmpty()) {
+        if (eventName.isNullOrBlank()) {
             return
         }
         pushEvent(eventName, null)
@@ -1664,10 +1524,8 @@ open class CleverTapAPI internal constructor(
      *                           event properties regarding Signed Call event
      */
     @Deprecated("Deprecated")
-    open fun pushSignedCallEvent(eventName: String?, eventProperties: JSONObject?): Future<*>? {
-        return coreState.analyticsManager
-            .raiseEventForSignedCall(eventName, eventProperties)
-    }
+    open fun pushSignedCallEvent(eventName: String?, eventProperties: JSONObject?): Future<*>? =
+        coreState.analyticsManager.raiseEventForSignedCall(eventName, eventProperties)
 
     /**
      * Used to record errors of the Geofence module
@@ -1676,8 +1534,7 @@ open class CleverTapAPI internal constructor(
      * @param errorMessage - String - error message
      */
     open fun pushGeoFenceError(errorCode: Int, errorMessage: String?) {
-        val validationResult = ValidationResult(errorCode, errorMessage)
-        coreState.validationResultStack.pushValidationResult(validationResult)
+        coreState.validationResultStack.pushValidationResult(ValidationResult(errorCode, errorMessage))
     }
 
     /**
@@ -1686,10 +1543,9 @@ open class CleverTapAPI internal constructor(
      * @param geoFenceProperties The [JSONObject] object that contains the
      *                           event properties regarding GeoFence Cluster Exited event
      */
-    open fun pushGeoFenceExitedEvent(geoFenceProperties: JSONObject?): Future<*>? {
-        return coreState.analyticsManager
-            .raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME, geoFenceProperties!!)
-    }
+    // Java dereferenced null properties too (NPE); the parameter stays nullable for Kotlin source compatibility.
+    open fun pushGeoFenceExitedEvent(geoFenceProperties: JSONObject?): Future<*>? =
+        coreState.analyticsManager.raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME, geoFenceProperties!!)
 
     /**
      * Pushes the Geofence Cluster Entered event to CleverTap.
@@ -1697,10 +1553,9 @@ open class CleverTapAPI internal constructor(
      * @param geofenceProperties The [JSONObject] object that contains the
      *                           event properties regarding GeoFence Cluster Entered event
      */
-    open fun pushGeofenceEnteredEvent(geofenceProperties: JSONObject?): Future<*>? {
-        return coreState.analyticsManager
-            .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties!!)
-    }
+    // Java dereferenced null properties too (NPE); the parameter stays nullable for Kotlin source compatibility.
+    open fun pushGeofenceEnteredEvent(geofenceProperties: JSONObject?): Future<*>? =
+        coreState.analyticsManager.raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties!!)
 
     /**
      * Pushes the Notification Clicked event for App Inbox to CleverTap.
@@ -1709,9 +1564,8 @@ open class CleverTapAPI internal constructor(
      */
     open fun pushInboxNotificationClickedEvent(messageId: String?) {
         Logger.v("CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [$messageId]")
-
-        val message = getInboxMessageForId(messageId)
-        coreState.analyticsManager.pushInboxMessageStateEvent(true, message!!, null)
+        // An unknown id has no message; Java threw an NPE further down for it as well.
+        coreState.analyticsManager.pushInboxMessageStateEvent(true, getInboxMessageForId(messageId)!!, null)
     }
 
     /**
@@ -1721,8 +1575,8 @@ open class CleverTapAPI internal constructor(
      */
     open fun pushInboxNotificationViewedEvent(messageId: String?) {
         Logger.v("CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [$messageId]")
-        val message = getInboxMessageForId(messageId)
-        coreState.analyticsManager.pushInboxMessageStateEvent(false, message!!, null)
+        // An unknown id has no message; Java threw an NPE further down for it as well.
+        coreState.analyticsManager.pushInboxMessageStateEvent(false, getInboxMessageForId(messageId)!!, null)
     }
 
     /**
@@ -1784,7 +1638,7 @@ open class CleverTapAPI internal constructor(
      */
     open fun recordScreen(screenName: String?) {
         val currentScreenName = coreState.coreMetaData.screenName
-        if (screenName == null || (currentScreenName != null && !currentScreenName.isEmpty() && currentScreenName == screenName)) {
+        if (screenName == null || (!currentScreenName.isNullOrEmpty() && currentScreenName == screenName)) {
             return
         }
         configLogger.debug(accountId, "Screen changed to $screenName")
@@ -1803,7 +1657,7 @@ open class CleverTapAPI internal constructor(
      * @param value String
      */
     open fun removeMultiValueForKey(key: String?, value: String?) {
-        removeMultiValuesForKey(key, ArrayList(Collections.singletonList(value)))
+        removeMultiValuesForKey(key, arrayListOf(value))
     }
 
     /**
@@ -1913,11 +1767,11 @@ open class CleverTapAPI internal constructor(
     }
 
     open fun setInboxMessageButtonListener(listener: InboxMessageButtonListener?) {
-        this.inboxMessageButtonListener = WeakReference(listener)
+        inboxMessageButtonListener = WeakReference(listener)
     }
 
     open fun setCTInboxMessageListener(listener: InboxMessageListener?) {
-        this.inboxMessageListener = WeakReference(listener)
+        inboxMessageListener = WeakReference(listener)
     }
 
     /**
@@ -1927,10 +1781,7 @@ open class CleverTapAPI internal constructor(
      * @param library [String] library name
      */
     open fun setLibrary(library: String?) {
-        @Suppress("SENSELESS_COMPARISON")
-        if (coreState.deviceInfo != null) {
-            coreState.deviceInfo.library = library
-        }
+        coreState.deviceInfo.library = library
     }
 
     /**
@@ -2035,15 +1886,15 @@ open class CleverTapAPI internal constructor(
      *                          Set to `false` to disallow system-level CleverTap events (only if `userOptOut` is also `true`).
      */
     open fun setOptOut(userOptOut: Boolean, allowSystemEvents: Boolean) {
-        val task = coreState.executors.postAsyncSafelyTask<Void?>()
-        task.execute("setOptOut") {
+        coreState.executors.postAsyncSafelyTask<Void?>().execute("setOptOut") {
             // Handle case with userOptOut = false, allowSystemEvents = false
             val resolvedAllowSystemEvents = !userOptOut || allowSystemEvents
 
             // generate the data for a profile push to alert the server to the optOut state change
-            val optOutMap = HashMap<String, Any?>()
-            optOutMap[Constants.CLEVERTAP_OPTOUT] = userOptOut
-            optOutMap[Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS] = resolvedAllowSystemEvents
+            val optOutMap = hashMapOf<String, Any?>(
+                Constants.CLEVERTAP_OPTOUT to userOptOut,
+                Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS to resolvedAllowSystemEvents
+            )
 
             coreState.coreMetaData.isCurrentUserOptedOut = false
             coreState.analyticsManager.pushProfile(optOutMap)
@@ -2064,32 +1915,25 @@ open class CleverTapAPI internal constructor(
      */
     open fun showAppInbox(styleConfig: CTInboxStyleConfig?) {
         synchronized(coreState.cTLockManager.inboxControllerLock) {
-            if (coreState.controllerManager.ctInboxController == null) {
-                configLogger.debug(accountId, "Notification Inbox not initialized")
+            if (inboxControllerOrLog() == null) {
                 return
             }
         }
 
-        // make styleConfig immutable
-        val _styleConfig = CTInboxStyleConfig(styleConfig!!)
+        // make styleConfig immutable. Java dereferenced a null styleConfig too (NPE); the parameter
+        // stays nullable for Kotlin source compatibility.
+        val immutableStyleConfig = CTInboxStyleConfig(styleConfig!!)
 
         val intent = Intent(context, CTInboxActivity::class.java)
-        intent.putExtra("styleConfig", _styleConfig)
-        val configBundle = Bundle()
-        configBundle.putParcelable("config", config)
-        intent.putExtra("configBundle", configBundle)
+            .putExtra("styleConfig", immutableStyleConfig)
+            .putExtra("configBundle", Bundle().apply { putParcelable("config", config) })
         try {
             val currentActivity = CoreMetaData.getCurrentActivity()
-            if (currentActivity == null) {
-                throw IllegalStateException("Current activity reference not found")
-            }
+                ?: throw IllegalStateException("Current activity reference not found")
             currentActivity.startActivity(intent)
             Logger.d("Displaying Notification Inbox")
         } catch (t: Throwable) {
-            Logger.v(
-                "Please verify the integration of your app." +
-                        " It is not setup to support Notification Inbox yet.", t
-            )
+            Logger.v("Please verify the integration of your app. It is not setup to support Notification Inbox yet.", t)
         }
     }
 
@@ -2099,9 +1943,7 @@ open class CleverTapAPI internal constructor(
     open fun dismissAppInbox() {
         try {
             val appInboxActivity = coreState.coreMetaData.appInboxActivity
-            if (appInboxActivity == null) {
-                throw IllegalStateException("AppInboxActivity reference not found")
-            }
+                ?: throw IllegalStateException("AppInboxActivity reference not found")
             if (!appInboxActivity.isFinishing) {
                 configLogger.verbose(accountId, "Finishing the App Inbox")
                 appInboxActivity.finish()
@@ -2110,7 +1952,7 @@ open class CleverTapAPI internal constructor(
             configLogger.verbose(
                 accountId,
                 "Can't dismiss AppInbox, please ensure to call this method after the usage of " +
-                        "cleverTapApiInstance.showAppInbox(). \n" + t
+                    "cleverTapApiInstance.showAppInbox(). \n$t"
             )
         }
     }
@@ -2119,8 +1961,7 @@ open class CleverTapAPI internal constructor(
      * Opens [CTInboxActivity] to display Inbox Messages with default [CTInboxStyleConfig] object
      */
     open fun showAppInbox() {
-        val styleConfig = CTInboxStyleConfig()
-        showAppInbox(styleConfig)
+        showAppInbox(CTInboxStyleConfig())
     }
 
     /**
@@ -2167,10 +2008,10 @@ open class CleverTapAPI internal constructor(
         }
     }
 
+    // CoreMetaData keys custom SDK versions by a non-null name; a null name is an NPE.
     @RestrictTo(Scope.LIBRARY_GROUP)
-    open fun getCustomSdkVersion(customSdkName: String?): Int {
-        return coreState.coreMetaData.getCustomSdkVersion(customSdkName!!)
-    }
+    open fun getCustomSdkVersion(customSdkName: String?): Int =
+        coreState.coreMetaData.getCustomSdkVersion(customSdkName!!)
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     open fun setCustomSdkVersion(customSdkName: String?, customSdkVersion: Int) {
@@ -2185,9 +2026,16 @@ open class CleverTapAPI internal constructor(
     private val configLogger: Logger
         get() = config.logger
 
-    private fun isErrorDeviceId(): Boolean {
-        return coreState.deviceInfo.isErrorDeviceId
-    }
+    private val isErrorDeviceId: Boolean
+        get() = coreState.deviceInfo.isErrorDeviceId
+
+    /** The inbox controller, or `null` after logging that the inbox has not been initialized. */
+    private fun inboxControllerOrLog(): CTInboxController? =
+        coreState.controllerManager.ctInboxController.also {
+            if (it == null) {
+                configLogger.debug(accountId, "Notification Inbox not initialized")
+            }
+        }
 
     /**
      * Subscribe to receive a unique identifier by which CleverTap identifies this user. The listener is called on the
@@ -2197,10 +2045,8 @@ open class CleverTapAPI internal constructor(
      * @param onInitCleverTapIDListener non-null callback to retrieve identifier on main thread.
      */
     open fun getCleverTapID(onInitCleverTapIDListener: OnInitCleverTapIDListener) {
-        val taskDeviceCachedInfo = coreState.executors.ioTask<Void?>()
-        taskDeviceCachedInfo.execute("getCleverTapID") {
-            val deviceID = coreState.deviceInfo.deviceID
-            if (deviceID != null) {
+        coreState.executors.ioTask<Void?>().execute("getCleverTapID") {
+            coreState.deviceInfo.deviceID?.let { deviceID ->
                 runOnUiThread { onInitCleverTapIDListener.onInitCleverTapID(deviceID) }
             }
             coreState.callbackManager.addOnInitCleverTapIDListener(onInitCleverTapIDListener)
@@ -2216,10 +2062,7 @@ open class CleverTapAPI internal constructor(
      *                                  [getCleverTapID] that should be removed.
      */
     open fun removeCleverTapIDListener(onInitCleverTapIDListener: OnInitCleverTapIDListener) {
-        @Suppress("SENSELESS_COMPARISON")
-        if (coreState != null && coreState.callbackManager != null) {
-            coreState.callbackManager.removeOnInitCleverTapIDListener(onInitCleverTapIDListener)
-        }
+        coreState.callbackManager.removeOnInitCleverTapIDListener(onInitCleverTapIDListener)
     }
 
     //TODO: start synchronizing entire flow from here
@@ -2229,32 +2072,17 @@ open class CleverTapAPI internal constructor(
         extras: Bundle?
     ): Future<*>? {
         val config = coreState.config
-        var future: Future<*>? = null
-
-        try {
-            val task = coreState.executors.postAsyncSafelyTask<Void?>()
-            future = task.submit("CleverTapAPI#renderPushNotification") {
+        return try {
+            coreState.executors.postAsyncSafelyTask<Void?>().submit("CleverTapAPI#renderPushNotification") {
                 synchronized(coreState.pushProviders.getPushRenderingLock()) {
-                    coreState.pushProviders.pushNotificationRenderer = iNotificationRenderer
-
-                    if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
-                        coreState.pushProviders
-                            ._createNotification(
-                                context!!, extras,
-                                extras.getInt(Constants.PT_NOTIF_ID)
-                            )
-                    } else {
-                        coreState.pushProviders
-                            ._createNotification(context!!, extras, Constants.EMPTY_NOTIFICATION_ID)
-                    }
+                    createNotificationWith(iNotificationRenderer, context, extras)
                 }
                 null
             }
         } catch (t: Throwable) {
             config.logger.debug(config.accountId, "Failed to process renderPushNotification()", t)
+            null
         }
-
-        return future
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
@@ -2269,24 +2097,25 @@ open class CleverTapAPI internal constructor(
             synchronized(coreState.pushProviders.getPushRenderingLock()) {
                 config.logger.verbose(
                     config.accountId,
-                    "rendering push on caller thread with id = " + Thread.currentThread().id
+                    "rendering push on caller thread with id = ${Thread.currentThread().id}"
                 )
-                coreState.pushProviders.pushNotificationRenderer = iNotificationRenderer
-
-                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
-                    coreState.pushProviders
-                        ._createNotification(
-                            context!!, extras,
-                            extras.getInt(Constants.PT_NOTIF_ID)
-                        )
-                } else {
-                    coreState.pushProviders
-                        ._createNotification(context!!, extras, Constants.EMPTY_NOTIFICATION_ID)
-                }
+                createNotificationWith(iNotificationRenderer, context, extras)
             }
         } catch (t: Throwable) {
             config.logger.debug(config.accountId, "Failed to process renderPushNotification()", t)
         }
+    }
+
+    /** Renders [extras] with [renderer]; callers hold the push rendering lock. */
+    private fun createNotificationWith(renderer: INotificationRenderer, context: Context?, extras: Bundle?) {
+        coreState.pushProviders.pushNotificationRenderer = renderer
+        val notificationId = if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+            extras.getInt(Constants.PT_NOTIF_ID)
+        } else {
+            Constants.EMPTY_NOTIFICATION_ID
+        }
+        // Java passed a null context on, failing with an NPE in the renderer; the caller logs it.
+        coreState.pushProviders._createNotification(context!!, extras, notificationId)
     }
 
     /**
@@ -2298,8 +2127,7 @@ open class CleverTapAPI internal constructor(
      *
      * @return `true` if the app is in development mode, `false` otherwise.
      */
-    @Suppress("SENSELESS_COMPARISON")
-    open fun isDevelopmentMode(): Boolean = context != null && isDevelopmentMode(context)
+    open fun isDevelopmentMode(): Boolean = isDevelopmentMode(context)
 
     /** Kotlin property syntax, equivalent to [isDevelopmentMode]. */
     val isDevelopmentMode: Boolean
@@ -2314,10 +2142,9 @@ open class CleverTapAPI internal constructor(
      * @param <T> Type of value.
      * @return Returns the Var instance.
      */
-    open fun <T> defineVariable(name: String?, defaultValue: T): Var<T>? {
-        // Var.define returns null for an invalid name or a null non-file default, as it did in Java.
-        return Var.define(name, defaultValue, coreState.cTVariables)
-    }
+    // Var.define returns null for an invalid name or a null non-file default, as it did in Java.
+    open fun <T> defineVariable(name: String?, defaultValue: T): Var<T>? =
+        Var.define(name, defaultValue, coreState.cTVariables)
 
     /**
      * Defines a new file variable. Disclaimer: cannot be used with @Variable annotation.
@@ -2325,11 +2152,10 @@ open class CleverTapAPI internal constructor(
      * @param name Name of the variable.
      * @return Returns the Var instance.
      */
+    // Var.define returns null for an invalid name, as it did in Java.
     @Suppress("UNCHECKED_CAST")
-    open fun defineFileVariable(name: String?): Var<String>? {
-        // Var.define returns null for an invalid name, as it did in Java.
-        return Var.define<String?>(name, null, CTVariableUtils.FILE, coreState.cTVariables) as Var<String>?
-    }
+    open fun defineFileVariable(name: String?): Var<String>? =
+        Var.define<String?>(name, null, CTVariableUtils.FILE, coreState.cTVariables) as Var<String>?
 
     /**
      * Parses the @Variable annotated fields from a given instance or multiple instances.
@@ -2355,12 +2181,7 @@ open class CleverTapAPI internal constructor(
      * @param name The name of the variable or the group.
      * @return The value of the variable or the group.
      */
-    open fun getVariableValue(name: String?): Any? {
-        if (name == null) {
-            return null
-        }
-        return coreState.varCache.getMergedValue(name)
-    }
+    open fun getVariableValue(name: String?): Any? = name?.let { coreState.varCache.getMergedValue(it) }
 
     /**
      * Get an instance of a variable or a group.
@@ -2368,12 +2189,7 @@ open class CleverTapAPI internal constructor(
      * @param name The name of the variable or the group.
      * @return The instance of the variable or the group, or null if not created yet.
      */
-    open fun <T> getVariable(name: String?): Var<T>? {
-        if (name == null) {
-            return null
-        }
-        return coreState.varCache.getVariable(name)
-    }
+    open fun <T> getVariable(name: String?): Var<T>? = name?.let { coreState.varCache.getVariable(it) }
 
     /**
      * Fetches variable values from server.
@@ -2387,9 +2203,9 @@ open class CleverTapAPI internal constructor(
      * an "id" key mapping to the numeric ID of the variant.
      */
     open fun variants(): List<Map<String, Any>> {
-        val originalVariants = coreState.varCache.variants()
+        // An unmodifiable copy: Java callers get UnsupportedOperationException on mutation, as before.
         @Suppress("UNCHECKED_CAST")
-        return Collections.unmodifiableList(ArrayList(originalVariants)) as List<Map<String, Any>>
+        return Collections.unmodifiableList(coreState.varCache.variants().toList()) as List<Map<String, Any>>
     }
 
     /**
@@ -2401,14 +2217,9 @@ open class CleverTapAPI internal constructor(
         if (coreState.config.isAnalyticsOnly) {
             return
         }
-        Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...")
-
-        if (callback != null) {
-            coreState.callbackManager.fetchInAppsCallback = callback
-        }
-
-        val event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
-        coreState.analyticsManager.sendFetchEvent(event)
+        Logger.v("${Constants.LOG_TAG_INAPP} Fetching In Apps...")
+        callback?.let { coreState.callbackManager.fetchInAppsCallback = it }
+        coreState.analyticsManager.sendFetchEvent(getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS))
     }
 
     /**
@@ -2421,17 +2232,15 @@ open class CleverTapAPI internal constructor(
         if (coreState.config.isAnalyticsOnly) {
             return
         }
-        Logger.v(Constants.FEATURE_DISPLAY_UNIT + "Fetching Native Display metadata...")
-        val event = getFetchRequestAsJson(Constants.FETCH_TYPE_ND_META)
-        coreState.analyticsManager.sendFetchEvent(event)
+        Logger.v("${Constants.FEATURE_DISPLAY_UNIT}Fetching Native Display metadata...")
+        coreState.analyticsManager.sendFetchEvent(getFetchRequestAsJson(Constants.FETCH_TYPE_ND_META))
     }
 
     @JvmName("getFetchRequestAsJson")
     internal fun getFetchRequestAsJson(fetchType: Int): JSONObject {
         val event = JSONObject()
-        val notif = JSONObject()
         try {
-            notif.put(Constants.KEY_T, fetchType)
+            val notif = JSONObject().put(Constants.KEY_T, fetchType)
             event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH)
             event.put(Constants.KEY_EVT_DATA, notif)
         } catch (e: JSONException) {
@@ -2455,12 +2264,8 @@ open class CleverTapAPI internal constructor(
             return
         }
         Logger.v("variables", "Fetching  variables")
-        if (callback != null) {
-            coreState.callbackManager.fetchVariablesCallback = callback
-        }
-
-        val event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES)
-        coreState.analyticsManager.sendFetchEvent(event)
+        callback?.let { coreState.callbackManager.fetchVariablesCallback = it }
+        coreState.analyticsManager.sendFetchEvent(getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES))
     }
 
     /**
@@ -2564,7 +2369,7 @@ open class CleverTapAPI internal constructor(
     open fun getLocale(): String? = coreState.deviceInfo.customLocale
 
     open fun setLocale(locale: String?) {
-        if (TextUtils.isEmpty(locale)) {
+        if (locale.isNullOrEmpty()) {
             Logger.i("Empty Locale provided for setLocale, not setting it")
             return
         }
@@ -2583,24 +2388,7 @@ open class CleverTapAPI internal constructor(
      */
     @WorkerThread
     open fun clearInAppResources(expiredOnly: Boolean) {
-        val logger = configLogger
-
-        val storeRegistry = coreState.storeRegistry
-        @Suppress("SENSELESS_COMPARISON")
-        if (storeRegistry == null) {
-            logger.info(
-                "There was a problem clearing resources because instance is not completely initialised, please try again after some time"
-            )
-            return
-        }
-
-        val impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry)
-
-        if (expiredOnly) {
-            impl.cleanupExpiredResources(CtCacheType.IMAGE)
-        } else {
-            impl.cleanupAllResources(CtCacheType.IMAGE)
-        }
+        clearResources(expiredOnly, CtCacheType.IMAGE)
     }
 
     /**
@@ -2612,23 +2400,15 @@ open class CleverTapAPI internal constructor(
      */
     @WorkerThread
     open fun clearFileResources(expiredOnly: Boolean) {
-        val logger = configLogger
+        clearResources(expiredOnly, CtCacheType.FILES)
+    }
 
-        val storeRegistry = coreState.storeRegistry
-        @Suppress("SENSELESS_COMPARISON")
-        if (storeRegistry == null) {
-            logger.info(
-                "There was a problem clearing file resources because instance is not completely initialised, please try again after some time"
-            )
-            return
-        }
-
-        val impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry)
-
+    private fun clearResources(expiredOnly: Boolean, cacheType: CtCacheType) {
+        val repo = FileResourcesRepoFactory.createFileResourcesRepo(context, configLogger, coreState.storeRegistry)
         if (expiredOnly) {
-            impl.cleanupExpiredResources(CtCacheType.FILES)
+            repo.cleanupExpiredResources(cacheType)
         } else {
-            impl.cleanupAllResources(CtCacheType.FILES)
+            repo.cleanupAllResources(cacheType)
         }
     }
 
@@ -2658,14 +2438,14 @@ open class CleverTapAPI internal constructor(
         @Suppress("unused")
         private var sdkVersion: String? = null // For Google Play Store/Android Studio analytics
 
-        private var sNotificationHandler: NotificationHandler? = null
+        private var registeredNotificationHandler: NotificationHandler? = null
 
-        private var sSignedCallNotificationHandler: NotificationHandler? = null
+        private var registeredSignedCallNotificationHandler: NotificationHandler? = null
 
         @Volatile
-        private var sLiveUpdateNotificationFactory: ICleverTapLiveUpdateNotificationFactory? = null
+        private var liveUpdateNotificationFactory: ICleverTapLiveUpdateNotificationFactory? = null
 
-        private val sNotificationRenderedListenerMap = HashMap<String?, NotificationRenderedListener?>()
+        private val notificationRenderedListeners = HashMap<String?, NotificationRenderedListener?>()
 
         private var clevertapClock: Clock = Clock.SYSTEM
 
@@ -2693,9 +2473,8 @@ open class CleverTapAPI internal constructor(
             val defaultConfig = defaultConfig
             if (defaultConfig != null) {
                 Logger.i(
-                    "CleverTap SDK already initialized with accountID:" + defaultConfig.accountId
-                            + " and token:" + defaultConfig.accountToken + ". Cannot change credentials to "
-                            + accountID + " and " + token
+                    "CleverTap SDK already initialized with accountID:${defaultConfig.accountId} and " +
+                        "token:${defaultConfig.accountToken}. Cannot change credentials to $accountID and $token"
                 )
                 return
             }
@@ -2721,11 +2500,11 @@ open class CleverTapAPI internal constructor(
             val defaultConfig = defaultConfig
             if (defaultConfig != null) {
                 Logger.i(
-                    "CleverTap SDK already initialized with accountID:" + defaultConfig.accountId
-                            + ", token:" + defaultConfig.accountToken + ", proxyDomain: " + defaultConfig.proxyDomain +
-                            " and spikyDomain: " + defaultConfig.spikyProxyDomain +
-                            ". Cannot change credentials to accountID: " + accountID +
-                            ", token: " + token + ", proxyDomain: " + proxyDomain + "and spikyProxyDomain: " + spikyProxyDomain
+                    "CleverTap SDK already initialized with accountID:${defaultConfig.accountId}, " +
+                        "token:${defaultConfig.accountToken}, proxyDomain: ${defaultConfig.proxyDomain} and " +
+                        "spikyDomain: ${defaultConfig.spikyProxyDomain}. Cannot change credentials to " +
+                        "accountID: $accountID, token: $token, proxyDomain: ${proxyDomain}and " +
+                        "spikyProxyDomain: $spikyProxyDomain"
                 )
                 return
             }
@@ -2753,12 +2532,12 @@ open class CleverTapAPI internal constructor(
             val defaultConfig = defaultConfig
             if (defaultConfig != null) {
                 Logger.i(
-                    "CleverTap SDK already initialized with accountID:" + defaultConfig.accountId
-                            + ", token:" + defaultConfig.accountToken + ", proxyDomain: " + defaultConfig.proxyDomain +
-                            ", spikyDomain: " + defaultConfig.spikyProxyDomain + ", handshakeDomain: " + defaultConfig.customHandshakeDomain
-                            + ". Cannot change credentials to accountID: " + accountID +
-                            ", token: " + token + ", proxyDomain: " + proxyDomain + ", spikyProxyDomain: " + spikyProxyDomain
-                            + "and customHandshakeDomain: " + customHandshakeDomain
+                    "CleverTap SDK already initialized with accountID:${defaultConfig.accountId}, " +
+                        "token:${defaultConfig.accountToken}, proxyDomain: ${defaultConfig.proxyDomain}, " +
+                        "spikyDomain: ${defaultConfig.spikyProxyDomain}, " +
+                        "handshakeDomain: ${defaultConfig.customHandshakeDomain}. Cannot change credentials to " +
+                        "accountID: $accountID, token: $token, proxyDomain: $proxyDomain, " +
+                        "spikyProxyDomain: ${spikyProxyDomain}and customHandshakeDomain: $customHandshakeDomain"
                 )
                 return
             }
@@ -2792,26 +2571,24 @@ open class CleverTapAPI internal constructor(
          */
         @JvmStatic
         fun createNotification(context: Context?, extras: Bundle?, notificationId: Int) {
-            val instance = fromBundle(context, extras)
-            if (instance != null) {
-                val coreState = instance.coreState
-                val config = coreState.config
+            val instance = fromBundle(context, extras) ?: return
+            val coreState = instance.coreState
+            val config = coreState.config
 
-                try {
-                    synchronized(coreState.pushProviders.getPushRenderingLock()) {
-                        coreState.pushProviders.pushNotificationRenderer = CoreNotificationRenderer()
-                        coreState.pushProviders._createNotification(context!!, extras, notificationId)
-                    }
-                } catch (t: Throwable) {
-                    config.logger.debug(config.accountId, "Failed to process createNotification()", t)
+            try {
+                synchronized(coreState.pushProviders.getPushRenderingLock()) {
+                    coreState.pushProviders.pushNotificationRenderer = CoreNotificationRenderer()
+                    // a null context fails here as it did in Java; the catch below logs it
+                    coreState.pushProviders._createNotification(context!!, extras, notificationId)
                 }
+            } catch (t: Throwable) {
+                config.logger.debug(config.accountId, "Failed to process createNotification()", t)
             }
         }
 
         @JvmStatic
-        fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? {
-            return fromAccountId(context, _accountId)
-        }
+        fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =
+            fromAccountId(context, _accountId)
 
         /**
          * Pass Push Notification Payload to CleverTap for smooth functioning of Pull Notifications
@@ -2821,10 +2598,9 @@ open class CleverTapAPI internal constructor(
          */
         @JvmStatic
         fun processPushNotification(context: Context?, extras: Bundle?) {
-            val instance = fromBundle(context, extras)
-            if (instance != null) {
-                instance.coreState.pushProviders.processCustomPushNotification(extras!!)
-            }
+            val instance = fromBundle(context, extras) ?: return
+            // fromBundle already required non-null extras
+            instance.coreState.pushProviders.processCustomPushNotification(extras!!)
         }
 
         /**
@@ -2866,38 +2642,11 @@ open class CleverTapAPI internal constructor(
             channelName: CharSequence?, channelDescription: String?, importance: Int,
             showBadge: Boolean
         ) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("createNotificationChannel", @RequiresApi(api = Build.VERSION_CODES.O) {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-                        val notificationChannel = NotificationChannel(
-                            channelId,
-                            channelName,
-                            importance
-                        )
-                        notificationChannel.description = channelDescription
-                        notificationChannel.setShowBadge(showBadge)
-                        notificationManager.createNotificationChannel(notificationChannel)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel " + channelName.toString() + " has been created"
-                        )
-                        null
-                    })
-                }
-            } catch (t: Throwable) {
-                instance.configLogger.verbose(instance.accountId, "Failure creating Notification Channel", t)
-            }
+            createChannel(
+                context, channelId, channelName, channelDescription, importance,
+                groupId = null, showBadge = showBadge, customSound = false, sound = null,
+                taskName = "createNotificationChannel"
+            )
         }
 
         /**
@@ -2924,40 +2673,11 @@ open class CleverTapAPI internal constructor(
             channelName: CharSequence?, channelDescription: String?, importance: Int,
             groupId: String?, showBadge: Boolean
         ) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("creatingNotificationChannel") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-                        val notificationChannel = NotificationChannel(
-                            channelId,
-                            channelName,
-                            importance
-                        )
-                        notificationChannel.description = channelDescription
-                        notificationChannel.group = groupId
-                        notificationChannel.setShowBadge(showBadge)
-                        notificationManager.createNotificationChannel(notificationChannel)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel " + channelName.toString() + " has been created"
-                        )
-
-                        null
-                    }
-                }
-            } catch (t: Throwable) {
-                instance.configLogger.verbose(instance.accountId, "Failure creating Notification Channel", t)
-            }
+            createChannel(
+                context, channelId, channelName, channelDescription, importance,
+                groupId = groupId, showBadge = showBadge, customSound = false, sound = null,
+                taskName = "creatingNotificationChannel"
+            )
         }
 
         /**
@@ -2981,69 +2701,11 @@ open class CleverTapAPI internal constructor(
             channelName: CharSequence?, channelDescription: String?, importance: Int,
             showBadge: Boolean, sound: String?
         ) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("createNotificationChannel") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-
-                        var soundfile = ""
-                        var soundUri: Uri? = null
-
-                        if (!sound!!.isEmpty()) {
-                            if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
-                                soundfile = sound.substring(0, (sound.length - 4))
-                            } else {
-                                instance.configLogger
-                                    .debug(instance.accountId, "Sound file name not supported")
-                            }
-                            if (!soundfile.isEmpty()) {
-                                soundUri = Uri.parse(
-                                    ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
-                                        .packageName + "/raw/" + soundfile
-                                )
-                            }
-                        }
-
-                        val notificationChannel = NotificationChannel(
-                            channelId,
-                            channelName,
-                            importance
-                        )
-                        notificationChannel.description = channelDescription
-                        notificationChannel.setShowBadge(showBadge)
-                        if (soundUri != null) {
-                            notificationChannel.setSound(
-                                soundUri,
-                                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                    .build()
-                            )
-                        } else {
-                            instance.configLogger.debug(
-                                instance.accountId,
-                                "Sound file not found, notification channel will be created without custom sound"
-                            )
-                        }
-                        notificationManager.createNotificationChannel(notificationChannel)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel " + channelName.toString() + " has been created"
-                        )
-                        null
-                    }
-                }
-            } catch (t: Throwable) {
-                instance.configLogger.verbose(instance.accountId, "Failure creating Notification Channel", t)
-            }
+            createChannel(
+                context, channelId, channelName, channelDescription, importance,
+                groupId = null, showBadge = showBadge, customSound = true, sound = sound,
+                taskName = "createNotificationChannel"
+            )
         }
 
         /**
@@ -3071,69 +2733,11 @@ open class CleverTapAPI internal constructor(
             channelName: CharSequence?, channelDescription: String?, importance: Int,
             groupId: String?, showBadge: Boolean, sound: String?
         ) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("creatingNotificationChannel") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-
-                        var soundfile = ""
-                        var soundUri: Uri? = null
-
-                        if (!sound!!.isEmpty()) {
-                            if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
-                                soundfile = sound.substring(0, (sound.length - 4))
-                            } else {
-                                instance.configLogger
-                                    .debug(instance.accountId, "Sound file name not supported")
-                            }
-                            if (!soundfile.isEmpty()) {
-                                soundUri = Uri.parse(
-                                    ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
-                                        .packageName + "/raw/" + soundfile
-                                )
-                            }
-                        }
-                        val notificationChannel = NotificationChannel(
-                            channelId,
-                            channelName,
-                            importance
-                        )
-                        notificationChannel.description = channelDescription
-                        notificationChannel.group = groupId
-                        notificationChannel.setShowBadge(showBadge)
-                        if (soundUri != null) {
-                            notificationChannel.setSound(
-                                soundUri,
-                                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                    .build()
-                            )
-                        } else {
-                            instance.configLogger.debug(
-                                instance.accountId,
-                                "Sound file not found, notification channel will be created without custom sound"
-                            )
-                        }
-                        notificationManager.createNotificationChannel(notificationChannel)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel " + channelName.toString() + " has been created"
-                        )
-                        null
-                    }
-                }
-            } catch (t: Throwable) {
-                instance.configLogger.verbose(instance.accountId, "Failure creating Notification Channel", t)
-            }
+            createChannel(
+                context, channelId, channelName, channelDescription, importance,
+                groupId = groupId, showBadge = showBadge, customSound = true, sound = sound,
+                taskName = "creatingNotificationChannel"
+            )
         }
 
         /**
@@ -3152,34 +2756,17 @@ open class CleverTapAPI internal constructor(
             context: Context?, groupId: String?,
             groupName: CharSequence?
         ) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#createNotificationChannelGroup")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("creatingNotificationChannelGroup") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-                        notificationManager
-                            .createNotificationChannelGroup(
-                                NotificationChannelGroup(groupId, groupName)
-                            )
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel group " + groupName.toString() + " has been created"
-                        )
-                        null
-                    }
-                }
-            } catch (t: Throwable) {
-                instance.configLogger
-                    .verbose(instance.accountId, "Failure creating Notification Channel Group", t)
+            withNotificationManager(
+                context,
+                apiName = "createNotificationChannelGroup",
+                taskName = "creatingNotificationChannelGroup",
+                failureMessage = "Failure creating Notification Channel Group"
+            ) { instance, notificationManager ->
+                notificationManager.createNotificationChannelGroup(NotificationChannelGroup(groupId, groupName))
+                instance.configLogger.info(
+                    instance.accountId,
+                    "Notification channel group $groupName has been created"
+                )
             }
         }
 
@@ -3195,30 +2782,14 @@ open class CleverTapAPI internal constructor(
         @RequiresApi(api = Build.VERSION_CODES.O)
         @JvmStatic
         fun deleteNotificationChannel(context: Context?, channelId: String?) {
-            val instance = getDefaultInstanceOrFirstOther(context)
-            if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannel")
-                return
-            }
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("deletingNotificationChannel") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-                        notificationManager.deleteNotificationChannel(channelId)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel $channelId has been deleted"
-                        )
-                        null
-                    }
-                }
-            } catch (t: Throwable) {
-                instance.configLogger.verbose(instance.accountId, "Failure deleting Notification Channel", t)
+            withNotificationManager(
+                context,
+                apiName = "deleteNotificationChannel",
+                taskName = "deletingNotificationChannel",
+                failureMessage = "Failure deleting Notification Channel"
+            ) { instance, notificationManager ->
+                notificationManager.deleteNotificationChannel(channelId)
+                instance.configLogger.info(instance.accountId, "Notification channel $channelId has been deleted")
             }
         }
 
@@ -3234,32 +2805,105 @@ open class CleverTapAPI internal constructor(
         @RequiresApi(api = Build.VERSION_CODES.O)
         @JvmStatic
         fun deleteNotificationChannelGroup(context: Context?, groupId: String?) {
+            withNotificationManager(
+                context,
+                apiName = "deleteNotificationChannelGroup",
+                taskName = "deletingNotificationChannelGroup",
+                failureMessage = "Failure deleting Notification Channel Group"
+            ) { instance, notificationManager ->
+                notificationManager.deleteNotificationChannelGroup(groupId)
+                instance.configLogger.info(instance.accountId, "Notification channel group $groupId has been deleted")
+            }
+        }
+
+        private fun createChannel(
+            context: Context?,
+            channelId: String?,
+            channelName: CharSequence?,
+            channelDescription: String?,
+            importance: Int,
+            groupId: String?,
+            showBadge: Boolean,
+            customSound: Boolean,
+            sound: String?,
+            taskName: String
+        ) {
+            withNotificationManager(
+                context,
+                apiName = "createNotificatonChannel",
+                taskName = taskName,
+                failureMessage = "Failure creating Notification Channel",
+                action = @RequiresApi(api = Build.VERSION_CODES.O) { instance, notificationManager ->
+                    val soundUri = if (customSound) soundUri(context, instance, sound) else null
+                    val notificationChannel = NotificationChannel(channelId, channelName, importance).apply {
+                        description = channelDescription
+                        group = groupId // null (the default) for the overloads without a group
+                        setShowBadge(showBadge)
+                    }
+                    when {
+                        soundUri != null -> notificationChannel.setSound(
+                            soundUri,
+                            AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build()
+                        )
+
+                        customSound -> instance.configLogger.debug(
+                            instance.accountId,
+                            "Sound file not found, notification channel will be created without custom sound"
+                        )
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel)
+                    instance.configLogger.info(instance.accountId, "Notification channel $channelName has been created")
+                }
+            )
+        }
+
+        /** The `android.resource` uri of a raw sound file such as `chime.mp3`, or `null` if unsupported. */
+        private fun soundUri(context: Context?, instance: CleverTapAPI, sound: String?): Uri? {
+            // Java dereferenced a null sound name here too; the task logs the failure.
+            val fileName = sound!!
+            if (fileName.isEmpty()) {
+                return null
+            }
+            if (!(fileName.contains(".mp3") || fileName.contains(".ogg") || fileName.contains(".wav"))) {
+                instance.configLogger.debug(instance.accountId, "Sound file name not supported")
+                return null
+            }
+            val rawName = fileName.substring(0, fileName.length - 4)
+            if (rawName.isEmpty()) {
+                return null
+            }
+            return Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context?.packageName}/raw/$rawName")
+        }
+
+        /**
+         * Runs [action] with the [NotificationManager] on the SDK's async queue (Android O+), logging
+         * through the default instance, or the first other instance.
+         */
+        private fun withNotificationManager(
+            context: Context?,
+            apiName: String,
+            taskName: String,
+            failureMessage: String,
+            action: (CleverTapAPI, NotificationManager) -> Unit
+        ) {
             val instance = getDefaultInstanceOrFirstOther(context)
             if (instance == null) {
-                Logger.v("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannelGroup")
+                Logger.v("No CleverTap Instance found in CleverTapAPI#$apiName")
                 return
             }
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-                    task.execute("deletingNotificationChannelGroup") {
-                        val notificationManager = context!!
-                            .getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-                        if (notificationManager == null) {
-                            return@execute null
-                        }
-                        notificationManager.deleteNotificationChannelGroup(groupId)
-                        instance.configLogger.info(
-                            instance.accountId,
-                            "Notification channel group $groupId has been deleted"
-                        )
-
+                    instance.coreState.executors.postAsyncSafelyTask<Void?>().execute(taskName) {
+                        // Java dereferenced a null context here too; the task logs the failure.
+                        val notificationManager =
+                            context!!.getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
+                            ?: return@execute null
+                        action(instance, notificationManager)
                         null
                     }
                 }
             } catch (t: Throwable) {
-                instance.configLogger
-                    .verbose(instance.accountId, "Failure deleting Notification Channel Group", t)
+                instance.configLogger.verbose(instance.accountId, failureMessage, t)
             }
         }
 
@@ -3273,8 +2917,7 @@ open class CleverTapAPI internal constructor(
         @JvmStatic
         fun fcmTokenRefresh(context: Context?, token: String?) {
             for (instance in getAvailableInstances(context)) {
-                @Suppress("SENSELESS_COMPARISON")
-                if (instance == null || instance.coreState.config.isAnalyticsOnly) {
+                if (instance.coreState.config.isAnalyticsOnly) {
                     Logger.d("Instance is Analytics Only not processing device token")
                     continue
                 }
@@ -3288,9 +2931,7 @@ open class CleverTapAPI internal constructor(
          * @return The [LogLevel] int value
          */
         @JvmStatic
-        fun getDebugLevel(): Int {
-            return debugLevel
-        }
+        fun getDebugLevel(): Int = debugLevel
 
         /**
          * Enables or disables debugging. If enabled, see debug messages in Android's logcat utility.
@@ -3333,17 +2974,8 @@ open class CleverTapAPI internal constructor(
             // For Google Play Store/Android Studio tracking
             sdkVersion = BuildConfig.SDK_VERSION_STRING
 
-            val currentDefaultConfig = defaultConfig
-            if (currentDefaultConfig != null) {
-                return instanceWithConfig(context, currentDefaultConfig, cleverTapID)
-            } else {
-                defaultConfig = getDefaultConfig(context)
-                val newDefaultConfig = defaultConfig
-                if (newDefaultConfig != null) {
-                    return instanceWithConfig(context, newDefaultConfig, cleverTapID)
-                }
-            }
-            return null
+            val config = defaultConfig ?: getDefaultConfig(context).also { defaultConfig = it }
+            return config?.let { instanceWithConfig(context, it, cleverTapID) }
         }
 
         /**
@@ -3353,36 +2985,23 @@ open class CleverTapAPI internal constructor(
          * @return The [CleverTapAPI] object
          */
         @JvmStatic
-        fun getDefaultInstance(context: Context?): CleverTapAPI? {
-            return getDefaultInstance(context, null)
-        }
+        fun getDefaultInstance(context: Context?): CleverTapAPI? = getDefaultInstance(context, null)
 
-        private fun fromAccountId(context: Context?, _accountId: String?): CleverTapAPI? {
+        /**
+         * The instance for [accountId] (the default instance when it is null), creating it when no
+         * instance exists yet; `null` when there is none.
+         */
+        private fun fromAccountId(context: Context?, accountId: String?): CleverTapAPI? {
             if (CleverTapInstanceStore.isEmpty()) {
-                return createInstanceIfAvailable(context, _accountId)
+                return createInstanceIfAvailable(context, accountId)
             }
-
-            for (instance in CleverTapInstanceStore.all()) {
-                var shouldProcess = false
-                @Suppress("SENSELESS_COMPARISON")
-                if (instance != null) {
-                    shouldProcess = (_accountId == null && instance.coreState.config.isDefaultInstance) ||
-                            instance
-                                .accountId
-                                .equals(_accountId)
-                }
-                if (shouldProcess) {
-                    return instance
-                }
+            return CleverTapInstanceStore.all().firstOrNull { instance ->
+                (accountId == null && instance.coreState.config.isDefaultInstance) || instance.accountId == accountId
             }
-
-            return null // failed to get instance
         }
 
         @JvmStatic
-        fun getInstances(): HashMap<String, CleverTapAPI> {
-            return CleverTapInstanceStore.snapshot()
-        }
+        fun getInstances(): HashMap<String, CleverTapAPI> = CleverTapInstanceStore.snapshot()
 
         @JvmStatic
         fun setInstances(instances: HashMap<String, CleverTapAPI>?) {
@@ -3414,35 +3033,7 @@ open class CleverTapAPI internal constructor(
                 return
             }
 
-            var _accountId: String? = null
-            try {
-                _accountId = notification.getString(Constants.WZRK_ACCT_ID_KEY)
-            } catch (t: Throwable) {
-                // no-op
-            }
-
-            if (CleverTapInstanceStore.isEmpty()) {
-                val instance = createInstanceIfAvailable(context, _accountId)
-                if (instance != null) {
-                    instance.pushNotificationClickedEvent(notification)
-                }
-                return
-            }
-
-            for (instance in CleverTapInstanceStore.all()) {
-                var shouldProcess = false
-                @Suppress("SENSELESS_COMPARISON")
-                if (instance != null) {
-                    shouldProcess = (_accountId == null && instance.coreState.config.isDefaultInstance) ||
-                            instance
-                                .accountId
-                                .equals(_accountId)
-                }
-                if (shouldProcess) {
-                    instance.pushNotificationClickedEvent(notification)
-                    break
-                }
-            }
+            fromAccountId(context, accountIdOf(notification))?.pushNotificationClickedEvent(notification)
         }
 
         /**
@@ -3464,25 +3055,14 @@ open class CleverTapAPI internal constructor(
                 return
             }
 
-            var _accountId: String? = null
-            try {
-                _accountId = notification.getString(Constants.WZRK_ACCT_ID_KEY)
-            } catch (t: Throwable) {
-                // no-op
-            }
-
             // Reuse the shared instance-resolution (default vs multi-instance) instead of re-implementing
             // the registry lookup — same path handleNotificationClicked and friends use.
-            val instance = fromAccountId(context, _accountId)
-            if (instance == null) {
-                return
-            }
+            val instance = fromAccountId(context, accountIdOf(notification)) ?: return
 
             // Dismissal is delivered on the BroadcastReceiver's main thread; raise the event on a worker
             // so the analytics/DB queue work (raiseLiveUpdateLifecycleEvent is @WorkerThread) never runs
             // on the main thread.
-            val task = instance.coreState.executors.postAsyncSafelyTask<Void?>()
-            task.execute("handleLiveUpdateDismissed") {
+            instance.coreState.executors.postAsyncSafelyTask<Void?>().execute("handleLiveUpdateDismissed") {
                 instance.coreState.analyticsManager
                     .raiseLiveUpdateLifecycleEvent(notification, Constants.LIVE_UPDATE_STATE_DISMISSED)
                 null
@@ -3497,9 +3077,8 @@ open class CleverTapAPI internal constructor(
          * @return The [CleverTapAPI] object, or `null` if [config] is null
          */
         @JvmStatic
-        fun instanceWithConfig(context: Context?, config: CleverTapInstanceConfig?): CleverTapAPI? {
-            return instanceWithConfig(context, config, null)
-        }
+        fun instanceWithConfig(context: Context?, config: CleverTapInstanceConfig?): CleverTapAPI? =
+            instanceWithConfig(context, config, null)
 
         /**
          * Returns an instance of the CleverTap SDK using CleverTapInstanceConfig.
@@ -3519,18 +3098,17 @@ open class CleverTapAPI internal constructor(
                 return null
             }
             var created = false
-            val instance = CleverTapInstanceStore.getOrCreate(
-                config.accountId
-            ) {
+            val instance = CleverTapInstanceStore.getOrCreate(config.accountId) {
                 created = true
+                // Java dereferenced a null context when creating an instance too.
                 CleverTapAPI(context!!, config, cleverTapID)
             }
-            if (!created && instance.config.enableCustomCleverTapId && Utils
-                    .validateCTID(cleverTapID) && instance.isErrorDeviceId()
+            if (!created && instance.config.enableCustomCleverTapId &&
+                Utils.validateCTID(cleverTapID) && instance.isErrorDeviceId
             ) {
                 instance.coreState.loginController.asyncProfileSwitchUser(null, null, cleverTapID)
             }
-            Logger.v(config.accountId + ":async_deviceID", "CleverTapAPI instance = $instance")
+            Logger.v("${config.accountId}:async_deviceID", "CleverTapAPI instance = $instance")
             return instance
         }
 
@@ -3540,9 +3118,7 @@ open class CleverTapAPI internal constructor(
          * @return The foreground status
          */
         @JvmStatic
-        fun isAppForeground(): Boolean {
-            return CoreMetaData.isAppForeground()
-        }
+        fun isAppForeground(): Boolean = CoreMetaData.isAppForeground()
 
         /**
          * Use this method to notify CleverTap that the app is in foreground
@@ -3558,10 +3134,7 @@ open class CleverTapAPI internal constructor(
         fun onActivityPaused() {
             for (instance in CleverTapInstanceStore.all()) {
                 try {
-                    @Suppress("SENSELESS_COMPARISON")
-                    if (instance != null) {
-                        instance.coreState.activityLifeCycleManager.activityPaused()
-                    }
+                    instance.coreState.activityLifeCycleManager.activityPaused()
                 } catch (t: Throwable) {
                     // Ignore
                 }
@@ -3576,11 +3149,8 @@ open class CleverTapAPI internal constructor(
         @JvmStatic
         fun onActivityResumed(activity: Activity?, cleverTapID: String?) {
             if (CleverTapInstanceStore.isEmpty()) {
-                createInstanceIfAvailable(
-                    activity!!.applicationContext,
-                    null,
-                    cleverTapID
-                )
+                // Java dereferenced a null activity here too.
+                createInstanceIfAvailable(activity!!.applicationContext, null, cleverTapID)
             }
 
             CoreMetaData.setAppForeground(true)
@@ -3597,42 +3167,42 @@ open class CleverTapAPI internal constructor(
             }
 
             if (CoreMetaData.getInitialAppEnteredForegroundTime() <= 0) {
-                val initialAppEnteredForegroundTime = clevertapClock.currentTimeSecondsInt()
-                CoreMetaData.setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime)
+                CoreMetaData.setInitialAppEnteredForegroundTime(clevertapClock.currentTimeSecondsInt())
             }
 
             for (instance in CleverTapInstanceStore.all()) {
                 try {
-                    @Suppress("SENSELESS_COMPARISON")
-                    if (instance != null) {
-                        instance.coreState.activityLifeCycleManager.activityResumed(activity)
-                    }
+                    instance.coreState.activityLifeCycleManager.activityResumed(activity)
                 } catch (t: Throwable) {
-                    Logger.v("Throwable - " + t.localizedMessage)
+                    Logger.v("Throwable - ${t.localizedMessage}")
                 }
             }
         }
 
-        private fun fromBundle(context: Context?, extras: Bundle?): CleverTapAPI? {
-            val _accountId = extras!!.getString(Constants.WZRK_ACCT_ID_KEY)
-            return fromAccountId(context, _accountId)
+        // The push entry points have always required a payload: Java dereferenced a null one too.
+        private fun fromBundle(context: Context?, extras: Bundle?): CleverTapAPI? =
+            fromAccountId(context, extras!!.getString(Constants.WZRK_ACCT_ID_KEY))
+
+        /** The account id a CleverTap push / notification bundle was sent for, if readable. */
+        private fun accountIdOf(notification: Bundle): String? = try {
+            notification.getString(Constants.WZRK_ACCT_ID_KEY)
+        } catch (t: Throwable) {
+            null
         }
 
-        private fun isDevelopmentMode(context: Context): Boolean {
-            return 0 != (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE)
-        }
+        private fun isDevelopmentMode(context: Context): Boolean =
+            (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
         @RestrictTo(Scope.LIBRARY)
         @JvmStatic
         fun runJobWork(context: Context?) {
             if (CleverTapInstanceStore.isEmpty()) {
-                val instance = getDefaultInstance(context)
-                if (instance != null) {
-                    if (instance.config.isBackgroundSync) {
-                        instance.coreState.pushProviders.runPushAmpWork(context!!)
-                    } else {
-                        Logger.d("Instance doesn't allow Background sync, not running the Job")
-                    }
+                val instance = getDefaultInstance(context) ?: return
+                if (instance.config.isBackgroundSync) {
+                    // an instance exists only for a non-null context
+                    instance.coreState.pushProviders.runPushAmpWork(context!!)
+                } else {
+                    Logger.d("Instance doesn't allow Background sync, not running the Job")
                 }
                 return
             }
@@ -3729,32 +3299,25 @@ open class CleverTapAPI internal constructor(
         }
 
         @JvmStatic
-        fun getNotificationHandler(): NotificationHandler? {
-            return sNotificationHandler
-        }
+        fun getNotificationHandler(): NotificationHandler? = registeredNotificationHandler
 
         @JvmStatic
-        fun getSignedCallNotificationHandler(): NotificationHandler? {
-            return sSignedCallNotificationHandler
-        }
+        fun getSignedCallNotificationHandler(): NotificationHandler? = registeredSignedCallNotificationHandler
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
         fun addNotificationRenderedListener(id: String?, notificationRenderedListener: NotificationRenderedListener?) {
-            sNotificationRenderedListenerMap[id] = notificationRenderedListener
+            notificationRenderedListeners[id] = notificationRenderedListener
         }
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
-        fun getNotificationRenderedListener(id: String?): NotificationRenderedListener? {
-            return sNotificationRenderedListenerMap[id]
-        }
+        fun getNotificationRenderedListener(id: String?): NotificationRenderedListener? = notificationRenderedListeners[id]
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
-        fun removeNotificationRenderedListener(id: String?): NotificationRenderedListener? {
-            return sNotificationRenderedListenerMap.remove(id)
-        }
+        fun removeNotificationRenderedListener(id: String?): NotificationRenderedListener? =
+            notificationRenderedListeners.remove(id)
 
         // @RestrictTo keeps the BCV dump clean: @JvmName makes BCV treat this internal member as public.
         @RestrictTo(Scope.LIBRARY)
@@ -3780,43 +3343,41 @@ open class CleverTapAPI internal constructor(
                 return
             }
 
-            var alreadyProcessedByCleverTap = false
-            var notification: Bundle? = null
-            var deepLink: Uri? = null
-            var _accountId: String? = null
-
             // check for launch deep link
-            try {
-                val intent = activity.intent
-                deepLink = intent.data
-                if (deepLink != null) {
-                    val queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true)
-                    _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY)
-                }
+            val deepLink: Uri? = try {
+                activity.intent.data
             } catch (t: Throwable) {
-                // Ignore
+                null
+            }
+            var accountId: String? = deepLink?.let {
+                try {
+                    UriHelper.getAllKeyValuePairs(it.toString(), true).getString(Constants.WZRK_ACCT_ID_KEY)
+                } catch (t: Throwable) {
+                    null
+                }
             }
 
             // check for launch via notification click
+            val notification: Bundle? = try {
+                activity.intent.extras
+            } catch (t: Throwable) {
+                null
+            }
+            var alreadyProcessedByCleverTap = false
             try {
-                notification = activity.intent.extras
                 if (notification != null && !notification.isEmpty) {
-                    try {
+                    @Suppress("DEPRECATION")
+                    alreadyProcessedByCleverTap = notification.containsKey(Constants.WZRK_FROM_KEY) &&
+                        Constants.WZRK_FROM == notification.get(Constants.WZRK_FROM_KEY)
+                    if (alreadyProcessedByCleverTap) {
+                        Logger.v(
+                            "ActivityLifecycleCallback: Notification Clicked already processed for " +
+                                "$notification, dropping duplicate."
+                        )
+                    }
+                    if (notification.containsKey(Constants.WZRK_ACCT_ID_KEY)) {
                         @Suppress("DEPRECATION")
-                        alreadyProcessedByCleverTap = (notification.containsKey(Constants.WZRK_FROM_KEY) &&
-                                Constants.WZRK_FROM == notification.get(Constants.WZRK_FROM_KEY))
-                        if (alreadyProcessedByCleverTap) {
-                            Logger.v(
-                                "ActivityLifecycleCallback: Notification Clicked already processed for "
-                                        + notification + ", dropping duplicate."
-                            )
-                        }
-                        if (notification.containsKey(Constants.WZRK_ACCT_ID_KEY)) {
-                            @Suppress("DEPRECATION")
-                            _accountId = notification.get(Constants.WZRK_ACCT_ID_KEY) as String?
-                        }
-                    } catch (t: Throwable) {
-                        // no-op
+                        accountId = notification.get(Constants.WZRK_ACCT_ID_KEY) as String?
                     }
                 }
             } catch (t: Throwable) {
@@ -3829,71 +3390,56 @@ open class CleverTapAPI internal constructor(
 
             try {
                 for (instance in CleverTapInstanceStore.all()) {
-                    @Suppress("SENSELESS_COMPARISON")
-                    if (instance != null) {
-                        instance.coreState.activityLifeCycleManager
-                            .onActivityCreated(notification, deepLink, _accountId)
-                    }
+                    instance.coreState.activityLifeCycleManager.onActivityCreated(notification, deepLink, accountId)
                 }
             } catch (t: Throwable) {
-                Logger.v("Throwable - " + t.localizedMessage)
+                Logger.v("Throwable - ${t.localizedMessage}")
             }
         }
 
-        private fun createInstanceIfAvailable(context: Context?, _accountId: String?): CleverTapAPI? {
-            return createInstanceIfAvailable(context, _accountId, null)
-        }
+        private fun createInstanceIfAvailable(context: Context?, accountId: String?): CleverTapAPI? =
+            createInstanceIfAvailable(context, accountId, null)
 
         private fun createInstanceIfAvailable(
             context: Context?,
-            _accountId: String?,
+            accountId: String?,
             cleverTapID: String?
-        ): CleverTapAPI? {
-            try {
-                if (_accountId == null) {
-                    try {
-                        return getDefaultInstance(context, cleverTapID)
-                    } catch (t: Throwable) {
-                        Logger.v("Error creating shared Instance: ", t.cause)
-                        return null
-                    }
-                }
-                val configJson = StorageHelper.getString(context!!, "instance:$_accountId", "")
-                if (!configJson!!.isEmpty()) {
+        ): CleverTapAPI? = try {
+            if (accountId == null) {
+                defaultInstanceOrNull { getDefaultInstance(context, cleverTapID) }
+            } else {
+                // Without a context or stored config there is nothing to create (Java hit an NPE and
+                // returned null from the catch below).
+                val appContext = context ?: return null
+                val configJson = StorageHelper.getString(appContext, "instance:$accountId", "") ?: return null
+                if (configJson.isNotEmpty()) {
                     val config = CleverTapInstanceConfig.createInstanceFromJson(configJson)
                     Logger.v("Inflated Instance Config: $configJson")
-                    return if (config != null) instanceWithConfig(context, config, cleverTapID) else null
+                    config?.let { instanceWithConfig(appContext, it, cleverTapID) }
                 } else {
-                    try {
-                        val instance = getDefaultInstance(context)
-                        return if (instance != null && instance.coreState.config.accountId == _accountId) {
-                            instance
-                        } else {
-                            null
-                        }
-                    } catch (t: Throwable) {
-                        Logger.v("Error creating shared Instance: ", t.cause)
-                        return null
+                    defaultInstanceOrNull {
+                        getDefaultInstance(appContext)?.takeIf { it.coreState.config.accountId == accountId }
                     }
                 }
-            } catch (t: Throwable) {
-                return null
             }
+        } catch (t: Throwable) {
+            null
+        }
+
+        private inline fun defaultInstanceOrNull(create: () -> CleverTapAPI?): CleverTapAPI? = try {
+            create()
+        } catch (t: Throwable) {
+            Logger.v("Error creating shared Instance: ", t.cause)
+            null
         }
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
         fun getAvailableInstances(context: Context?): ArrayList<CleverTapAPI> {
-            val apiArrayList = ArrayList<CleverTapAPI>()
             if (CleverTapInstanceStore.isEmpty()) {
-                val cleverTapAPI = getDefaultInstance(context)
-                if (cleverTapAPI != null) {
-                    apiArrayList.add(cleverTapAPI)
-                }
-            } else {
-                apiArrayList.addAll(CleverTapInstanceStore.all())
+                return ArrayList<CleverTapAPI>().apply { getDefaultInstance(context)?.let { add(it) } }
             }
-            return apiArrayList
+            return ArrayList(CleverTapInstanceStore.all())
         }
 
         /**
@@ -3925,35 +3471,24 @@ open class CleverTapAPI internal constructor(
             )
 
             // todo : check if these re-assignments are needed, already added in manifest parsing
-            if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
+            if (!proxyDomain.isNullOrBlank()) {
                 defaultInstanceConfig.proxyDomain = proxyDomain
             }
-            if (spikyProxyDomain != null && !spikyProxyDomain.trim().isEmpty()) {
+            if (!spikyProxyDomain.isNullOrBlank()) {
                 defaultInstanceConfig.spikyProxyDomain = spikyProxyDomain
             }
-            if (handshakeDomain != null && !handshakeDomain.trim().isEmpty()) {
+            if (!handshakeDomain.isNullOrBlank()) {
                 defaultInstanceConfig.customHandshakeDomain = handshakeDomain
             }
             return defaultInstanceConfig
         }
 
-        private fun getDefaultInstanceOrFirstOther(context: Context?): CleverTapAPI? {
-            var instance = getDefaultInstance(context)
-            if (instance == null && !CleverTapInstanceStore.isEmpty()) {
-                for (other in CleverTapInstanceStore.all()) {
-                    @Suppress("SENSELESS_COMPARISON")
-                    if (other != null) {
-                        instance = other
-                        break
-                    }
-                }
-            }
-            return instance
-        }
+        private fun getDefaultInstanceOrFirstOther(context: Context?): CleverTapAPI? =
+            getDefaultInstance(context) ?: CleverTapInstanceStore.all().firstOrNull()
 
         @JvmStatic
         fun setNotificationHandler(notificationHandler: NotificationHandler?) {
-            sNotificationHandler = notificationHandler
+            registeredNotificationHandler = notificationHandler
         }
 
         /**
@@ -3973,17 +3508,15 @@ open class CleverTapAPI internal constructor(
          */
         @JvmStatic
         fun setLiveUpdateNotificationFactory(factory: ICleverTapLiveUpdateNotificationFactory?) {
-            sLiveUpdateNotificationFactory = factory
+            liveUpdateNotificationFactory = factory
         }
 
         @JvmStatic
-        fun getLiveUpdateNotificationFactory(): ICleverTapLiveUpdateNotificationFactory? {
-            return sLiveUpdateNotificationFactory
-        }
+        fun getLiveUpdateNotificationFactory(): ICleverTapLiveUpdateNotificationFactory? = liveUpdateNotificationFactory
 
         @JvmStatic
         fun setSignedCallNotificationHandler(notificationHandler: NotificationHandler?) {
-            sSignedCallNotificationHandler = notificationHandler
+            registeredSignedCallNotificationHandler = notificationHandler
         }
 
         /**
@@ -4019,8 +3552,7 @@ open class CleverTapAPI internal constructor(
                 return null
             }
 
-            val coreState: CoreState? = cleverTapAPI.coreState
-            if (coreState != null && !coreState.networkMonitor.isNetworkOnline()) {
+            if (!cleverTapAPI.coreState.networkMonitor.isNetworkOnline()) {
                 Logger.v("Network unavailable. Not downloading notification bitmap!")
                 return null
             }
@@ -4082,8 +3614,7 @@ open class CleverTapAPI internal constructor(
                 return null
             }
 
-            val coreState: CoreState? = cleverTapAPI.coreState
-            if (coreState != null && !coreState.networkMonitor.isNetworkOnline()) {
+            if (!cleverTapAPI.coreState.networkMonitor.isNetworkOnline()) {
                 Logger.v("Network unavailable. Not downloading notification bitmap!")
                 return null
             }

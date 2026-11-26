@@ -51,11 +51,12 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
     DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener,
     InAppController.RestoredInAppListener {
 
+    // Set by setUp; stays null while an in-app is being restored, or when setUp gave up early.
     private var config: CleverTapInstanceConfig? = null
 
     private var inAppNotification: CTInAppNotification? = null
 
-    private var listenerWeakReference: WeakReference<InAppListener>? = null
+    private var listenerWeakReference = WeakReference<InAppListener>(null)
 
     private var pushPermissionHandler: PushPermissionHandler? = null
 
@@ -80,8 +81,8 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
             // start.
             if (!restoreInApp()) {
                 Logger.v(
-                    "In-app " + intent.getStringExtra(Constants.INAPP_ID_KEY)
-                            + " is no longer available, closing InAppNotificationActivity"
+                    "In-app ${intent.getStringExtra(Constants.INAPP_ID_KEY)} is no longer available, " +
+                        "closing InAppNotificationActivity"
                 )
                 finish()
             }
@@ -100,76 +101,67 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
 
         val orientation = resources.configuration.orientation
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val window = window
-            if (window != null) {
+            window?.let { window ->
                 window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                val insetsController = WindowInsetsControllerCompat(window, window.decorView)
-                insetsController.hide(WindowInsetsCompat.Type.systemBars())
+                WindowInsetsControllerCompat(window, window.decorView).hide(WindowInsetsCompat.Type.systemBars())
             }
         }
-        try {
-            val intentExtras = intent.extras
-            if (intentExtras == null) {
-                throw IllegalArgumentException()
-            }
+        val (inAppConfig, notification) = try {
+            val intentExtras = intent.extras ?: throw IllegalArgumentException()
 
-            config = intentExtras.getParcelable(INTENT_EXTRA_CT_CONFIG)
-            if (config == null) {
-                throw IllegalArgumentException()
-            }
+            val intentConfig = intentExtras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG)
+                ?: throw IllegalArgumentException()
+            config = intentConfig
 
             // Pass the application context: instanceWithConfig may construct a CleverTapAPI that
             // retains the Context for the instance's (long) lifetime, so handing it an Activity
             // context would leak this Activity.
-            val ctState = CleverTapAPI.instanceWithConfig(applicationContext, config!!)!!.coreState
+            val cleverTapAPI = checkNotNull(CleverTapAPI.instanceWithConfig(applicationContext, intentConfig)) {
+                "No CleverTap instance for the in-app config"
+            }
+            val ctState = cleverTapAPI.coreState
 
             pushPermissionHandler = PushPermissionHandler(
-                config!!,
+                intentConfig,
                 ctState.callbackManager.pushPermissionResponseListenerList,
                 this
             )
 
-            val showHardNotificationPermission = intentExtras.getBoolean(
-                INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT,
-                false
-            )
-            if (showHardNotificationPermission) {
-                val shouldShowFallbackSettings = intentExtras.getBoolean(
-                    INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS,
-                    false
+            if (intentExtras.getBoolean(INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT, false)) {
+                showPushPermissionPrompt(
+                    intentExtras.getBoolean(INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS, false)
                 )
-                showPushPermissionPrompt(shouldShowFallbackSettings)
                 return
             }
 
-            setListener(ctState.inAppController)
+            listenerWeakReference = WeakReference(ctState.inAppController)
             ctState.inAppController.registerInAppDisplayListener(this)
 
             val inAppId = intentExtras.getString(Constants.INAPP_ID_KEY)
-            inAppNotification = InAppController.getDisplayingInApp(inAppId)
-            if (inAppNotification == null) {
+            val inApp = InAppController.getDisplayingInApp(inAppId)
+            inAppNotification = inApp
+            if (inApp == null) {
                 // Not in memory (e.g. the app process was killed): close without tracking.
-                config!!.logger.verbose(
-                    config!!.accountId,
+                intentConfig.logger.verbose(
+                    intentConfig.accountId,
                     "In-app $inAppId is no longer available, closing InAppNotificationActivity"
                 )
                 finish()
                 return
             }
-            config!!.logger.verbose(
-                config!!.accountId,
+            intentConfig.logger.verbose(
+                intentConfig.accountId,
                 "InAppNotificationActivity loaded in-app $inAppId from memory"
             )
+            intentConfig to inApp
         } catch (t: Throwable) {
             Logger.v("Cannot find a valid notification bundle to show!", t)
             finish()
             return
         }
 
-        val inAppNotification = inAppNotification!!
-
         //Allow rotation for all InApps but respect the flags sent from dashboard
-        if (inAppNotification.isPortrait && !inAppNotification.isLandscape) {
+        if (notification.isPortrait && !notification.isLandscape) {
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 Logger.d("App in Landscape, dismissing portrait InApp Notification")
                 finish()
@@ -180,7 +172,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
             }
         }
 
-        if (!inAppNotification.isPortrait && inAppNotification.isLandscape) {
+        if (!notification.isPortrait && notification.isLandscape) {
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                 Logger.d("App in Portrait, dismissing landscape InApp Notification")
                 finish()
@@ -191,27 +183,22 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
             }
         }
 
-        val contentFragment: CTInAppBaseFullFragment?
         if (savedInstanceState == null) {
-            contentFragment = createContentFragment()
-            if (contentFragment != null) {
-                contentFragment.setArguments(inAppNotification, config!!)
+            createContentFragment(notification, inAppConfig)?.let { contentFragment ->
+                contentFragment.setArguments(notification, inAppConfig)
                 supportFragmentManager.beginTransaction()
                     .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
-                    .add(android.R.id.content, contentFragment, getFragmentTag())
+                    .add(android.R.id.content, contentFragment, fragmentTag(inAppConfig))
                     .commitNow()
             }
         } else if (isAlertVisible) {
-            createContentFragment()
+            createContentFragment(notification, inAppConfig)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        val handler = pushPermissionHandler
-        if (handler != null) { // null while an in-app is being restored
-            handler.onActivityResume(this)
-        }
+        pushPermissionHandler?.onActivityResume(this) // null while an in-app is being restored
     }
 
     /**
@@ -222,30 +209,21 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
     private fun restoreInApp(): Boolean {
         // After a process kill this is often the call that creates the SDK instance for the new
         // process. As in setUp, any error closes the screen instead of crashing the app.
-        try {
-            val extras = intent.extras
-            if (extras == null) {
-                return false
-            }
-            val inAppId = extras.getString(Constants.INAPP_ID_KEY)
-            val restoreConfig = extras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG)
-            if (inAppId == null || restoreConfig == null) {
-                return false
-            }
-            val cleverTapAPI = CleverTapAPI.instanceWithConfig(applicationContext, restoreConfig)
-            if (cleverTapAPI == null) {
-                return false
-            }
+        return try {
+            val extras = intent.extras ?: return false
+            val inAppId = extras.getString(Constants.INAPP_ID_KEY) ?: return false
+            val restoreConfig = extras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG) ?: return false
+            val cleverTapAPI = CleverTapAPI.instanceWithConfig(applicationContext, restoreConfig) ?: return false
             Logger.v("In-app $inAppId is not in memory, restoring it from storage")
             // This window is transparent and has no content yet, but it still covers the app and
             // would take every tap. Let taps through to the app until the in-app is ready.
             window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
             restoreTimeoutHandler.postDelayed({ onRestoreTimeout() }, RESTORE_TIMEOUT_MS)
             cleverTapAPI.coreState.inAppController.restoreDisplayedInApp(inAppId, this)
-            return true
+            true
         } catch (t: Throwable) {
             Logger.v("Could not start restoring the in-app, closing InAppNotificationActivity", t)
-            return false
+            false
         }
     }
 
@@ -261,8 +239,8 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         restoreTimeoutHandler.removeCallbacksAndMessages(null)
         if (restoredInApp == null || supportFragmentManager.isStateSaved) {
             Logger.v(
-                "In-app " + intent.getStringExtra(Constants.INAPP_ID_KEY)
-                        + " could not be restored, closing InAppNotificationActivity"
+                "In-app ${intent.getStringExtra(Constants.INAPP_ID_KEY)} could not be restored, " +
+                    "closing InAppNotificationActivity"
             )
             finish()
             return false
@@ -283,8 +261,8 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         }
         restoreFinished = true
         Logger.v(
-            "Restoring in-app " + intent.getStringExtra(Constants.INAPP_ID_KEY)
-                    + " took too long, closing InAppNotificationActivity"
+            "Restoring in-app ${intent.getStringExtra(Constants.INAPP_ID_KEY)} took too long, " +
+                "closing InAppNotificationActivity"
         )
         finish()
     }
@@ -305,19 +283,9 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         button: CTInAppNotificationButton,
         buttonIndex: Int,
         activityContext: Context?
-    ): Bundle? {
-        val listener = getListener()
-        return if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, button, buttonIndex, this)
-        } else {
-            null
-        }
-    }
+    ): Bundle? = currentListener()?.inAppNotificationDidClick(inAppNotification, button, buttonIndex, this)
 
-    override fun inAppNotificationDidDismiss(
-        inAppNotification: CTInAppNotification,
-        formData: Bundle?
-    ) {
+    override fun inAppNotificationDidDismiss(inAppNotification: CTInAppNotification, formData: Bundle?) {
         didDismiss(formData)
     }
 
@@ -331,31 +299,25 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         callToAction: String,
         additionalData: Bundle?,
         activityContext: Context?
-    ): Bundle? {
-        val listener = getListener()
-        return if (listener != null) {
-            listener.inAppNotificationActionTriggered(
-                inAppNotification,
-                action,
-                callToAction,
-                additionalData,
-                this
-            )
-        } else {
-            null
-        }
-    }
+    ): Bundle? = currentListener()?.inAppNotificationActionTriggered(
+        inAppNotification,
+        action,
+        callToAction,
+        additionalData,
+        this
+    )
 
     override fun didClickForHardPermissionWithFallbackSettings(fallbackToSettings: Boolean) {
         showPushPermissionPrompt(fallbackToSettings)
     }
 
+    // pushPermissionHandler is null only before setUp created it (in-app being restored, or setUp gave up).
     override fun didCancelPermissionRequest() {
-        pushPermissionHandler!!.notifyPushPermissionExternalListeners(this)
+        pushPermissionHandler?.notifyPushPermissionExternalListeners(this)
     }
 
     fun showPushPermissionPrompt(isFallbackSettingsEnabled: Boolean) {
-        pushPermissionHandler!!.requestPermission(this, isFallbackSettingsEnabled)
+        pushPermissionHandler?.requestPermission(this, isFallbackSettingsEnabled)
     }
 
     override fun onRequestPermissionsResult(
@@ -364,31 +326,26 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        pushPermissionHandler!!.onRequestPermissionsResult(this, requestCode, grantResults)
+        pushPermissionHandler?.onRequestPermissionsResult(this, requestCode, grantResults)
     }
 
     override fun onPushPermissionResult(isGranted: Boolean) {
-        var data: Bundle? = null
-        val notification = inAppNotification
-        if (notification != null && notification.isLocalInApp) {
-            data = Bundle()
-            data.putString(Constants.KEY_C2A, notification.buttons[0].text)
-            data.putString(Constants.NOTIFICATION_ID_TAG, "")
+        val data = inAppNotification?.takeIf { it.isLocalInApp }?.let { notification ->
+            Bundle().apply {
+                putString(Constants.KEY_C2A, notification.buttons[0].text)
+                putString(Constants.NOTIFICATION_ID_TAG, "")
+            }
         }
         didDismiss(data)
     }
 
-    fun didDismiss(data: Bundle?) {
-        didDismiss(data, true)
-    }
-
-    fun didDismiss(data: Bundle?, killActivity: Boolean) {
+    fun didDismiss(data: Bundle?, killActivity: Boolean = true) {
         if (isAlertVisible) {
             isAlertVisible = false
         }
 
         if (!invokedCallbacks) {
-            val listener = getListener()
+            val listener = currentListener()
             val notification = inAppNotification
             if (listener != null && notification != null) {
                 listener.inAppNotificationDidDismiss(notification, data)
@@ -400,87 +357,57 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         }
     }
 
-    fun didShow(data: Bundle?) {
-        val listener = getListener()
-        if (listener != null) {
-            listener.inAppNotificationDidShow(inAppNotification!!, data)
-        }
+    private fun didShow(data: Bundle?) {
+        val listener = currentListener() ?: return
+        // The listener is only set together with the in-app in setUp.
+        val notification = inAppNotification ?: return
+        listener.inAppNotificationDidShow(notification, data)
     }
 
-    fun getListener(): InAppListener? {
-        var listener: InAppListener? = null
-        try {
-            listener = listenerWeakReference!!.get()
-        } catch (t: Throwable) {
-            // no-op
-        }
+    private fun currentListener(): InAppListener? {
+        val listener = listenerWeakReference.get()
         val notification = inAppNotification
         if (listener == null && notification != null) {
-            config!!.logger.verbose(
-                config!!.accountId,
-                "InAppActivityListener is null for notification: " + notification.jsonDescription
-            )
+            config?.let {
+                it.logger.verbose(
+                    it.accountId,
+                    "InAppActivityListener is null for notification: ${notification.jsonDescription}"
+                )
+            }
         }
         return listener
     }
 
-    fun setListener(listener: InAppListener?) {
-        listenerWeakReference = WeakReference(listener)
-    }
+    private fun didClick(
+        notification: CTInAppNotification,
+        button: CTInAppNotificationButton,
+        buttonIndex: Int
+    ): Bundle? = currentListener()?.inAppNotificationDidClick(notification, button, buttonIndex, this)
 
-    private fun didClick(button: CTInAppNotificationButton, buttonIndex: Int): Bundle? {
-        val listener = getListener()
-        return if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification!!, button, buttonIndex, this)
-        } else {
+    private fun createContentFragment(
+        notification: CTInAppNotification,
+        config: CleverTapInstanceConfig
+    ): CTInAppBaseFullFragment? = when (val type = notification.inAppType) {
+        CTInAppType.CTInAppTypeCoverHTML -> CTInAppHtmlCoverFragment()
+        CTInAppType.CTInAppTypeInterstitialHTML -> CTInAppHtmlInterstitialFragment()
+        CTInAppType.CTInAppTypeHalfInterstitialHTML -> CTInAppHtmlHalfInterstitialFragment()
+        CTInAppType.CTInAppTypeCover -> CTInAppNativeCoverFragment()
+        CTInAppType.CTInAppTypeInterstitial -> CTInAppNativeInterstitialFragment()
+        CTInAppType.CTInAppTypeHalfInterstitial -> CTInAppNativeHalfInterstitialFragment()
+        CTInAppType.CTInAppTypeCoverImageOnly -> CTInAppNativeCoverImageFragment()
+        CTInAppType.CTInAppTypeInterstitialImageOnly -> CTInAppNativeInterstitialImageFragment()
+        CTInAppType.CTInAppTypeHalfInterstitialImageOnly -> CTInAppNativeHalfInterstitialImageFragment()
+        CTInAppType.CTInAppTypeAlert -> {
+            showAlertDialogForInApp(notification, config)
+            null
+        }
+        else -> {
+            config.logger.verbose("InAppNotificationActivity: Unhandled InApp Type: $type")
             null
         }
     }
 
-    private fun createContentFragment(): CTInAppBaseFullFragment? {
-        val type = inAppNotification!!.inAppType
-        var viewFragment: CTInAppBaseFullFragment? = null
-        when (type) {
-            CTInAppType.CTInAppTypeCoverHTML -> {
-                viewFragment = CTInAppHtmlCoverFragment()
-            }
-            CTInAppType.CTInAppTypeInterstitialHTML -> {
-                viewFragment = CTInAppHtmlInterstitialFragment()
-            }
-            CTInAppType.CTInAppTypeHalfInterstitialHTML -> {
-                viewFragment = CTInAppHtmlHalfInterstitialFragment()
-            }
-            CTInAppType.CTInAppTypeCover -> {
-                viewFragment = CTInAppNativeCoverFragment()
-            }
-            CTInAppType.CTInAppTypeInterstitial -> {
-                viewFragment = CTInAppNativeInterstitialFragment()
-            }
-            CTInAppType.CTInAppTypeHalfInterstitial -> {
-                viewFragment = CTInAppNativeHalfInterstitialFragment()
-            }
-            CTInAppType.CTInAppTypeCoverImageOnly -> {
-                viewFragment = CTInAppNativeCoverImageFragment()
-            }
-            CTInAppType.CTInAppTypeInterstitialImageOnly -> {
-                viewFragment = CTInAppNativeInterstitialImageFragment()
-            }
-            CTInAppType.CTInAppTypeHalfInterstitialImageOnly -> {
-                viewFragment = CTInAppNativeHalfInterstitialImageFragment()
-            }
-            CTInAppType.CTInAppTypeAlert -> {
-                showAlertDialogForInApp()
-            }
-            else -> {
-                config!!.logger.verbose("InAppNotificationActivity: Unhandled InApp Type: $type")
-            }
-        }
-        return viewFragment
-    }
-
-    private fun getFragmentTag(): String {
-        return config!!.accountId + ":CT_INAPP_CONTENT_FRAGMENT"
-    }
+    private fun fragmentTag(config: CleverTapInstanceConfig): String = "${config.accountId}:CT_INAPP_CONTENT_FRAGMENT"
 
     /**
      * True when this activity was opened for an in-app that is no longer in memory, which happens
@@ -494,44 +421,36 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         return InAppController.getDisplayingInApp(extras.getString(Constants.INAPP_ID_KEY)) == null
     }
 
-    private fun showAlertDialogForInApp() {
-        val notification = inAppNotification!!
+    private fun showAlertDialogForInApp(notification: CTInAppNotification, config: CleverTapInstanceConfig) {
         val buttons = notification.buttons
         if (buttons.isEmpty()) {
-            config!!.logger
-                .debug("InAppNotificationActivity: Notification has no buttons, not showing Alert InApp")
+            config.logger.debug("InAppNotificationActivity: Notification has no buttons, not showing Alert InApp")
             return
         }
-        val alertDialog: AlertDialog
         val positiveButton = buttons[0]
 
-        alertDialog = AlertDialog.Builder(
-            this@InAppNotificationActivity,
-            android.R.style.Theme_Material_Light_Dialog_Alert
-        )
+        val alertDialog = AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_Alert)
             .setCancelable(false)
             .setTitle(notification.title)
             .setMessage(notification.message)
-            .setPositiveButton(
-                positiveButton.text
-            ) { _, _ -> onAlertButtonClick(positiveButton, 0, true) }
+            .setPositiveButton(positiveButton.text) { _, _ ->
+                onAlertButtonClick(notification, positiveButton, 0, true)
+            }
             .create()
 
-        if (notification.buttons.size == 2) {
+        if (buttons.size == 2) {
             val negativeButton = buttons[1]
-            alertDialog.setButton(
-                DialogInterface.BUTTON_NEGATIVE,
-                negativeButton.text
-            ) { _, _ -> onAlertButtonClick(negativeButton, 1, false) }
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, negativeButton.text) { _, _ ->
+                onAlertButtonClick(notification, negativeButton, 1, false)
+            }
         }
 
         //By default, we will allow 2 button alerts and set a third button if it is configured
         if (buttons.size > 2) {
             val button = buttons[2]
-            alertDialog.setButton(
-                DialogInterface.BUTTON_NEUTRAL,
-                button.text
-            ) { _, _ -> onAlertButtonClickLegacy(button, 2) }
+            alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, button.text) { _, _ ->
+                onAlertButtonClickLegacy(notification, button, 2)
+            }
         }
 
         alertDialog.show()
@@ -539,14 +458,21 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         didShow(null)
     }
 
-    private fun onAlertButtonClickLegacy(button: CTInAppNotificationButton, buttonIndex: Int) {
-        val clickData = didClick(button, buttonIndex)
-        didDismiss(clickData)
+    private fun onAlertButtonClickLegacy(
+        notification: CTInAppNotification,
+        button: CTInAppNotificationButton,
+        buttonIndex: Int
+    ) {
+        didDismiss(didClick(notification, button, buttonIndex))
     }
 
-    private fun onAlertButtonClick(button: CTInAppNotificationButton, buttonIndex: Int, isPositive: Boolean) {
-        val clickData = didClick(button, buttonIndex)
-        val notification = inAppNotification!!
+    private fun onAlertButtonClick(
+        notification: CTInAppNotification,
+        button: CTInAppNotificationButton,
+        buttonIndex: Int,
+        isPositive: Boolean
+    ) {
+        val clickData = didClick(notification, button, buttonIndex)
 
         if (notification.isLocalInApp) {
             if (isPositive) {
@@ -574,15 +500,11 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         super.onDestroy()
         restoreTimeoutHandler.removeCallbacksAndMessages(null)
 
-        val currentConfig = config
-        if (currentConfig != null) {
-            val cleverTapAPI = CleverTapAPI.instanceWithConfig(applicationContext, currentConfig)
-            if (cleverTapAPI != null) {
-                val ctState: CoreState? = cleverTapAPI.coreState
-                if (ctState != null) {
-                    ctState.inAppController.unregisterInAppDisplayListener()
-                }
-            }
+        config?.let { currentConfig ->
+            CleverTapAPI.instanceWithConfig(applicationContext, currentConfig)
+                ?.coreState
+                ?.inAppController
+                ?.unregisterInAppDisplayListener()
         }
         if (!isChangingConfigurations) {
             didDismiss(null, false)
@@ -600,36 +522,34 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         private const val RESTORE_TIMEOUT_MS: Long = 4000
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
-        @JvmStatic
         fun launchForPushPermissionPrompt(
             activity: Activity,
             config: CleverTapInstanceConfig?,
             showFallbackSettings: Boolean
         ) {
-            if (activity.javaClass != InAppNotificationActivity::class.java) {
+            if (activity !is InAppNotificationActivity) {
                 val intent = Intent(activity, InAppNotificationActivity::class.java)
-                intent.putExtra(INTENT_EXTRA_CT_CONFIG, config)
-                intent.putExtra(INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT, true)
-                intent.putExtra(INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS, showFallbackSettings)
+                    .putExtra(INTENT_EXTRA_CT_CONFIG, config)
+                    .putExtra(INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT, true)
+                    .putExtra(INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS, showFallbackSettings)
                 activity.startActivity(intent)
             }
         }
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
-        @JvmStatic
         fun launchForInAppNotification(
             context: Context,
             inAppNotification: CTInAppNotification,
             config: CleverTapInstanceConfig
         ) {
-            val intent = Intent(context, InAppNotificationActivity::class.java)
             // Only the id is sent; the in-app is read from InAppController. Sending the whole object
             // can exceed the Binder limit for large HTML (TransactionTooLargeException, SDK-6299).
-            intent.putExtra(Constants.INAPP_ID_KEY, inAppNotification.campaignId)
-            intent.putExtra(INTENT_EXTRA_CT_CONFIG, config)
+            val intent = Intent(context, InAppNotificationActivity::class.java)
+                .putExtra(Constants.INAPP_ID_KEY, inAppNotification.campaignId)
+                .putExtra(INTENT_EXTRA_CT_CONFIG, config)
             config.logger.verbose(
                 config.accountId,
-                "Launching InAppNotificationActivity with in-app id: " + inAppNotification.campaignId
+                "Launching InAppNotificationActivity with in-app id: ${inAppNotification.campaignId}"
             )
             context.startActivity(intent)
         }

@@ -3,94 +3,61 @@ package com.clevertap.android.sdk
 import android.os.Parcel
 import android.os.Parcelable
 import com.clevertap.android.sdk.inbox.CTInboxActivity
-import java.util.ArrayList
-import java.util.Arrays
 
 /**
  * This class has all the parameters required to configure the styling of your [CTInboxActivity]
  * All the setter methods are public and the object of this class is made immutable by [CleverTapAPI]
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-open class CTInboxStyleConfig : Parcelable {
+open class CTInboxStyleConfig() : Parcelable {
 
-    private var _backButtonColor: String? = null
+    private var backButtonColorValue: String? = "#333333"
+    private var firstTabTitleValue: String? = "ALL"
+    private var inboxBackgroundColorValue: String? = "#D3D4DA"
+    private var navBarColorValue: String? = "#FFFFFF"
+    private var navBarTitleValue: String? = "App Inbox"
+    private var navBarTitleColorValue: String? = "#333333"
+    private var noMessageViewTextValue: String? = "No Message(s) to show"
+    private var noMessageViewTextColorValue: String? = "#000000"
+    private var selectedTabColorValue: String? = "#1C84FE"
+    private var selectedTabIndicatorColorValue: String? = "#1C84FE"
+    private var tabBackgroundColorValue: String? = "#FFFFFF"
+    private var tabsValue: Array<String?>? = emptyArray()
+    private var unselectedTabColorValue: String? = "#808080"
 
-    private var _firstTabTitle: String? = null
-
-    private var _inboxBackgroundColor: String? = null
-
-    private var _navBarColor: String? = null
-
-    private var _navBarTitle: String? = null
-
-    private var _navBarTitleColor: String? = null
-
-    private var _noMessageViewText: String? = null
-
-    private var _noMessageViewTextColor: String? = null
-
-    private var _selectedTabColor: String? = null
-
-    private var _selectedTabIndicatorColor: String? = null
-
-    private var _tabBackgroundColor: String? = null
-
-    private var _tabs: Array<String?>? = null
-
-    private var _unselectedTabColor: String? = null
-
-    constructor() {
-        _navBarColor = "#FFFFFF"
-        _navBarTitle = "App Inbox"
-        _navBarTitleColor = "#333333"
-        _inboxBackgroundColor = "#D3D4DA"
-        _backButtonColor = "#333333"
-        _selectedTabColor = "#1C84FE"
-        _unselectedTabColor = "#808080"
-        _selectedTabIndicatorColor = "#1C84FE"
-        _tabBackgroundColor = "#FFFFFF"
-        _tabs = arrayOfNulls(0)
-        _noMessageViewText = "No Message(s) to show"
-        _noMessageViewTextColor = "#000000"
-        _firstTabTitle = "ALL"
+    internal constructor(config: CTInboxStyleConfig) : this() {
+        navBarColorValue = config.navBarColorValue
+        navBarTitleValue = config.navBarTitleValue
+        navBarTitleColorValue = config.navBarTitleColorValue
+        inboxBackgroundColorValue = config.inboxBackgroundColorValue
+        backButtonColorValue = config.backButtonColorValue
+        selectedTabColorValue = config.selectedTabColorValue
+        unselectedTabColorValue = config.unselectedTabColorValue
+        selectedTabIndicatorColorValue = config.selectedTabIndicatorColorValue
+        tabBackgroundColorValue = config.tabBackgroundColorValue
+        tabsValue = config.tabsValue?.copyOf() ?: emptyArray()
+        noMessageViewTextValue = config.noMessageViewTextValue
+        noMessageViewTextColorValue = config.noMessageViewTextColorValue
+        firstTabTitleValue = config.firstTabTitleValue
     }
 
-    internal constructor(config: CTInboxStyleConfig) {
-        _navBarColor = config._navBarColor
-        _navBarTitle = config._navBarTitle
-        _navBarTitleColor = config._navBarTitleColor
-        _inboxBackgroundColor = config._inboxBackgroundColor
-        _backButtonColor = config._backButtonColor
-        _selectedTabColor = config._selectedTabColor
-        _unselectedTabColor = config._unselectedTabColor
-        _selectedTabIndicatorColor = config._selectedTabIndicatorColor
-        _tabBackgroundColor = config._tabBackgroundColor
-        val configTabs = config._tabs
-        _tabs = if (configTabs == null) arrayOfNulls(0) else Arrays.copyOf(configTabs, configTabs.size)
-        _noMessageViewText = config._noMessageViewText
-        _noMessageViewTextColor = config._noMessageViewTextColor
-        _firstTabTitle = config._firstTabTitle
+    protected constructor(parcel: Parcel) : this() {
+        navBarColorValue = parcel.readString()
+        navBarTitleValue = parcel.readString()
+        navBarTitleColorValue = parcel.readString()
+        inboxBackgroundColorValue = parcel.readString()
+        tabsValue = parcel.createStringArray()
+        backButtonColorValue = parcel.readString()
+        selectedTabColorValue = parcel.readString()
+        unselectedTabColorValue = parcel.readString()
+        selectedTabIndicatorColorValue = parcel.readString()
+        tabBackgroundColorValue = parcel.readString()
+        noMessageViewTextValue = parcel.readString()
+        noMessageViewTextColorValue = parcel.readString()
+        firstTabTitleValue = parcel.readString()
     }
 
-    protected constructor(`in`: Parcel) {
-        _navBarColor = `in`.readString()
-        _navBarTitle = `in`.readString()
-        _navBarTitleColor = `in`.readString()
-        _inboxBackgroundColor = `in`.readString()
-        _tabs = `in`.createStringArray()
-        _backButtonColor = `in`.readString()
-        _selectedTabColor = `in`.readString()
-        _unselectedTabColor = `in`.readString()
-        _selectedTabIndicatorColor = `in`.readString()
-        _tabBackgroundColor = `in`.readString()
-        _noMessageViewText = `in`.readString()
-        _noMessageViewTextColor = `in`.readString()
-        _firstTabTitle = `in`.readString()
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     /**
      * The color of the back button on the top navigation toolbar.
@@ -98,10 +65,10 @@ open class CTInboxStyleConfig : Parcelable {
      * Setter: sets the color of the back button on the top navigation toolbar
      * (String - hexcode of the color).
      */
-    open fun getBackButtonColor(): String? = _backButtonColor
+    open fun getBackButtonColor(): String? = backButtonColorValue
 
     open fun setBackButtonColor(backButtonColor: String?) {
-        _backButtonColor = backButtonColor
+        backButtonColorValue = backButtonColor
     }
 
     /** Kotlin property syntax, equivalent to [getBackButtonColor] / [setBackButtonColor]. */
@@ -114,10 +81,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the title of the first tab of the App Inbox (String - title of the first tab).
      */
-    open fun getFirstTabTitle(): String? = _firstTabTitle
+    open fun getFirstTabTitle(): String? = firstTabTitleValue
 
     open fun setFirstTabTitle(title: String?) {
-        _firstTabTitle = title
+        firstTabTitleValue = title
     }
 
     /** Kotlin property syntax, equivalent to [getFirstTabTitle] / [setFirstTabTitle]. */
@@ -130,10 +97,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the background color for the entire inbox (String - hexcode of the color).
      */
-    open fun getInboxBackgroundColor(): String? = _inboxBackgroundColor
+    open fun getInboxBackgroundColor(): String? = inboxBackgroundColorValue
 
     open fun setInboxBackgroundColor(inboxBackgroundColor: String?) {
-        _inboxBackgroundColor = inboxBackgroundColor
+        inboxBackgroundColorValue = inboxBackgroundColor
     }
 
     /** Kotlin property syntax, equivalent to [getInboxBackgroundColor] / [setInboxBackgroundColor]. */
@@ -146,10 +113,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the color for the top navigation toolbar (String - hexcode of the color).
      */
-    open fun getNavBarColor(): String? = _navBarColor
+    open fun getNavBarColor(): String? = navBarColorValue
 
     open fun setNavBarColor(navBarColor: String?) {
-        _navBarColor = navBarColor
+        navBarColorValue = navBarColor
     }
 
     /** Kotlin property syntax, equivalent to [getNavBarColor] / [setNavBarColor]. */
@@ -162,10 +129,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the text for the top navigation toolbar (String).
      */
-    open fun getNavBarTitle(): String? = _navBarTitle
+    open fun getNavBarTitle(): String? = navBarTitleValue
 
     open fun setNavBarTitle(navBarTitle: String?) {
-        _navBarTitle = navBarTitle
+        navBarTitleValue = navBarTitle
     }
 
     /** Kotlin property syntax, equivalent to [getNavBarTitle] / [setNavBarTitle]. */
@@ -178,10 +145,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the color for the title in the top navigation toolbar (String - hexcode of the color).
      */
-    open fun getNavBarTitleColor(): String? = _navBarTitleColor
+    open fun getNavBarTitleColor(): String? = navBarTitleColorValue
 
     open fun setNavBarTitleColor(navBarTitleColor: String?) {
-        _navBarTitleColor = navBarTitleColor
+        navBarTitleColorValue = navBarTitleColor
     }
 
     /** Kotlin property syntax, equivalent to [getNavBarTitleColor] / [setNavBarTitleColor]. */
@@ -194,10 +161,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the text for when there are no messages in the App Inbox (String).
      */
-    open fun getNoMessageViewText(): String? = _noMessageViewText
+    open fun getNoMessageViewText(): String? = noMessageViewTextValue
 
     open fun setNoMessageViewText(noMessageViewText: String?) {
-        _noMessageViewText = noMessageViewText
+        noMessageViewTextValue = noMessageViewText
     }
 
     /** Kotlin property syntax, equivalent to [getNoMessageViewText] / [setNoMessageViewText]. */
@@ -211,10 +178,10 @@ open class CTInboxStyleConfig : Parcelable {
      * Setter: sets the color of the text for when there are no messages in the App Inbox
      * (String - hexcode of the color).
      */
-    open fun getNoMessageViewTextColor(): String? = _noMessageViewTextColor
+    open fun getNoMessageViewTextColor(): String? = noMessageViewTextColorValue
 
     open fun setNoMessageViewTextColor(noMessageViewTextColor: String?) {
-        _noMessageViewTextColor = noMessageViewTextColor
+        noMessageViewTextColorValue = noMessageViewTextColor
     }
 
     /** Kotlin property syntax, equivalent to [getNoMessageViewTextColor] / [setNoMessageViewTextColor]. */
@@ -227,10 +194,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the color of the selected tab (String - hexcode of the color).
      */
-    open fun getSelectedTabColor(): String? = _selectedTabColor
+    open fun getSelectedTabColor(): String? = selectedTabColorValue
 
     open fun setSelectedTabColor(selectedTabColor: String?) {
-        _selectedTabColor = selectedTabColor
+        selectedTabColorValue = selectedTabColor
     }
 
     /** Kotlin property syntax, equivalent to [getSelectedTabColor] / [setSelectedTabColor]. */
@@ -243,10 +210,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the color of the indicator of the selected tab (String - hexcode of the color).
      */
-    open fun getSelectedTabIndicatorColor(): String? = _selectedTabIndicatorColor
+    open fun getSelectedTabIndicatorColor(): String? = selectedTabIndicatorColorValue
 
     open fun setSelectedTabIndicatorColor(selectedTabIndicatorColor: String?) {
-        _selectedTabIndicatorColor = selectedTabIndicatorColor
+        selectedTabIndicatorColorValue = selectedTabIndicatorColor
     }
 
     /** Kotlin property syntax, equivalent to [getSelectedTabIndicatorColor] / [setSelectedTabIndicatorColor]. */
@@ -259,10 +226,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the background color for the tabs (String - hexcode of the color).
      */
-    open fun getTabBackgroundColor(): String? = _tabBackgroundColor
+    open fun getTabBackgroundColor(): String? = tabBackgroundColorValue
 
     open fun setTabBackgroundColor(tabBackgroundColor: String?) {
-        _tabBackgroundColor = tabBackgroundColor
+        tabBackgroundColorValue = tabBackgroundColor
     }
 
     /** Kotlin property syntax, equivalent to [getTabBackgroundColor] / [setTabBackgroundColor]. */
@@ -277,23 +244,14 @@ open class CTInboxStyleConfig : Parcelable {
      * The contents of the tabs are filtered based on the name of the tab.
      * A `null` or empty list is ignored; only the first two entries are kept.
      */
-    open fun getTabs(): ArrayList<String> {
-        val current = _tabs
-        @Suppress("UNCHECKED_CAST")
-        return if (current == null) ArrayList() else ArrayList(Arrays.asList(*current)) as ArrayList<String>
-    }
+    @Suppress("UNCHECKED_CAST")
+    open fun getTabs(): ArrayList<String> = ArrayList(tabsValue.orEmpty().asList()) as ArrayList<String>
 
     open fun setTabs(tabs: ArrayList<String>?) {
-        if (tabs == null || tabs.size <= 0) {
+        if (tabs.isNullOrEmpty()) {
             return
         }
-
-        val toAdd: ArrayList<String> = if (tabs.size > MAX_TABS) {
-            ArrayList(tabs.subList(0, MAX_TABS))
-        } else {
-            tabs
-        }
-        _tabs = toAdd.toTypedArray<String?>()
+        tabsValue = tabs.take(MAX_TABS).toTypedArray<String?>()
     }
 
     /** Kotlin property syntax, equivalent to [getTabs] / [setTabs]. */
@@ -306,10 +264,10 @@ open class CTInboxStyleConfig : Parcelable {
      *
      * Setter: sets the color of the unselected tab (String - hexcode of the color).
      */
-    open fun getUnselectedTabColor(): String? = _unselectedTabColor
+    open fun getUnselectedTabColor(): String? = unselectedTabColorValue
 
     open fun setUnselectedTabColor(unselectedTabColor: String?) {
-        _unselectedTabColor = unselectedTabColor
+        unselectedTabColorValue = unselectedTabColor
     }
 
     /** Kotlin property syntax, equivalent to [getUnselectedTabColor] / [setUnselectedTabColor]. */
@@ -317,42 +275,35 @@ open class CTInboxStyleConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetUnselectedTabColor") inline get() = getUnselectedTabColor()
         @JvmSynthetic @JvmName("ktSetUnselectedTabColor") inline set(value) = setUnselectedTabColor(value)
 
-    open fun isUsingTabs(): Boolean {
-        val current = _tabs
-        return current != null && current.isNotEmpty()
-    }
+    open fun isUsingTabs(): Boolean = !tabsValue.isNullOrEmpty()
 
     /** Kotlin property syntax, equivalent to [isUsingTabs]. */
     val isUsingTabs: Boolean
         @JvmSynthetic @JvmName("ktIsUsingTabs") inline get() = isUsingTabs()
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeString(_navBarColor)
-        dest.writeString(_navBarTitle)
-        dest.writeString(_navBarTitleColor)
-        dest.writeString(_inboxBackgroundColor)
-        dest.writeStringArray(_tabs)
-        dest.writeString(_backButtonColor)
-        dest.writeString(_selectedTabColor)
-        dest.writeString(_unselectedTabColor)
-        dest.writeString(_selectedTabIndicatorColor)
-        dest.writeString(_tabBackgroundColor)
-        dest.writeString(_noMessageViewText)
-        dest.writeString(_noMessageViewTextColor)
-        dest.writeString(_firstTabTitle)
+        dest.writeString(navBarColorValue)
+        dest.writeString(navBarTitleValue)
+        dest.writeString(navBarTitleColorValue)
+        dest.writeString(inboxBackgroundColorValue)
+        dest.writeStringArray(tabsValue)
+        dest.writeString(backButtonColorValue)
+        dest.writeString(selectedTabColorValue)
+        dest.writeString(unselectedTabColorValue)
+        dest.writeString(selectedTabIndicatorColorValue)
+        dest.writeString(tabBackgroundColorValue)
+        dest.writeString(noMessageViewTextValue)
+        dest.writeString(noMessageViewTextColorValue)
+        dest.writeString(firstTabTitleValue)
     }
 
     companion object {
 
         @JvmField
         val CREATOR: Parcelable.Creator<CTInboxStyleConfig> = object : Parcelable.Creator<CTInboxStyleConfig> {
-            override fun createFromParcel(`in`: Parcel): CTInboxStyleConfig {
-                return CTInboxStyleConfig(`in`)
-            }
+            override fun createFromParcel(parcel: Parcel): CTInboxStyleConfig = CTInboxStyleConfig(parcel)
 
-            override fun newArray(size: Int): Array<CTInboxStyleConfig?> {
-                return arrayOfNulls(size)
-            }
+            override fun newArray(size: Int): Array<CTInboxStyleConfig?> = arrayOfNulls(size)
         }
 
         private const val MAX_TABS = 2

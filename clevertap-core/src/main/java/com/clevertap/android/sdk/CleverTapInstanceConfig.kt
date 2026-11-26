@@ -3,7 +3,6 @@ package com.clevertap.android.sdk
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope
@@ -20,63 +19,58 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-import java.util.ArrayList
-import java.util.Arrays
-
 open class CleverTapInstanceConfig : Parcelable {
 
-    private var _accountId: String? = null
-    private var _accountRegion: String? = null
-    private var _accountToken: String? = null
-    private var _proxyDomain: String? = null
-    private var _spikyProxyDomain: String? = null
-    private var _customHandshakeDomain: String? = null
-    private val _pushTypes: ArrayList<PushType> = getDefaultPushTypes()
-    private var _analyticsOnly = false
-    private var _backgroundSync = false
-    private var _beta = false
-    private var _createdPostAppLaunch = false
-    private var _debugLevel = 0
-    private var _disableAppLaunchedEvent = false
-    private var _enableCustomCleverTapId = false
-    private var _fcmSenderId: String? = null
-    private var _isDefaultInstance = false
-    private var _logger: Logger? = null
-    private var _packageName: String? = null
-    private var _personalization = false
-    private var _identityKeys: Array<String>? = Constants.NULL_STRING_ARRAY
-    private var _sslPinning = false
-    private var _useGoogleAdId = false
-    private var _encryptionLevel = 0
-    private var _encryptionInTransit: String? = null
+    private var accountIdValue: String? = null
+    private var accountRegionValue: String? = null
+    private var accountTokenValue: String? = null
+    private var proxyDomainValue: String? = null
+    private var spikyProxyDomainValue: String? = null
+    private var customHandshakeDomainValue: String? = null
+    private val pushTypesValue: ArrayList<PushType> = getDefaultPushTypes()
+    private var analyticsOnlyValue = false
+    private var backgroundSyncValue = false
+    private var beta = false
+    private var createdPostAppLaunch = false
+    private var debugLevelValue = 0
+    private var disableAppLaunchedEventValue = false
+    private var enableCustomCleverTapIdValue = false
+    private var fcmSenderIdValue: String? = null
+    private var defaultInstance = false
+    private lateinit var loggerValue: Logger
+    private var packageNameValue: String? = null
+    private var personalization = false
+    private var identityKeysValue: Array<String>? = Constants.NULL_STRING_ARRAY
+    private var sslPinning = false
+    private var useGoogleAdId = false
+    private var encryptionLevelValue = 0
+    private var encryptionInTransitValue: String? = null
 
     internal constructor(config: CleverTapInstanceConfig) {
-        this._accountId = config._accountId
-        this._accountToken = config._accountToken
-        this._accountRegion = config._accountRegion
-        this._proxyDomain = config._proxyDomain
-        this._spikyProxyDomain = config._spikyProxyDomain
-        this._customHandshakeDomain = config._customHandshakeDomain
-        this._isDefaultInstance = config._isDefaultInstance
-        this._analyticsOnly = config._analyticsOnly
-        this._personalization = config._personalization
-        this._debugLevel = config._debugLevel
-        this._logger = config._logger
-        this._useGoogleAdId = config._useGoogleAdId
-        this._disableAppLaunchedEvent = config._disableAppLaunchedEvent
-        this._createdPostAppLaunch = config._createdPostAppLaunch
-        this._sslPinning = config._sslPinning
-        this._backgroundSync = config._backgroundSync
-        this._enableCustomCleverTapId = config._enableCustomCleverTapId
-        this._fcmSenderId = config._fcmSenderId
-        this._packageName = config._packageName
-        this._beta = config._beta
-        this._identityKeys = config._identityKeys
-        this._encryptionLevel = config._encryptionLevel
-        for (pushType in config._pushTypes) {
-            addPushType(pushType)
-        }
-        this._encryptionInTransit = config._encryptionInTransit
+        accountIdValue = config.accountIdValue
+        accountTokenValue = config.accountTokenValue
+        accountRegionValue = config.accountRegionValue
+        proxyDomainValue = config.proxyDomainValue
+        spikyProxyDomainValue = config.spikyProxyDomainValue
+        customHandshakeDomainValue = config.customHandshakeDomainValue
+        defaultInstance = config.defaultInstance
+        analyticsOnlyValue = config.analyticsOnlyValue
+        personalization = config.personalization
+        debugLevelValue = config.debugLevelValue
+        loggerValue = config.loggerValue
+        useGoogleAdId = config.useGoogleAdId
+        disableAppLaunchedEventValue = config.disableAppLaunchedEventValue
+        createdPostAppLaunch = config.createdPostAppLaunch
+        sslPinning = config.sslPinning
+        backgroundSyncValue = config.backgroundSyncValue
+        enableCustomCleverTapIdValue = config.enableCustomCleverTapIdValue
+        fcmSenderIdValue = config.fcmSenderIdValue
+        packageNameValue = config.packageNameValue
+        beta = config.beta
+        identityKeysValue = config.identityKeysValue
+        encryptionLevelValue = config.encryptionLevelValue
+        config.pushTypesValue.forEach(::addPushType)
+        encryptionInTransitValue = config.encryptionInTransitValue
     }
 
     private constructor(
@@ -86,209 +80,193 @@ open class CleverTapInstanceConfig : Parcelable {
         accountRegion: String?,
         isDefault: Boolean
     ) {
-        this._accountId = accountId
-        this._accountToken = accountToken
-        this._accountRegion = accountRegion
-        this._isDefaultInstance = isDefault
-        this._analyticsOnly = false
-        this._personalization = true
-        this._debugLevel = CleverTapAPI.LogLevel.INFO.intValue()
-        this._logger = Logger(this._debugLevel)
-        this._createdPostAppLaunch = false
+        accountIdValue = accountId
+        accountTokenValue = accountToken
+        accountRegionValue = accountRegion
+        defaultInstance = isDefault
+        analyticsOnlyValue = false
+        personalization = true
+        debugLevelValue = CleverTapAPI.LogLevel.INFO.intValue()
+        loggerValue = Logger(debugLevelValue)
+        createdPostAppLaunch = false
 
-        this._useGoogleAdId = manifest.useGoogleAdId()
-        this._disableAppLaunchedEvent = manifest.isAppLaunchedDisabled
-        this._sslPinning = manifest.isSSLPinningEnabled
-        this._backgroundSync = manifest.isBackgroundSync
-        this._fcmSenderId = manifest.fcmSenderId
-        this._packageName = manifest.packageName
-        this._enableCustomCleverTapId = manifest.useCustomId()
-        this._beta = manifest.enableBeta()
+        useGoogleAdId = manifest.useGoogleAdId()
+        disableAppLaunchedEventValue = manifest.isAppLaunchedDisabled
+        sslPinning = manifest.isSSLPinningEnabled
+        backgroundSyncValue = manifest.isBackgroundSync
+        fcmSenderIdValue = manifest.fcmSenderId
+        packageNameValue = manifest.packageName
+        enableCustomCleverTapIdValue = manifest.useCustomId()
+        beta = manifest.enableBeta()
         /*
          * For default instance, use manifest meta, otherwise use from setter field
          */
-        if (_isDefaultInstance) {
-            this._encryptionLevel = manifest.encryptionLevel
-            _identityKeys = manifest.profileKeys
+        if (defaultInstance) {
+            encryptionLevelValue = manifest.encryptionLevel
+            identityKeysValue = manifest.profileKeys
             log(
-                LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
-                    .toString(_identityKeys)
+                LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                "Setting Profile Keys from Manifest: ${identityKeysValue.contentToString()}"
             )
         } else {
-            this._encryptionLevel = 0
+            encryptionLevelValue = 0
         }
         buildPushProvidersFromManifest(manifest)
 
-        val fromManifest = manifest.encryptionInTransit
-        this._encryptionInTransit = fromManifest ?: "0"
+        encryptionInTransitValue = manifest.encryptionInTransit ?: "0"
     }
 
     private fun buildPushProvidersFromManifest(manifest: ManifestInfo) {
         try {
-            val provider1 = manifest.vendorOneProvider
-            if (provider1 != null) {
-                val splits = provider1.split(",").dropLastWhile { it.isEmpty() }.toTypedArray()
-                if (splits.size == 4) {
-                    val pushType = PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim())
-                    addPushType(pushType)
-                }
-            }
-            val provider2 = manifest.vendorTwoProvider
-            if (provider2 != null) {
-                val splits = provider2.split(",").dropLastWhile { it.isEmpty() }.toTypedArray()
-                if (splits.size == 4) {
-                    val pushType = PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim())
-                    addPushType(pushType)
-                }
-            }
+            addPushTypeFromManifest(manifest.vendorOneProvider)
+            addPushTypeFromManifest(manifest.vendorTwoProvider)
         } catch (e: Exception) {
             Logger.v("There was some problem in loading push providers from manifest")
         }
     }
 
-    @Throws(Throwable::class)
-    private constructor(jsonString: String?) {
-        try {
-            val configJsonObject = JSONObject(jsonString)
-            if (configJsonObject.has(KEY_ACCOUNT_ID)) {
-                this._accountId = configJsonObject.getString(KEY_ACCOUNT_ID)
-            }
-            if (configJsonObject.has(KEY_ACCOUNT_TOKEN)) {
-                this._accountToken = configJsonObject.getString(KEY_ACCOUNT_TOKEN)
-            }
-            if (configJsonObject.has(KEY_PROXY_DOMAIN)) {
-                this._proxyDomain = configJsonObject.getString(KEY_PROXY_DOMAIN)
-            }
-            if (configJsonObject.has(KEY_SPIKY_PROXY_DOMAIN)) {
-                this._spikyProxyDomain = configJsonObject.getString(KEY_SPIKY_PROXY_DOMAIN)
-            }
-            if (configJsonObject.has(KEY_CUSTOM_HANDSHAKE_DOMAIN)) {
-                this._customHandshakeDomain = configJsonObject.optString(KEY_CUSTOM_HANDSHAKE_DOMAIN, null)
-            }
-            if (configJsonObject.has(KEY_ACCOUNT_REGION)) {
-                this._accountRegion = configJsonObject.getString(KEY_ACCOUNT_REGION)
-            }
-            if (configJsonObject.has(KEY_ANALYTICS_ONLY)) {
-                this._analyticsOnly = configJsonObject.getBoolean(KEY_ANALYTICS_ONLY)
-            }
-            if (configJsonObject.has(KEY_DEFAULT_INSTANCE)) {
-                this._isDefaultInstance = configJsonObject.getBoolean(KEY_DEFAULT_INSTANCE)
-            }
-            if (configJsonObject.has(KEY_USE_GOOGLE_AD_ID)) {
-                this._useGoogleAdId = configJsonObject.getBoolean(KEY_USE_GOOGLE_AD_ID)
-            }
-            if (configJsonObject.has(KEY_DISABLE_APP_LAUNCHED)) {
-                this._disableAppLaunchedEvent = configJsonObject.getBoolean(KEY_DISABLE_APP_LAUNCHED)
-            }
-            if (configJsonObject.has(KEY_PERSONALIZATION)) {
-                this._personalization = configJsonObject.getBoolean(KEY_PERSONALIZATION)
-            }
-            if (configJsonObject.has(KEY_DEBUG_LEVEL)) {
-                this._debugLevel = configJsonObject.getInt(KEY_DEBUG_LEVEL)
-            }
-            this._logger = Logger(this._debugLevel)
-
-            if (configJsonObject.has(KEY_PACKAGE_NAME)) {
-                this._packageName = configJsonObject.getString(KEY_PACKAGE_NAME)
-            }
-            if (configJsonObject.has(KEY_CREATED_POST_APP_LAUNCH)) {
-                this._createdPostAppLaunch = configJsonObject.getBoolean(KEY_CREATED_POST_APP_LAUNCH)
-            }
-            if (configJsonObject.has(KEY_SSL_PINNING)) {
-                this._sslPinning = configJsonObject.getBoolean(KEY_SSL_PINNING)
-            }
-            if (configJsonObject.has(KEY_BACKGROUND_SYNC)) {
-                this._backgroundSync = configJsonObject.getBoolean(KEY_BACKGROUND_SYNC)
-            }
-            if (configJsonObject.has(KEY_ENABLE_CUSTOM_CT_ID)) {
-                this._enableCustomCleverTapId = configJsonObject.getBoolean(KEY_ENABLE_CUSTOM_CT_ID)
-            }
-            if (configJsonObject.has(KEY_FCM_SENDER_ID)) {
-                this._fcmSenderId = configJsonObject.getString(KEY_FCM_SENDER_ID)
-            }
-            if (configJsonObject.has(KEY_BETA)) {
-                this._beta = configJsonObject.getBoolean(KEY_BETA)
-            }
-            if (configJsonObject.has(KEY_IDENTITY_TYPES)) {
-                @Suppress("UNCHECKED_CAST")
-                this._identityKeys = toArray<Any>(configJsonObject.getJSONArray(KEY_IDENTITY_TYPES)) as Array<String>
-            }
-            if (configJsonObject.has(KEY_ENCRYPTION_LEVEL)) {
-                this._encryptionLevel = configJsonObject.getInt(KEY_ENCRYPTION_LEVEL)
-            }
-            if (configJsonObject.has(KEY_PUSH_TYPES)) {
-                val pushTypesArray = configJsonObject.getJSONArray(KEY_PUSH_TYPES)
-                for (i in 0 until pushTypesArray.length()) {
-                    val pushTypeJo = pushTypesArray.getJSONObject(i)
-                    val pushType = PushType.fromJSONObject(pushTypeJo)
-                    if (pushType != null) {
-                        addPushType(pushType)
-                    }
-                }
-            }
-            this._encryptionInTransit = configJsonObject.optString(KEY_ENCRYPTION_IN_TRANSIT, "0")
-        } catch (t: Throwable) {
-            Logger.v("Error constructing CleverTapInstanceConfig from JSON: $jsonString: ", t.cause)
-            throw (t)
+    /** Parses a `type,prefKey,className,messagingSDKClassName` manifest entry into a [PushType]. */
+    private fun addPushTypeFromManifest(provider: String?) {
+        val splits = provider?.split(",")?.dropLastWhile { it.isEmpty() } ?: return
+        if (splits.size == 4) {
+            addPushType(PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim()))
         }
     }
 
-    private constructor(`in`: Parcel) {
-        _accountId = `in`.readString()
-        _accountToken = `in`.readString()
-        _accountRegion = `in`.readString()
-        _proxyDomain = `in`.readString()
-        _spikyProxyDomain = `in`.readString()
-        _customHandshakeDomain = `in`.readString()
-        _analyticsOnly = `in`.readByte().toInt() != 0x00
-        _isDefaultInstance = `in`.readByte().toInt() != 0x00
-        _useGoogleAdId = `in`.readByte().toInt() != 0x00
-        _disableAppLaunchedEvent = `in`.readByte().toInt() != 0x00
-        _personalization = `in`.readByte().toInt() != 0x00
-        _debugLevel = `in`.readInt()
-        _createdPostAppLaunch = `in`.readByte().toInt() != 0x00
-        _sslPinning = `in`.readByte().toInt() != 0x00
-        _backgroundSync = `in`.readByte().toInt() != 0x00
-        _enableCustomCleverTapId = `in`.readByte().toInt() != 0x00
-        _fcmSenderId = `in`.readString()
-        _packageName = `in`.readString()
-        _logger = Logger(_debugLevel)
-        _beta = `in`.readByte().toInt() != 0x00
-        _identityKeys = `in`.createStringArray()
-        _encryptionLevel = `in`.readInt()
-        _encryptionInTransit = `in`.readString()
+    private constructor(jsonString: String?) {
         try {
-            val allowedTypesJsonArray = JSONArray(`in`.readString())
-            for (i in 0 until allowedTypesJsonArray.length()) {
-                val pushType = PushType.fromJSONObject(allowedTypesJsonArray.getJSONObject(i))
-                if (pushType != null) {
-                    addPushType(pushType)
+            val json = JSONObject(jsonString)
+            if (json.has(KEY_ACCOUNT_ID)) {
+                accountIdValue = json.getString(KEY_ACCOUNT_ID)
+            }
+            if (json.has(KEY_ACCOUNT_TOKEN)) {
+                accountTokenValue = json.getString(KEY_ACCOUNT_TOKEN)
+            }
+            if (json.has(KEY_PROXY_DOMAIN)) {
+                proxyDomainValue = json.getString(KEY_PROXY_DOMAIN)
+            }
+            if (json.has(KEY_SPIKY_PROXY_DOMAIN)) {
+                spikyProxyDomainValue = json.getString(KEY_SPIKY_PROXY_DOMAIN)
+            }
+            if (json.has(KEY_CUSTOM_HANDSHAKE_DOMAIN)) {
+                customHandshakeDomainValue = json.optString(KEY_CUSTOM_HANDSHAKE_DOMAIN, null)
+            }
+            if (json.has(KEY_ACCOUNT_REGION)) {
+                accountRegionValue = json.getString(KEY_ACCOUNT_REGION)
+            }
+            if (json.has(KEY_ANALYTICS_ONLY)) {
+                analyticsOnlyValue = json.getBoolean(KEY_ANALYTICS_ONLY)
+            }
+            if (json.has(KEY_DEFAULT_INSTANCE)) {
+                defaultInstance = json.getBoolean(KEY_DEFAULT_INSTANCE)
+            }
+            if (json.has(KEY_USE_GOOGLE_AD_ID)) {
+                useGoogleAdId = json.getBoolean(KEY_USE_GOOGLE_AD_ID)
+            }
+            if (json.has(KEY_DISABLE_APP_LAUNCHED)) {
+                disableAppLaunchedEventValue = json.getBoolean(KEY_DISABLE_APP_LAUNCHED)
+            }
+            if (json.has(KEY_PERSONALIZATION)) {
+                personalization = json.getBoolean(KEY_PERSONALIZATION)
+            }
+            if (json.has(KEY_DEBUG_LEVEL)) {
+                debugLevelValue = json.getInt(KEY_DEBUG_LEVEL)
+            }
+            loggerValue = Logger(debugLevelValue)
+
+            if (json.has(KEY_PACKAGE_NAME)) {
+                packageNameValue = json.getString(KEY_PACKAGE_NAME)
+            }
+            if (json.has(KEY_CREATED_POST_APP_LAUNCH)) {
+                createdPostAppLaunch = json.getBoolean(KEY_CREATED_POST_APP_LAUNCH)
+            }
+            if (json.has(KEY_SSL_PINNING)) {
+                sslPinning = json.getBoolean(KEY_SSL_PINNING)
+            }
+            if (json.has(KEY_BACKGROUND_SYNC)) {
+                backgroundSyncValue = json.getBoolean(KEY_BACKGROUND_SYNC)
+            }
+            if (json.has(KEY_ENABLE_CUSTOM_CT_ID)) {
+                enableCustomCleverTapIdValue = json.getBoolean(KEY_ENABLE_CUSTOM_CT_ID)
+            }
+            if (json.has(KEY_FCM_SENDER_ID)) {
+                fcmSenderIdValue = json.getString(KEY_FCM_SENDER_ID)
+            }
+            if (json.has(KEY_BETA)) {
+                beta = json.getBoolean(KEY_BETA)
+            }
+            if (json.has(KEY_IDENTITY_TYPES)) {
+                @Suppress("UNCHECKED_CAST")
+                identityKeysValue = toArray<Any>(json.getJSONArray(KEY_IDENTITY_TYPES)) as Array<String>
+            }
+            if (json.has(KEY_ENCRYPTION_LEVEL)) {
+                encryptionLevelValue = json.getInt(KEY_ENCRYPTION_LEVEL)
+            }
+            if (json.has(KEY_PUSH_TYPES)) {
+                val pushTypesArray = json.getJSONArray(KEY_PUSH_TYPES)
+                for (i in 0 until pushTypesArray.length()) {
+                    PushType.fromJSONObject(pushTypesArray.getJSONObject(i))?.let(::addPushType)
                 }
+            }
+            encryptionInTransitValue = json.optString(KEY_ENCRYPTION_IN_TRANSIT, "0")
+        } catch (t: Throwable) {
+            Logger.v("Error constructing CleverTapInstanceConfig from JSON: $jsonString: ", t.cause)
+            throw t
+        }
+    }
+
+    private constructor(parcel: Parcel) {
+        accountIdValue = parcel.readString()
+        accountTokenValue = parcel.readString()
+        accountRegionValue = parcel.readString()
+        proxyDomainValue = parcel.readString()
+        spikyProxyDomainValue = parcel.readString()
+        customHandshakeDomainValue = parcel.readString()
+        analyticsOnlyValue = parcel.readFlag()
+        defaultInstance = parcel.readFlag()
+        useGoogleAdId = parcel.readFlag()
+        disableAppLaunchedEventValue = parcel.readFlag()
+        personalization = parcel.readFlag()
+        debugLevelValue = parcel.readInt()
+        createdPostAppLaunch = parcel.readFlag()
+        sslPinning = parcel.readFlag()
+        backgroundSyncValue = parcel.readFlag()
+        enableCustomCleverTapIdValue = parcel.readFlag()
+        fcmSenderIdValue = parcel.readString()
+        packageNameValue = parcel.readString()
+        loggerValue = Logger(debugLevelValue)
+        beta = parcel.readFlag()
+        identityKeysValue = parcel.createStringArray()
+        encryptionLevelValue = parcel.readInt()
+        encryptionInTransitValue = parcel.readString()
+        try {
+            val allowedTypesJsonArray = JSONArray(parcel.readString())
+            for (i in 0 until allowedTypesJsonArray.length()) {
+                PushType.fromJSONObject(allowedTypesJsonArray.getJSONObject(i))?.let(::addPushType)
             }
         } catch (e: JSONException) {
             Logger.v("Error in loading push providers from parcel, using firebase")
         }
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     open fun enablePersonalization(enablePersonalization: Boolean) {
-        this._personalization = enablePersonalization
+        personalization = enablePersonalization
     }
 
     /**
      * The CleverTap account ID. Every public factory rejects a null account ID, so this is non-null
      * for any config created through the public API.
      */
-    open fun getAccountId(): String = _accountId!!
+    open fun getAccountId(): String =
+        accountIdValue ?: throw NullPointerException("CleverTapInstanceConfig has no account ID")
 
     /** Kotlin property syntax, equivalent to [getAccountId]. */
     val accountId: String
         @JvmSynthetic @JvmName("ktGetAccountId") inline get() = getAccountId()
 
-    open fun getAccountRegion(): String? = _accountRegion
+    open fun getAccountRegion(): String? = accountRegionValue
 
     /** Kotlin property syntax, equivalent to [getAccountRegion]. */
     val accountRegion: String?
@@ -298,35 +276,33 @@ open class CleverTapInstanceConfig : Parcelable {
      * The CleverTap account token. Every public factory rejects a null token, so this is non-null
      * for any config created through the public API.
      */
-    open fun getAccountToken(): String = _accountToken!!
+    open fun getAccountToken(): String =
+        accountTokenValue ?: throw NullPointerException("CleverTapInstanceConfig has no account token")
 
     /** Kotlin property syntax, equivalent to [getAccountToken]. */
     val accountToken: String
         @JvmSynthetic @JvmName("ktGetAccountToken") inline get() = getAccountToken()
 
-    open fun getPushTypes(): ArrayList<PushType> = _pushTypes
+    open fun getPushTypes(): ArrayList<PushType> = pushTypesValue
 
     /** Kotlin property syntax, equivalent to [getPushTypes]. */
     val pushTypes: ArrayList<PushType>
         @JvmSynthetic @JvmName("ktGetPushTypes") inline get() = getPushTypes()
 
     open fun addPushType(allowedPushType: PushType) {
-        if (!_pushTypes.contains(allowedPushType)) {
-            this._pushTypes.add(allowedPushType)
+        if (allowedPushType !in pushTypesValue) {
+            pushTypesValue.add(allowedPushType)
         }
     }
 
     /**
      * Debug level of this instance. Setting it also updates this instance's [logger].
      */
-    open fun getDebugLevel(): Int = _debugLevel
+    open fun getDebugLevel(): Int = debugLevelValue
 
     open fun setDebugLevel(debugLevel: Int) {
-        this._debugLevel = debugLevel
-        val currentLogger = _logger
-        if (currentLogger != null) {
-            currentLogger.setDebugLevel(debugLevel)
-        }
+        debugLevelValue = debugLevel
+        loggerValue.setDebugLevel(debugLevel)
     }
 
     /** Kotlin property syntax, equivalent to [getDebugLevel] / [setDebugLevel]. */
@@ -334,10 +310,10 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetDebugLevel") inline get() = getDebugLevel()
         @JvmSynthetic @JvmName("ktSetDebugLevel") inline set(value) = setDebugLevel(value)
 
-    open fun getProxyDomain(): String? = _proxyDomain
+    open fun getProxyDomain(): String? = proxyDomainValue
 
     open fun setProxyDomain(proxyDomain: String?) {
-        this._proxyDomain = proxyDomain
+        proxyDomainValue = proxyDomain
     }
 
     /** Kotlin property syntax, equivalent to [getProxyDomain] / [setProxyDomain]. */
@@ -345,10 +321,10 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetProxyDomain") inline get() = getProxyDomain()
         @JvmSynthetic @JvmName("ktSetProxyDomain") inline set(value) = setProxyDomain(value)
 
-    open fun getSpikyProxyDomain(): String? = _spikyProxyDomain
+    open fun getSpikyProxyDomain(): String? = spikyProxyDomainValue
 
     open fun setSpikyProxyDomain(spikyProxyDomain: String?) {
-        this._spikyProxyDomain = spikyProxyDomain
+        spikyProxyDomainValue = spikyProxyDomain
     }
 
     /** Kotlin property syntax, equivalent to [getSpikyProxyDomain] / [setSpikyProxyDomain]. */
@@ -356,10 +332,10 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetSpikyProxyDomain") inline get() = getSpikyProxyDomain()
         @JvmSynthetic @JvmName("ktSetSpikyProxyDomain") inline set(value) = setSpikyProxyDomain(value)
 
-    open fun getCustomHandshakeDomain(): String? = _customHandshakeDomain
+    open fun getCustomHandshakeDomain(): String? = customHandshakeDomainValue
 
     open fun setCustomHandshakeDomain(handshakeDomain: String?) {
-        this._customHandshakeDomain = handshakeDomain
+        customHandshakeDomainValue = handshakeDomain
     }
 
     /** Kotlin property syntax, equivalent to [getCustomHandshakeDomain] / [setCustomHandshakeDomain]. */
@@ -368,29 +344,22 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktSetCustomHandshakeDomain") inline set(value) = setCustomHandshakeDomain(value)
 
     open fun setDebugLevel(debugLevel: CleverTapAPI.LogLevel) {
-        this.debugLevel = debugLevel.intValue()
+        setDebugLevel(debugLevel.intValue())
     }
 
-    open fun getFcmSenderId(): String? = _fcmSenderId
+    open fun getFcmSenderId(): String? = fcmSenderIdValue
 
     /** Kotlin property syntax, equivalent to [getFcmSenderId]. */
     val fcmSenderId: String?
         @JvmSynthetic @JvmName("ktGetFcmSenderId") inline get() = getFcmSenderId()
 
-    open fun getLogger(): Logger {
-        var currentLogger = _logger
-        if (currentLogger == null) {
-            currentLogger = Logger(this._debugLevel)
-            _logger = currentLogger
-        }
-        return currentLogger
-    }
+    open fun getLogger(): Logger = loggerValue
 
     /** Kotlin property syntax, equivalent to [getLogger]. */
     val logger: Logger
         @JvmSynthetic @JvmName("ktGetLogger") inline get() = getLogger()
 
-    open fun getPackageName(): String? = _packageName
+    open fun getPackageName(): String? = packageNameValue
 
     /** Kotlin property syntax, equivalent to [getPackageName]. */
     val packageName: String?
@@ -399,16 +368,16 @@ open class CleverTapInstanceConfig : Parcelable {
     /**
      * Identity keys used for user login. Set them with [setIdentityKeys].
      */
-    open fun getIdentityKeys(): Array<String>? = _identityKeys
+    open fun getIdentityKeys(): Array<String>? = identityKeysValue
 
     /** Kotlin property syntax, equivalent to [getIdentityKeys]. */
     val identityKeys: Array<String>?
         @JvmSynthetic @JvmName("ktGetIdentityKeys") inline get() = getIdentityKeys()
 
-    open fun isAnalyticsOnly(): Boolean = _analyticsOnly
+    open fun isAnalyticsOnly(): Boolean = analyticsOnlyValue
 
     open fun setAnalyticsOnly(analyticsOnly: Boolean) {
-        this._analyticsOnly = analyticsOnly
+        analyticsOnlyValue = analyticsOnly
     }
 
     /** Kotlin property syntax, equivalent to [isAnalyticsOnly] / [setAnalyticsOnly]. */
@@ -416,13 +385,13 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktIsAnalyticsOnly") inline get() = isAnalyticsOnly()
         @JvmSynthetic @JvmName("ktSetAnalyticsOnly") inline set(value) = setAnalyticsOnly(value)
 
-    open fun isBeta(): Boolean = _beta
+    open fun isBeta(): Boolean = beta
 
     /** Kotlin property syntax, equivalent to [isBeta]. */
     val isBeta: Boolean
         @JvmSynthetic @JvmName("ktIsBeta") inline get() = isBeta()
 
-    open fun isDefaultInstance(): Boolean = _isDefaultInstance
+    open fun isDefaultInstance(): Boolean = defaultInstance
 
     /** Kotlin property syntax, equivalent to [isDefaultInstance]. */
     val isDefaultInstance: Boolean
@@ -430,60 +399,59 @@ open class CleverTapInstanceConfig : Parcelable {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     open fun log(tag: String, message: String) {
-        logger.verbose(getDefaultSuffix(tag), message)
+        logger.verbose(defaultSuffix(tag), message)
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     open fun log(tag: String, message: String, throwable: Throwable?) {
-        logger.verbose(getDefaultSuffix(tag), message, throwable)
+        logger.verbose(defaultSuffix(tag), message, throwable)
     }
 
     open fun setIdentityKeys(@IdentityType vararg identityKeys: String) {
-        if (!_isDefaultInstance) {
+        if (!defaultInstance) {
             @Suppress("UNCHECKED_CAST")
-            this._identityKeys = identityKeys as Array<String>
+            identityKeysValue = identityKeys as Array<String>
             log(
-                LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
-                    .toString(this._identityKeys)
+                LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                "Setting Profile Keys via setter: ${identityKeysValue.contentToString()}"
             )
         }
     }
 
     open fun useGoogleAdId(value: Boolean) {
-        this._useGoogleAdId = value
+        useGoogleAdId = value
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeString(_accountId)
-        dest.writeString(_accountToken)
-        dest.writeString(_accountRegion)
-        dest.writeString(_proxyDomain)
-        dest.writeString(_spikyProxyDomain)
-        dest.writeString(_customHandshakeDomain)
-        dest.writeByte((if (_analyticsOnly) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_isDefaultInstance) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_useGoogleAdId) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_disableAppLaunchedEvent) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_personalization) 0x01 else 0x00).toByte())
-        dest.writeInt(_debugLevel)
-        dest.writeByte((if (_createdPostAppLaunch) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_sslPinning) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_backgroundSync) 0x01 else 0x00).toByte())
-        dest.writeByte((if (_enableCustomCleverTapId) 0x01 else 0x00).toByte())
-        dest.writeString(_fcmSenderId)
-        dest.writeString(_packageName)
-        dest.writeByte((if (_beta) 0x01 else 0x00).toByte())
-        dest.writeStringArray(_identityKeys)
-        dest.writeInt(_encryptionLevel)
-        dest.writeString(_encryptionInTransit)
-        val allowTypesString = getPushTypesArray().toString()
-        dest.writeString(allowTypesString)
+        dest.writeString(accountIdValue)
+        dest.writeString(accountTokenValue)
+        dest.writeString(accountRegionValue)
+        dest.writeString(proxyDomainValue)
+        dest.writeString(spikyProxyDomainValue)
+        dest.writeString(customHandshakeDomainValue)
+        dest.writeFlag(analyticsOnlyValue)
+        dest.writeFlag(defaultInstance)
+        dest.writeFlag(useGoogleAdId)
+        dest.writeFlag(disableAppLaunchedEventValue)
+        dest.writeFlag(personalization)
+        dest.writeInt(debugLevelValue)
+        dest.writeFlag(createdPostAppLaunch)
+        dest.writeFlag(sslPinning)
+        dest.writeFlag(backgroundSyncValue)
+        dest.writeFlag(enableCustomCleverTapIdValue)
+        dest.writeString(fcmSenderIdValue)
+        dest.writeString(packageNameValue)
+        dest.writeFlag(beta)
+        dest.writeStringArray(identityKeysValue)
+        dest.writeInt(encryptionLevelValue)
+        dest.writeString(encryptionInTransitValue)
+        dest.writeString(pushTypesJson().toString())
     }
 
-    open fun getEnableCustomCleverTapId(): Boolean = _enableCustomCleverTapId
+    open fun getEnableCustomCleverTapId(): Boolean = enableCustomCleverTapIdValue
 
     open fun setEnableCustomCleverTapId(enableCustomCleverTapId: Boolean) {
-        this._enableCustomCleverTapId = enableCustomCleverTapId
+        enableCustomCleverTapIdValue = enableCustomCleverTapId
     }
 
     /** Kotlin property syntax, equivalent to [getEnableCustomCleverTapId] / [setEnableCustomCleverTapId]. */
@@ -495,10 +463,10 @@ open class CleverTapInstanceConfig : Parcelable {
      * Background sync flag. The getter is SDK-internal (`@RestrictTo(LIBRARY)`), the setter is public API.
      */
     @RestrictTo(Scope.LIBRARY)
-    open fun isBackgroundSync(): Boolean = _backgroundSync
+    open fun isBackgroundSync(): Boolean = backgroundSyncValue
 
     open fun setBackgroundSync(backgroundSync: Boolean) {
-        this._backgroundSync = backgroundSync
+        backgroundSyncValue = backgroundSync
     }
 
     /** Kotlin property syntax, equivalent to [isBackgroundSync] / [setBackgroundSync]. */
@@ -506,7 +474,7 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktIsBackgroundSync") inline get() = isBackgroundSync()
         @JvmSynthetic @JvmName("ktSetBackgroundSync") inline set(value) = setBackgroundSync(value)
 
-    open fun isCreatedPostAppLaunch(): Boolean = _createdPostAppLaunch
+    open fun isCreatedPostAppLaunch(): Boolean = createdPostAppLaunch
 
     /** Kotlin property syntax, equivalent to [isCreatedPostAppLaunch]. */
     val isCreatedPostAppLaunch: Boolean
@@ -517,10 +485,10 @@ open class CleverTapInstanceConfig : Parcelable {
      * SDK-internal (`@RestrictTo(LIBRARY)`); the setter is public API.
      */
     @RestrictTo(Scope.LIBRARY)
-    open fun isDisableAppLaunchedEvent(): Boolean = _disableAppLaunchedEvent
+    open fun isDisableAppLaunchedEvent(): Boolean = disableAppLaunchedEventValue
 
     open fun setDisableAppLaunchedEvent(disableAppLaunchedEvent: Boolean) {
-        this._disableAppLaunchedEvent = disableAppLaunchedEvent
+        disableAppLaunchedEventValue = disableAppLaunchedEvent
     }
 
     /** Kotlin property syntax, equivalent to [isDisableAppLaunchedEvent] / [setDisableAppLaunchedEvent]. */
@@ -530,9 +498,9 @@ open class CleverTapInstanceConfig : Parcelable {
 
     @get:JvmName("isPersonalizationEnabled")
     internal val isPersonalizationEnabled: Boolean
-        get() = _personalization
+        get() = personalization
 
-    open fun isSslPinningEnabled(): Boolean = _sslPinning
+    open fun isSslPinningEnabled(): Boolean = sslPinning
 
     /** Kotlin property syntax, equivalent to [isSslPinningEnabled]. */
     val isSslPinningEnabled: Boolean
@@ -540,34 +508,33 @@ open class CleverTapInstanceConfig : Parcelable {
 
     @get:JvmName("isUseGoogleAdId")
     internal val isUseGoogleAdId: Boolean
-        get() = _useGoogleAdId
+        get() = useGoogleAdId
 
     @JvmName("setCreatedPostAppLaunch")
     internal fun setCreatedPostAppLaunch() {
-        this._createdPostAppLaunch = true
+        createdPostAppLaunch = true
     }
 
     open fun setEncryptionLevel(encryptionLevel: EncryptionLevel) {
-        this._encryptionLevel = encryptionLevel.intValue()
+        encryptionLevelValue = encryptionLevel.intValue()
     }
 
-    open fun getEncryptionLevel(): Int = _encryptionLevel
+    open fun getEncryptionLevel(): Int = encryptionLevelValue
 
     /** Kotlin property syntax, equivalent to [getEncryptionLevel]. */
     val encryptionLevel: Int
         @JvmSynthetic @JvmName("ktGetEncryptionLevel") inline get() = getEncryptionLevel()
 
     open fun setEncryptionInTransit(encryptionInTransit: Boolean) {
-        this._encryptionInTransit = if (encryptionInTransit) "1" else "0"
+        encryptionInTransitValue = if (encryptionInTransit) "1" else "0"
     }
 
-    open fun isEncryptionInTransitEnabled(): Boolean {
-        try {
-            return Integer.parseInt(_encryptionInTransit) > 0
-        } catch (e: NumberFormatException) {
-            Logger.v("Invalid value passed in manifest for encryption in transit")
-            return false
-        }
+    open fun isEncryptionInTransitEnabled(): Boolean = try {
+        // a null value fails to parse, as it did in Java
+        encryptionInTransitValue.orEmpty().toInt() > 0
+    } catch (e: NumberFormatException) {
+        Logger.v("Invalid value passed in manifest for encryption in transit")
+        false
     }
 
     /** Kotlin property syntax, equivalent to [isEncryptionInTransitEnabled]. */
@@ -575,67 +542,52 @@ open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktIsEncryptionInTransitEnabled") inline get() = isEncryptionInTransitEnabled()
 
     @JvmName("toJSONString")
-    internal fun toJSONString(): String? {
-        val configJsonObject = JSONObject()
-        try {
-            configJsonObject.put(KEY_ACCOUNT_ID, _accountId)
-            configJsonObject.put(KEY_ACCOUNT_TOKEN, _accountToken)
-            configJsonObject.put(KEY_ACCOUNT_REGION, accountRegion)
-            configJsonObject.put(KEY_PROXY_DOMAIN, proxyDomain)
-            configJsonObject.put(KEY_SPIKY_PROXY_DOMAIN, spikyProxyDomain)
-            configJsonObject.put(KEY_CUSTOM_HANDSHAKE_DOMAIN, customHandshakeDomain)
-            configJsonObject.put(KEY_FCM_SENDER_ID, fcmSenderId)
-            configJsonObject.put(KEY_ANALYTICS_ONLY, isAnalyticsOnly)
-            configJsonObject.put(KEY_DEFAULT_INSTANCE, isDefaultInstance)
-            configJsonObject.put(KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId)
-            configJsonObject.put(KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent)
-            configJsonObject.put(KEY_PERSONALIZATION, isPersonalizationEnabled)
-            configJsonObject.put(KEY_DEBUG_LEVEL, debugLevel)
-            configJsonObject.put(KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch)
-            configJsonObject.put(KEY_SSL_PINNING, isSslPinningEnabled)
-            configJsonObject.put(KEY_BACKGROUND_SYNC, isBackgroundSync)
-            configJsonObject.put(KEY_ENABLE_CUSTOM_CT_ID, enableCustomCleverTapId)
-            configJsonObject.put(KEY_PACKAGE_NAME, packageName)
-            configJsonObject.put(KEY_BETA, isBeta)
-            configJsonObject.put(KEY_ENCRYPTION_LEVEL, encryptionLevel)
-            configJsonObject.put(KEY_ENCRYPTION_IN_TRANSIT, _encryptionInTransit)
-            val pushTypesArray = getPushTypesArray()
-            configJsonObject.put(KEY_PUSH_TYPES, pushTypesArray)
-
-            return configJsonObject.toString()
-        } catch (e: Throwable) {
-            Logger.v("Unable to convert config to JSON : ", e.cause)
-            return null
-        }
+    internal fun toJSONString(): String? = try {
+        JSONObject().apply {
+            put(KEY_ACCOUNT_ID, accountIdValue)
+            put(KEY_ACCOUNT_TOKEN, accountTokenValue)
+            put(KEY_ACCOUNT_REGION, accountRegion)
+            put(KEY_PROXY_DOMAIN, proxyDomain)
+            put(KEY_SPIKY_PROXY_DOMAIN, spikyProxyDomain)
+            put(KEY_CUSTOM_HANDSHAKE_DOMAIN, customHandshakeDomain)
+            put(KEY_FCM_SENDER_ID, fcmSenderId)
+            put(KEY_ANALYTICS_ONLY, isAnalyticsOnly)
+            put(KEY_DEFAULT_INSTANCE, isDefaultInstance)
+            put(KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId)
+            put(KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent)
+            put(KEY_PERSONALIZATION, isPersonalizationEnabled)
+            put(KEY_DEBUG_LEVEL, debugLevel)
+            put(KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch)
+            put(KEY_SSL_PINNING, isSslPinningEnabled)
+            put(KEY_BACKGROUND_SYNC, isBackgroundSync)
+            put(KEY_ENABLE_CUSTOM_CT_ID, enableCustomCleverTapId)
+            put(KEY_PACKAGE_NAME, packageName)
+            put(KEY_BETA, isBeta)
+            put(KEY_ENCRYPTION_LEVEL, encryptionLevel)
+            put(KEY_ENCRYPTION_IN_TRANSIT, encryptionInTransitValue)
+            put(KEY_PUSH_TYPES, pushTypesJson())
+        }.toString()
+    } catch (e: Throwable) {
+        Logger.v("Unable to convert config to JSON : ", e.cause)
+        null
     }
 
-    private fun getPushTypesArray(): JSONArray {
-        val pushTypesArray = JSONArray()
-        for (pushType in pushTypes) {
-            // fcm is always loaded by default.
-            if (pushType !== PushConstants.FCM) {
-                pushTypesArray.put(pushType.toJSONObject())
-            }
-        }
-        return pushTypesArray
+    private fun pushTypesJson(): JSONArray = JSONArray().apply {
+        // fcm is always loaded by default.
+        pushTypes.filter { it !== PushConstants.FCM }.forEach { put(it.toJSONObject()) }
     }
 
-    private fun getDefaultSuffix(tag: String): String {
-        return "[" + ((if (!TextUtils.isEmpty(tag)) ":$tag" else "") + ":" + _accountId + "]")
-    }
+    private fun defaultSuffix(tag: String): String =
+        "[${if (tag.isNotEmpty()) ":$tag" else ""}:$accountIdValue]"
 
     companion object {
 
         @JvmField
         val CREATOR: Parcelable.Creator<CleverTapInstanceConfig> =
             object : Parcelable.Creator<CleverTapInstanceConfig> {
-                override fun createFromParcel(`in`: Parcel): CleverTapInstanceConfig {
-                    return CleverTapInstanceConfig(`in`)
-                }
+                override fun createFromParcel(parcel: Parcel): CleverTapInstanceConfig = CleverTapInstanceConfig(parcel)
 
-                override fun newArray(size: Int): Array<CleverTapInstanceConfig?> {
-                    return arrayOfNulls(size)
-                }
+                override fun newArray(size: Int): Array<CleverTapInstanceConfig?> = arrayOfNulls(size)
             }
 
         //Keys used by the SDK
@@ -696,9 +648,7 @@ open class CleverTapInstanceConfig : Parcelable {
             context: Context?,
             accountId: String?,
             accountToken: String?
-        ): CleverTapInstanceConfig? {
-            return createInstance(context, accountId, accountToken, null)
-        }
+        ): CleverTapInstanceConfig? = createInstance(context, accountId, accountToken, null)
 
         /**
          * Creates a CleverTapInstanceConfig for an additional instance.
@@ -727,10 +677,8 @@ open class CleverTapInstanceConfig : Parcelable {
             accountId: String,
             accountToken: String,
             accountRegion: String?
-        ): CleverTapInstanceConfig {
-            val manifestInfo = ManifestInfo.getInstance(context)
-            return createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true)
-        }
+        ): CleverTapInstanceConfig =
+            createInstanceWithManifest(ManifestInfo.getInstance(context), accountId, accountToken, accountRegion, true)
 
         // @RestrictTo keeps the BCV dump clean: @JvmName makes BCV treat this internal member as public.
         @RestrictTo(Scope.LIBRARY)
@@ -742,26 +690,25 @@ open class CleverTapInstanceConfig : Parcelable {
             accountToken: String?,
             accountRegion: String?,
             isDefaultInstance: Boolean
-        ): CleverTapInstanceConfig {
-            return CleverTapInstanceConfig(manifest, accountId, accountToken, accountRegion, isDefaultInstance)
-        }
+        ): CleverTapInstanceConfig =
+            CleverTapInstanceConfig(manifest, accountId, accountToken, accountRegion, isDefaultInstance)
 
         // for internal use only!
         @JvmStatic
-        protected fun createInstance(jsonString: String?): CleverTapInstanceConfig? {
-            return createInstanceFromJson(jsonString)
-        }
+        protected fun createInstance(jsonString: String?): CleverTapInstanceConfig? = createInstanceFromJson(jsonString)
 
         /**
          * SDK-internal access to [createInstance] (String): Kotlin `protected` companion members are
          * not visible to other classes in the package, unlike Java `protected static`.
          */
-        internal fun createInstanceFromJson(jsonString: String?): CleverTapInstanceConfig? {
-            try {
-                return CleverTapInstanceConfig(jsonString)
-            } catch (t: Throwable) {
-                return null
-            }
+        internal fun createInstanceFromJson(jsonString: String?): CleverTapInstanceConfig? = try {
+            CleverTapInstanceConfig(jsonString)
+        } catch (t: Throwable) {
+            null
         }
+
+        private fun Parcel.readFlag(): Boolean = readByte().toInt() != 0x00
+
+        private fun Parcel.writeFlag(value: Boolean) = writeByte(if (value) 0x01 else 0x00)
     }
 }

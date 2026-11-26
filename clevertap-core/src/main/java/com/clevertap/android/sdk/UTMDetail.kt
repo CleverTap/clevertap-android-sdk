@@ -3,16 +3,16 @@ package com.clevertap.android.sdk
 @Suppress("MemberVisibilityCanBePrivate")
 open class UTMDetail {
 
-    private var _campaign: String? = null
+    private var campaignValue: String? = null
 
-    private var _medium: String? = null
+    private var mediumValue: String? = null
 
-    private var _source: String? = null
+    private var sourceValue: String? = null
 
-    open fun getCampaign(): String? = _campaign
+    open fun getCampaign(): String? = campaignValue
 
     open fun setCampaign(campaign: String?) {
-        this._campaign = campaign
+        campaignValue = campaign
     }
 
     /** Kotlin property syntax, equivalent to [getCampaign] / [setCampaign]. */
@@ -20,10 +20,10 @@ open class UTMDetail {
         @JvmSynthetic @JvmName("ktGetCampaign") inline get() = getCampaign()
         @JvmSynthetic @JvmName("ktSetCampaign") inline set(value) = setCampaign(value)
 
-    open fun getMedium(): String? = _medium
+    open fun getMedium(): String? = mediumValue
 
     open fun setMedium(medium: String?) {
-        this._medium = medium
+        mediumValue = medium
     }
 
     /** Kotlin property syntax, equivalent to [getMedium] / [setMedium]. */
@@ -31,10 +31,10 @@ open class UTMDetail {
         @JvmSynthetic @JvmName("ktGetMedium") inline get() = getMedium()
         @JvmSynthetic @JvmName("ktSetMedium") inline set(value) = setMedium(value)
 
-    open fun getSource(): String? = _source
+    open fun getSource(): String? = sourceValue
 
     open fun setSource(source: String?) {
-        this._source = source
+        sourceValue = source
     }
 
     /** Kotlin property syntax, equivalent to [getSource] / [setSource]. */

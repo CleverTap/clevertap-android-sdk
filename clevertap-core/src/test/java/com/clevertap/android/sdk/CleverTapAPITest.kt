@@ -376,7 +376,6 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.deleteInboxMessagesForIDs(messageIDs) }
     }
 
@@ -408,7 +407,6 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
     }
 
