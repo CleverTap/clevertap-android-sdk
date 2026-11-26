@@ -238,11 +238,11 @@ internal class CtApi(
         }
 
         val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
-        if (toCheckCached.isNotNullAndBlank()) {
-            return toCheckCached
+        return if (toCheckCached.isNotNullAndBlank()) {
+            toCheckCached
+        } else {
+            defaultDomain
         }
-
-        return defaultDomain
     }
 
     fun needsHandshake(isViewedEvent: Boolean) : Boolean {

@@ -8,9 +8,11 @@ import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultFactory
 import com.clevertap.android.sdk.validation.pipeline.EventDataMetrics
 import com.clevertap.android.sdk.validation.pipeline.EventDataNormalizationResult
+import com.clevertap.android.sdk.validation.pipeline.KeyModification
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
 import com.clevertap.android.sdk.validation.pipeline.RemovalReason
 import com.clevertap.android.sdk.validation.pipeline.Validator
+import com.clevertap.android.sdk.validation.pipeline.ValueModification
 
 /**
  * Validates event data after normalization.
@@ -69,58 +71,35 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         errors: MutableList<ValidationResult>
     ) {
         maxDepth?.let { limit ->
-            if (metrics.maxDepth > limit) {
-                val error = ValidationResultFactory.create(
-                    ValidationError.DEPTH_LIMIT_EXCEEDED,
-                    metrics.maxDepth.toString(),
-                    limit.toString()
-                )
-                errors.add(error)
-            }
+            checkLimit(metrics.maxDepth, limit, ValidationError.DEPTH_LIMIT_EXCEEDED, errors)
         }
 
         maxArrayKeyCount?.let { limit ->
-            if (metrics.maxArrayKeyCount > limit) {
-                val error = ValidationResultFactory.create(
-                    ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED,
-                    metrics.maxArrayKeyCount.toString(),
-                    limit.toString()
-                )
-                errors.add(error)
-            }
+            checkLimit(metrics.maxArrayKeyCount, limit, ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED, errors)
         }
 
         maxObjectKeyCount?.let { limit ->
-            if (metrics.maxObjectKeyCount > limit) {
-                val error = ValidationResultFactory.create(
-                    ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED,
-                    metrics.maxObjectKeyCount.toString(),
-                    limit.toString()
-                )
-                errors.add(error)
-            }
+            checkLimit(metrics.maxObjectKeyCount, limit, ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED, errors)
         }
 
         maxArrayLength?.let { limit ->
-            if (metrics.maxArrayLength > limit) {
-                val error = ValidationResultFactory.create(
-                    ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED,
-                    metrics.maxArrayLength.toString(),
-                    limit.toString()
-                )
-                errors.add(error)
-            }
+            checkLimit(metrics.maxArrayLength, limit, ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED, errors)
         }
 
         maxKVPairCount?.let { limit ->
-            if (metrics.maxKVPairCount > limit) {
-                val error = ValidationResultFactory.create(
-                    ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED,
-                    metrics.maxKVPairCount.toString(),
-                    limit.toString()
-                )
-                errors.add(error)
-            }
+            checkLimit(metrics.maxKVPairCount, limit, ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED, errors)
+        }
+    }
+
+    /** Adds [error] to [errors] when [actual] exceeds the configured [limit]. */
+    private fun checkLimit(
+        actual: Int,
+        limit: Int,
+        error: ValidationError,
+        errors: MutableList<ValidationResult>
+    ) {
+        if (actual > limit) {
+            errors.add(ValidationResultFactory.create(error, actual.toString(), limit.toString()))
         }
     }
 
@@ -130,27 +109,50 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         errors: MutableList<ValidationResult>
     ) {
         metrics.keysModified.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = when (reason) {
-                    ModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        ValidationResultFactory.create(
-                            ValidationError.KEY_INVALID_CHARACTERS,
-                            modification.originalKey,
-                            modification.cleanedKey
-                        )
-                    }
-                    ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
-                        maxKeyLength?.let { limit ->
-                            ValidationResultFactory.create(
-                                ValidationError.KEY_LENGTH_EXCEEDED,
-                                modification.originalKey,
-                                limit.toString(),
-                                modification.cleanedKey
-                            )
-                        } ?: return@forEach
-                    }
-                }
+            addKeyModificationErrors(modification = modification, maxKeyLength = maxKeyLength, errors = errors)
+        }
+    }
+
+    private fun addKeyModificationErrors(
+        modification: KeyModification,
+        maxKeyLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = keyModificationError(
+                modification = modification,
+                reason = reason,
+                maxKeyLength = maxKeyLength
+            )
+            if (error != null) {
                 errors.add(error)
+            }
+        }
+    }
+
+    /** Returns null for a truncation when no max key length is configured, which reports nothing. */
+    private fun keyModificationError(
+        modification: KeyModification,
+        reason: ModificationReason,
+        maxKeyLength: Int?
+    ): ValidationResult? {
+        return when (reason) {
+            ModificationReason.INVALID_CHARACTERS_REMOVED -> {
+                ValidationResultFactory.create(
+                    ValidationError.KEY_INVALID_CHARACTERS,
+                    modification.originalKey,
+                    modification.cleanedKey
+                )
+            }
+            ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
+                maxKeyLength?.let { limit ->
+                    ValidationResultFactory.create(
+                        ValidationError.KEY_LENGTH_EXCEEDED,
+                        modification.originalKey,
+                        limit.toString(),
+                        modification.cleanedKey
+                    )
+                }
             }
         }
     }
@@ -161,29 +163,52 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
         errors: MutableList<ValidationResult>
     ) {
         metrics.valuesModified.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = when (reason) {
-                    ModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        ValidationResultFactory.create(
-                            ValidationError.VALUE_INVALID_CHARACTERS,
-                            modification.originalValue,
-                            modification.key,
-                            modification.cleanedValue
-                        )
-                    }
-                    ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
-                        maxValueLength?.let { limit ->
-                            ValidationResultFactory.create(
-                                ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
-                                modification.originalValue,
-                                modification.key,
-                                limit.toString(),
-                                modification.cleanedValue
-                            )
-                        } ?: return@forEach
-                    }
-                }
+            addValueModificationErrors(modification = modification, maxValueLength = maxValueLength, errors = errors)
+        }
+    }
+
+    private fun addValueModificationErrors(
+        modification: ValueModification,
+        maxValueLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = valueModificationError(
+                modification = modification,
+                reason = reason,
+                maxValueLength = maxValueLength
+            )
+            if (error != null) {
                 errors.add(error)
+            }
+        }
+    }
+
+    /** Returns null for a truncation when no max value length is configured, which reports nothing. */
+    private fun valueModificationError(
+        modification: ValueModification,
+        reason: ModificationReason,
+        maxValueLength: Int?
+    ): ValidationResult? {
+        return when (reason) {
+            ModificationReason.INVALID_CHARACTERS_REMOVED -> {
+                ValidationResultFactory.create(
+                    ValidationError.VALUE_INVALID_CHARACTERS,
+                    modification.originalValue,
+                    modification.key,
+                    modification.cleanedValue
+                )
+            }
+            ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
+                maxValueLength?.let { limit ->
+                    ValidationResultFactory.create(
+                        ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
+                        modification.originalValue,
+                        modification.key,
+                        limit.toString(),
+                        modification.cleanedValue
+                    )
+                }
             }
         }
     }
@@ -213,7 +238,7 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
                     ValidationResultFactory.create(
                         ValidationError.PROP_VALUE_NOT_PRIMITIVE,
                         item.key,
-                        item.originalValue?.let { it::class.simpleName } ?: "null"
+                        typeNameOf(item.originalValue)
                     )
                 }
                 RemovalReason.INVALID_PHONE_NUMBER -> {
@@ -230,4 +255,6 @@ internal class EventDataValidator : Validator<EventDataNormalizationResult> {
             errors.add(error)
         }
     }
+
+    private fun typeNameOf(value: Any?): String = value?.let { it::class.simpleName } ?: "null"
 }

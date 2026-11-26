@@ -206,7 +206,7 @@ internal class StoreProvider {
             STORE_TYPE_ND -> "${Constants.ND_KEY}:$deviceId:$accountId"
             STORE_TYPE_ND_IMPRESSION -> "${Constants.KEY_ND_IMPRESSIONS_PER_TARGET}:$deviceId:$accountId"
             STORE_TYPE_ND_COUNTS -> "${Constants.KEY_ND_COUNTS_PER_TARGET}:$deviceId:$accountId"
-            STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG
+            // STORE_TYPE_LEGACY_INAPP and unknown types share the account-level storage tag
             else -> Constants.CLEVERTAP_STORAGE_TAG
         }
 }

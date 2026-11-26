@@ -15,18 +15,22 @@ internal object AnalyticsManagerBundler {
         for (s in root.keySet()) {
             val o = root[s]
             if (o is Bundle) {
-                val wzrkFields = wzrkBundleToJson(o)
-                val keys = wzrkFields.keys()
-                while (keys.hasNext()) {
-                    val k = keys.next()
-                    fields.put(k, wzrkFields[k])
-                }
+                putAll(target = fields, source = wzrkBundleToJson(o))
             } else if (s.startsWith(Constants.WZRK_PREFIX)) {
                 fields.put(s, root[s])
             }
         }
 
         return fields
+    }
+
+    @Throws(JSONException::class)
+    private fun putAll(target: JSONObject, source: JSONObject) {
+        val keys = source.keys()
+        while (keys.hasNext()) {
+            val k = keys.next()
+            target.put(k, source[k])
+        }
     }
 
     @JvmStatic

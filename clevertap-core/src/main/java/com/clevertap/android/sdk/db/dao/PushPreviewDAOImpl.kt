@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -68,20 +69,23 @@ internal class PushPreviewDAOImpl(
                 "${Column.PREVIEW_KEY} = ? AND ${Column.EXPIRES} > $nowSeconds",
                 arrayOf(previewKey),
                 null, null, null, "1"
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    return dbEncryptionHandler.unwrapDbData(cursor.getString(0)).also { data ->
-                        // A row that exists but cannot be decrypted is a key problem, not a missing push.
-                        if (data == null) {
-                            logger.verbose("Push preview row for $previewKey is unreadable")
-                        }
-                    }
-                }
-            }
+            ).use { cursor -> return readFirstPreview(cursor = cursor, previewKey = previewKey) }
         } catch (e: SQLiteException) {
             logger.verbose("Error reading push preview from $TABLE", e)
         }
         return null
+    }
+
+    private fun readFirstPreview(cursor: Cursor, previewKey: String): String? {
+        if (!cursor.moveToFirst()) {
+            return null
+        }
+        return dbEncryptionHandler.unwrapDbData(cursor.getString(0)).also { data ->
+            // A row that exists but cannot be decrypted is a key problem, not a missing push.
+            if (data == null) {
+                logger.verbose("Push preview row for $previewKey is unreadable")
+            }
+        }
     }
 
     /**

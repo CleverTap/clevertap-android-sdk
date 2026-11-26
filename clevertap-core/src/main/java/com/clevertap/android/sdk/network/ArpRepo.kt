@@ -60,15 +60,7 @@ internal class ArpRepo(
                     }
 
                 val all = prefs.all
-                val iter = all.entries.iterator()
-
-                while (iter.hasNext()) {
-                    val kv = iter.next()
-                    val o = kv.value!!
-                    if (o is Number && o.toInt() == -1) {
-                        iter.remove()
-                    }
-                }
+                removeUnsetEntries(all)
                 val ret = JSONObject(all)
                 logger.verbose(
                     accountId,
@@ -80,6 +72,19 @@ internal class ArpRepo(
                 return null
             }
         }
+
+    /** Drops entries whose value was set to -1, which marks them as removed. */
+    private fun removeUnsetEntries(all: MutableMap<String, *>) {
+        val iter = all.entries.iterator()
+
+        while (iter.hasNext()) {
+            val kv = iter.next()
+            val o = kv.value!!
+            if (o is Number && o.toInt() == -1) {
+                iter.remove()
+            }
+        }
+    }
 
     /**
      * Saves ARP directly to new namespace
@@ -99,26 +104,7 @@ internal class ArpRepo(
             val key = keys.next()
             try {
                 val o = arp.get(key)
-                if (o is Number) {
-                    val update = (o).toInt()
-                    editor.putInt(key, update)
-                } else if (o is String) {
-                    if ((o).length < 100) {
-                        editor.putString(key, o)
-                    } else {
-                        logger.verbose(
-                            accountId,
-                            "ARP update for key $key rejected (string value too long)"
-                        )
-                    }
-                } else if (o is Boolean) {
-                    editor.putBoolean(key, o)
-                } else {
-                    logger.verbose(
-                        accountId,
-                        "ARP update for key $key rejected (invalid data type)"
-                    )
-                }
+                putArpValue(editor = editor, key = key, value = o)
             } catch (e: Exception) {
                 // Ignore
             }
@@ -140,30 +126,38 @@ internal class ArpRepo(
 
         for ((key, value) in all) {
             val o = value!!
-            if (o is Number) {
-                val update = o.toInt()
-                editor.putInt(key, update)
-            } else if (o is String) {
-                if (o.length < 100) {
-                    editor.putString(key, o)
-                } else {
-                    logger.verbose(
-                        accountId,
-                        "ARP update for key $key rejected (string value too long)"
-                    )
-                }
-            } else if (o is Boolean) {
-                editor.putBoolean(key, o)
-            } else {
-                logger.verbose(
-                    accountId,
-                    "ARP update for key $key rejected (invalid data type)"
-                )
-            }
+            putArpValue(editor = editor, key = key, value = o)
         }
         logger.verbose(accountId, "Completed ARP update for namespace key: $newKey")
         StorageHelper.persist(editor)
         oldPrefs.edit { clear() }
         return newPrefs
+    }
+
+    /**
+     * Writes one ARP value: numbers as Int, strings shorter than 100 chars, booleans. Anything
+     * else is rejected with a log.
+     */
+    private fun putArpValue(editor: SharedPreferences.Editor, key: String, value: Any) {
+        if (value is Number) {
+            val update = value.toInt()
+            editor.putInt(key, update)
+        } else if (value is String) {
+            if (value.length < 100) {
+                editor.putString(key, value)
+            } else {
+                logger.verbose(
+                    accountId,
+                    "ARP update for key $key rejected (string value too long)"
+                )
+            }
+        } else if (value is Boolean) {
+            editor.putBoolean(key, value)
+        } else {
+            logger.verbose(
+                accountId,
+                "ARP update for key $key rejected (invalid data type)"
+            )
+        }
     }
 }

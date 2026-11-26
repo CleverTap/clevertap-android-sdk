@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationOutcome
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultFactory
+import com.clevertap.android.sdk.validation.pipeline.KeyModification
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyNormalizationResult
 import com.clevertap.android.sdk.validation.pipeline.Validator
@@ -33,34 +34,60 @@ internal class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationRes
 
         // Report key modifications
         input.modifications.forEach { modification ->
-            modification.reasons.forEach { reason ->
-                val error = when (reason) {
-                    ModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        ValidationResultFactory.create(
-                            ValidationError.KEY_INVALID_CHARACTERS,
-                            modification.originalKey,
-                            modification.cleanedKey
-                        )
-                    }
-                    ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
-                        config.maxKeyLength?.let { limit ->
-                            ValidationResultFactory.create(
-                                ValidationError.KEY_LENGTH_EXCEEDED,
-                                modification.originalKey,
-                                limit.toString(),
-                                modification.cleanedKey
-                            )
-                        } ?: return@forEach
-                    }
-                }
-                errors.add(error)
-            }
+            addKeyModificationErrors(modification = modification, maxKeyLength = config.maxKeyLength, errors = errors)
         }
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()
         } else {
             ValidationOutcome.Warning(errors)
+        }
+    }
+
+    private fun addKeyModificationErrors(
+        modification: KeyModification,
+        maxKeyLength: Int?,
+        errors: MutableList<ValidationResult>
+    ) {
+        modification.reasons.forEach { reason ->
+            val error = keyModificationError(
+                modification = modification,
+                reason = reason,
+                maxKeyLength = maxKeyLength
+            )
+            if (error != null) {
+                errors.add(error)
+            }
+        }
+    }
+
+    /**
+     * Maps one key modification reason to its warning. Returns null for a truncation when no
+     * max key length is configured, which reports nothing.
+     */
+    private fun keyModificationError(
+        modification: KeyModification,
+        reason: ModificationReason,
+        maxKeyLength: Int?
+    ): ValidationResult? {
+        return when (reason) {
+            ModificationReason.INVALID_CHARACTERS_REMOVED -> {
+                ValidationResultFactory.create(
+                    ValidationError.KEY_INVALID_CHARACTERS,
+                    modification.originalKey,
+                    modification.cleanedKey
+                )
+            }
+            ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
+                maxKeyLength?.let { limit ->
+                    ValidationResultFactory.create(
+                        ValidationError.KEY_LENGTH_EXCEEDED,
+                        modification.originalKey,
+                        limit.toString(),
+                        modification.cleanedKey
+                    )
+                }
+            }
         }
     }
 }

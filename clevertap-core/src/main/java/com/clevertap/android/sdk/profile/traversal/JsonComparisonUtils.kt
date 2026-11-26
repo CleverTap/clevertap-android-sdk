@@ -20,11 +20,9 @@ internal object JsonComparisonUtils {
      * @return true if values are deeply equal
      */
     fun areEqual(obj1: Any?, obj2: Any?): Boolean {
-        if (obj1 == null && obj2 == null) {
-            return true
-        }
         if (obj1 == null || obj2 == null) {
-            return false
+            // Equal only when both are null
+            return obj1 === obj2
         }
         if (obj1 === obj2) {
             return true

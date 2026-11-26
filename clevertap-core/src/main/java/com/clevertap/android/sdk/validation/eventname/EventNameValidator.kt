@@ -39,8 +39,29 @@ internal class EventNameValidator : Validator<EventNameNormalizationResult> {
             errors = errors
         )
 
+        val drop = checkCleanedName(cleanedName = input.cleanedName, config = config, errors = errors)
+        if (drop != null) {
+            return drop
+        }
+
+        return if (errors.isEmpty()) {
+            ValidationOutcome.Success()
+        } else {
+            ValidationOutcome.Warning(errors)
+        }
+    }
+
+    /**
+     * Drops a cleaned name that is empty, restricted or discarded, adding the matching error to
+     * [errors]. Returns null when the name may be sent.
+     */
+    private fun checkCleanedName(
+        cleanedName: String,
+        config: ValidationConfig,
+        errors: MutableList<ValidationResult>
+    ): ValidationOutcome.Drop? {
         // Check for empty cleaned name (became empty after normalization)
-        if (input.cleanedName.isEmpty()) {
+        if (cleanedName.isEmpty()) {
             val error = ValidationResultFactory.create(ValidationError.EVENT_NAME_NULL)
             errors.add(error)
             return ValidationOutcome.Drop(
@@ -50,10 +71,10 @@ internal class EventNameValidator : Validator<EventNameNormalizationResult> {
         }
 
         // Check restricted event names
-        if (isRestricted(input.cleanedName, config.restrictedEventNames)) {
+        if (isRestricted(cleanedName, config.restrictedEventNames)) {
             val error = ValidationResultFactory.create(
                 ValidationError.RESTRICTED_EVENT_NAME,
-                input.cleanedName
+                cleanedName
             )
             errors.add(error)
             return ValidationOutcome.Drop(
@@ -63,10 +84,10 @@ internal class EventNameValidator : Validator<EventNameNormalizationResult> {
         }
 
         // Check discarded event names
-        if (isDiscarded(input.cleanedName, config.discardedEventNames)) {
+        if (isDiscarded(cleanedName, config.discardedEventNames)) {
             val error = ValidationResultFactory.create(
                 ValidationError.DISCARDED_EVENT_NAME,
-                input.cleanedName
+                cleanedName
             )
             errors.add(error)
             return ValidationOutcome.Drop(
@@ -74,12 +95,7 @@ internal class EventNameValidator : Validator<EventNameNormalizationResult> {
                 reason = DropReason.DISCARDED_EVENT_NAME
             )
         }
-
-        return if (errors.isEmpty()) {
-            ValidationOutcome.Success()
-        } else {
-            ValidationOutcome.Warning(errors)
-        }
+        return null
     }
 
     /**

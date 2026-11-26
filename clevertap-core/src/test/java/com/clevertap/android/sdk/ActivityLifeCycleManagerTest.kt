@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk
 
+import android.net.Uri
+import android.os.Bundle
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
@@ -180,5 +182,46 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         activityLifeCycleManager.activityResumed()
 
         verify(exactly = 0) { inboxV2Bridge.submit(any(), any()) }
+    }
+
+    @Test
+    fun `onActivityCreated for another account pushes nothing`() {
+        val notification = Bundle().apply { putString(Constants.NOTIFICATION_TAG, "true") }
+
+        activityLifeCycleManager.onActivityCreated(notification, Uri.parse("app://deeplink"), "other-account")
+
+        verify(exactly = 0) { coreState.analyticsManager.pushNotificationClickedEvent(any()) }
+        verify(exactly = 0) { coreState.analyticsManager.pushDeepLink(any(), any()) }
+    }
+
+    @Test
+    fun `onActivityCreated pushes notification click and deep link for this account`() {
+        val notification = Bundle().apply { putString(Constants.NOTIFICATION_TAG, "true") }
+        val deepLink = Uri.parse("app://deeplink")
+
+        activityLifeCycleManager.onActivityCreated(notification, deepLink, cleverTapInstanceConfig.accountId)
+
+        verify(exactly = 1) { coreState.analyticsManager.pushNotificationClickedEvent(notification) }
+        verify(exactly = 1) { coreState.analyticsManager.pushDeepLink(deepLink, false) }
+    }
+
+    @Test
+    fun `onActivityCreated ignores a notification bundle without the CleverTap tag`() {
+        val notification = Bundle().apply { putString("other", "value") }
+
+        activityLifeCycleManager.onActivityCreated(notification, null, cleverTapInstanceConfig.accountId)
+
+        verify(exactly = 0) { coreState.analyticsManager.pushNotificationClickedEvent(any()) }
+        verify(exactly = 0) { coreState.analyticsManager.pushDeepLink(any(), any()) }
+    }
+
+    @Test
+    fun `onActivityCreated swallows a deep link failure`() {
+        val deepLink = Uri.parse("app://deeplink")
+        every { coreState.analyticsManager.pushDeepLink(deepLink, false) } throws RuntimeException("boom")
+
+        activityLifeCycleManager.onActivityCreated(null, deepLink, cleverTapInstanceConfig.accountId)
+
+        verify(exactly = 1) { coreState.analyticsManager.pushDeepLink(deepLink, false) }
     }
 }

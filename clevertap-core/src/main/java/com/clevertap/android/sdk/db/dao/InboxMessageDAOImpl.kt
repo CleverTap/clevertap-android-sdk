@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -32,49 +33,51 @@ internal class InboxMessageDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, "${Column.USER_ID} = ?", arrayOf(userId), 
                 null, null, "${Column.CREATED_AT} DESC"
-            ).use { cursor ->
-                // find indices
-                val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID)
-                val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA)
-                val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
-                val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT)
-                val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES)
-                val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ)
-                val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID)
-                val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
-                val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
-                val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE)
-                val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE)
-
-                while (cursor.moveToNext()) {
-                    val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
-                    if (decryptedData == null) {
-                        logger.debug("There was some problem in loading inbox message from DB")
-                        continue
-                    }
-
-                    val ctMessageDAO = CTMessageDAO().apply {
-                        this.id = cursor.getString(idColumnIndex)
-                        this.jsonData = JSONObject(decryptedData)
-                        this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
-                        this.date = cursor.getLong(createdAtColumnIndex)
-                        this.expires = cursor.getLong(expiresColumnIndex)
-                        this.isRead = cursor.getInt(isReadColumnIndex)
-                        this.userId =
-                            // This seems redundant if you are already filtering by userId
-                            cursor.getString(userIdColumnIndex)
-                        this.tags = cursor.getString(tagsColumnIndex)
-                        this.campaignId = cursor.getString(campaignColumnIndex)
-                        this.source = readSource(cursor, sourceColumnIndex)
-                        this.indexState = readIndexState(cursor, indexStateColumnIndex)
-                    }
-                    messageDAOArrayList.add(ctMessageDAO)
-                }
-            }
+            ).use { cursor -> collectMessages(cursor = cursor, messageDAOArrayList = messageDAOArrayList) }
         } catch (e: Exception) {
             logger.verbose("Error retrieving records from $tName", e)
         }
         return messageDAOArrayList
+    }
+
+    private fun collectMessages(cursor: Cursor, messageDAOArrayList: MutableList<CTMessageDAO>) {
+        // find indices
+        val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID)
+        val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA)
+        val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
+        val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT)
+        val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES)
+        val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ)
+        val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID)
+        val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
+        val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
+        val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE)
+        val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE)
+
+        while (cursor.moveToNext()) {
+            val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
+            if (decryptedData == null) {
+                logger.debug("There was some problem in loading inbox message from DB")
+                continue
+            }
+
+            val ctMessageDAO = CTMessageDAO().apply {
+                this.id = cursor.getString(idColumnIndex)
+                this.jsonData = JSONObject(decryptedData)
+                this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
+                this.date = cursor.getLong(createdAtColumnIndex)
+                this.expires = cursor.getLong(expiresColumnIndex)
+                this.isRead = cursor.getInt(isReadColumnIndex)
+                this.userId =
+                    // This seems redundant if you are already filtering by userId
+                    cursor.getString(userIdColumnIndex)
+                this.tags = cursor.getString(tagsColumnIndex)
+                this.campaignId = cursor.getString(campaignColumnIndex)
+                this.source = readSource(cursor, sourceColumnIndex)
+                this.indexState = readIndexState(cursor, indexStateColumnIndex)
+            }
+            messageDAOArrayList.add(ctMessageDAO)
+        }
     }
 
     /**
@@ -148,15 +151,24 @@ internal class InboxMessageDAOImpl(
         // is locked), and CryptMigrator.migrateInboxData calls us during SDK start-up
         // without any try/catch of its own — so a throw here would break initialisation.
         try {
-            db.beginTransaction()
-            try {
-                inboxMessages.forEach { messageDAO -> writeMessage(db, messageDAO) }
-                db.setTransactionSuccessful()
-            } finally {
-                db.endTransaction()
-            }
+            writeMessagesInTransaction(db = db, inboxMessages = inboxMessages)
         } catch (e: SQLiteException) {
             logger.verbose("Error writing inbox messages to ${INBOX_MESSAGES.tableName}", e)
+        }
+    }
+
+    /**
+     * Writes every message inside one transaction. Exceptions from beginTransaction() and
+     * endTransaction() propagate to the caller, which logs them.
+     */
+    @WorkerThread
+    private fun writeMessagesInTransaction(db: SQLiteDatabase, inboxMessages: List<CTMessageDAO>) {
+        db.beginTransaction()
+        try {
+            inboxMessages.forEach { messageDAO -> writeMessage(db, messageDAO) }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
     }
 
@@ -351,16 +363,18 @@ internal class InboxMessageDAOImpl(
                 selection,
                 selectionArgs,
                 null, null, null
-            ).use { cursor ->
-                val idIndex = cursor.getColumnIndexOrThrow(Column.ID)
-                while (cursor.moveToNext()) {
-                    cursor.getString(idIndex)?.let { result.add(it) }
-                }
-            }
+            ).use { cursor -> collectIds(cursor = cursor, result = result) }
         } catch (e: Exception) {
             logger.verbose("Error querying sweepable V2 ids from $tName", e)
         }
         return result
+    }
+
+    private fun collectIds(cursor: Cursor, result: MutableSet<String>) {
+        val idIndex = cursor.getColumnIndexOrThrow(Column.ID)
+        while (cursor.moveToNext()) {
+            cursor.getString(idIndex)?.let { result.add(it) }
+        }
     }
 
     private fun readSource(cursor: android.database.Cursor, columnIndex: Int): InboxMessageSource {

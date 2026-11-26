@@ -81,15 +81,7 @@ internal open class LoginController(
                 sessionManager.destroySession()
 
                 // either force restore the cached GUID or generate a new one
-                when {
-                    cacheGuid != null -> {
-                        deviceInfo.forceUpdateDeviceId(cacheGuid)
-                        callbackManager.notifyUserProfileInitialized(cacheGuid)
-                    }
-
-                    config.enableCustomCleverTapId -> deviceInfo.forceUpdateCustomCleverTapID(cleverTapID)
-                    else -> deviceInfo.forceNewDeviceID()
-                }
+                switchDeviceId(cacheGuid = cacheGuid, cleverTapID = cleverTapID)
 
                 localDataStore.changeUser()
                 callbackManager.notifyUserProfileInitialized(deviceInfo.deviceID)
@@ -122,6 +114,18 @@ internal open class LoginController(
                 config.logger.verbose(config.accountId, "Reset Profile error", t)
             }
             null
+        }
+    }
+
+    private fun switchDeviceId(cacheGuid: String?, cleverTapID: String?) {
+        when {
+            cacheGuid != null -> {
+                deviceInfo.forceUpdateDeviceId(cacheGuid)
+                callbackManager.notifyUserProfileInitialized(cacheGuid)
+            }
+
+            config.enableCustomCleverTapId -> deviceInfo.forceUpdateCustomCleverTapID(cleverTapID)
+            else -> deviceInfo.forceNewDeviceID()
         }
     }
 

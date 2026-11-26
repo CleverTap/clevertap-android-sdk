@@ -27,13 +27,7 @@ internal class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNorma
         val modifications = mutableSetOf<KeyModification>()
 
         if (cleaned.isEmpty()) {
-            return PropertyKeyNormalizationResult(
-                originalKey = original,
-                cleanedKey = "",
-                modifications = emptySet(),
-                wasRemoved = true,
-                removalReason = RemovalReason.EMPTY_KEY
-            )
+            return removedKeyResult(original)
         }
 
         val reasons = mutableListOf<ModificationReason>()
@@ -59,13 +53,7 @@ internal class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNorma
 
         // Check if key became empty after cleaning
         if (result.isEmpty()) {
-            return PropertyKeyNormalizationResult(
-                originalKey = original,
-                cleanedKey = "",
-                modifications = emptySet(),
-                wasRemoved = true,
-                removalReason = RemovalReason.EMPTY_KEY
-            )
+            return removedKeyResult(original)
         }
 
         // Record modifications
@@ -85,6 +73,17 @@ internal class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNorma
             modifications = modifications,
             wasRemoved = false,
             removalReason = null
+        )
+    }
+
+    /** Result for a key that is empty, either as given or after cleaning. */
+    private fun removedKeyResult(original: String): PropertyKeyNormalizationResult {
+        return PropertyKeyNormalizationResult(
+            originalKey = original,
+            cleanedKey = "",
+            modifications = emptySet(),
+            wasRemoved = true,
+            removalReason = RemovalReason.EMPTY_KEY
         )
     }
 }
