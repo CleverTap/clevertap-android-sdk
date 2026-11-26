@@ -2715,6 +2715,7 @@ public open class CleverTapAPI internal constructor(
          * @param _accountId the account ID, or `null` for the default instance
          * @return the instance, or `null` if there is none and it cannot be created
          */
+        @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
         @JvmStatic
         public fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =
             fromAccountId(context, _accountId)

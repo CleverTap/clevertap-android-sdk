@@ -19,6 +19,7 @@ import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // shared base of the native header/footer fragments
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFragment(),
     OnTouchListener, OnLongClickListener {

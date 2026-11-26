@@ -168,6 +168,7 @@ public open class CTProductConfigController @Deprecated(
      *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
+    @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public open fun getBoolean(Key: String?): Boolean? =
         activatedValue(Key)?.toBoolean() ?: DEFAULT_VALUE_FOR_BOOLEAN
@@ -181,6 +182,7 @@ public open class CTProductConfigController @Deprecated(
      *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
+    @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public open fun getDouble(Key: String?): Double? =
         parseActivatedValue(Key, "Double") { it.toDouble() } ?: DEFAULT_VALUE_FOR_DOUBLE
@@ -209,6 +211,7 @@ public open class CTProductConfigController @Deprecated(
      *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
+    @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public open fun getLong(Key: String?): Long? =
         parseActivatedValue(Key, "Long") { it.toLong() } ?: DEFAULT_VALUE_FOR_LONG
@@ -226,6 +229,7 @@ public open class CTProductConfigController @Deprecated(
      *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
+    @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public open fun getString(Key: String?): String = activatedValue(Key) ?: DEFAULT_VALUE_FOR_STRING
 
