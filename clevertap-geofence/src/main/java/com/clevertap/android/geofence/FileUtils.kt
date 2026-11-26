@@ -24,24 +24,30 @@ internal object FileUtils {
         try {
             val file = File(context.filesDir, dirName!!)
             if (file.exists() && file.isDirectory) {
-                val children = file.list()
-                if (children != null) {
-                    for (child in children) {
-                        val isDeleted = if (File(file, child).delete()) {
-                            "successfully deleted"
-                        } else {
-                            "failed to delete"
-                        }
-                        CTGeofenceAPI.getLogger().verbose(
-                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                            "$child :$isDeleted"
-                        )
-                    }
-                }
+                deleteChildren(file)
             }
         } catch (e: Exception) {
             CTGeofenceAPI.getLogger()
                 .debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "deleteDirectory failed for dirName: $dirName", e)
+        }
+    }
+
+    /**
+     * Deletes every direct child of [directory], logging the outcome for each one.
+     */
+    @WorkerThread
+    private fun deleteChildren(directory: File) {
+        val children = directory.list() ?: return
+        for (child in children) {
+            val isDeleted = if (File(directory, child).delete()) {
+                "successfully deleted"
+            } else {
+                "failed to delete"
+            }
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "$child :$isDeleted"
+            )
         }
     }
 
@@ -106,10 +112,8 @@ internal object FileUtils {
                 return false
             }
             val file = File(context!!.filesDir, dirName!!)
-            if (!file.exists()) {
-                if (!file.mkdir()) {
-                    return false
-                }
+            if (!file.exists() && !file.mkdir()) {
+                return false
             }
 
             val file1 = File(file, fileName!!)
