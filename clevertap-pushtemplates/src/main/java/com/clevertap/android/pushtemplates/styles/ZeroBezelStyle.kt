@@ -14,7 +14,10 @@ import com.clevertap.android.pushtemplates.content.ZeroBezelSmallContentView
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
+internal class ZeroBezelStyle(
+    private val data: ZeroBezelTemplateData,
+    renderer: TemplateRenderer
+) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 

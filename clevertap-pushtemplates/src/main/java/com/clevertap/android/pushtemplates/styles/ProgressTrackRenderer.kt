@@ -105,7 +105,9 @@ internal object ProgressTrackRenderer {
                 listOf(ProgressPayloadParser.SegmentData(DEFAULT_TOTAL, null)) to DEFAULT_TOTAL
             valid.size > MAX_SEGMENTS -> {
                 val first = valid.first().color
-                listOf(ProgressPayloadParser.SegmentData(sum.toInt(), first.takeIf { valid.all { s -> s.color == first } })) to sum.toInt()
+                listOf(
+                    ProgressPayloadParser.SegmentData(sum.toInt(), first.takeIf { valid.all { s -> s.color == first } })
+                ) to sum.toInt()
             }
             else -> valid to sum.toInt()
         }
@@ -115,7 +117,12 @@ internal object ProgressTrackRenderer {
 
     /** Native fade: same color at half its alpha. */
     fun faded(color: Int): Int =
-        Color.argb((Color.alpha(color) * FADED_OPACITY + 0.5f).toInt(), Color.red(color), Color.green(color), Color.blue(color))
+        Color.argb(
+            (Color.alpha(color) * FADED_OPACITY + 0.5f).toInt(),
+            Color.red(color),
+            Color.green(color),
+            Color.blue(color)
+        )
 
     /**
      * Native ProgressStyle.sanitizeProgressColor (Notification.Builder.ensureColorContrast, API 36):
@@ -127,7 +134,7 @@ internal object ProgressTrackRenderer {
         val opaqueBg = ColorUtils.setAlphaComponent(bg, 255)
         fun meets(c: Int) = ColorUtils.calculateContrast(c, opaqueBg) > MIN_CONTRAST
         val opaque = ColorUtils.setAlphaComponent(color, 255)
-        if (ColorUtils.calculateContrast(opaque, opaqueBg) >= MIN_CONTRAST) return color
+        if (ColorUtils.calculateContrast(opaque, opaqueBg) >= MIN_CONTRAST) { return color }
 
         val adjusted = if (ColorUtils.calculateLuminance(opaqueBg) <= DARK_BG_LUMINANCE) {
             // ContrastColorUtil.findContrastColorAgainstDark: raise the HSL lightness.
@@ -135,9 +142,9 @@ internal object ProgressTrackRenderer {
             var low = hsl[2]
             var high = 1f
             for (i in 0 until 15) {
-                if (high - low <= 0.00001f) break
+                if (high - low <= 0.00001f) { break }
                 hsl[2] = (low + high) / 2
-                if (meets(ColorUtils.HSLToColor(hsl))) high = hsl[2] else low = hsl[2]
+                if (meets(ColorUtils.HSLToColor(hsl))) { high = hsl[2] } else { low = hsl[2] }
             }
             hsl[2] = high
             ColorUtils.HSLToColor(hsl)
@@ -147,9 +154,9 @@ internal object ProgressTrackRenderer {
             var low = 0.0
             var high = lab[0]
             for (i in 0 until 15) {
-                if (high - low <= 0.00001) break
+                if (high - low <= 0.00001) { break }
                 val l = (low + high) / 2
-                if (meets(ColorUtils.LABToColor(l, lab[1], lab[2]))) low = l else high = l
+                if (meets(ColorUtils.LABToColor(l, lab[1], lab[2]))) { low = l } else { high = l }
             }
             ColorUtils.LABToColor(low, lab[1], lab[2])
         }
@@ -168,13 +175,15 @@ internal object ProgressTrackRenderer {
     ): Layout {
         val dotRadius = DOT_DP * spec.density / 2f
         val trackThickness = TRACK_DP * spec.density
-        val trackerSize = if (hasTracker) TRACKER_DP * spec.density else 0f
+        val trackerSize = if (hasTracker) { TRACKER_DP * spec.density } else { 0f }
         // The track runs through the middle of the tallest thing on it (dot or tracker).
         val trackY = maxOf(dotRadius, trackerSize / 2f)
         val hasTitles = points.any { !it.title.isNullOrEmpty() }
         val titleHeight = if (hasTitles) {
             TITLE_GAP_DP * spec.density + (titlePaint.fontMetrics.descent - titlePaint.fontMetrics.ascent)
-        } else 0f
+        } else {
+            0f
+        }
         val width = spec.widthPx.coerceAtLeast(1)
         val height = Math.ceil((trackY * 2 + titleHeight).toDouble()).toInt().coerceAtLeast(1)
 
@@ -187,7 +196,7 @@ internal object ProgressTrackRenderer {
         val progressX = x(clampedProgress)
         val fadeAhead = styledByProgress && clampedProgress < total
         // Without a tracker, native leaves a gap before the progress so the split is visible.
-        val progressGap = if (hasTracker) 0f else PROGRESS_GAP_DP * spec.density
+        val progressGap = if (hasTracker) { 0f } else { PROGRESS_GAP_DP * spec.density }
 
         var acc = 0
         val segmentRects = ArrayList<SegmentRect>(segments.size + 1)
@@ -207,7 +216,7 @@ internal object ProgressTrackRenderer {
         }
         val dots = points.map {
             val color = ensureContrast(it.color ?: spec.defaultColor, spec.backgroundColor)
-            Dot(x(it.position), if (fadeAhead && it.position > clampedProgress) faded(color) else color,
+            Dot(x(it.position), if (fadeAhead && it.position > clampedProgress) { faded(color) } else { color },
                 it.title?.takeIf { t -> t.isNotEmpty() })
         }
         // Tracker centered on the progress, kept fully on the canvas at both ends.
@@ -215,7 +224,9 @@ internal object ProgressTrackRenderer {
             val left = (progressX - trackerSize / 2f).coerceIn(0f, (width - trackerSize).coerceAtLeast(0f))
             val top = trackY - trackerSize / 2f
             RectF(left, top, left + trackerSize, top + trackerSize)
-        } else null
+        } else {
+            null
+        }
         val titleBaseline = trackY * 2 + TITLE_GAP_DP * spec.density - titlePaint.fontMetrics.ascent
         return Layout(width, height, trackY, trackThickness, FADED_TRACK_DP * spec.density, dotRadius,
             segmentRects, dots, titleBaseline, progressX, tracker)
@@ -243,8 +254,8 @@ internal object ProgressTrackRenderer {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
         for (seg in l.segments) {
-            if (seg.right <= seg.left) continue
-            val half = (if (seg.faded) l.fadedTrackThickness else l.trackThickness) / 2
+            if (seg.right <= seg.left) { continue }
+            val half = (if (seg.faded) { l.fadedTrackThickness } else { l.trackThickness }) / 2
             paint.color = seg.color
             canvas.drawRect(seg.left, l.trackY - half, seg.right, l.trackY + half, paint)
         }
@@ -286,15 +297,21 @@ internal object ProgressTrackRenderer {
         for (i in 0 until n - 1) {
             val j = i + 1
             var overflow = right[i] + gap - left[j]
-            if (overflow <= 0) continue
+            if (overflow <= 0) { continue }
 
             // 1. Slide apart: the left title not past its own left neighbour, neither past its dot.
-            val floor = if (i == 0) 0f else right[i - 1] + gap
-            val slideLeft = minOf(overflow, (left[i] - maxOf(floor, centers[i] - (right[i] - left[i]))).coerceAtLeast(0f))
+            val floor = if (i == 0) { 0f } else { right[i - 1] + gap }
+            val slideLeft = minOf(
+                overflow,
+                (left[i] - maxOf(floor, centers[i] - (right[i] - left[i]))).coerceAtLeast(0f)
+            )
             left[i] -= slideLeft; right[i] -= slideLeft; overflow -= slideLeft
-            val slideRight = minOf(overflow, (minOf(centers[j], canvasWidth - (right[j] - left[j])) - left[j]).coerceAtLeast(0f))
+            val slideRight = minOf(
+                overflow,
+                (minOf(centers[j], canvasWidth - (right[j] - left[j])) - left[j]).coerceAtLeast(0f)
+            )
             left[j] += slideRight; right[j] += slideRight; overflow -= slideRight
-            if (overflow <= 0) continue
+            if (overflow <= 0) { continue }
 
             // 2. Trim the facing ends, sharing the overflow, each only down to its own dot.
             val capLeft = (right[i] - maxOf(centers[i], left[i])).coerceAtLeast(0f)
@@ -302,7 +319,7 @@ internal object ProgressTrackRenderer {
             val trimRight = minOf(capRight, overflow - minOf(capLeft, overflow / 2))
             val trimLeft = minOf(capLeft, overflow - trimRight)
             right[i] -= trimLeft; left[j] += trimRight; overflow -= trimLeft + trimRight
-            if (overflow <= 0) continue
+            if (overflow <= 0) { continue }
 
             // 3. Dots closer than the gap itself: split at the midpoint.
             val mid = (centers[i] + centers[j]) / 2
@@ -318,8 +335,9 @@ internal object ProgressTrackRenderer {
         val slots = titleSlots(titled.map { it.cx }, titled.map { paint.measureText(it.title) }, l.width.toFloat(), gap)
         titled.forEachIndexed { i, dot ->
             val slot = slots[i]
-            val text = TextUtils.ellipsize(dot.title, paint, slot.right - slot.left, TextUtils.TruncateAt.END).toString()
-            if (text.isEmpty()) return@forEachIndexed
+            val text = TextUtils.ellipsize(dot.title, paint, slot.right - slot.left, TextUtils.TruncateAt.END)
+                .toString()
+            if (text.isEmpty()) { return@forEachIndexed }
             val w = paint.measureText(text)
             val x = (dot.cx - w / 2).coerceIn(slot.left, maxOf(slot.left, slot.right - w))
             canvas.drawText(text, x, l.titleBaseline, paint)

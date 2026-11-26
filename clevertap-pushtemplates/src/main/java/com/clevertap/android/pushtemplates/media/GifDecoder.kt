@@ -40,7 +40,7 @@ internal class GifDecoderImpl(
     }
 
     private fun selectFrameIndices(totalFrames: Int, maxFrames: Int): List<Int> {
-        if (totalFrames <= 0 || maxFrames <= 0) return emptyList()
+        if (totalFrames <= 0 || maxFrames <= 0) { return emptyList() }
 
         return when {
             maxFrames >= totalFrames -> (0 until totalFrames).toList()

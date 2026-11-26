@@ -170,7 +170,7 @@ internal object Utils {
     fun getDarkModeAdaptiveColor(extras: Bundle, isDarkMode: Boolean, key: String): String? {
         val colorDark = extras.getString("$key$PT_DARK_MODE_SUFFIX")
         val color = extras.getString(key)
-        return if (isDarkMode && colorDark != null) colorDark else color
+        return if (isDarkMode && colorDark != null) { colorDark } else { color }
     }
 
     fun isDarkMode(context: Context): Boolean =
@@ -305,7 +305,7 @@ internal object Utils {
                 if (!propValue.isNullOrEmpty()) {
                     if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
                         val eProp = Pattern.compile(PTConstants.PT_EVENT_PROPERTY_SEPERATOR).split(key)
-                        eProps[eProp[1]] = if (propValue.equals(pkey, ignoreCase = true)) value else propValue
+                        eProps[eProp[1]] = if (propValue.equals(pkey, ignoreCase = true)) { value } else { propValue }
                     } else {
                         PTLog.verbose("Property $key does not have the separator")
                     }

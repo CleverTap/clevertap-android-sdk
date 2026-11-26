@@ -98,9 +98,11 @@ internal object NotificationBitmapUtils {
             val innerRect = RectF(strokeWidth, strokeWidth, width - strokeWidth, height - strokeWidth)
             // Scale inner radius proportionally so corners stay visually consistent
             // regardless of how small cornerRadius or how large borderWidth is.
-            val innerCornerRadius = if (height > 0)
+            val innerCornerRadius = if (height > 0) {
                 clampedOuterRadius * (innerRect.height() / height.toFloat())
-            else 0f
+            } else {
+                0f
+            }
 
             // Draw fill first on the transparent bitmap so any alpha in the fill paint
             // composites against the notification background, not the border colour.

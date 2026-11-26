@@ -61,7 +61,11 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Random
 private const val TAG = "TemplateRenderer"
-public class TemplateRenderer @JvmOverloads constructor(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+public class TemplateRenderer @JvmOverloads constructor(
+    context: Context,
+    private val extras: Bundle,
+    internal val config: CleverTapInstanceConfig? = null
+) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
@@ -93,7 +97,7 @@ public class TemplateRenderer @JvmOverloads constructor(context: Context, privat
         } catch (e: JSONException) {
             PTLog.verbose("Failed to parse push template JSON", e)
         }
-        if (newExtras != null) extras.putAll(newExtras)
+        if (newExtras != null) { extras.putAll(newExtras) }
     }
 
     override fun getMessage(extras: Bundle): String? {
@@ -163,9 +167,15 @@ public class TemplateRenderer @JvmOverloads constructor(context: Context, privat
                      * If most icon bitmaps fail to load, gracefully fall back to a basic
                      * title/message notification instead of suppressing the notification.
                      */
-                    if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
-                        PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.")
+                    if (
+                        (fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView)
+                            .getUnloadedFiveIconsCount() > 2 ||
+                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView)
+                            .getUnloadedFiveIconsCount() > 2
+                    ) {
+                        PTLog.debug(
+                            "More than 2 images were not retrieved in 5CTA Notification, reverting to basic template."
+                        )
                         buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                     } else {
                         fiveIconNotificationBuilder
@@ -222,7 +232,9 @@ public class TemplateRenderer @JvmOverloads constructor(context: Context, privat
                     }
                 }
                 templateData.baseContent.notificationBehavior.dismissAfter == null && !templateData.renderTerminal -> {
-                    PTLog.debug("Timer already expired and renderTerminal is configured as false. Skipping notification")
+                    PTLog.debug(
+                        "Timer already expired and renderTerminal is configured as false. Skipping notification"
+                    )
                     null
                 }
                 templateData.baseContent.notificationBehavior.dismissAfter == null -> {
@@ -294,7 +306,9 @@ public class TemplateRenderer @JvmOverloads constructor(context: Context, privat
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
-        this.smallIconColour = Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR) ?: extras.getString(WZRK_COLOR)
+        this.smallIconColour =
+            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
+                ?: extras.getString(WZRK_COLOR)
 
         try {
             this.smallIconBitmap = Utils.setBitMapColour(context, smallIcon, this.smallIconColour, PT_META_CLR_DEFAULTS)
