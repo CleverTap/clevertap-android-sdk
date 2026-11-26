@@ -241,18 +241,11 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
             val button = inAppNotification.buttons[index]
             val clickData = didClick(button, index)
 
-            if (inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
-                when (index) {
-                    0 -> {
-                        didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
-                            inAppNotification.fallBackToNotificationSettings
-                        )
-                        return
-                    }
-                    1 -> {
-                        didClickForHardPermissionListener?.didCancelPermissionRequest()
-                    }
-                }
+            val handledAsLocalPermissionButton = inAppNotification.isLocalInApp &&
+                didClickForHardPermissionListener != null &&
+                notifyLocalInAppPermissionButton(index)
+            if (handledAsLocalPermissionButton) {
+                return
             }
 
             val action = button.action
@@ -269,6 +262,26 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         } catch (t: Throwable) {
             config.logger.debug("Error handling notification button click", t)
             didDismiss(null)
+        }
+    }
+
+    /**
+     * Push-primer (local in-app) buttons: index 0 asks for the permission and fully handles the click
+     * (returns true); index 1 cancels the request and the click then dismisses as usual (returns false).
+     */
+    private fun notifyLocalInAppPermissionButton(index: Int): Boolean {
+        return when (index) {
+            0 -> {
+                didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
+                    inAppNotification.fallBackToNotificationSettings
+                )
+                true
+            }
+            1 -> {
+                didClickForHardPermissionListener?.didCancelPermissionRequest()
+                false
+            }
+            else -> false
         }
     }
 
