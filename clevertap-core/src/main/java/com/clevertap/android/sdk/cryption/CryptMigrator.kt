@@ -204,13 +204,11 @@ internal data class CryptMigrator(
         try {
             val keysIterator = cachedGuidJsonObj.keys()
             while (keysIterator.hasNext()) {
-                val nextKey = keysIterator.next()
-                val (key, identifier) = nextKey.split("_", limit = 2)
-                val migrationResult = performMigrationStep(EncryptionLevel.NONE, identifier)
-                if (migrationResult.migrationSuccessful) {
-                    val cryptedKey = "${key}_${migrationResult.data}"
-                    migratedGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
-                }
+                migrateCachedGuidKey(
+                    cachedGuidJsonObj = cachedGuidJsonObj,
+                    nextKey = keysIterator.next(),
+                    migratedGuidJsonObj = migratedGuidJsonObj
+                )
             }
         } catch (t: Throwable) {
             logger.verbose(
@@ -219,6 +217,16 @@ internal data class CryptMigrator(
             )
         }
         return migratedGuidJsonObj
+    }
+
+    /** Converts the identifier half of one cached-GUID key to plain text and copies the entry. */
+    private fun migrateCachedGuidKey(cachedGuidJsonObj: JSONObject, nextKey: String, migratedGuidJsonObj: JSONObject) {
+        val (key, identifier) = nextKey.split("_", limit = 2)
+        val migrationResult = performMigrationStep(EncryptionLevel.NONE, identifier)
+        if (migrationResult.migrationSuccessful) {
+            val cryptedKey = "${key}_${migrationResult.data}"
+            migratedGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
+        }
     }
 
     /**
@@ -240,23 +248,8 @@ internal data class CryptMigrator(
         var migrationSuccessful = true
         for ((deviceID, profile) in profiles) {
             try {
-                piiDBKeys.forEach { piiKey ->
-                    profile.getStringOrNull(piiKey)?.let { value ->
-                        val moveTo = if (EncryptionLevel.FULL_DATA == level) {
-                            // Lets convert individual keys to plain text in case of FULL
-                            // dataMigrationRepository.saveUserProfile() internally will correctly save the data completely encrypted (entire profile).
-                            EncryptionLevel.NONE
-                        } else {
-                            level
-                        }
-
-                        val migrationResult =
-                            performMigrationStep(level = moveTo, data = value)
-                        migrationSuccessful =
-                            migrationSuccessful && migrationResult.migrationSuccessful
-                        profile.put(piiKey, migrationResult.data)
-                    }
-                }
+                val piiMigrated = migrateProfilePiiValues(profile = profile, level = level)
+                migrationSuccessful = migrationSuccessful && piiMigrated
                 logger.verbose(
                     logPrefix,
                     "DB migrated with success = $migrationSuccessful = $profile"
@@ -271,6 +264,37 @@ internal data class CryptMigrator(
         }
 
         return migrationSuccessful
+    }
+
+    /**
+     * Migrates every PII value present in [profile] in place.
+     *
+     * @return false if any value failed to migrate
+     */
+    private fun migrateProfilePiiValues(profile: JSONObject, level: EncryptionLevel): Boolean {
+        var allMigrated = true
+        piiDBKeys.forEach { piiKey ->
+            profile.getStringOrNull(piiKey)?.let { value ->
+                val moveTo = piiTargetLevel(level)
+
+                val migrationResult =
+                    performMigrationStep(level = moveTo, data = value)
+                allMigrated =
+                    allMigrated && migrationResult.migrationSuccessful
+                profile.put(piiKey, migrationResult.data)
+            }
+        }
+        return allMigrated
+    }
+
+    private fun piiTargetLevel(level: EncryptionLevel): EncryptionLevel {
+        return if (EncryptionLevel.FULL_DATA == level) {
+            // Lets convert individual keys to plain text in case of FULL
+            // dataMigrationRepository.saveUserProfile() internally will correctly save the data completely encrypted (entire profile).
+            EncryptionLevel.NONE
+        } else {
+            level
+        }
     }
 
 
