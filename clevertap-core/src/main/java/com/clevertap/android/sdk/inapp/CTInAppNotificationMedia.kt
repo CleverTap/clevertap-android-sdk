@@ -31,9 +31,9 @@ internal class CTInAppNotificationMedia : Parcelable {
     }
 
     private constructor(parcel: Parcel) {
-        mediaUrl = parcel.readString() ?: ""
-        contentType = parcel.readString() ?: ""
-        contentDescription = parcel.readString() ?: ""
+        mediaUrl = parcel.readString().orEmpty()
+        contentType = parcel.readString().orEmpty()
+        contentDescription = parcel.readString().orEmpty()
         cacheKey = parcel.readString()
         orientation = parcel.readInt()
     }

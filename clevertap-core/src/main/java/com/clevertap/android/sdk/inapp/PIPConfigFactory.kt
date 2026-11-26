@@ -51,7 +51,7 @@ internal object PIPConfigFactory {
         }
 
         // Accessibility: media alt text
-        val contentDesc = media.contentDescription.takeIf { it.isNotBlank() } ?: ""
+        val contentDesc = media.contentDescription.takeIf { it.isNotBlank() }.orEmpty()
 
         // Fallback URL from raw JSON media object
         val rawMediaJson = inAppNotification.jsonDescription.optJSONObject("media")

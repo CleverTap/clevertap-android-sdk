@@ -344,7 +344,7 @@ internal class EventQueueManager(
         // Queue event if: (offline AND is regular event) OR (online AND NOT app launched event)
         if ((isOffline && isRegularEvent) || (!isOffline && !isAppLaunchedEvent)) {
             inAppController!!.onQueueEvent(eventName!!, flattenedEventProps, userLocation)
-            nativeDisplayController?.onQueueEvent(eventName!!, flattenedEventProps, userLocation)
+            nativeDisplayController?.onQueueEvent(eventName, flattenedEventProps, userLocation)
         }
     }
 

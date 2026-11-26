@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ListSizeChecker(val entity: List<Any>?, var size: Int, var errorMsg: String) :
-    SizeChecker<List<Any>>(entity, size, errorMsg) {
+    Checker<List<Any>> {
 
     override fun check(): Boolean {
         val b = entity == null || entity.size < size

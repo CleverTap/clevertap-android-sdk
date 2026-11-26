@@ -277,11 +277,7 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
             "requestBackgroundLocationUpdates() called"
         )
 
-        if (!isActivated) {
-            throw IllegalStateException(
-                "Geofence SDK must be initialized before initBackgroundLocationUpdates()"
-            )
-        }
+        check(isActivated) { "Geofence SDK must be initialized before initBackgroundLocationUpdates()" }
 
         val locationUpdateTask = LocationUpdateTask(context)
         locationUpdateTask.setOnCompleteListener(CTGeofenceTask.OnCompleteListener {
@@ -343,9 +339,7 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
             return
         }
 
-        if (!isActivated) {
-            throw IllegalStateException("Geofence SDK must be initialized before triggerLocation()")
-        }
+        check(isActivated) { "Geofence SDK must be initialized before triggerLocation()" }
 
         CTGeofenceTaskManager.getInstance().postAsyncSafely(
             "TriggerLocation",
@@ -372,7 +366,7 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
      * @param accountId CleverTap account id
      */
     private fun setAccountId(accountId: String?) {
-        if (accountId == null || accountId.isEmpty()) {
+        if (accountId.isNullOrEmpty()) {
             logger.debug(
                 GEOFENCE_LOG_TAG,
                 "Account Id is null or empty"

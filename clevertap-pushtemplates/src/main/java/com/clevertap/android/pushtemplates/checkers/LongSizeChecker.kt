@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class LongSizeChecker(val entity: Long?, val size: Int, val errorMsg: String) :
-    SizeChecker<Long>(entity, size, errorMsg) {
+    Checker<Long> {
 
     override fun check(): Boolean {
         if (entity == null || entity == Long.MIN_VALUE) {

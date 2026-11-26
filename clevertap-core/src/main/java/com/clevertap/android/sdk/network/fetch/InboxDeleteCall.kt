@@ -73,9 +73,8 @@ internal class InboxDeleteCall(
         val arr = JSONArray()
         for (m in messages) {
             val obj = JSONObject().put(Constants.WZRK_MID, m.messageId)
-            m.wzrkParams?.let { params ->
-                params.keys().forEach { key -> obj.put(key, params.get(key)) }
-            }
+            val params = m.wzrkParams
+            params.keys().forEach { key -> obj.put(key, params.get(key)) }
             arr.put(obj)
         }
         val payload = JSONObject()

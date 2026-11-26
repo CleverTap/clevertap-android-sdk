@@ -255,12 +255,14 @@ internal class CTInAppHtmlBannerOverlay(
             }
         }
 
-        override fun onActivityCreated(a: Activity, b: Bundle?) {}
-        override fun onActivityStarted(a: Activity) {}
-        override fun onActivityResumed(a: Activity) {}
-        override fun onActivityPaused(a: Activity) {}
-        override fun onActivityStopped(a: Activity) {}
-        override fun onActivitySaveInstanceState(a: Activity, b: Bundle) {}
+        override fun onActivityCreated(a: Activity, b: Bundle?) { /* No-op: only onActivityDestroyed matters */ }
+        override fun onActivityStarted(a: Activity) { /* No-op: only onActivityDestroyed matters */ }
+        override fun onActivityResumed(a: Activity) { /* No-op: only onActivityDestroyed matters */ }
+        override fun onActivityPaused(a: Activity) { /* No-op: only onActivityDestroyed matters */ }
+        override fun onActivityStopped(a: Activity) { /* No-op: only onActivityDestroyed matters */ }
+        override fun onActivitySaveInstanceState(a: Activity, b: Bundle) {
+            // No-op: only onActivityDestroyed matters
+        }
     }
 
     private fun cleanupWebView() {

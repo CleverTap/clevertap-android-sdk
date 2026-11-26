@@ -31,10 +31,10 @@ internal object CTGeofenceFactory {
                 return GoogleGeofenceAdapter(context.applicationContext)
             } else {
                 val errorString = GoogleApiAvailability.getInstance().getErrorString(googlePlayServicesAvailable)
-                throw IllegalStateException("Play service APK error :: $errorString")
+                error("Play service APK error :: $errorString")
             }
         } else {
-            throw IllegalStateException("play-services-location dependency is missing")
+            error("play-services-location dependency is missing")
         }
     }
 }

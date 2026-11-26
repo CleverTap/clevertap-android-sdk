@@ -114,8 +114,8 @@ internal class InAppStore(
         clientSideInAppsCache = clientSideInApps
         val jsonArray = JSONArray(clientSideInApps)
         val encryptedString = cryptHandler.encrypt(jsonArray.toString())
-        encryptedString?.apply {
-            ctPreference.writeString(PREFS_INAPP_KEY_CS, this)
+        encryptedString?.let {
+            ctPreference.writeString(PREFS_INAPP_KEY_CS, it)
         }
     }
 
@@ -144,7 +144,7 @@ internal class InAppStore(
         serverSideInAppsCache = serverSideInApps
         val jsonArray = JSONArray(serverSideInApps)
         val encryptedString = cryptHandler.encrypt(jsonArray.toString())
-        encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
+        encryptedString?.let { ctPreference.writeString(INAPP_KEY, it) }
     }
 
     /**
@@ -367,8 +367,8 @@ internal class InAppStore(
         clientSideDelayedInAppsCache = delayedInApps
         val jsonArray = JSONArray(delayedInApps)
         val encryptedString = cryptHandler.encrypt(jsonArray.toString())
-        encryptedString?.apply {
-            ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, this)
+        encryptedString?.let {
+            ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, it)
         }
     }
 

@@ -25,7 +25,7 @@ internal class ImpressionManager @JvmOverloads constructor(
     private val locale: Locale = Locale.getDefault(),
 ) {
 
-    private var sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
+    private val sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
     private var sessionImpressionsTotal = 0
 
     fun setSessionImpressions(sessionImpressions: MutableMap<String, MutableList<Long>>) {
@@ -233,7 +233,7 @@ internal class ImpressionManager @JvmOverloads constructor(
     }
 
     fun getImpressions(campaignId: String): List<Long> {
-        return impressionStoreProvider()?.read(campaignId) ?: emptyList()
+        return impressionStoreProvider()?.read(campaignId).orEmpty()
     }
 
     /**

@@ -22,12 +22,10 @@ internal class TimerStyle(
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (data.baseContent.notificationBehavior.dismissAfter == null) {
-            null
-        } else {
+        return data.baseContent.notificationBehavior.dismissAfter?.let { dismissAfter ->
             TimerSmallContentView(
                 context,
-                data.baseContent.notificationBehavior.dismissAfter,
+                dismissAfter,
                 renderer,
                 data
             ).remoteView
@@ -35,10 +33,8 @@ internal class TimerStyle(
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (data.baseContent.notificationBehavior.dismissAfter == null) {
-            null
-        } else {
-            TimerBigContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
+        return data.baseContent.notificationBehavior.dismissAfter?.let { dismissAfter ->
+            TimerBigContentView(context, dismissAfter, renderer, data).remoteView
         }
     }
 

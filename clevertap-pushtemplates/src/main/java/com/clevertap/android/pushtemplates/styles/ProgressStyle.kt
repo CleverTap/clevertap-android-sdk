@@ -93,8 +93,8 @@ internal class ProgressStyle(
     ): NotificationCompat.Builder {
 
         val ended = "end".equals(extras.getString(PTConstants.PT_LA_EVENT), ignoreCase = true)
-        val title = renderer.getTitle(extras, context) ?: ""
-        val message = renderer.getMessage(extras) ?: ""
+        val title = renderer.getTitle(extras, context).orEmpty()
+        val message = renderer.getMessage(extras).orEmpty()
         // Segments/points (incl. point titles) are parsed once in TemplateDataFactory.
         val segments = data.segments
         val points = data.points

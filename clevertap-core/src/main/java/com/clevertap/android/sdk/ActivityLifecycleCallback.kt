@@ -25,6 +25,7 @@ public class ActivityLifecycleCallback {
                 }
 
                 override fun onActivityDestroyed(activity: Activity) {
+                    // No-op: CleverTap only tracks created, resumed and paused.
                 }
 
                 override fun onActivityPaused(activity: Activity) {
@@ -36,12 +37,15 @@ public class ActivityLifecycleCallback {
                 }
 
                 override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {
+                    // No-op: CleverTap only tracks created, resumed and paused.
                 }
 
                 override fun onActivityStarted(activity: Activity) {
+                    // No-op: CleverTap only tracks created, resumed and paused.
                 }
 
                 override fun onActivityStopped(activity: Activity) {
+                    // No-op: CleverTap only tracks created, resumed and paused.
                 }
             }
 

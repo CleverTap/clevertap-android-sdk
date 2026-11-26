@@ -548,6 +548,6 @@ internal open class CTInboxListViewFragment : Fragment() {
          * relative to their in-place-mutated read flag.
          */
         private fun contentJson(message: CTInboxMessage): String =
-            message.data.optJSONObject(Constants.KEY_MSG)?.toString() ?: ""
+            message.data.optJSONObject(Constants.KEY_MSG)?.toString().orEmpty()
     }
 }

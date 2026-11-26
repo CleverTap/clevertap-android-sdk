@@ -16,11 +16,11 @@ public object PushNotificationUtil {
 
     @JvmStatic
     public fun getAccountIdFromNotificationBundle(message: Bundle?): String =
-        message?.getString(WZRK_ACCT_ID_KEY, "") ?: ""
+        message?.getString(WZRK_ACCT_ID_KEY, "").orEmpty()
 
     @JvmStatic
     public fun getPushIdFromNotificationBundle(message: Bundle?): String =
-        message?.getString(WZRK_PUSH_ID, "") ?: ""
+        message?.getString(WZRK_PUSH_ID, "").orEmpty()
 
     /**
      * Returns the names of all push types

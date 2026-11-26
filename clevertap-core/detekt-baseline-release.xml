@@ -138,7 +138,6 @@
     <ID>CyclomaticComplexMethod:EventDataValidator.kt$EventDataValidator$private fun checkItemRemovals(metrics: EventDataMetrics, errors: MutableList&lt;ValidationResult&gt;)</ID>
     <ID>CyclomaticComplexMethod:EventDataValidator.kt$EventDataValidator$private fun checkStructuralLimits( metrics: EventDataMetrics, maxDepth: Int?, maxArrayKeyCount: Int?, maxObjectKeyCount: Int?, maxArrayLength: Int?, maxKVPairCount: Int?, errors: MutableList&lt;ValidationResult&gt; )</ID>
     <ID>CyclomaticComplexMethod:EventMediator.kt$EventMediator$open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean</ID>
-    <ID>CyclomaticComplexMethod:EventPropertyKeyNormalizer.kt$EventPropertyKeyNormalizer$override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult</ID>
     <ID>CyclomaticComplexMethod:EventQueueManager.kt$EventQueueManager$fun processEvent( context: Context, event: JSONObject, eventType: Int, flattenedEventData: FlattenedEventData )</ID>
     <ID>CyclomaticComplexMethod:EventQueueManager.kt$EventQueueManager$override fun pushBasicProfile( baseProfile: JSONObject?, removeFromSharedPrefs: Boolean, profileChanges: FlattenedEventData )</ID>
     <ID>CyclomaticComplexMethod:GifDecoder.kt$GifDecoder$private fun averageColorsNear( positionInMainPixels: Int, maxPositionInMainPixels: Int, currentFrameIw: Int ): Int</ID>
@@ -180,7 +179,6 @@
     <ID>CyclomaticComplexMethod:PushPreviewKey.kt$CanonicalJson.Lexer$fun readString(): String?</ID>
     <ID>CyclomaticComplexMethod:PushPreviewKey.kt$CanonicalJson.Lexer$private fun readEscape(sb: StringBuilder): Boolean</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
-    <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun createOrResetWorker(isPingFrequencyUpdated: Boolean)</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun triggerLiveUpdateNotification( context: Context, extras: Bundle, customFactory: ICleverTapLiveUpdateNotificationFactory? )</ID>
     <ID>CyclomaticComplexMethod:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
     <ID>CyclomaticComplexMethod:SharedPreferencesMigration.kt$SharedPreferencesMigration$@Suppress("UNCHECKED_CAST") fun migrate()</ID>
@@ -212,19 +210,10 @@
     <ID>DoubleMutabilityForCollection:EvaluationManager.kt$EvaluationManager$// Internal list to track client-side suppressed in-app notifications. This map is used to identify the suppressedIDs for raised and profile events together. @VisibleForTesting internal var suppressedClientSideInApps: MutableList&lt;Map&lt;String, Any?&gt;&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:EvaluationManager.kt$EvaluationManager$// Internal list to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events together. @VisibleForTesting internal var evaluatedServerSideCampaignIds: MutableList&lt;Long&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:GifHeader.kt$GifHeader$var frames: MutableList&lt;GifFrame&gt; = ArrayList()</ID>
-    <ID>DoubleMutabilityForCollection:ImpressionManager.kt$ImpressionManager$private var sessionImpressions: MutableMap&lt;String, MutableList&lt;Long&gt;&gt; = mutableMapOf()</ID>
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$// App-Launched CG-suppression acks (bare {wzrk_id, wzrk_pivot, wzrk_cgId}), via recordCgSuppressed. @VisibleForTesting internal var suppressedNdCampaigns: MutableList&lt;Map&lt;String, Any?&gt;&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:NdEvaluationManager.kt$NdEvaluationManager$@VisibleForTesting internal var evaluatedNdCampaignIds: MutableList&lt;Long&gt; = ArrayList()</ID>
     <ID>DoubleMutabilityForCollection:ValidationResultStack.kt$ValidationResultStack$/** * The pending results, oldest first. Returned as the live list outside the lock (as before). */ var pendingValidationResults = ArrayList&lt;ValidationResult&gt;() private set</ID>
     <ID>EmptyDefaultConstructor:CTMessageDAO.kt$CTMessageDAO$()</ID>
-    <ID>EmptyFunctionBlock:ActivityLifecycleCallback.kt$ActivityLifecycleCallback.Companion.&lt;no name provided&gt;${ }</ID>
-    <ID>EmptyFunctionBlock:CTInAppBasePartialNativeFragment.kt$CTInAppBasePartialNativeFragment.GestureListener.&lt;no name provided&gt;${ }</ID>
-    <ID>EmptyFunctionBlock:CTInAppHtmlBannerOverlay.kt$CTInAppHtmlBannerOverlay.&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:ExoplayerPlayerListener.kt$ExoplayerPlayerListener${}</ID>
-    <ID>EmptyFunctionBlock:Media3PlayerListener.kt$Media3PlayerListener${}</ID>
-    <ID>EmptyFunctionBlock:MediaPlayerRecyclerView.kt$MediaPlayerRecyclerView.&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:PIPManager.kt$PIPManager.&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:PartialHtmlInAppGestureListener.kt$PartialHtmlInAppGestureListener.&lt;no name provided&gt;${}</ID>
     <ID>ForbiddenComment:CleverTapAPI.kt$CleverTapAPI$//TODO: start synchronizing entire flow from here</ID>
     <ID>ForbiddenMethodCall:CTDisplayUnitType.kt$CTDisplayUnitType.Companion$d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")</ID>
     <ID>ForbiddenMethodCall:CleverTapResponse.kt$CleverTapResponse$i("CleverTapResponse", "Done processing response!")</ID>
@@ -955,7 +944,6 @@
     <ID>NestedBlockDepth:InAppResponseAdapter.kt$InAppResponseAdapter$private fun fetchMediaUrls( imageList: MutableList&lt;String&gt;, gifList: MutableList&lt;String&gt; )</ID>
     <ID>NestedBlockDepth:InAppStore.kt$InAppStore$fun migrateEvaluatedServerSideInAppIds(evaluatedIds: String): JSONArray</ID>
     <ID>NestedBlockDepth:InAppStore.kt$InAppStore$private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONArray</ID>
-    <ID>NestedBlockDepth:InboxDeleteCall.kt$InboxDeleteCall$private fun buildDeletePayload(messages: List&lt;CTInboxMessage&gt;): JSONObject</ID>
     <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set&lt;String&gt;</ID>
     <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun getMessages(userId: String): ArrayList&lt;CTMessageDAO&gt;</ID>
     <ID>NestedBlockDepth:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$@WorkerThread override fun upsertMessages(inboxMessages: List&lt;CTMessageDAO&gt;)</ID>
@@ -1165,7 +1153,6 @@
     <ID>NullableToStringCall:VarCache.kt$VarCache$$merged</ID>
     <ID>NullableToStringCall:VarCache.kt$VarCache$${variable.name()}</ID>
     <ID>NullableToStringCall:VariablesRepo.kt$VariablesRepo$$cache</ID>
-    <ID>ObjectLiteralToLambda:CTInAppBaseFullFragment.kt$CTInAppBaseFullFragment$object : Runnable { override fun run() { val margin = closeImageView.measuredWidth / 2 closeImageView.x = (relativeLayout.right - margin).toFloat() closeImageView.y = (relativeLayout.top - margin).toFloat() } }</ID>
     <ID>ObjectLiteralToLambda:CleverTapAPI.kt$CleverTapAPI$object : OnCompleteListener&lt;String&gt; { override fun onComplete(task: com.google.android.gms.tasks.Task&lt;String&gt;) { if (!task.isSuccessful) { Logger.v( LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json failed", task.exception ) requestTokenListener.onDevicePushToken(null, FCM) return } val token = task.result Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token") requestTokenListener.onDevicePushToken(token, FCM) } }</ID>
     <ID>PackageNaming:CTProductConfigConstants.kt$package com.clevertap.android.sdk.product_config</ID>
     <ID>PackageNaming:CTProductConfigController.kt$package com.clevertap.android.sdk.product_config</ID>
@@ -1602,29 +1589,6 @@
     <ID>UnnecessaryAbstractClass:CleverTapMetaData.kt$CleverTapMetaData$CleverTapMetaData</ID>
     <ID>UnnecessaryAbstractClass:CleverTapResponse.kt$CleverTapResponse$CleverTapResponse</ID>
     <ID>UnnecessaryAbstractClass:Crypt.kt$Crypt$Crypt</ID>
-    <ID>UnnecessaryApply:InAppStore.kt$InAppStore$apply { ctPreference.writeString(INAPP_KEY, this) }</ID>
-    <ID>UnnecessaryApply:InAppStore.kt$InAppStore$apply { ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, this) }</ID>
-    <ID>UnnecessaryApply:InAppStore.kt$InAppStore$apply { ctPreference.writeString(PREFS_INAPP_KEY_CS, this) }</ID>
-    <ID>UnnecessaryLet:AESCrypt.kt$AESCrypt$let { encryptedBytes -&gt; encryptedBytes.contentToString() }</ID>
-    <ID>UnnecessaryLet:CTLocalInApp.kt$CTLocalInApp.Builder.Builder6$let { put(Constants.KEY_ALT_TEXT, contentDescription) }</ID>
-    <ID>UnnecessaryLet:Media3Handle.kt$Media3Handle$let { ep -&gt; ep.volume }</ID>
-    <ID>UnnecessaryLet:NdStoreProvider.kt$NdStoreProvider$let { ndCountsStoreCache }</ID>
-    <ID>UnnecessaryLet:NdStoreProvider.kt$NdStoreProvider$let { ndImpressionStoreCache }</ID>
-    <ID>UnnecessaryLet:NdStoreProvider.kt$NdStoreProvider$let { ndStoreCache }</ID>
-    <ID>UnnecessaryNotNullOperator:EventQueueManager.kt$EventQueueManager$eventName!!</ID>
-    <ID>UnnecessarySafeCall:InboxDeleteCall.kt$InboxDeleteCall$m.wzrkParams?.let { params -&gt; params.keys().forEach { key -&gt; obj.put(key, params.get(key)) } }</ID>
-    <ID>UnnecessarySafeCall:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$dbHelper.readableDatabase.query( tName, arrayOf(Column.ID), selection, selectionArgs, null, null, null )?.use { cursor -&gt; val idIndex = cursor.getColumnIndexOrThrow(Column.ID) while (cursor.moveToNext()) { cursor.getString(idIndex)?.let { result.add(it) } } }</ID>
-    <ID>UnnecessarySafeCall:InboxMessageDAOImpl.kt$InboxMessageDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC" )?.use { cursor -&gt; // find indices val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID) val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA) val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS) val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT) val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES) val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ) val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID) val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS) val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN) val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE) val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE) while (cursor.moveToNext()) { val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex)) if (decryptedData == null) { logger.debug("There was some problem in loading inbox message from DB") continue } val ctMessageDAO = CTMessageDAO().apply { this.id = cursor.getString(idColumnIndex) this.jsonData = JSONObject(decryptedData) this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex)) this.date = cursor.getLong(createdAtColumnIndex) this.expires = cursor.getLong(expiresColumnIndex) this.isRead = cursor.getInt(isReadColumnIndex) this.userId = // This seems redundant if you are already filtering by userId cursor.getString(userIdColumnIndex) this.tags = cursor.getString(tagsColumnIndex) this.campaignId = cursor.getString(campaignColumnIndex) this.source = readSource(cursor, sourceColumnIndex) this.indexState = readIndexState(cursor, indexStateColumnIndex) } messageDAOArrayList.add(ctMessageDAO) } }</ID>
-    <ID>UnnecessarySafeCall:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.DATA} = ?", arrayOf(id), null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)) } logger.verbose("Fetching PID for check - $pushId") }</ID>
-    <ID>UnnecessarySafeCall:PushNotificationDAOImpl.kt$PushNotificationDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.IS_READ} = 0", null, null, null, null )?.use { cursor -&gt; while (cursor.moveToNext()) { val dataIndex = cursor.getColumnIndex(Column.DATA) if (dataIndex &gt;= 0) { val data = cursor.getString(dataIndex) logger.verbose("Fetching PID - $data") if (data != null) { // this case is practically not possible since we have null check in store pushIds.add(data) } } } }</ID>
-    <ID>UnnecessarySafeCall:UninstallTimestampDAOImpl.kt$UninstallTimestampDAOImpl$dbHelper.readableDatabase.query( tName, null, null, null, null, null, "${Column.CREATED_AT} DESC", "1" )?.use { cursor -&gt; if (cursor.moveToFirst()) { timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT)) } }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, null, null, null, null, orderBy )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventLog } else { null } }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, null, selection, selectionArgs, null, null, orderBy, null )?.use { cursor -&gt; while (cursor.moveToNext()) { val eventLog = UserEventLog( eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)), normalizedEventName = cursor.getString( cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME) ), firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)), lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)), countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)), deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID)) ) eventList.add(eventLog) } eventList }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.query( tName, projection, selection, selectionArgs, null, null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)) } else { 0 } }</ID>
-    <ID>UnnecessarySafeCall:UserEventLogDAOImpl.kt$UserEventLogDAOImpl$db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor -&gt; if (cursor.moveToFirst()) { cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1 } else { false } }</ID>
-    <ID>UnnecessarySafeCall:UserProfileDAOImpl.kt$UserProfileDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?", arrayOf(accountId, deviceId), null, null, null )?.use { cursor -&gt; if (cursor.moveToFirst()) { val dataIndex = cursor.getColumnIndex(Column.DATA) if (dataIndex &gt;= 0) { val profileString = cursor.getString(dataIndex) val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString) if (decryptedProfile != null) { op = JSONObject(decryptedProfile) } else { logger.verbose("Failed profile decryption") } } } else { logger.verbose("There was no profile found in DB") } }</ID>
-    <ID>UnnecessarySafeCall:UserProfileDAOImpl.kt$UserProfileDAOImpl$dbHelper.readableDatabase.query( tName, null, "${Column.ID} = ?", arrayOf(accountId), null, null, null )?.use { cursor -&gt; val dataIndex = cursor.getColumnIndex(Column.DATA) val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID) while (cursor.moveToNext()) { val profileString = cursor.getString(dataIndex) val deviceIdString = cursor.getString(deviceIdIndex) val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString) if (decryptedProfile != null) { val jsonObject = JSONObject(decryptedProfile) profiles[deviceIdString] = jsonObject } else { logger.verbose("Error decrypting JSON for profile") } } }</ID>
     <ID>UnsafeCallOnNullableType:ArpRepo.kt$ArpRepo$kv.value!!</ID>
     <ID>UnsafeCallOnNullableType:ArpRepo.kt$ArpRepo$value!!</ID>
     <ID>UnsafeCallOnNullableType:CTCaches.kt$CTCaches.Companion$ctCaches!!</ID>
@@ -1707,57 +1671,15 @@
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$it[0]!!</ID>
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$it[1]!!</ID>
     <ID>UnsafeCallOnNullableType:TriggersMatcher.kt$TriggersMatcher$triggerRadius!!</ID>
-    <ID>UnusedParameter:ActivityLifeCycleManager.kt$ActivityLifeCycleManager$activity: Activity?</ID>
     <ID>UnusedParameter:EventQueueManager.kt$EventQueueManager$context: Context?</ID>
-    <ID>UnusedParameter:PIPExpandedView.kt$PIPExpandedView$session: PIPSession</ID>
     <ID>UnusedParameter:Utils.kt$Utils$context: Context?</ID>
-    <ID>UnusedPrivateProperty:InActionStorageStrategy.kt$InActionStorageStrategy$private val accountId: String</ID>
-    <ID>UnusedPrivateProperty:InActionStorageStrategy.kt$InActionStorageStrategy$private val logger: ILogger</ID>
-    <ID>UseCheckOrError:CleverTapAPI.kt$CleverTapAPI$throw IllegalStateException("AppInboxActivity reference not found")</ID>
-    <ID>UseCheckOrError:CleverTapAPI.kt$CleverTapAPI$throw IllegalStateException("Current activity reference not found")</ID>
-    <ID>UseCheckOrError:GifHeaderParser.kt$GifHeaderParser$throw IllegalStateException("You must call setData() before parseHeader()")</ID>
-    <ID>UseCheckOrError:InAppController.kt$InAppController$throw IllegalStateException("Current activity reference not found for PIP")</ID>
-    <ID>UseCheckOrError:InAppController.kt$InAppController$throw IllegalStateException("Current activity reference not found")</ID>
-    <ID>UseLet:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent$if (mediaValue != null) { contentTypeValue } else { null }</ID>
-    <ID>UseOrEmpty:CTHtmlBannerCallbacksBridge.kt$CTHtmlBannerCallbacksBridge$parsed.callToAction ?: ""</ID>
-    <ID>UseOrEmpty:CTInAppBaseFragment.kt$CTInAppBaseFragment$parsed.callToAction ?: ""</ID>
-    <ID>UseOrEmpty:CTInAppNotificationButton.kt$CTInAppNotificationButton$parcel.readString() ?: ""</ID>
-    <ID>UseOrEmpty:CTInAppNotificationMedia.kt$CTInAppNotificationMedia$parcel.readString() ?: ""</ID>
-    <ID>UseOrEmpty:CTInboxListViewFragment.kt$CTInboxListViewFragment.Companion$message.data.optJSONObject(Constants.KEY_MSG)?.toString() ?: ""</ID>
     <ID>UseOrEmpty:CTInboxStyleConfig.kt$CTInboxStyleConfig$config.tabsValue?.copyOf() ?: emptyArray()</ID>
-    <ID>UseOrEmpty:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$actionUrl?.trim { it &lt;= ' ' } ?: ""</ID>
-    <ID>UseOrEmpty:CleverTapDisplayUnitContent.kt$CleverTapDisplayUnitContent.Companion$androidObject?.opt(Constants.KEY_TEXT) as? String ?: ""</ID>
-    <ID>UseOrEmpty:CtDatabase.kt$DatabaseHelper$StorageHelper.getString(context, baseKey, null) ?: StorageHelper.getString(context, fallbackKey, "") ?: ""</ID>
-    <ID>UseOrEmpty:CustomTemplateContext.kt$CustomTemplateContext$action?.customTemplateInAppData?.templateName ?: action?.type?.toString() ?: ""</ID>
-    <ID>UseOrEmpty:DisplayUnitResponse.kt$DisplayUnitResponse$deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson&lt;Any&gt;(it) } ?: emptyMap()</ID>
-    <ID>UseOrEmpty:EvaluationManager.kt$EvaluationManager$storeRegistry.inAppStore?.let { store -&gt; val metadata = store.readServerSideInActionMetaData().toList&lt;JSONObject&gt;() val eligibleInApps = evaluateEventsAgainstMetadata(events, metadata) trackAndSaveEvaluatedCampaignIds(eligibleInApps) eligibleInApps } ?: emptyList()</ID>
-    <ID>UseOrEmpty:EventPropertyKeyNormalizer.kt$EventPropertyKeyNormalizer$input?.trim() ?: ""</ID>
-    <ID>UseOrEmpty:EventPropertyKeyNormalizer.kt$EventPropertyKeyNormalizer$input?: ""</ID>
-    <ID>UseOrEmpty:FileStore.kt$FileStore$ctPreference.readAll()?.keys ?: emptySet()</ID>
-    <ID>UseOrEmpty:ImpressionManager.kt$ImpressionManager$impressionStoreProvider()?.read(campaignId) ?: emptyList()</ID>
-    <ID>UseOrEmpty:InAppAssetsStore.kt$InAppAssetsStore$ctPreference.readAll()?.keys ?: emptySet()</ID>
-    <ID>UseOrEmpty:InAppController.kt$InAppController$inAppNotification.customTemplateData?.templateName ?: ""</ID>
-    <ID>UseOrEmpty:InAppNotificationInflater.kt$InAppNotificationInflater$customTemplateData?.getFileArgsUrls(templatesManager) ?: emptyList()</ID>
-    <ID>UseOrEmpty:InAppResponseAdapter.kt$InAppResponseAdapter$responseJson.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?.let { ContentFetchItem.listFrom(it) } ?: emptyList()</ID>
-    <ID>UseOrEmpty:PIPConfigFactory.kt$PIPConfigFactory$media.contentDescription.takeIf { it.isNotBlank() } ?: ""</ID>
-    <ID>UseOrEmpty:PIPInAppCallbacksBridge.kt$PIPInAppCallbacksBridge$onClick?.optString("c2a", "") ?: ""</ID>
-    <ID>UseOrEmpty:ProductConfigUtil.kt$ProductConfigUtil$config?.accountId ?: ""</ID>
-    <ID>UseOrEmpty:PushNotificationUtil.kt$PushNotificationUtil$message?.getString(WZRK_ACCT_ID_KEY, "") ?: ""</ID>
-    <ID>UseOrEmpty:PushNotificationUtil.kt$PushNotificationUtil$message?.getString(WZRK_PUSH_ID, "") ?: ""</ID>
-    <ID>UseOrEmpty:PushProviders.kt$PushProviders$StorageHelper.getString(context, PF_WORK_ID, "") ?: ""</ID>
-    <ID>UseOrEmpty:PushProviders.kt$PushProviders$extras.getString(Constants.NOTIF_MSG) ?: ""</ID>
-    <ID>UseOrEmpty:PushProviders.kt$PushProviders$iNotificationRenderer.getMessage(extras) ?: ""</ID>
-    <ID>UseRequire:GifDecoder.kt$GifDecoder$throw IllegalArgumentException("Sample size must be &gt;=0, not: $sampleSize")</ID>
     <ID>UseRequire:PushProviders.kt$PushProviders$throw IllegalArgumentException()</ID>
     <ID>UselessCallOnNotNull:CTProductConfigController.kt$CTProductConfigController.&lt;no name provided&gt;$key.isNullOrEmpty()</ID>
     <ID>UtilityClassWithPublicConstructor:ActivityLifecycleCallback.kt$ActivityLifecycleCallback</ID>
     <ID>UtilityClassWithPublicConstructor:CTVariableUtils.kt$CTVariableUtils</ID>
     <ID>UtilityClassWithPublicConstructor:FileResourcesRepoFactory.kt$FileResourcesRepoFactory</ID>
     <ID>UtilityClassWithPublicConstructor:MemoryCreator.kt$MemoryCreator</ID>
-    <ID>VarCouldBeVal:CTLocalInApp.kt$CTLocalInApp.Builder$private var jsonObject = JSONObject()</ID>
-    <ID>VarCouldBeVal:ExoplayerHandle.kt$ExoplayerHandle$private var playerViewLayoutParamsFullScreen = FrameLayout.LayoutParams( MATCH_PARENT, MATCH_PARENT )</ID>
-    <ID>VarCouldBeVal:ImpressionManager.kt$ImpressionManager$private var sessionImpressions: MutableMap&lt;String, MutableList&lt;Long&gt;&gt; = mutableMapOf()</ID>
-    <ID>VarCouldBeVal:Media3Handle.kt$Media3Handle$private var playerViewLayoutParamsFullScreen = FrameLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT )</ID>
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val CURRENT_THREAD_EXECUTOR: Executor = Executor { it.run() }</ID>
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR</ID>
     <ID>VariableNaming:CTExecutors.kt$CTExecutors$@JvmField public val IO_EXECUTOR: IOExecutor</ID>

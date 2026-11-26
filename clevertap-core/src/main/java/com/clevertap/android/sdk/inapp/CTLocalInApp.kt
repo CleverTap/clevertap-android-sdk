@@ -25,7 +25,7 @@ public class CTLocalInApp private constructor() {
 
     public class Builder internal constructor() {
 
-        private var jsonObject = JSONObject()
+        private val jsonObject = JSONObject()
 
         public fun setInAppType(inAppType: InAppType): Builder1 =
             jsonObject.run {
@@ -110,7 +110,7 @@ public class CTLocalInApp private constructor() {
                     val mediaObject = JSONObject().apply {
                         put(Constants.KEY_URL, imageUrl)
                         put(Constants.KEY_CONTENT_TYPE, "image")
-                        contentDescription?.let {
+                        if (contentDescription != null) {
                             put(Constants.KEY_ALT_TEXT, contentDescription)
                         }
                     }

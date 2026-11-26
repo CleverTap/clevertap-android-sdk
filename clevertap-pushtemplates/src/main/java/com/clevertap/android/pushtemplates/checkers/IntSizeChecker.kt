@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class IntSizeChecker(val entity: Int?, val size: Int, val errorMsg: String) :
-    SizeChecker<Int>(entity, size, errorMsg) {
+    Checker<Int> {
 
     override fun check(): Boolean {
         if (entity == null || entity == Int.MIN_VALUE) {

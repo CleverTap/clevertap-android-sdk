@@ -24,7 +24,7 @@ internal object Utils {
 
     @JvmStatic
     fun emptyIfNull(str: String?): String {
-        return str ?: ""
+        return str.orEmpty()
     }
 
     @JvmStatic
@@ -262,9 +262,7 @@ internal object Utils {
      */
     @JvmStatic
     fun subArray(arr: JSONArray, fromIndex: Int, toIndex: Int): JSONArray {
-        if (fromIndex > toIndex) {
-            throw IllegalArgumentException("fromIndex($fromIndex) > toIndex($toIndex)")
-        }
+        require(fromIndex <= toIndex) { "fromIndex($fromIndex) > toIndex($toIndex)" }
 
         val jsonArray = JSONArray()
 

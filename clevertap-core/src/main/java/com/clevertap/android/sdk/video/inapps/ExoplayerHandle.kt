@@ -47,7 +47,7 @@ internal class ExoplayerHandle : InAppVideoPlayerHandle {
     private var playerView: StyledPlayerView? = null
 
     private var playerViewLayoutParamsNormal: ViewGroup.LayoutParams? = null
-    private var playerViewLayoutParamsFullScreen =
+    private val playerViewLayoutParamsFullScreen =
         FrameLayout.LayoutParams(
             MATCH_PARENT,
             MATCH_PARENT

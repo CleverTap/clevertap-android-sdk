@@ -69,9 +69,11 @@ internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFra
                 }
 
                 override fun onAnimationRepeat(animation: Animation?) {
+                    // No-op: only the end of the dismiss animation matters.
                 }
 
                 override fun onAnimationStart(animation: Animation?) {
+                    // No-op: only the end of the dismiss animation matters.
                 }
             })
             inAppView?.startAnimation(animSet)

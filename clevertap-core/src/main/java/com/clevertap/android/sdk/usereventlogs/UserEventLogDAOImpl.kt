@@ -125,7 +125,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, selection, selectionArgs, null, null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 if (cursor.moveToFirst()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
@@ -158,13 +158,13 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, projection, selection, selectionArgs, null, null, null, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 if (cursor.moveToFirst()) {
                     cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT))
                 } else {
                     0
                 }
-            } ?: -1
+            }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             -1
@@ -187,13 +187,13 @@ internal class UserEventLogDAOImpl(
         """.trimIndent()
 
         return try {
-            db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
+            db.readableDatabase.rawQuery(query, selectionArgs).use { cursor ->
                 if (cursor.moveToFirst()) {
                     cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
                 } else {
                     false
                 }
-            } ?: false
+            }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             false
@@ -219,13 +219,13 @@ internal class UserEventLogDAOImpl(
                 ) AS $resultColumn;
         """.trimIndent()
         return try {
-            db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
+            db.readableDatabase.rawQuery(query, selectionArgs).use { cursor ->
                 if (cursor.moveToFirst()) {
                     cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
                 } else {
                     false
                 }
-            } ?: false
+            }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             false
@@ -244,7 +244,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, selection, selectionArgs, null, null, orderBy, null
-            )?.use { cursor ->
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
@@ -259,7 +259,7 @@ internal class UserEventLogDAOImpl(
                     eventList.add(eventLog)
                 }
                 eventList
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             emptyList()
@@ -276,7 +276,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, null, null, null, null, orderBy
-            )?.use { cursor ->
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
@@ -291,7 +291,7 @@ internal class UserEventLogDAOImpl(
                     eventList.add(eventLog)
                 }
                 eventList
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             emptyList()
