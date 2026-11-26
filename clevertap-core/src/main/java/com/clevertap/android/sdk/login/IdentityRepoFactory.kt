@@ -15,17 +15,15 @@ internal object IdentityRepoFactory {
      *
      * @return - repo provider
      */
-    @JvmStatic
     fun getRepo(
         context: Context,
         config: CleverTapInstanceConfig,
         validationResultStack: ValidationResultStack
     ): IdentityRepo {
         val infoProvider = LoginInfoProvider(context, config)
-        val repo: IdentityRepo = if (infoProvider.isLegacyProfileLoggedIn()) {
-            LegacyIdentityRepo(
-                config
-            ) // case 1: Migration (cached guid but no newly saved profile pref)
+        val repo: IdentityRepo = if (infoProvider.isLegacyProfileLoggedIn) {
+            // case 1: Migration (cached guid but no newly saved profile pref)
+            LegacyIdentityRepo(config)
         } else {
             /* ----------------------------------------------------
              * case 2: Not logged in & using default config
@@ -33,10 +31,7 @@ internal object IdentityRepoFactory {
              * -----------------------------------------------------*/
             ConfigurableIdentityRepo(config, infoProvider, validationResultStack)
         }
-        config.log(
-            LOG_TAG_ON_USER_LOGIN,
-            "Repo provider: " + repo.javaClass.simpleName
-        )
+        config.log(LOG_TAG_ON_USER_LOGIN, "Repo provider: ${repo.javaClass.simpleName}")
         return repo
     }
 }

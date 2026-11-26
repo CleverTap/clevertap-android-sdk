@@ -6,17 +6,7 @@ import com.clevertap.android.sdk.Utils
 /**
  * Wrapper class of identities & related behaviors
  */
-internal open class IdentitySet {
-
-    private val identities = HashSet<String>()
-
-    private constructor(keys: Array<String>?) {
-        init(keys)
-    }
-
-    private constructor(hashSet: HashSet<String>) {
-        identities.addAll(hashSet)
-    }
+internal open class IdentitySet private constructor(private val identities: Set<String>) {
 
     /**
      * Checks if two identity sets contain same identities
@@ -31,13 +21,11 @@ internal open class IdentitySet {
         if (other == null || javaClass != other.javaClass) {
             return false
         }
-        val that = other as IdentitySet
-        return identities == that.identities
+        return identities == (other as IdentitySet).identities
     }
 
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
+    // Identity-based, as in the Java original (inconsistent with equals; kept as is).
+    override fun hashCode(): Int = super.hashCode()
 
     /**
      * Stringifies the identity set in comma separated string value.
@@ -46,18 +34,8 @@ internal open class IdentitySet {
      *
      * @return String value of the identity set.
      */
-    override fun toString(): String {
-        val stringBuilder = StringBuilder()
-        val iterator = identities.iterator()
-        while (iterator.hasNext()) {
-            val type = iterator.next()
-            if (Constants.ALL_IDENTITY_KEYS.contains(type)) {
-                stringBuilder.append(type)
-                    .append(if (iterator.hasNext()) Constants.SEPARATOR_COMMA else "")
-            }
-        }
-        return stringBuilder.toString()
-    }
+    override fun toString(): String =
+        identities.filter { it in Constants.ALL_IDENTITY_KEYS }.joinToString(Constants.SEPARATOR_COMMA)
 
     /**
      * checks if a given key is an identity or not
@@ -65,31 +43,13 @@ internal open class IdentitySet {
      * @param Key - String value of key
      * @return - true , if the given key is an identity key else false.
      */
-    fun contains(Key: String?): Boolean {
-        return Utils.containsIgnoreCase(identities, Key)
-    }
+    fun contains(Key: String?): Boolean = Utils.containsIgnoreCase(identities, Key)
 
     /**
      * @return true - if the set contains at least one of the valid identities [Constants.ALL_IDENTITY_KEYS]
      */
     val isValid: Boolean
         get() = identities.isNotEmpty()
-
-    /**
-     * Initialises the identity set using the string array items.
-     * It also filters out invalid identities during initialisation
-     *
-     * @param keysArrays - String array containing identities.
-     */
-    private fun init(keysArrays: Array<String>?) {
-        if (keysArrays != null && keysArrays.isNotEmpty()) {
-            for (key in keysArrays) {
-                if (Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, key)) {
-                    identities.add(Utils.convertToTitleCase(key)!!)
-                }
-            }
-        }
-    }
 
     companion object {
 
@@ -101,32 +61,30 @@ internal open class IdentitySet {
          * @param keysCommaSeparated - comma separated key string
          * @return IdentitySet containing valid identities.
          */
-        @JvmStatic
         fun from(keysCommaSeparated: String): IdentitySet {
             // Kotlin's split keeps trailing empty strings (Java's regex split drops them); empty keys are
-            // filtered out by init(), so the resulting set is identical.
-            return IdentitySet(keysCommaSeparated.split(Constants.SEPARATOR_COMMA).toTypedArray())
+            // filtered out as invalid, so the resulting set is identical.
+            return from(keysCommaSeparated.split(Constants.SEPARATOR_COMMA).toTypedArray())
         }
 
         /**
-         * Prepares Identity set from array of string values
+         * Prepares Identity set from array of string values, filtering out invalid identities.
          * String array            Set
-         * e.g [email,phone] => {email, phone}
+         * e.g [email,phone] => {Email, Phone}
          *
          * @param keysArray - array of string values
          * @return IdentitySet containing valid identities.
          */
-        @JvmStatic
         fun from(keysArray: Array<String>?): IdentitySet {
-            return IdentitySet(keysArray)
+            val identities = keysArray.orEmpty()
+                .filter { Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, it) }
+                .mapNotNullTo(HashSet()) { Utils.convertToTitleCase(it) }
+            return IdentitySet(identities)
         }
 
         /**
-         * Returns Default Identity Set which is set to legacy identity set [Constants.LEGACY_IDENTITY_KEYS]
+         * Returns a new Default Identity Set which is set to legacy identity set [Constants.LEGACY_IDENTITY_KEYS]
          */
-        @JvmStatic
-        fun getDefault(): IdentitySet {
-            return IdentitySet(Constants.LEGACY_IDENTITY_KEYS)
-        }
+        fun default(): IdentitySet = IdentitySet(HashSet(Constants.LEGACY_IDENTITY_KEYS))
     }
 }

@@ -20,6 +20,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
@@ -673,7 +674,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_input_is_not_null() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
                 every {
                     IdentityRepoFactory.getRepo(
@@ -721,7 +722,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_key_is_profile_identifier() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
                 every {
                     IdentityRepoFactory.getRepo(
@@ -772,7 +773,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_true() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>()
                 every {
                     IdentityRepoFactory.getRepo(
@@ -835,7 +836,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_false() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>()
                 every {
                     IdentityRepoFactory.getRepo(
@@ -891,7 +892,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_false() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>()
                 every {
                     IdentityRepoFactory.getRepo(
@@ -952,7 +953,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_true() {
         withMockExecutors {
 
-            mockkStatic(IdentityRepoFactory::class) {
+            mockkObject(IdentityRepoFactory) {
                 val mockIdentityRepo = mockk<IdentityRepo>()
                 every {
                     IdentityRepoFactory.getRepo(
