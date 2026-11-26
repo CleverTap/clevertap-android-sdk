@@ -27,9 +27,9 @@ public class Logger internal constructor(@LogLevel level: Int) {
 
     public fun debug(suffix: String?, message: String?) {
         if (debugLevel > INFO) {
-            if (message!!.length > 4000) {
-                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))
-                debug(suffix, message.substring(4000))
+            if (message!!.length > MAX_LOG_LENGTH) {
+                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, MAX_LOG_LENGTH))
+                debug(suffix, message.substring(MAX_LOG_LENGTH))
             } else {
                 Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)
             }
@@ -92,9 +92,9 @@ public class Logger internal constructor(@LogLevel level: Int) {
     @Suppress("MemberVisibilityCanBePrivate")
     public fun verbose(suffix: String?, message: String?) {
         if (debugLevel > DEBUG) {
-            if (message!!.length > 4000) {
-                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))
-                verbose(suffix, message.substring(4000))
+            if (message!!.length > MAX_LOG_LENGTH) {
+                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, MAX_LOG_LENGTH))
+                verbose(suffix, message.substring(MAX_LOG_LENGTH))
             } else {
                 Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)
             }
@@ -122,5 +122,8 @@ public class Logger internal constructor(@LogLevel level: Int) {
         public const val DEBUG: Int = 2
 
         public const val VERBOSE: Int = 3
+
+        /** Longest message passed to one [Log] call; longer messages are split into chunks. */
+        private const val MAX_LOG_LENGTH: Int = 4000
     }
 }

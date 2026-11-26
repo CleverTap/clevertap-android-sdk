@@ -14,7 +14,7 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTGeofenceTaskManager private constructor() {
 
-    private var EXECUTOR_THREAD_ID: Long = 0
+    private var executorThreadId: Long = 0
 
     private var es: ExecutorService = Executors.newFixedThreadPool(1)
 
@@ -29,7 +29,7 @@ internal class CTGeofenceTaskManager private constructor() {
     fun postAsyncSafely(name: String, runnable: Runnable): Future<*>? {
         var future: Future<*>? = null
         try {
-            val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
+            val executeSync = Thread.currentThread().id == executorThreadId
 
             if (executeSync) {
                 // if new task comes from executor thread itself then run it immediately
@@ -37,7 +37,7 @@ internal class CTGeofenceTaskManager private constructor() {
                 runnable.run()
             } else {
                 future = es.submit(Runnable {
-                    EXECUTOR_THREAD_ID = Thread.currentThread().id
+                    executorThreadId = Thread.currentThread().id
                     try {
                         runnable.run()
                     } catch (t: Throwable) {
@@ -66,7 +66,7 @@ internal class CTGeofenceTaskManager private constructor() {
     fun postAsyncSafely(name: String, task: CTGeofenceTask): Future<*>? {
         var future: Future<*>? = null
         try {
-            val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
+            val executeSync = Thread.currentThread().id == executorThreadId
 
             if (executeSync) {
                 // if new task comes from executor thread itself then run it immediately
@@ -74,7 +74,7 @@ internal class CTGeofenceTaskManager private constructor() {
                 task.execute()
             } else {
                 future = es.submit(Runnable {
-                    EXECUTOR_THREAD_ID = Thread.currentThread().id
+                    executorThreadId = Thread.currentThread().id
                     try {
                         task.execute()
                     } catch (t: Throwable) {
