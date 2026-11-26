@@ -28,6 +28,27 @@ open class CleverTapDisplayUnitContent private constructor(
     private val errorValue: String?
 ) : Parcelable {
 
+    // Arguments are evaluated left to right, i.e. in the order writeToParcel wrote them. Kept as a
+    // (private) secondary constructor: its synthetic JVM bridge is part of the API dump.
+    @Suppress("UNCHECKED_CAST", "DEPRECATION")
+    private constructor(parcel: Parcel) : this(
+        titleValue = parcel.readString(),
+        titleColorValue = parcel.readString(),
+        messageValue = parcel.readString(),
+        messageColorValue = parcel.readString(),
+        iconValue = parcel.readString(),
+        mediaValue = parcel.readString(),
+        contentTypeValue = parcel.readString(),
+        posterUrlValue = parcel.readString(),
+        actionUrlValue = parcel.readString(),
+        metaDataValue = if (parcel.readByte().toInt() == 0x00) {
+            null
+        } else {
+            parcel.readHashMap(null) as HashMap<String, Any?>?
+        },
+        errorValue = parcel.readString()
+    )
+
     override fun describeContents(): Int = 0
 
     /**
@@ -222,25 +243,8 @@ open class CleverTapDisplayUnitContent private constructor(
         @JvmField
         val CREATOR: Parcelable.Creator<CleverTapDisplayUnitContent> =
             object : Parcelable.Creator<CleverTapDisplayUnitContent> {
-                // Arguments are evaluated left to right, i.e. in the order writeToParcel wrote them.
-                @Suppress("UNCHECKED_CAST", "DEPRECATION")
-                override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnitContent = CleverTapDisplayUnitContent(
-                    titleValue = parcel.readString(),
-                    titleColorValue = parcel.readString(),
-                    messageValue = parcel.readString(),
-                    messageColorValue = parcel.readString(),
-                    iconValue = parcel.readString(),
-                    mediaValue = parcel.readString(),
-                    contentTypeValue = parcel.readString(),
-                    posterUrlValue = parcel.readString(),
-                    actionUrlValue = parcel.readString(),
-                    metaDataValue = if (parcel.readByte().toInt() == 0x00) {
-                        null
-                    } else {
-                        parcel.readHashMap(null) as HashMap<String, Any?>?
-                    },
-                    errorValue = parcel.readString()
-                )
+                override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnitContent =
+                    CleverTapDisplayUnitContent(parcel)
 
                 override fun newArray(size: Int): Array<CleverTapDisplayUnitContent?> = arrayOfNulls(size)
             }

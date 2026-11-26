@@ -31,8 +31,9 @@ open class CleverTapDisplayUnit private constructor(
      * Reads the fields in writeToParcel order. A failure keeps whatever was read so far and records
      * the error, as the Java original did.
      */
+    // Kept as a (private) secondary constructor: its synthetic JVM bridge is part of the API dump.
     @Suppress("UNCHECKED_CAST", "DEPRECATION")
-    private fun readFrom(parcel: Parcel) {
+    private constructor(parcel: Parcel) : this(null, null, null, null, null, null, null) {
         try {
             unitIDValue = parcel.readString()
             typeValue = parcel.readValue(CTDisplayUnitType::class.java.classLoader) as CTDisplayUnitType?
@@ -248,8 +249,7 @@ open class CleverTapDisplayUnit private constructor(
 
         @JvmField
         val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> = object : Parcelable.Creator<CleverTapDisplayUnit> {
-            override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnit =
-                CleverTapDisplayUnit(null, null, null, null, null, null, null).apply { readFrom(parcel) }
+            override fun createFromParcel(parcel: Parcel): CleverTapDisplayUnit = CleverTapDisplayUnit(parcel)
 
             override fun newArray(size: Int): Array<CleverTapDisplayUnit?> = arrayOfNulls(size)
         }
