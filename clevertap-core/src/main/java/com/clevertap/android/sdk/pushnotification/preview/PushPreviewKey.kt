@@ -254,19 +254,38 @@ internal object CanonicalJson {
             var closed = false
             while (ok && !closed && pos < text.length) {
                 val ch = text[pos++]
-                when {
-                    ch == '"' -> closed = true
-                    ch == '\\' -> ok = readEscape(sb)
-                    ch < ' ' -> ok = false // control characters must be escaped
-                    else -> sb.append(ch)
+                closed = ch == '"'
+                if (!closed) {
+                    ok = appendStringChar(sb, ch)
                 }
             }
             return if (ok && closed) { sb.toString() } else { null }
         }
 
+        /** Appends one non-quote string character, decoding an escape. Returns false on invalid input. */
+        private fun appendStringChar(sb: StringBuilder, ch: Char): Boolean {
+            return when {
+                ch == '\\' -> readEscape(sb)
+                ch < ' ' -> false // control characters must be escaped
+                else -> {
+                    sb.append(ch)
+                    true
+                }
+            }
+        }
+
         private fun readEscape(sb: StringBuilder): Boolean {
             val ch = if (pos < text.length) { text[pos++] } else { END }
-            val decoded = when (ch) {
+            val decoded = decodeEscape(ch)
+            if (decoded != null) {
+                sb.append(decoded)
+            }
+            return decoded != null
+        }
+
+        /** The character that the escape `\<ch>` stands for, or null if it is not a valid escape. */
+        private fun decodeEscape(ch: Char): Char? {
+            return when (ch) {
                 '"', '\\', '/' -> ch
                 'b' -> '\b'
                 'f' -> FORM_FEED
@@ -276,10 +295,6 @@ internal object CanonicalJson {
                 'u' -> readUnicodeEscape()
                 else -> null
             }
-            if (decoded != null) {
-                sb.append(decoded)
-            }
-            return decoded != null
         }
 
         /** Exactly four hex digits. toIntOrNull alone would also accept a sign, as in "\u-001". */
@@ -352,17 +367,27 @@ internal object CanonicalJson {
     private fun quote(s: String): String {
         val sb = StringBuilder(s.length + 2).append('"')
         for (ch in s) {
-            when (ch) {
-                '"' -> sb.append("\\\"")
-                '\\' -> sb.append("\\\\")
-                '\n' -> sb.append("\\n")
-                '\r' -> sb.append("\\r")
-                '\t' -> sb.append("\\t")
-                '\b' -> sb.append("\\b")
-                FORM_FEED -> sb.append("\\f")
-                else -> if (ch < ' ') { sb.append("\\u%04x".format(Locale.ROOT, ch.code)) } else { sb.append(ch) }
+            val escape = shortEscape(ch)
+            when {
+                escape != null -> sb.append(escape)
+                ch < ' ' -> sb.append("\\u%04x".format(Locale.ROOT, ch.code))
+                else -> sb.append(ch)
             }
         }
         return sb.append('"').toString()
+    }
+
+    /** The two-character JSON escape for [ch], or null if [ch] has none. */
+    private fun shortEscape(ch: Char): String? {
+        return when (ch) {
+            '"' -> "\\\""
+            '\\' -> "\\\\"
+            '\n' -> "\\n"
+            '\r' -> "\\r"
+            '\t' -> "\\t"
+            '\b' -> "\\b"
+            FORM_FEED -> "\\f"
+            else -> null
+        }
     }
 }
