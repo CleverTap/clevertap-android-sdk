@@ -69,4 +69,43 @@ class InAppResponseAdapterTest {
     fun `contentFetchItems is empty when the content_fetch array is empty`() {
         assertTrue(adapter(response()).contentFetchItems.isEmpty())
     }
+
+    private fun media(url: String, contentType: String): JSONObject =
+        JSONObject().put(Constants.KEY_URL, url).put(Constants.KEY_CONTENT_TYPE, contentType)
+
+    @Test
+    fun `preloadAssetsMeta collects client-side portrait and landscape image and gif urls`() {
+        val inApps = JSONArray()
+            .put(
+                JSONObject()
+                    .put(Constants.KEY_MEDIA, media("https://p.png", "image/png"))
+                    .put(Constants.KEY_MEDIA_LANDSCAPE, media("https://l.gif", "image/gif"))
+            )
+            .put(
+                JSONObject()
+                    .put(Constants.KEY_MEDIA, media("https://v.mp4", "video/mp4"))
+                    .put(Constants.KEY_MEDIA_LANDSCAPE, media("", "image/png"))
+            )
+            .put(JSONObject().put(Constants.KEY_MEDIA_LANDSCAPE, media("https://l2.jpg", "image/jpeg")))
+        val body = JSONObject().put(Constants.INAPP_NOTIFS_KEY_CS, inApps)
+
+        val meta = adapter(body).preloadAssetsMeta
+
+        assertEquals(
+            listOf(
+                "https://p.png" to CtCacheType.IMAGE,
+                "https://l2.jpg" to CtCacheType.IMAGE,
+                "https://l.gif" to CtCacheType.GIF
+            ),
+            meta
+        )
+    }
+
+    @Test
+    fun `preloadAssetsMeta ignores media of non client-side in-apps`() {
+        val inApps = JSONArray().put(JSONObject().put(Constants.KEY_MEDIA, media("https://p.png", "image/png")))
+        val body = JSONObject().put(Constants.INAPP_JSON_RESPONSE_KEY, inApps)
+
+        assertTrue(adapter(body).preloadAssetsMeta.isEmpty())
+    }
 }
