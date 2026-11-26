@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import kotlin.math.max
 import kotlin.time.Duration.Companion.days
+import androidx.annotation.RestrictTo
 
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
 /**
@@ -19,6 +20,7 @@ internal const val TAG_FILE_DOWNLOAD = "FileDownload"
  * @param fileStore The store for managing file URLs and their expiry times.
  * @param legacyInAppsStore The store for managing legacy in-app data.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,

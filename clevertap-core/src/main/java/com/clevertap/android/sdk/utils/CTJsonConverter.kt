@@ -14,7 +14,9 @@ import com.clevertap.android.sdk.validation.ValidationResult
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTJsonConverter {
 
     private const val TAG = "CTJsonConverter"

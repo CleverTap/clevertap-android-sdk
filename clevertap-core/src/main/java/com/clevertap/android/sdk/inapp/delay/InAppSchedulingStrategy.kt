@@ -2,10 +2,12 @@ package com.clevertap.android.sdk.inapp.delay
 
 import androidx.annotation.WorkerThread
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Strategy interface for handling storage operations before/after scheduling
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppSchedulingStrategy {
     /**
      * Prepare data before scheduling (e.g., save to DB)

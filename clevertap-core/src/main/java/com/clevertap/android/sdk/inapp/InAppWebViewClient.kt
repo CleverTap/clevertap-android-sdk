@@ -8,7 +8,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.clevertap.android.sdk.Logger
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppWebViewClient(host: InAppWebInteraction) : WebViewClient() {
     private val hostWr = WeakReference(host)
 

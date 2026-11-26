@@ -16,12 +16,14 @@ import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
 import org.json.JSONException
 import java.util.concurrent.Callable
+import androidx.annotation.RestrictTo
 
 /**
  * Controller class which handles Users and Messages for the Notification Inbox.
  *
  * Always construct it off the main thread: it reads the messages from the database.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTInboxController @WorkerThread constructor(
     private val config: CleverTapInstanceConfig,
     guid: String?,

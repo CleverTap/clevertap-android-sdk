@@ -11,7 +11,9 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.VERTICAL_IMAGE_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.VerticalImageBigContentView
 import com.clevertap.android.pushtemplates.content.VerticalImageSmallContentView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class VerticalImageStyle(
     private val data: VerticalImageTemplateData,
     renderer: TemplateRenderer,

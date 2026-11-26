@@ -13,7 +13,9 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.VerticalImageButtonData
 import com.clevertap.android.sdk.Constants
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class VerticalImageContentView(
     context: Context,
     renderer: TemplateRenderer,

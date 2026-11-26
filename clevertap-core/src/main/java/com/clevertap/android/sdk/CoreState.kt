@@ -25,8 +25,10 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import androidx.annotation.RestrictTo
 
 @Suppress("DEPRECATION")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CoreState(
     val locationManager: BaseLocationManager,
     val config: CleverTapInstanceConfig,

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.utils.UriHelper
 import java.net.URLDecoder
+import androidx.annotation.RestrictTo
 
 /**
  * Stateless parser for in-app actions triggered from an HTML/WebView surface.
@@ -18,6 +19,7 @@ import java.net.URLDecoder
  * ([com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment]) and the non-fragment
  * [CTInAppHtmlBannerOverlay] path so that both resolve actions identically.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object InAppActionParser {
 
     data class ParsedAction(

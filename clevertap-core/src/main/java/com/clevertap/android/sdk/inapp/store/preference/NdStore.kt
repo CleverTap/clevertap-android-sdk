@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Stores Native Display (ND) Server-Side state, mirroring the SS half of [InAppStore].
@@ -25,6 +26,7 @@ import org.json.JSONObject
  * new user's prefs, with an empty [metaCache]) on the next access after the device id changes. Do not
  * re-add a change-user callback here — the provider is the single owner.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NdStore(
     private val ctPreference: ICTPreference,
 ) {

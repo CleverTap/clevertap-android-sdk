@@ -11,7 +11,9 @@ import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class TemplateRepository(val context: Context, val config: CleverTapInstanceConfig?) {
 
     companion object {

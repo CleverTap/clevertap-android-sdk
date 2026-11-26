@@ -9,6 +9,7 @@ import androidx.viewpager.widget.ViewPager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_CONTENT_PAGE_INDEX
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Custom OnClickListener to handle both "onMessage" and "onLink" clicks.
@@ -16,6 +17,7 @@ import org.json.JSONObject
  * With a [viewPager] (carousels) a click opens the page on screen; otherwise it is a button click
  * when [buttonText] and [buttonObject] are given, and a message body click when they are not.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInboxButtonClickListener(
     private val position: Int,
     private val inboxMessage: CTInboxMessage,

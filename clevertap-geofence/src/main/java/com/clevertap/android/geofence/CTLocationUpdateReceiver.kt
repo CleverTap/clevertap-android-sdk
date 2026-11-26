@@ -7,6 +7,7 @@ import androidx.annotation.MainThread
 import com.google.android.gms.location.LocationResult
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import androidx.annotation.RestrictTo
 
 /**
  * A [BroadcastReceiver] which receives location updates in foreground as well as in background
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeoutException
  * Accuracy and Frequency of location updates depends on accuracy, interval, fastest interval and
  * smallest displacement as set by Client through [CTGeofenceAPI.init]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTLocationUpdateReceiver : BroadcastReceiver() {
 
     /**

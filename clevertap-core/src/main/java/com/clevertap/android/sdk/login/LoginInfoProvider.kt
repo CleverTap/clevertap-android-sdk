@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.util.Locale
+import androidx.annotation.RestrictTo
 
 /**
  * Handles saving and/or providing login related information.
@@ -16,6 +17,7 @@ import java.util.Locale
  * [cryptHandler] is only needed by the cached-GUID read/write paths; callers that only query login
  * state (e.g. [isLegacyProfileLoggedIn], [deviceIsMultiUser]) may omit it.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class LoginInfoProvider(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

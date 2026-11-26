@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.Con
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class TemplatesManager(templates: Collection<CustomTemplate>, private val logger: Logger) :
     ContextDismissListener {
 

@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.network.ContentFetchManager
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ContentFetchResponse(
     private val config: CleverTapInstanceConfig,
     private val contentFetchManager: ContentFetchManager

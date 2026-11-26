@@ -1,11 +1,14 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
+import androidx.annotation.RestrictTo
+
 /**
  * Callback interface for renderers to report state changes upward.
  * Keeps renderers decoupled from [com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession]
  * — they don't write session fields directly; instead, the coordinator
  * ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPMediaView]) handles it.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface RendererStateListener {
     /** A new video player was created. Session should store the reference. */
     fun onPlayerCreated(wrapper: PIPVideoPlayerWrapper)

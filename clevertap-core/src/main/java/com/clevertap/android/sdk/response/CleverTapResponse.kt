@@ -4,10 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.WorkerThread
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Abstract Response that will be wrapped by [CleverTapResponseDecorator] objects
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CleverTapResponse {
 
     /**

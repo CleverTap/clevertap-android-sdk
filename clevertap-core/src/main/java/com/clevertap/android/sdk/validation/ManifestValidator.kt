@@ -16,7 +16,9 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver
 import com.clevertap.android.sdk.pushnotification.PushConstants
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object ManifestValidator {
 
     private const val OUR_APPLICATION_CLASS_NAME = "com.clevertap.android.sdk.Application"

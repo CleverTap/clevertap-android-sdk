@@ -6,11 +6,13 @@ import android.content.Intent
 import androidx.annotation.MainThread
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import androidx.annotation.RestrictTo
 
 /**
  * A [BroadcastReceiver] which receives geofence enter/exit event updates in foreground as well as in background
  * and in killed state.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTGeofenceReceiver : BroadcastReceiver() {
 
     /**

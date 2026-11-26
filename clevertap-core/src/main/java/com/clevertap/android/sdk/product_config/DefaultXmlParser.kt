@@ -6,7 +6,9 @@ import android.content.res.XmlResourceParser
 import android.util.Log
 import com.clevertap.android.sdk.Constants.LOG_TAG_PRODUCT_CONFIG
 import org.xmlpull.v1.XmlPullParser
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class DefaultXmlParser {
 
     open fun getDefaultsFromXml(context: Context, resourceId: Int): Map<String, String> =

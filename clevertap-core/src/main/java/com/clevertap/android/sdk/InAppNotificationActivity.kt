@@ -47,6 +47,7 @@ import java.lang.ref.WeakReference
  * Declared in the SDK manifest (keep the FQN). Kotlin `internal`: it implements SDK-internal
  * interfaces and is instantiated only by the framework, so it stays JVM-public.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
     DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener,
     InAppController.RestoredInAppListener {

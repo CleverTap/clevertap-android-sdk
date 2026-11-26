@@ -6,6 +6,7 @@ import androidx.core.graphics.drawable.IconCompat
 import com.clevertap.android.pushtemplates.PTLog
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
+import androidx.annotation.RestrictTo
 
 /**
  * The androidx.core 1.17.0 APIs behind the native Android 16 ProgressStyle, looked up by reflection
@@ -22,6 +23,7 @@ import java.lang.reflect.Method
  * never built half native. Only the reflective handles are cached; each notification still creates
  * its own ProgressStyle / Segment / Point instances.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object NativeProgressApi {
 
     class Methods(

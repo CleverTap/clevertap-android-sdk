@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
 import androidx.core.content.edit
+import androidx.annotation.RestrictTo
 
 interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
@@ -23,6 +24,7 @@ interface IDataMigrationRepository {
     fun inAppDataFiles(keysToMigrate: List<String>, migrate: (String) -> String?)
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DataMigrationRepository(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.BOOL
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.NUMBER
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.STRING
+import androidx.annotation.RestrictTo
 
 /**
  * A definition of a custom template. Can be a function or a code template.
@@ -313,6 +314,7 @@ class CustomTemplate private constructor(
     }
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class CustomTemplateType(private val stringName: String) {
     TEMPLATE("template"),
     FUNCTION("function");

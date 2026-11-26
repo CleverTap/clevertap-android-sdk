@@ -90,7 +90,9 @@ import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CleverTapFactory {
     @JvmStatic
     fun getCoreState(

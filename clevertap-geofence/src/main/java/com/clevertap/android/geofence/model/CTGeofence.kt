@@ -4,10 +4,12 @@ import com.clevertap.android.geofence.CTGeofenceAPI
 import com.clevertap.android.geofence.CTGeofenceConstants
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Wrapper over [com.google.android.gms.location.Geofence]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTGeofence private constructor(builder: Builder) {
 
     class Builder internal constructor(internal val id: String) {

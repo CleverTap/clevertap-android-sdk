@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.task
 
 import java.util.concurrent.Executor
+import androidx.annotation.RestrictTo
 
 /**
  * Wrapper class to execute runnable after a task is successful.
@@ -8,6 +9,7 @@ import java.util.concurrent.Executor
  *
  * @param TResult
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class SuccessExecutable<TResult>(
     executor: Executor,
     val successListener: OnSuccessListener<TResult>

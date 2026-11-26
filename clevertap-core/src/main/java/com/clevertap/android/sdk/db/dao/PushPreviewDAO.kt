@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import androidx.annotation.WorkerThread
+import androidx.annotation.RestrictTo
 
 /**
  * Table access for trusted copies of Send Test previews (SDK-6282).
@@ -12,6 +13,7 @@ import androidx.annotation.WorkerThread
  * one row. A tap at 10:05 finds it through [find]. A tap the next day at 10:05
  * finds nothing because the row has expired.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface PushPreviewDAO {
 
     /**

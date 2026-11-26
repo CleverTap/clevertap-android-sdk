@@ -1,10 +1,12 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
+import androidx.annotation.RestrictTo
 
 /**
  * This class is a factory class to generate a Crypt object based on the EncryptionAlgorithm
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CryptFactory(
     private val accountId: String,
     private val ctKeyGenerator: CTKeyGenerator

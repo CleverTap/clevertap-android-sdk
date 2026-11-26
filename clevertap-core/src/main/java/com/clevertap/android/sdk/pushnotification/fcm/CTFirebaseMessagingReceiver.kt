@@ -16,11 +16,13 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccoun
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushIdFromNotificationBundle
 import com.google.firebase.messaging.RemoteMessage
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Receiver to receive firebase messaging broadcast directly from OS.
  * This guarantees OS delivered broadcast reaches to Receiver directly instead of FirebaseMessagingService.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTFirebaseMessagingReceiver : BroadcastReceiver(), NotificationRenderedListener {
 
     private var countDownTimer: CountDownTimer? = null

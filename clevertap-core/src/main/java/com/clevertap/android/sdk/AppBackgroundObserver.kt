@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import androidx.annotation.RestrictTo
 
 /**
  * Notifies [onAppBackground] when the whole app moves to background.
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
  * is dispatched only when no activity is started, so activity transitions and configuration changes
  * do not trigger it.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AppBackgroundObserver(
     private val lifecycleOwner: LifecycleOwner,
     private val accountId: String,

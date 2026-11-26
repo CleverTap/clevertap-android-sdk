@@ -3,7 +3,9 @@ package com.clevertap.android.sdk
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseAnalyticsManager {
 
     abstract fun addMultiValuesForKey(key: String?, values: List<String?>?)

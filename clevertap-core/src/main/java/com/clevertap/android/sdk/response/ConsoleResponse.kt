@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ConsoleResponse(private val config: CleverTapInstanceConfig) : CleverTapResponseDecorator() {
 
     private val logger: Logger = config.logger

@@ -3,8 +3,10 @@ package com.clevertap.android.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.WorkerThread
+import androidx.annotation.RestrictTo
 
 @Suppress("unused")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object StorageHelper {
     @JvmStatic
     fun getPreferences(context: Context, namespace: String?): SharedPreferences {

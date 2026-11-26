@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class MetadataResponse(
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo,

@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.safeGetJSONObjectListOrEmpty
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 object InAppDelayConstants{
     const val INAPP_DELAY_AFTER_TRIGGER = "delayAfterTrigger"
@@ -34,6 +35,7 @@ object InAppInActionConstants {
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppResponseAdapter(
     responseJson: JSONObject,
     templatesManager: TemplatesManager

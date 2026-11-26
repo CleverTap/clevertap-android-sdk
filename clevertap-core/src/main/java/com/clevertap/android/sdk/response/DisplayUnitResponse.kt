@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Single owner of the Display Units / Native Display (ND) channel.
@@ -36,6 +37,7 @@ import org.json.JSONObject
  * The ND dependencies are nullable: the send-test / push-preview path (see the content-only secondary
  * constructor) carries a single display unit and no ND meta, so meta ingestion is skipped there.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DisplayUnitResponse(
     private val config: CleverTapInstanceConfig,
     private val callbackManager: BaseCallbackManager,

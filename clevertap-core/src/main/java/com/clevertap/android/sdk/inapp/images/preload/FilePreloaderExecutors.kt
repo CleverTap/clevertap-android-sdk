@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.task.CTExecutors
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FilePreloaderExecutors @JvmOverloads constructor(
     override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,

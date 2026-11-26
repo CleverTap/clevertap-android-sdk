@@ -14,7 +14,9 @@ import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
 
     fun addCloseImageView(relativeLayout: RelativeLayout, closeImageView: CloseImageView) {

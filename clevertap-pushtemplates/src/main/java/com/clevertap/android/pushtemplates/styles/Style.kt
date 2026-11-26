@@ -11,7 +11,9 @@ import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class Style(private val data: BaseContent, private val renderer: TemplateRenderer) {
 
     protected open fun setNotificationBuilderBasics(

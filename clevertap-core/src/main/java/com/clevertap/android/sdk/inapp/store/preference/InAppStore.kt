@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 /**
  * The `InAppStore` class manages the storage and retrieval of In-App messages.
  * In-App messages can be stored in either Client-side mode (CS) or Server-side mode (SS).
@@ -28,6 +29,7 @@ import org.json.JSONObject
  * @property ctPreference The shared preference handler for storing and retrieving data.
  * @property cryptHandler The handler used for encryption and decryption of In-App messages.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppStore(
     private val ctPreference: ICTPreference,
     private val cryptHandler: ICryptHandler

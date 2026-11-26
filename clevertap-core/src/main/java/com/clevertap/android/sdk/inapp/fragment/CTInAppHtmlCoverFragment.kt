@@ -8,7 +8,9 @@ import android.widget.RelativeLayout
 import android.widget.RelativeLayout.LayoutParams
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppHtmlCoverFragment : CTInAppBaseFullHtmlFragment() {
 
     override fun getLayoutParamsForCloseButton(webViewId: Int): LayoutParams {

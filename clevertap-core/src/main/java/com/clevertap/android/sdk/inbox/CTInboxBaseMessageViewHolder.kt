@@ -30,7 +30,9 @@ import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.roundToInt
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     /** The list fragment's context, taken at bind time. */

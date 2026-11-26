@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk.login
 
+import androidx.annotation.RestrictTo
+
 /**
  * Interface to provide Identities related functionality
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface IdentityRepo {
 
     val identitySet: IdentitySet

@@ -4,7 +4,9 @@ import android.app.NotificationManager
 import android.content.Context
 import com.clevertap.android.pushtemplates.CancelTemplateData
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CancelTemplateHandler {
     internal fun renderCancelNotification(context: Context, templateData: CancelTemplateData) {
         val notificationManager =

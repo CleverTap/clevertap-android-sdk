@@ -6,6 +6,7 @@ import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 import java.util.concurrent.ExecutorService
+import androidx.annotation.RestrictTo
 
 /**
  * Groups all parameters needed by [FallbackImageLoader.load] into a single object.
@@ -24,6 +25,7 @@ import java.util.concurrent.ExecutorService
  * @param onSuccess       Called when fallback image loaded successfully (cached or fetched)
  * @param onTotalFailure  Called when both primary and fallback failed — no media available
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class FallbackLoadRequest(
     val container: ViewGroup,
     val fallbackUrl: String?,
@@ -47,6 +49,7 @@ internal data class FallbackLoadRequest(
  * 3. On fetch success, create an [ImageView] and add to [container]
  * 4. On failure, fire [PIPCallbacks.onMediaError]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object FallbackImageLoader {
 
     fun load(request: FallbackLoadRequest) {

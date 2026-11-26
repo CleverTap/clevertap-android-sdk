@@ -6,7 +6,9 @@ import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ZeroBezelBigContentView(
     context: Context,
     renderer: TemplateRenderer,

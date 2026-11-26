@@ -19,7 +19,9 @@ import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class InAppResponse(
     private val config: CleverTapInstanceConfig,
     private val controllerManager: ControllerManager,

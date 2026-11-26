@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class EventMediator(
     private val config: CleverTapInstanceConfig,
     private val cleverTapMetaData: CoreMetaData,

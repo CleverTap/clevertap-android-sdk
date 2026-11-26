@@ -32,7 +32,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.TimeZone
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EventQueueManager(
     private val baseDatabaseManager: BaseDatabaseManager,
     private val context: Context,

@@ -7,10 +7,12 @@ import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.interfaces.INotificationParser
 import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
 import com.huawei.hms.push.RemoteMessage
+import androidx.annotation.RestrictTo
 
 /**
  * Implementation of [INotificationParser]<[RemoteMessage]>
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class HmsNotificationParser : INotificationParser<RemoteMessage> {
 
     override fun toBundle(message: RemoteMessage): Bundle? {

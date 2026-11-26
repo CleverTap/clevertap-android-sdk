@@ -7,11 +7,13 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListener
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
+import androidx.annotation.RestrictTo
 
 /**
  * A task of type [CTGeofenceTask] responsible for requesting or removing background
  * location updates by comparing [CTGeofenceSettings] and [PendingIntent]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class LocationUpdateTask(context: Context) : CTGeofenceTask {
 
     private val context: Context = context.applicationContext

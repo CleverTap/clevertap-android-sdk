@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class GeofenceResponse(
     private val config: CleverTapInstanceConfig,
     private val callbackManager: BaseCallbackManager

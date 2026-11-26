@@ -4,9 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
+import androidx.annotation.RestrictTo
 
 @Suppress("SuspiciousNameCombination")
 @SuppressLint("AppCompatCustomView")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class SquareImageView : ImageView {
 
     constructor(context: Context) : super(context)

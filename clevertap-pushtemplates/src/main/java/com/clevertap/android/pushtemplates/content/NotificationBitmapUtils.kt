@@ -15,7 +15,9 @@ import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTLog
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object NotificationBitmapUtils {
 
     fun createSolidBitmap(

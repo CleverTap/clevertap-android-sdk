@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.Logger
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class FeatureFlagResponse(
     private val config: CleverTapInstanceConfig,
     private val controllerManager: ControllerManager

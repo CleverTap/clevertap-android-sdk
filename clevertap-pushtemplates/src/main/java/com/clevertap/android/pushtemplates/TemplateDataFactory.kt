@@ -80,12 +80,14 @@ import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 /**
  * Factory class for creating TemplateData objects based on template type.
  * This factory follows the same parsing logic as TemplateRenderer and provides
  * a clean interface for instantiating the appropriate TemplateData subclass.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object TemplateDataFactory {
 
     /**

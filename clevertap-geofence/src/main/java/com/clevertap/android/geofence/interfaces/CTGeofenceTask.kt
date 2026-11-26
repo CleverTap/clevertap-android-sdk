@@ -1,8 +1,11 @@
 package com.clevertap.android.geofence.interfaces
 
+import androidx.annotation.RestrictTo
+
 /**
  * Represents an asynchronous operation.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface CTGeofenceTask {
 
     /**

@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.displayunits
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Controller class for caching & supplying the Display Units to the client.
  * Default implementation of [DisplayUnitCache].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTDisplayUnitController : DisplayUnitCache {
 
     internal val items = HashMap<String, CleverTapDisplayUnit>()

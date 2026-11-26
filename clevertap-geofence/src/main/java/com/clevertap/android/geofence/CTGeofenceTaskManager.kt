@@ -5,11 +5,13 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
 /**
  * Provides methods to post tasks/Runnable to a single threaded queue for processing tasks
  * This class is singleton, so only one queue will be created and shared.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTGeofenceTaskManager private constructor() {
 
     private var EXECUTOR_THREAD_ID: Long = 0

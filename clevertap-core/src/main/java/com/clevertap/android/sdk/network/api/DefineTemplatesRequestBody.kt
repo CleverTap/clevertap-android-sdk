@@ -4,7 +4,9 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.utils.putObject
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DefineTemplatesRequestBody(header: JSONObject, templates: Collection<CustomTemplate>) {
 
     val jsonArray = JSONArray().apply {

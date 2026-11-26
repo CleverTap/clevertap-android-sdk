@@ -10,7 +10,9 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
 
     var type: InAppActionType?

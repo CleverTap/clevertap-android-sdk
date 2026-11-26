@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.lifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.annotation.RestrictTo
 
 /**
  * Fires [onStop] when the observed [LifecycleOwner] reaches the STOPPED state.
  * Used for SAA support — pass `fragment.viewLifecycleOwner` to [com.clevertap.android.sdk.inapp.pipsdk.PIPManager.show].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPLifecycleObserver(
     private val onStop: () -> Unit,
 ) : LifecycleEventObserver {

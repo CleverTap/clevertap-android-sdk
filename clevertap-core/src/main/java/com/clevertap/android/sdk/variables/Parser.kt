@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.variables.annotations.Variable
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
+import androidx.annotation.RestrictTo
 
 /**
  * Parses CleverTap annotations when called via Parser.parseVariables(...)
@@ -17,6 +18,7 @@ import java.lang.reflect.Field
  *
  * @author Ansh Sachdeva
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class Parser(private val ctVariables: CTVariables) {
 
     /**

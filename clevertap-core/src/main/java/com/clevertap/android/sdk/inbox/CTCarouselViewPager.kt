@@ -7,7 +7,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import androidx.viewpager.widget.ViewPager
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTCarouselViewPager : ViewPager {
 
     constructor(context: Context) : super(context) {

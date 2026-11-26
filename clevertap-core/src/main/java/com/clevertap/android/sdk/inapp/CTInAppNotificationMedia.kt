@@ -5,7 +5,9 @@ import android.os.Parcelable
 import com.clevertap.android.sdk.Constants
 import org.json.JSONObject
 import java.util.UUID
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppNotificationMedia : Parcelable {
 
     var mediaUrl: String

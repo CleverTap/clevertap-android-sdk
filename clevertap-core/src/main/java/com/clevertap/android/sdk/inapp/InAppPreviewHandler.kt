@@ -14,7 +14,9 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppPreviewHandler(
     private val executors: CTExecutors,
     private val networkManager: NetworkManager,

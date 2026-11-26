@@ -34,6 +34,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.util.regex.Pattern
+import androidx.annotation.RestrictTo
 
 /*
  * Several helpers below collect Bundle.getString() results into ArrayList<String> / Map<String, String>.
@@ -42,6 +43,7 @@ import java.util.regex.Pattern
  * Kotlin callers expect, which keeps that runtime behaviour byte-for-byte.
  */
 @Suppress("WeakerAccess")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object Utils {
 
     /** Throws a [NullPointerException] for a null [context], for the callers to handle. */

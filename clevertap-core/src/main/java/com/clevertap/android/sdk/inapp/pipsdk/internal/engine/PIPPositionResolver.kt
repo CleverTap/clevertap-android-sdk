@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.engine
 import android.graphics.PointF
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PIPPositionResolver {
 
     /** Returns pixel (x, y) top-left coordinates for the PIP view at each position. */

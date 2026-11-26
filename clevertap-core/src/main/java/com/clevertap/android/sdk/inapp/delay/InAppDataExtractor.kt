@@ -2,10 +2,12 @@ package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Interface for extracting type-specific data from in-apps
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppDataExtractor<T> {
     fun extractDelay(inApp: JSONObject): Long
     fun createSuccessResult(id: String, data: JSONObject): T
@@ -16,6 +18,7 @@ internal interface InAppDataExtractor<T> {
 /**
  * Data extractor for delayed in-apps
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult> {
     override fun extractDelay(inApp: JSONObject): Long =
         InAppDurationPartitioner.extractDelayMillis(inApp)
@@ -42,6 +45,7 @@ internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult
 /**
  * Data extractor for in-action in-apps
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InActionDataExtractor : InAppDataExtractor<InActionResult> {
     override fun extractDelay(inApp: JSONObject): Long =
         InAppDurationPartitioner.extractInActionMillis(inApp)

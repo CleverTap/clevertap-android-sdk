@@ -10,7 +10,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.validation.ValidationConfig
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ARPResponse(
     private val config: CleverTapInstanceConfig,
     private val validationConfig: ValidationConfig?,

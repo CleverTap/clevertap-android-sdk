@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.clevertap.android.geofence.interfaces.CTLocationCallback
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
 /**
  * A [ListenableWorker] which fetches last known location from OS in foreground as well as in background
@@ -14,6 +15,7 @@ import java.util.concurrent.Future
  * [CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC]
  * Frequency of location updates depends on [CTGeofenceSettings.Builder.setInterval]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class BackgroundLocationWork(context: Context, workerParams: WorkerParameters) :
     ListenableWorker(context, workerParams) {
 

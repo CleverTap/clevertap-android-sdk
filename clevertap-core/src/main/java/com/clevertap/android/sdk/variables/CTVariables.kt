@@ -6,12 +6,14 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Package Private class to not allow external access to working of Variables
  *
  * @author Ansh Sachdeva
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTVariables(internal val varCache: VarCache) {
 
     /** false until the first variables response (or error) is handled; reset on user switch. */

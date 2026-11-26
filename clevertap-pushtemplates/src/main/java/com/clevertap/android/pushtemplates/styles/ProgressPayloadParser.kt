@@ -3,12 +3,14 @@ package com.clevertap.android.pushtemplates.styles
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.Utils
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 /**
  * Pure parsing of the `pt_progress_segments` / `pt_progress_points` JSON and hex colors, extracted
  * from [ProgressStyle] so it is unit-testable without building a Notification. All methods are
  * tolerant: malformed / missing input yields sensible empties/nulls and never throws.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object ProgressPayloadParser {
 
     data class SegmentData(val length: Int, val color: Int?)

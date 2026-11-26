@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
 import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Local evaluation of Native Display (ND) advanced-rule campaigns.
@@ -29,6 +30,7 @@ import org.json.JSONObject
  *
  * Reuses [TriggersMatcher] and [LimitsMatcher]; only the stores differ from in-app.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NdEvaluationManager(
     private val config: CleverTapInstanceConfig,
     private val triggersMatcher: TriggersMatcher,

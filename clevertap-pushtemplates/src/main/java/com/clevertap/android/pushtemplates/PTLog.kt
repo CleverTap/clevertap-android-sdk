@@ -1,8 +1,10 @@
 package com.clevertap.android.pushtemplates
 
 import android.util.Log
+import androidx.annotation.RestrictTo
 
 /** Push templates' Logcat logger, filtered by [TemplateRenderer.debugLevel]. */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PTLog {
 
     private fun isEnabled(level: TemplateRenderer.LogLevel): Boolean =

@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates.validators
 import com.clevertap.android.pushtemplates.*
 import com.clevertap.android.pushtemplates.checkers.*
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 const val PT_TITLE = "PT_TITLE"
 const val PT_MSG = "PT_MSG"
@@ -42,6 +43,7 @@ fun Iterable<Checker<out Any>>.or(): Boolean {
  * Builder class for creating validation checkers based on template data.
  * Uses a fluent interface to build only the necessary checkers for each template type.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ValidationCheckersBuilder {
     private val checkers = mutableMapOf<String, Checker<out Any>>()
 
@@ -174,6 +176,7 @@ internal class ValidationCheckersBuilder {
  * Factory for creating validators based on TemplateData objects.
  * Uses the builder pattern to create only the necessary validation checkers for each template type.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ValidatorFactory {
     companion object {
 

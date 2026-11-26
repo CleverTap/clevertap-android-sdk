@@ -1,8 +1,11 @@
 package com.clevertap.android.hms
 
+import androidx.annotation.RestrictTo
+
 /**
  * Bridge interface to communicate with Huawei SDK
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface IHmsSdkHandler {
 
     /**

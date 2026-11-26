@@ -7,6 +7,7 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.utils.Clock
+import androidx.annotation.RestrictTo
 
 /**
  * Data class representing a delayed legacy in-app entry for batch operations
@@ -15,12 +16,14 @@ import com.clevertap.android.sdk.utils.Clock
  * @property delay the delay in seconds before showing
  * @property inAppData the JSON data for the in-app notification
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class DelayedLegacyInAppData(
     val inAppId: String,
     val delay: Int,
     val inAppData: String
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface DelayedLegacyInAppDAO {
     /**
      * Insert multiple delayed legacy in-app notifications in a batch transaction
@@ -58,6 +61,7 @@ internal interface DelayedLegacyInAppDAO {
     fun clearAll(): Boolean
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DelayedLegacyInAppDAOImpl(
     private val db: DatabaseHelper,
     private val logger: ILogger,

@@ -24,7 +24,9 @@ import com.clevertap.android.sdk.network.DownloadedBitmap.Status
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CoreNotificationRenderer : INotificationRenderer, AudibleNotification {
 
     private var notifMessage: String? = null

@@ -11,10 +11,12 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.viewpager.widget.ViewPager
 import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
 /**
  * Viewholder class for Carousels
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageViewHolder(itemView) {
 
     /**

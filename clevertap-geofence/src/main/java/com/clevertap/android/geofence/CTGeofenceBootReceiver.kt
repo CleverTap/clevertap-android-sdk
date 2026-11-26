@@ -8,10 +8,12 @@ import androidx.annotation.MainThread
 import com.clevertap.android.geofence.CTGeofenceAPI.Companion.GEOFENCE_LOG_TAG
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import androidx.annotation.RestrictTo
 
 /**
  * A [BroadcastReceiver] which will reset geofence monitoring and location updates on device boot
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTGeofenceBootReceiver : BroadcastReceiver() {
 
     /**

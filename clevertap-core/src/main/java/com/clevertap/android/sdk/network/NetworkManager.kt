@@ -38,7 +38,9 @@ import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NetworkManager constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

@@ -23,7 +23,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.validation.ValidationResultStack
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class LoginController(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

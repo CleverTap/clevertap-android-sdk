@@ -7,6 +7,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import kotlin.math.abs
+import androidx.annotation.RestrictTo
 
 /**
  * Shared swipe-to-dismiss gesture for partial (header/footer) HTML in-apps, used by both the
@@ -21,6 +22,7 @@ import kotlin.math.abs
  * host's live field (and becomes null once the host cleans up) — no stale reference to a destroyed
  * WebView.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PartialHtmlInAppGestureListener(
     private val webViewProvider: () -> CTInAppWebView?,
     private val scaledPixels: (Int) -> Int,

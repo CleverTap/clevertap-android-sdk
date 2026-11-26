@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import kotlin.math.abs
+import androidx.annotation.RestrictTo
 
 /**
  * Handles drag-to-reposition and tap detection for [com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPCompactView].
@@ -14,6 +15,7 @@ import kotlin.math.abs
  * Usage: call [onInterceptDown] from [View.onInterceptTouchEvent] ACTION_DOWN,
  * [shouldIntercept] for ACTION_MOVE, and [onTouchEvent] from [View.onTouchEvent].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPDragHandler(
     private val view: View,
     private val dragEnabled: Boolean = true,

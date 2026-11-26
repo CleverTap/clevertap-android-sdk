@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationTyp
 import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
+import androidx.annotation.RestrictTo
 /**
  * An implementation of [MemoryAccessObject] for managing GIF images in memory and on disk.
  *
@@ -16,6 +17,7 @@ import java.io.File
  *@param ctCaches An instance of [CTCaches] providing access to the caching mechanisms.
  * @param logger An optional [ILogger] for debugging and tracking purposes.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches,private val logger: ILogger?): MemoryAccessObject<ByteArray> {
     /**
      * Fetches a GIF image from in-memory cache by key.

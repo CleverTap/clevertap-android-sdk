@@ -6,7 +6,9 @@ import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.VerticalImageTemplateData
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class VerticalImageSmallContentView(
     context: Context,
     renderer: TemplateRenderer,

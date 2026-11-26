@@ -2,7 +2,9 @@ package com.clevertap.android.sdk.inapp
 
 import android.content.Context
 import android.os.Bundle
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface InAppListener {
 
     fun inAppNotificationDidClick(

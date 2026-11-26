@@ -9,7 +9,9 @@ import com.clevertap.android.pushtemplates.ActionButton
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Logger
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ActionButtonsContentView(
     context: Context,
     renderer: TemplateRenderer,

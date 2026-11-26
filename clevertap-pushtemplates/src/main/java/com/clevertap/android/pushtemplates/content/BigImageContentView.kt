@@ -4,7 +4,9 @@ import android.content.Context
 import com.clevertap.android.pushtemplates.BasicTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class BigImageContentView(
     context: Context, renderer: TemplateRenderer, data: BasicTemplateData,
     layoutId: Int = R.layout.image_only_big,

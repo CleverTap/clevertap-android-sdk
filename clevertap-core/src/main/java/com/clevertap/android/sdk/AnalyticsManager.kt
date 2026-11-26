@@ -32,7 +32,9 @@ import java.util.concurrent.Future
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class AnalyticsManager(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

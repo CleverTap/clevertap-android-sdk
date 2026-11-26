@@ -5,7 +5,9 @@ import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 import com.clevertap.android.sdk.inapp.InAppDisplayListener
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAppDisplayListener {
 
     private val isCleanedUp = AtomicBoolean()

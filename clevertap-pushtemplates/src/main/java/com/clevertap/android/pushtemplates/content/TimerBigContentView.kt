@@ -4,7 +4,9 @@ import android.content.Context
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class TimerBigContentView(
     context: Context,
     timer_end: Long?,

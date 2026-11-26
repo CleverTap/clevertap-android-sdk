@@ -4,10 +4,12 @@ import android.content.Context
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import androidx.annotation.RestrictTo
 
 /**
  * A Factory to create an instance of [CTLocationAdapter]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTLocationFactory {
 
     /**

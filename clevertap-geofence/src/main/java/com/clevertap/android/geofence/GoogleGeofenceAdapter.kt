@@ -14,11 +14,13 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import androidx.annotation.RestrictTo
 
 /**
  * Communicates with [GeofencingClient] to
  * Register and Unregister geofences to and from OS respectively
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GoogleGeofenceAdapter(context: Context) : CTGeofenceAdapter {
 
     private val context: Context = context.applicationContext

@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.network.fetch
 
+import androidx.annotation.RestrictTo
+
 /**
  * A single-purpose network call — one request, one response. Implementations
  * own:
@@ -11,6 +13,7 @@ package com.clevertap.android.sdk.network.fetch
  * subtype instead. `CancellationException` from coroutines still propagates
  * naturally — don't swallow it.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal fun interface EndpointCall<T> {
 
     /**

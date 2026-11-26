@@ -9,7 +9,9 @@ import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.bakedInto
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutoCarouselContentView(
     context: Context,
     renderer: TemplateRenderer,

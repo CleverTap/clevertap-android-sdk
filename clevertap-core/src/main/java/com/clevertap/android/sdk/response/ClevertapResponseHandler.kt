@@ -2,7 +2,9 @@ package com.clevertap.android.sdk.response
 
 import android.content.Context
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ClevertapResponseHandler(
     val context: Context,
     val responses: List<CleverTapResponse>,

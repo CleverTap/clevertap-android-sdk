@@ -4,7 +4,9 @@ import android.content.Context
 import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ProductDisplayNonLinearSmallContentView(
     context: Context,
     renderer: TemplateRenderer,

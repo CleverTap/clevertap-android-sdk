@@ -16,7 +16,9 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import com.clevertap.android.sdk.inapp.PartialHtmlInAppGestureListener
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragment(),
     OnTouchListener,
     OnLongClickListener {

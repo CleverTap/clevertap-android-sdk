@@ -13,11 +13,13 @@ import androidx.appcompat.widget.AppCompatImageView
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
 /**
  * Represents the close button.
  */
 @SuppressLint("ResourceType")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CloseImageView : AppCompatImageView {
 
     private val iconSize = scaledPixels(Constants.INAPP_CLOSE_IV_WIDTH)

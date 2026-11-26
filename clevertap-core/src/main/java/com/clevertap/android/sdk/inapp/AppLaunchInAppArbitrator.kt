@@ -11,6 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Holds the `/a1` app-launch in-app winner, buffers the `/content` winner, and shows at most one —
@@ -24,6 +25,7 @@ import org.json.JSONObject
  * between [onContentFetchComplete] and a hard [hardTeardownMs] backstop (on this arbiter's own
  * never-cancelled scope) tears the window down, so a skipped completion can't leave it stuck.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AppLaunchInAppArbitrator(
     private val logger: Logger,
     private val logTag: String,

@@ -6,8 +6,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.annotation.RestrictTo
 
 @Suppress("unused")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class GifImageView : AppCompatImageView, Runnable {
 
     fun interface OnFrameAvailable {

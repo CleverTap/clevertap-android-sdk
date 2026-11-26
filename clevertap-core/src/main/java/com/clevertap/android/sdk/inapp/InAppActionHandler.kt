@@ -12,7 +12,9 @@ import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.PushPermissionHandler
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.utils.PlayStoreReviewHandler
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppActionHandler(
     private val context: Context,
     private val ctConfig: CleverTapInstanceConfig,

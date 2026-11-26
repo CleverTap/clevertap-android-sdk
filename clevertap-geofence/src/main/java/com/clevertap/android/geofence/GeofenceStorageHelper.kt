@@ -2,7 +2,9 @@ package com.clevertap.android.geofence
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object GeofenceStorageHelper {
 
     @JvmStatic

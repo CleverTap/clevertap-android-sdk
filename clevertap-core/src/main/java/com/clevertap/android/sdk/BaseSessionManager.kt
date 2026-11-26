@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseSessionManager {
 
     /**

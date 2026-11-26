@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.db
 
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 /**
  * QueueData that holds event data along with cleanup information
  * Used to track which events were fetched for later cleanup
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class QueueData {
     internal val data: JSONArray = JSONArray()
     internal val eventIds: MutableList<String> = mutableListOf()  // IDs from events table

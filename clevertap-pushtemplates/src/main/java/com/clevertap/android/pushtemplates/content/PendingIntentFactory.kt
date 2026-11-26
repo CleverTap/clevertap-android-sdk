@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.Random
+import androidx.annotation.RestrictTo
 
 const val BASIC_CONTENT_PENDING_INTENT = 1
 const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2
@@ -44,6 +45,7 @@ const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
 const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34
 const val PROGRESS_CONTENT_PENDING_INTENT = 35
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PendingIntentFactory {
 
     var launchIntent: Intent? = null

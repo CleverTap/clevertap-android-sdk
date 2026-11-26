@@ -4,11 +4,13 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Unified scheduler that combines timer management with storage strategy
  * Can be used for both delayed and in-action features
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppScheduler<T>(
     private val timerManager: InAppTimerManager,
     internal val storageStrategy: InAppSchedulingStrategy,

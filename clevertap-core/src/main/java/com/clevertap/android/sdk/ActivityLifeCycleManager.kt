@@ -15,7 +15,9 @@ import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ActivityLifeCycleManager(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

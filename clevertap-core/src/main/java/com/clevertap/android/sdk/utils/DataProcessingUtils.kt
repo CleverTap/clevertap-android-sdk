@@ -3,10 +3,12 @@ package com.clevertap.android.sdk.utils
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Constants used throughout the profile merge system.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object DataProcessingUtils {
     /**
      * Processes a string value, removing $D_ prefix if present and converting to long.

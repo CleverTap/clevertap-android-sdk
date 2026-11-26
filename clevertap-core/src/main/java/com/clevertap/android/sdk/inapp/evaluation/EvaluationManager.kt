@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.annotation.RestrictTo
 
 /**
  * Manages the evaluation of in-app notifications for the client and server sides.
@@ -43,6 +44,7 @@ import java.util.Locale
  * @property limitsMatcher An instance of [LimitsMatcher] to match limits for in-app notifications.
  * @property storeRegistry An instance of [StoreRegistry] to access storage for in-app notifications.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EvaluationManager(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
@@ -693,6 +695,7 @@ internal class EvaluationManager(
  * Unified strategy interface for in-app evaluation.
  * Supports both client-side and app launch server-side evaluations with immediate or delayed display.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal sealed interface InAppSelectionStrategy {
     /**
      * Selects eligible in-apps based on strategy-specific logic.

@@ -9,10 +9,12 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
+import androidx.annotation.RestrictTo
 
 /**
  * Shared rendering for the icons template collapsed and expanded views.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class IconsContentView(
     context: Context,
     renderer: TemplateRenderer,

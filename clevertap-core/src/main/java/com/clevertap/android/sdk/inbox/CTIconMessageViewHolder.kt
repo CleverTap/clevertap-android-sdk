@@ -13,10 +13,12 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
 /**
  * Custom Viewholder for Icon Message type of Inbox template
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTIconMessageViewHolder(itemView: View) : CTInboxBaseMessageViewHolder(itemView) {
 
     private val title: TextView = itemView.findViewById(R.id.messageTitle)

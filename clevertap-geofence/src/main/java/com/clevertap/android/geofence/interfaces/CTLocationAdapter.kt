@@ -1,11 +1,13 @@
 package com.clevertap.android.geofence.interfaces
 
 import android.app.PendingIntent
+import androidx.annotation.RestrictTo
 
 /**
  * Interface that defines API-type(Google APIs/Android platform APIs) class that can be used to add
  * and remove background location updates to and from OS respectively
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface CTLocationAdapter {
 
     /**

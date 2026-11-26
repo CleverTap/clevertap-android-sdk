@@ -17,7 +17,9 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ControllerManager(
     private val context: Context,
     val config: CleverTapInstanceConfig,

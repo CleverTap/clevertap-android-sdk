@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.media
 
 import androidx.annotation.MainThread
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
+import androidx.annotation.RestrictTo
 
 /**
  * Singleton cache that keeps an [InAppVideoPlayerHandle] alive across a single configuration
@@ -12,6 +13,7 @@ import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
  *
  * This cache is solely responsible for the player handle and fullscreen state.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object InAppVideoPlayerCache {
 
     private var handle: InAppVideoPlayerHandle? = null

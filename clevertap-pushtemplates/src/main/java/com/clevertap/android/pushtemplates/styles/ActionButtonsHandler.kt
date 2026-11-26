@@ -5,12 +5,14 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
 /**
  * Handles action buttons for notification styles.
  * This class implements the functionality that was previously in StyleWithActionButtons,
  * but using composition instead of inheritance.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ActionButtonsHandler(private val renderer: TemplateRenderer) {
 
     /**

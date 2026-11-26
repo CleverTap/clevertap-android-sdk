@@ -5,7 +5,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPInAppCallbacksBridge(
     private val inAppNotification: CTInAppNotification,
     private val inAppListener: InAppListener,

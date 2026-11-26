@@ -23,8 +23,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ContentFetchManager(
     config: CleverTapInstanceConfig,
     private val coreMetaData: CoreMetaData,

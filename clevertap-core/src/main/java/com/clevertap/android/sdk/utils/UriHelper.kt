@@ -7,7 +7,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import org.json.JSONObject
 import java.net.URLDecoder
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object UriHelper {
 
     fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle {

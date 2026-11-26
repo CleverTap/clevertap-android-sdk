@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.inapp.images.preload
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface FilePreloaderStrategy {
 
     val fileResourceProvider: () -> FileResourceProvider

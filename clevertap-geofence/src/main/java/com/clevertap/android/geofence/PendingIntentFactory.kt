@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import androidx.annotation.RestrictTo
 
 /**
  * A Factory to create [PendingIntent] which will be sent to OS to receive geofence updates
  * through [CTGeofenceReceiver] and location updates through [CTLocationUpdateReceiver]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PendingIntentFactory {
 
     /**

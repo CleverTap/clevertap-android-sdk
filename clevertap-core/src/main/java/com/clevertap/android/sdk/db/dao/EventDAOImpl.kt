@@ -14,7 +14,9 @@ import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EventDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,

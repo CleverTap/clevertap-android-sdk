@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.task.MainLooperHandler
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
 /**
  * Renders *custom-html* "header" and "footer" [CTInAppNotification]s in a [WindowManager] overlay,
@@ -36,6 +37,7 @@ import java.lang.ref.WeakReference
  * [CTHtmlBannerCallbacksBridge]), mirroring how the PIP renderer delegates to
  * [PIPInAppCallbacksBridge].
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppHtmlBannerOverlay(
     private val notification: CTInAppNotification,
     private val config: CleverTapInstanceConfig,

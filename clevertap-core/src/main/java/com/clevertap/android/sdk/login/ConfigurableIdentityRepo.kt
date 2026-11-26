@@ -5,7 +5,9 @@ import com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN
 import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationResultFactory
 import com.clevertap.android.sdk.validation.ValidationResultStack
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ConfigurableIdentityRepo(
     private val config: CleverTapInstanceConfig,
     private val infoProvider: LoginInfoProvider,

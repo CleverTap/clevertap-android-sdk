@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.video.VideoLibChecker
 import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
+import androidx.annotation.RestrictTo
 
 /**
  * Renderer for [com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType.VIDEO].
@@ -21,6 +22,7 @@ import java.util.concurrent.ExecutorService
  * [PIPSession] directly — the coordinator wires the listener and handles
  * session updates.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class VideoRenderer(
     private val resourceProvider: FileResourceProvider,
     private val mediaExecutor: ExecutorService,

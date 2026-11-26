@@ -12,11 +12,13 @@ import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
 import org.json.JSONObject
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
 /**
  * A task of type [CTGeofenceTask] responsible for processing and sending `GeoCluster Entered`
  * or `GeoCluster Exited` events to CleverTap SDK which will in turn send it to server.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushGeofenceEventTask(context: Context, private val intent: Intent) : CTGeofenceTask {
 
     private val context: Context = context.applicationContext

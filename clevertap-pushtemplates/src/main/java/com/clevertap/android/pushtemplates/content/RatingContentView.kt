@@ -11,7 +11,9 @@ import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.Random
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class RatingContentView(
     context: Context,
     renderer: TemplateRenderer,

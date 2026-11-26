@@ -4,11 +4,13 @@ import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Handles UPDATE, INCREMENT, DECREMENT, and GET operations during profile processing.
  * Manages value updates, retrieval, missing keys, and number operations.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class OperationHandler(
     private val changeTracker: ProfileChangeTracker,
     private val arrayHandler: ArrayOperationHandler

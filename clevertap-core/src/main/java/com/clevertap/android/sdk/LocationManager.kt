@@ -7,7 +7,9 @@ import com.clevertap.android.sdk.CleverTapAPI.Companion.isAppForeground
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import java.util.concurrent.Future
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class LocationManager(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

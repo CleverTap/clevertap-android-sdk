@@ -7,7 +7,9 @@ import com.clevertap.android.sdk.StorageHelper
 import androidx.core.content.edit
 import com.clevertap.android.sdk.DeviceInfo
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ArpRepo(
     private val accountId: String,
     private val logger: Logger,

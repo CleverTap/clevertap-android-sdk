@@ -21,8 +21,10 @@ import androidx.media3.exoplayer.trackselection.TrackSelector
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
+import androidx.annotation.RestrictTo
 
 @UnstableApi
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class Media3Handle: InboxVideoPlayerHandle {
 
     private var videoSurfaceView: PlayerView? = null

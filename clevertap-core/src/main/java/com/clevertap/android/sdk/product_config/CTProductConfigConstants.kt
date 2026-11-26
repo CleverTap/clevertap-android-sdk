@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.product_config
 
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTProductConfigConstants {
 
     const val TAG_PRODUCT_CONFIG = "[Product Config]"

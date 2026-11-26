@@ -5,7 +5,9 @@ import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
 import org.json.JSONObject
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseEventQueueManager {
 
     @AnyThread

@@ -18,6 +18,9 @@
  */
 package com.clevertap.android.sdk.gif
 
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GifFrame {
 
     /**

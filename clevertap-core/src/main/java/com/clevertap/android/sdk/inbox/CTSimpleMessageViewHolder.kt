@@ -10,10 +10,12 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
 /**
  * Custom ViewHolder for Simple message layout
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTSimpleMessageViewHolder(itemView: View) : CTInboxBaseMessageViewHolder(itemView) {
 
     private val title: TextView = itemView.findViewById(R.id.messageTitle)

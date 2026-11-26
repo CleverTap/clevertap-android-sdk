@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.pushnotification.preview
 import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * The five push fields that decide which preview a Send Test shows.
@@ -16,6 +17,7 @@ import org.json.JSONObject
  *   wzrk_inapp_s3_url = "https://.../inapp-preview-campaign/1699358338/8bd4..."
  * gives a payload with exactly those two fields.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushPreviewPayload private constructor(
     private val fields: Map<String, String>
 ) {

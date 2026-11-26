@@ -17,7 +17,9 @@ import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 
     protected var webView: CTInAppWebView? = null

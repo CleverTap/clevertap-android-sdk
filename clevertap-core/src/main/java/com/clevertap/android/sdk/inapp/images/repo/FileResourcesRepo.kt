@@ -3,12 +3,14 @@ package com.clevertap.android.sdk.inapp.images.repo
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
+import androidx.annotation.RestrictTo
 /**
  * A repository interface for managing file resources, such as images or other assets.
  *
  * This interface defines methods for preloading, caching, and cleaning up files, providing a structured approach to
  * handling file resources within an application.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface FileResourcesRepo {
     /**
      * The strategy for cleaning up stale or unnecessary files.

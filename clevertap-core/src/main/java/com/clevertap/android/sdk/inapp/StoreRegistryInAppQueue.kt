@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.validation.ValidationResult
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * <p>
@@ -34,6 +35,7 @@ import org.json.JSONObject
  *
  * @constructor Creates an InAppQueue with the given store registry.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class StoreRegistryInAppQueue(
     private val storeRegistry: StoreRegistry,
     private val logTag: String,

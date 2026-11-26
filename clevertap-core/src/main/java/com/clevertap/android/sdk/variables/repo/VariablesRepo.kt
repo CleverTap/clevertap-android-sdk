@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper.getStringFromPrefs
 import com.clevertap.android.sdk.StorageHelper.putString
 import com.clevertap.android.sdk.db.DBEncryptionHandler
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class VariablesRepo(
     val context: Context,
     val accountId: String,

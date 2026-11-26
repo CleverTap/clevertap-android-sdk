@@ -4,7 +4,9 @@ import android.content.Context
 import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class SmallContentView(
     context: Context,
     renderer: TemplateRenderer,

@@ -4,10 +4,12 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN
 import com.clevertap.android.sdk.validation.ValidationResultStack
+import androidx.annotation.RestrictTo
 
 /**
  * Provides Repo instance for an account
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object IdentityRepoFactory {
 
     /**

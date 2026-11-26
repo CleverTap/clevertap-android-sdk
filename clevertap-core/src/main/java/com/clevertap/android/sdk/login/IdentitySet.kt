@@ -2,10 +2,12 @@ package com.clevertap.android.sdk.login
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Utils
+import androidx.annotation.RestrictTo
 
 /**
  * Wrapper class of identities & related behaviors
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class IdentitySet private constructor(private val identities: Set<String>) {
 
     /**

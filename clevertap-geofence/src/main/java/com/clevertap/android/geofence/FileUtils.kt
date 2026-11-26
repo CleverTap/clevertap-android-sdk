@@ -9,8 +9,10 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileWriter
 import java.io.InputStreamReader
+import androidx.annotation.RestrictTo
 
 @Suppress("MemberVisibilityCanBePrivate")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object FileUtils {
 
     @JvmStatic

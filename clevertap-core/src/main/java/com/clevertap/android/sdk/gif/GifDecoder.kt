@@ -27,8 +27,10 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Arrays
+import androidx.annotation.RestrictTo
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
 
     /**

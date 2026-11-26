@@ -17,8 +17,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.minutes
+import androidx.annotation.RestrictTo
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FilePreloaderCoroutine @JvmOverloads constructor(
     override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,

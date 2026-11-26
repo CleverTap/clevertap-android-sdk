@@ -36,12 +36,14 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.Companion.TYPE_BUTTON_CLICK
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import com.clevertap.android.sdk.task.CTExecutorFactory
+import androidx.annotation.RestrictTo
 
 /**
  * Handles the clicks on interactive push templates (rating, product display, input box, manual
  * carousel, five icons, vertical image) and the dismissal of template notifications.
  */
 @Suppress("DEPRECATION")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushTemplateReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {

@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.util.Util
+import androidx.annotation.RestrictTo
 
 /**
  * Handle wrapping exoplayer library used to render video and audio for Inbox feature.
@@ -33,6 +34,7 @@ import com.google.android.exoplayer2.util.Util
     message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
     replaceWith = ReplaceWith("Media3Handle()", "com.clevertap.android.sdk.video.inbox.Media3Handle")
 )
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ExoplayerHandle : InboxVideoPlayerHandle {
 
     private var videoSurfaceView: StyledPlayerView? = null

@@ -21,6 +21,7 @@ import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.video.inbox.Media3PlayerListener
 import kotlin.math.min
+import androidx.annotation.RestrictTo
 
 /**
  * Self-contained video player for PIP in-app notifications.
@@ -30,6 +31,7 @@ import kotlin.math.min
  * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
  * so the PlayerView is created with `useController = false`.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPVideoPlayerWrapper {
 
     private var player: ExoPlayer? = null

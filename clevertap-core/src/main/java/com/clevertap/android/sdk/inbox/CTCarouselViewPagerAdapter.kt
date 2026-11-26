@@ -14,10 +14,12 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.Utils
 import java.lang.ref.WeakReference
+import androidx.annotation.RestrictTo
 
 /**
  * Custom ViewPager Adapter to add views to the Carousel
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTCarouselViewPagerAdapter(
     private val context: Context,
     parent: CTInboxListViewFragment?,

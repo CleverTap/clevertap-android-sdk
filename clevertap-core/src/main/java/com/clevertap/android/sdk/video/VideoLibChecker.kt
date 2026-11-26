@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.video
 
 import com.clevertap.android.sdk.Logger
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object VideoLibChecker {
 
     private val hasExoplayer = checkForExoPlayer()

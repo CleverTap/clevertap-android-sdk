@@ -5,10 +5,12 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
 import com.huawei.hms.push.HmsMessageService
 import com.huawei.hms.push.RemoteMessage
+import androidx.annotation.RestrictTo
 
 /**
  * Clevertap's Implementation for Huawei Message service
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTHmsMessageService : HmsMessageService() {
 
     private val mHandler: IHmsMessageHandler = CTHmsMessageHandler(HmsNotificationParser())

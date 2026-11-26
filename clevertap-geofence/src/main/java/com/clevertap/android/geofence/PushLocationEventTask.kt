@@ -6,11 +6,13 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListener
 import com.google.android.gms.location.LocationResult
 import java.util.concurrent.Future
+import androidx.annotation.RestrictTo
 
 /**
  * A task of type [CTGeofenceTask] responsible for sending Location received from OS to
  * CleverTap SDK which will in turn send it to server to fetch latest geofence list.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushLocationEventTask(
     context: Context,
     private val locationResult: LocationResult

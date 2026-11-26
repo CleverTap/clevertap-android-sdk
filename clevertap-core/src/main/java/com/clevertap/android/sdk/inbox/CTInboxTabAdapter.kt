@@ -4,11 +4,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.annotation.RestrictTo
 
 /**
  * Custom PagerAdapter for Notification Inbox tabs
  */
 @Suppress("DEPRECATION")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class CTInboxTabAdapter(fm: FragmentManager, size: Int) :
     FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 

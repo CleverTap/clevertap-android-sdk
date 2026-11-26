@@ -10,6 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedQueue
+import androidx.annotation.RestrictTo
 
 /**
  * A file cleanup strategy that utilizes Kotlin coroutines for asynchronous operations.
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * @param fileResourceProvider  The provider function for accessing and managing file resources.
  * @param dispatchers The dispatcher provider for managing coroutine execution contexts (defaults to [CtDefaultDispatchers]).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
     override val fileResourceProvider: () -> FileResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()

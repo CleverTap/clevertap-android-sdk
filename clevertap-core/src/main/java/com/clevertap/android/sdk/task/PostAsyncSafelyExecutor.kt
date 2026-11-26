@@ -8,6 +8,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.FutureTask
 import java.util.concurrent.RunnableFuture
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Post async safely executor is nothing but a single thread pool executor
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit
  *
  * A task submitted from the executor's own thread runs synchronously (re-entrancy without deadlock).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PostAsyncSafelyExecutor(
     internal val executor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : ExecutorService {

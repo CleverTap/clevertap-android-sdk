@@ -6,8 +6,10 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
+import androidx.annotation.RestrictTo
 
 @WorkerThread
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class FileUtils(
     private val context: Context,
     private val config: CleverTapInstanceConfig

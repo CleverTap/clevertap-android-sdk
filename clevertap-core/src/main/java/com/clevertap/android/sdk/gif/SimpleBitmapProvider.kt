@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.gif
 
 import android.graphics.Bitmap
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class SimpleBitmapProvider : GifDecoder.BitmapProvider {
 
     override fun obtain(width: Int, height: Int, config: Bitmap.Config): Bitmap =

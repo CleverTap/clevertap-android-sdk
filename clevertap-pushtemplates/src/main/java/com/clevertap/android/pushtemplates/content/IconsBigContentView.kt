@@ -5,7 +5,9 @@ import android.os.Bundle
 import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class IconsBigContentView(
     context: Context,
     renderer: TemplateRenderer,

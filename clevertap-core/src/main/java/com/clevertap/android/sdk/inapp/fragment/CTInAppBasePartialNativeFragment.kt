@@ -17,7 +17,9 @@ import android.widget.LinearLayout
 import kotlin.math.abs
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFragment(),
     OnTouchListener, OnLongClickListener {
 

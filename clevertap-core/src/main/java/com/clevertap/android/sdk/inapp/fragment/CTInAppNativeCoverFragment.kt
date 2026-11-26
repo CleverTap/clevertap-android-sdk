@@ -17,7 +17,9 @@ import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
 import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
     override fun createMediaHandler() = InAppMediaHandler.create(

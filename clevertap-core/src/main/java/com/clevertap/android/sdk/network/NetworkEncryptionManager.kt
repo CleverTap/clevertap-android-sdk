@@ -10,7 +10,9 @@ import com.clevertap.android.sdk.network.api.EncryptionResult
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class NetworkEncryptionManager(
     private val keyGenerator: CTKeyGenerator,
     private val aesgcm: AESGCMCrypt

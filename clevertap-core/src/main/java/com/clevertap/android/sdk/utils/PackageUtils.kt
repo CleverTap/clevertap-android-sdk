@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailabilityLight
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PackageUtils {
 
     private const val GOOGLE_PLAY_STORE_PACKAGE_OLD = "com.google.market"

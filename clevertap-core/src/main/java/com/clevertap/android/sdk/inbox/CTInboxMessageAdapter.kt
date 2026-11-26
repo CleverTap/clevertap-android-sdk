@@ -6,7 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInboxMessageAdapter(
     private val inboxMessages: List<CTInboxMessage>,
     private val fragment: CTInboxListViewFragment

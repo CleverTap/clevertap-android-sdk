@@ -12,7 +12,9 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.ProductDisplayLinearBigContentView
 import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearBigContentView
 import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallContentView
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ProductDisplayStyle(private val data: ProductTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {

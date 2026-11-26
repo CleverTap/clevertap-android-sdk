@@ -7,11 +7,13 @@ import java.nio.charset.StandardCharsets
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import androidx.annotation.RestrictTo
 
 /**
  * This class implements the AES-GCM Crypt algorithm
  *
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AESGCMCrypt(
     private val ctKeyGenerator: CTKeyGenerator
 ) : Crypt() {

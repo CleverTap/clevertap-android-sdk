@@ -68,7 +68,9 @@ import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InAppController(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

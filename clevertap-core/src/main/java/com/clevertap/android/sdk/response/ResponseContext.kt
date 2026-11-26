@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.response
 
+import androidx.annotation.RestrictTo
+
 /**
  * Immutable per-response context threaded through [CleverTapResponse.processResponse] so decorators
  * read request-scoped flags as a method argument instead of shared mutable fields. The fields were
@@ -10,6 +12,7 @@ package com.clevertap.android.sdk.response
  * - [isUserSwitching] — a user switch is in progress (InAppResponse skips the display path).
  * - [source] — which endpoint the response came from ([CTResponseSource]).
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class ResponseContext(
     val isFullResponse: Boolean,
     val isUserSwitching: Boolean,

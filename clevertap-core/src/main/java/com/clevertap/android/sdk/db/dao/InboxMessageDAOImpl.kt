@@ -14,7 +14,9 @@ import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.inbox.InboxIndexState
 import com.clevertap.android.sdk.inbox.InboxMessageSource
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class InboxMessageDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,

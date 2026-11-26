@@ -8,6 +8,7 @@ import java.util.Locale
 import java.util.TreeMap
 import kotlin.math.abs
 import kotlin.math.floor
+import androidx.annotation.RestrictTo
 
 /**
  * Turns a [PushPreviewPayload] into a stable 64 character hex key.
@@ -20,6 +21,7 @@ import kotlin.math.floor
  * the JSON in between, still give the same key because the JSON is
  * canonicalised (sorted keys, no whitespace) before hashing.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PushPreviewKey {
 
     private const val SEPARATOR = '\u0000'
@@ -80,6 +82,7 @@ internal object PushPreviewKey {
  * from the backend are standard JSON under 4 KB (the FCM cap) and a few levels deep,
  * so they are never refused.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CanonicalJson {
 
     /** Well above the FCM payload cap, well below anything that could hurt. */

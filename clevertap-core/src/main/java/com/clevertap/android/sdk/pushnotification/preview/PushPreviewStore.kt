@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Keeps trusted copies of Send Test previews (SDK-6282).
@@ -29,6 +30,7 @@ import org.json.JSONObject
  * _createNotification, seen again at 10:00:00.340 by pushNotificationViewedEvent,
  * skipped.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushPreviewStore(
     private val context: Context,
     private val databaseManager: BaseDatabaseManager,

@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.pushnotification.CTPushProvider
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.sdk.pushnotification.PushType
+import androidx.annotation.RestrictTo
 
 /**
  * Clevertap's Firebase Plugin Ref: [CTPushProvider]
@@ -15,6 +16,7 @@ import com.clevertap.android.sdk.pushnotification.PushType
  * through the `(CTPushProviderListener, Context, CleverTapInstanceConfig)` constructor.
  */
 @SuppressLint("unused")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class FcmPushProvider @SuppressLint("unused") constructor(
     ctPushListener: CTPushProviderListener,
     context: Context,

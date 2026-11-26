@@ -5,11 +5,13 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import kotlin.math.min
+import androidx.annotation.RestrictTo
 
 /**
  * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, UPDATE, and array element processing.
  * Supports both simple array operations and complex element-wise operations.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTracker) {
 
     /**

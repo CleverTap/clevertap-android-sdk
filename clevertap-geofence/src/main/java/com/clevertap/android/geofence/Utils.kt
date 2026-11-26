@@ -11,7 +11,9 @@ import com.clevertap.android.sdk.CleverTapAPI
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object Utils {
 
     private var isPlayServicesDependencyAvailable: Boolean? = null

@@ -13,10 +13,12 @@ import com.huawei.agconnect.AGConnectOptionsBuilder
 import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.api.HuaweiApiAvailability
 import org.jetbrains.annotations.TestOnly
+import androidx.annotation.RestrictTo
 
 /**
  * Implementation of [IHmsSdkHandler]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class HmsSdkHandler(
     context: Context,
     private val mConfig: CleverTapInstanceConfig?

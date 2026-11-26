@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.utils.CTJsonConverter.pushIdsToJSONArray
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class PushAmpResponse(
     private val context: Context,
     private val config: CleverTapInstanceConfig,

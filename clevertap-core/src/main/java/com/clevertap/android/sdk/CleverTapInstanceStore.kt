@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import java.util.concurrent.ConcurrentHashMap
+import androidx.annotation.RestrictTo
 
 /**
  * Thread-safe registry of live [CleverTapAPI] instances, keyed by `accountId`.
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * [getOrCreate] makes the check-then-create atomic so exactly one instance exists per account.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CleverTapInstanceStore {
 
     private val instances = ConcurrentHashMap<String, CleverTapAPI>()

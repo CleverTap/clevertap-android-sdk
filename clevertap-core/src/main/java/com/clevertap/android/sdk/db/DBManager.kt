@@ -11,7 +11,9 @@ import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DBManager constructor(
     private val accountId: String,
     private val logger: ILogger,

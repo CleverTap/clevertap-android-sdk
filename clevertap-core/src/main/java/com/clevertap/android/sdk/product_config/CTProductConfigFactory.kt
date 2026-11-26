@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.utils.FileUtils
+import androidx.annotation.RestrictTo
 
 /**
  * Factory class to get [CTProductConfigController] instance for a particular configuration
@@ -15,6 +16,7 @@ import com.clevertap.android.sdk.utils.FileUtils
  */
 @Suppress("DEPRECATION")
 @Deprecated("This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTProductConfigFactory {
 
     /**

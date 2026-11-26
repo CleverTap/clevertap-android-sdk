@@ -20,6 +20,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import java.util.concurrent.TimeUnit
+import androidx.annotation.RestrictTo
 
 /**
  * Communicates with [FusedLocationProviderClient] and [WorkManager] to
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit
  * ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC]) or
  * ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC]) and config settings
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GoogleLocationAdapter(context: Context) : CTLocationAdapter {
 
     private var backgroundLocationUpdatesEnabled = false

@@ -13,10 +13,12 @@ import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailabl
 import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import androidx.annotation.RestrictTo
 
 /**
  * implementation of [IFcmMessageHandler]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class FcmSdkHandlerImpl(
     private val listener: CTPushProviderListener,
     private val context: Context,

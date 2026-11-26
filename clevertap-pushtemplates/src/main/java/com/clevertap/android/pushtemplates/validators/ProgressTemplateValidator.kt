@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates.validators
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.ProgressTemplateData
 import com.clevertap.android.pushtemplates.checkers.Checker
+import androidx.annotation.RestrictTo
 
 /**
  * Validator for the progress-centric (`pt_progress`) template. Both tiers (native
@@ -15,6 +16,7 @@ import com.clevertap.android.pushtemplates.checkers.Checker
  * - **a progress indicator** — at least one of: segments, points, the indeterminate flag, or a
  *   `pt_progress` value. Without any of these there is nothing to draw.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ProgressTemplateValidator(private val data: ProgressTemplateData) : Validator(emptyMap()) {
 
     override fun loadKeys(): List<Checker<out Any>> = emptyList()

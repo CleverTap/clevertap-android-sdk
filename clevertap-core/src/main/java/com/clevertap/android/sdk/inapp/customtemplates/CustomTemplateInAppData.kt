@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
 
     var templateName: String?

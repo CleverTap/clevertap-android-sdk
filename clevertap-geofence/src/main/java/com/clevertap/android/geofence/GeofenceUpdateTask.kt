@@ -8,11 +8,13 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListen
 import com.clevertap.android.geofence.model.CTGeofence
 import com.google.android.gms.tasks.OnSuccessListener
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * A task of type [CTGeofenceTask] responsible for Adding/Replacing(remove followed by add)
  * Geofences into file and OS
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GeofenceUpdateTask(context: Context, private val fenceList: JSONObject?) : CTGeofenceTask {
 
     private val context: Context = context.applicationContext

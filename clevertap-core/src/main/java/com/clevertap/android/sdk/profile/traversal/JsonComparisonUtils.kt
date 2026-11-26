@@ -2,11 +2,13 @@ package com.clevertap.android.sdk.profile.traversal
 
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Utilities for comparing JSON objects and arrays for equality.
  * Provides deep equality checks that work correctly with nested structures.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object JsonComparisonUtils {
 
     /**

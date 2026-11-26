@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTInAppHtmlInterstitialFragment : CTInAppBaseFullHtmlFragment() {
 
     override fun onCreateView(

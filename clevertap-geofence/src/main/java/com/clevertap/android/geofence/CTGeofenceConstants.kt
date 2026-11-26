@@ -1,5 +1,8 @@
 package com.clevertap.android.geofence
 
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTGeofenceConstants {
 
     const val KEY_GEOFENCES: String = "geofences"

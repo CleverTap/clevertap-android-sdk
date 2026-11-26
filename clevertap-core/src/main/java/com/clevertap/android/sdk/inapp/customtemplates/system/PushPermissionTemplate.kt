@@ -3,7 +3,9 @@ package com.clevertap.android.sdk.inapp.customtemplates.system
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.function
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object PushPermissionTemplate {
     private const val NAME = "ctsystem_pushpermission"
     // Indicates whether to fallback to system settings when permission is denied

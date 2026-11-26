@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Channel-agnostic algorithms for the `/a1` header "vote" lists — the evaluated-campaign ids and the
@@ -12,6 +13,7 @@ import org.json.JSONObject
  * (`inapps_eval`/`inapps_suppressed`) and ND (`adUnit_eval`/`adUnit_suppressed`); only the wire keys
  * and persistence sinks differ. The lists themselves stay owned by each evaluator.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object HeaderVoteLists {
 
     /**

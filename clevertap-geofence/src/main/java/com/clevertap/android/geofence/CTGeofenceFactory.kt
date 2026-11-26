@@ -4,10 +4,12 @@ import android.content.Context
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import androidx.annotation.RestrictTo
 
 /**
  * A Factory to create an instance of [CTGeofenceAdapter]
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object CTGeofenceFactory {
 
     /**

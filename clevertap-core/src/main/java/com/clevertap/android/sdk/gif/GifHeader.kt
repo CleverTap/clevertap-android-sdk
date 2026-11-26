@@ -18,7 +18,10 @@
  */
 package com.clevertap.android.sdk.gif
 
+import androidx.annotation.RestrictTo
+
 @Suppress("unused")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class GifHeader {
 
     var bgColor = 0

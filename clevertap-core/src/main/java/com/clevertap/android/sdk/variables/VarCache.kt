@@ -13,12 +13,14 @@ import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
+import androidx.annotation.RestrictTo
 
 /**
  * Variable cache.
  *
  * @author Ansh Sachdeva.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class VarCache(
     private val instanceConfig: CleverTapInstanceConfig,
     private val variablesCtx: Context,

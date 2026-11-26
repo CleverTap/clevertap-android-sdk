@@ -6,7 +6,9 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver
 import com.clevertap.android.sdk.task.CTExecutorFactory
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PTPushNotificationReceiver : CTPushNotificationReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {

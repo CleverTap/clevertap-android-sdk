@@ -5,9 +5,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
 import kotlin.math.roundToInt
+import androidx.annotation.RestrictTo
 
 @Suppress("SuspiciousNameCombination")
 @SuppressLint("AppCompatCustomView")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class RectangleImageView : ImageView {
 
     constructor(context: Context) : super(context)
