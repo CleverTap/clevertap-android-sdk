@@ -10,7 +10,8 @@ no UI changes. Reading the diff is not enough, so compare the compiled output.
 
 ## Steps
 
-1. Check out the base branch (usually `develop`) and build it from a clean state, then keep the classes:
+1. Build the base in a separate clean worktree, so your uncommitted edits cannot leak into it:
+   `git worktree add ../base-check <base>` (the base is usually `develop`), then in `../base-check` run
    `./gradlew :<changed-module>:clean :<changed-module>:compileDebugKotlin :<changed-module>:compileDebugJavaWithJavac`
    (use the module you changed, for example `clevertap-core` or `clevertap-geofence`; repeat for each one).
    For `sample`, which has flavors (`local`, `remote`, `staging`), use the flavor task and path instead, for example
@@ -19,8 +20,9 @@ no UI changes. Reading the diff is not enough, so compare the compiled output.
    `build/intermediates/javac/localDebug/compileLocalDebugJavaWithJavac/classes`.
    Copy these folders, relative to `<changed-module>/`: `build/tmp/kotlin-classes/debug` and
    `build/intermediates/javac/debug/compileDebugJavaWithJavac/classes` to a scratch folder.
-2. Check out your branch, build the same module the same way (with `clean` again, so deleted or renamed
-   classes from the first build do not stay behind), and copy the same folders to a second scratch folder.
+2. In your own working tree (with your changes, committed or not), build the same module the same way, with
+   `clean` first so deleted or renamed classes from an earlier build do not stay behind, and copy the same
+   folders to a second scratch folder. Remove the worktree when done: `git worktree remove ../base-check`.
 3. Compare the two folders byte by byte. Files that are identical need no more work.
 4. For files that differ, disassemble both with `javap -c -p -constants` and compare. Remove the constant
    pool numbers (`#12`) and the `Compiled from` lines first, because those move when imports change.

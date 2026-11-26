@@ -275,6 +275,7 @@ Every row lists **all four module versions**, not only the ones that changed. Re
 Built and **verified working on 2026-07-30** (real 10 MB APK uploaded end to end).
 
 ```bash
+export BR_DRIVE_FOLDER_ID=<drive folder id>   # ask the release owner, or pass --folder <id> instead
 ~/.venvs/br-drive/bin/python .claude/skills/release/scripts/upload_br_apks.py <apk> [<apk> ...]
 ```
 

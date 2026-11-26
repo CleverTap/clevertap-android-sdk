@@ -408,6 +408,7 @@ human choice, not derivable.
 **Upload with the script** — set up and verified working on 2026-07-30:
 
 ```bash
+# First: export BR_DRIVE_FOLDER_ID=<drive folder id> (ask the release owner), or add --folder <id> below.
 # SDK_DIR = the path of this SDK repo (the working directory may be CT-Apps by now)
 ~/.venvs/br-drive/bin/python "$SDK_DIR/.claude/skills/release/scripts/upload_br_apks.py" \
   <release.apk> <debug.apk>
