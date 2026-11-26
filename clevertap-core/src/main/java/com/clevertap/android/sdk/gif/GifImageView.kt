@@ -27,13 +27,7 @@ internal open class GifImageView : AppCompatImageView, Runnable {
 
     private var animating = false
 
-    private var animationStartCallback: OnAnimationStart? = null
-
-    private var animationStopCallback: OnAnimationStop? = null
-
     private var animationThread: Thread? = null
-
-    private var frameCallback: OnFrameAvailable? = null
 
     /**
      * Custom display duration in milliseconds for the all frames. Should be set before [startAnimation].
@@ -59,14 +53,20 @@ internal open class GifImageView : AppCompatImageView, Runnable {
     }
 
     private val updateResults = Runnable {
-        if (tmpBitmap != null && !tmpBitmap!!.isRecycled) {
-            setImageBitmap(tmpBitmap)
+        val bitmap = tmpBitmap
+        if (bitmap != null && !bitmap.isRecycled) {
+            setImageBitmap(bitmap)
         }
     }
 
+    // Inflated from XML layouts: keep the framework constructors.
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     constructor(context: Context) : super(context)
+
+    /** The decoder of the current GIF; using the view before [setBytes] succeeded fails here, as before. */
+    private val decoder: GifDecoder
+        get() = checkNotNull(gifDecoder) { "No GIF decoded" }
 
     open fun clear() {
         animating = false
@@ -82,31 +82,26 @@ internal open class GifImageView : AppCompatImageView, Runnable {
      * @return frame count.
      */
     open val frameCount: Int
-        get() = gifDecoder!!.getFrameCount()
+        get() = decoder.getFrameCount()
 
     open val gifHeight: Int
-        get() = gifDecoder!!.getHeight()
+        get() = decoder.getHeight()
 
     open val gifWidth: Int
-        get() = gifDecoder!!.getWidth()
+        get() = decoder.getWidth()
 
-    open var onAnimationStop: OnAnimationStop?
-        get() = animationStopCallback
-        set(animationStop) {
-            this.animationStopCallback = animationStop
-        }
+    open var onAnimationStart: OnAnimationStart? = null
 
-    open var onFrameAvailable: OnFrameAvailable?
-        get() = frameCallback
-        set(frameProcessor) {
-            this.frameCallback = frameProcessor
-        }
+    open var onAnimationStop: OnAnimationStop? = null
+
+    open var onFrameAvailable: OnFrameAvailable? = null
 
     open fun gotoFrame(frame: Int) {
-        if (gifDecoder!!.getCurrentFrameIndex() == frame) {
+        val decoder = decoder
+        if (decoder.getCurrentFrameIndex() == frame) {
             return
         }
-        if (gifDecoder!!.setFrameIndex(frame - 1) && !animating) {
+        if (decoder.setFrameIndex(frame - 1) && !animating) {
             renderFrame = true
             startAnimationThread()
         }
@@ -116,27 +111,25 @@ internal open class GifImageView : AppCompatImageView, Runnable {
         get() = animating
 
     open fun resetAnimation() {
-        gifDecoder!!.resetLoopIndex()
+        decoder.resetLoopIndex()
         gotoFrame(0)
     }
 
     override fun run() {
-        animationStartCallback?.onAnimationStart()
+        onAnimationStart?.onAnimationStart()
 
         do {
             if (!animating && !renderFrame) {
                 break
             }
-            val advance = gifDecoder!!.advance()
+            val advance = decoder.advance()
 
             //milliseconds spent on frame decode
             var frameDecodeTime: Long = 0
             try {
                 val before = System.nanoTime()
-                tmpBitmap = gifDecoder!!.getNextFrame()
-                if (frameCallback != null) {
-                    tmpBitmap = frameCallback!!.onFrameAvailable(tmpBitmap)
-                }
+                tmpBitmap = decoder.getNextFrame()
+                onFrameAvailable?.let { tmpBitmap = it.onFrameAvailable(tmpBitmap) }
                 frameDecodeTime = (System.nanoTime() - before) / 1000000
                 handler.post(updateResults)
             } catch (e: ArrayIndexOutOfBoundsException) {
@@ -151,11 +144,10 @@ internal open class GifImageView : AppCompatImageView, Runnable {
                 break
             }
             try {
-                var delay = gifDecoder!!.getNextDelay()
                 // Sleep for frame duration minus time already spent on frame decode
                 // Actually we need next frame decode duration here,
                 // but I use previous frame time to make code more readable
-                delay = (delay - frameDecodeTime).toInt()
+                val delay = (decoder.getNextDelay() - frameDecodeTime).toInt()
                 if (delay > 0) {
                     Thread.sleep(if (framesDisplayDuration > 0) framesDisplayDuration else delay.toLong())
                 }
@@ -169,13 +161,14 @@ internal open class GifImageView : AppCompatImageView, Runnable {
         }
         animationThread = null
 
-        animationStopCallback?.onAnimationStop()
+        onAnimationStop?.onAnimationStop()
     }
 
     open fun setBytes(bytes: ByteArray?) {
-        gifDecoder = GifDecoder()
+        val decoder = GifDecoder()
+        gifDecoder = decoder
         try {
-            gifDecoder!!.read(bytes)
+            decoder.read(bytes)
         } catch (e: Exception) {
             gifDecoder = null
             //Log.e(TAG, e.getMessage(), e);
@@ -189,10 +182,6 @@ internal open class GifImageView : AppCompatImageView, Runnable {
         }
     }
 
-    open fun setOnAnimationStart(animationStart: OnAnimationStart?) {
-        this.animationStartCallback = animationStart
-    }
-
     open fun startAnimation() {
         animating = true
         startAnimationThread()
@@ -200,11 +189,8 @@ internal open class GifImageView : AppCompatImageView, Runnable {
 
     open fun stopAnimation() {
         animating = false
-
-        if (animationThread != null) {
-            animationThread!!.interrupt()
-            animationThread = null
-        }
+        animationThread?.interrupt()
+        animationThread = null
     }
 
     override fun onDetachedFromWindow() {
@@ -212,14 +198,13 @@ internal open class GifImageView : AppCompatImageView, Runnable {
         clear()
     }
 
-    private fun canStart(): Boolean {
-        return (animating || renderFrame) && gifDecoder != null && animationThread == null
-    }
+    private fun canStart(): Boolean = (animating || renderFrame) && gifDecoder != null && animationThread == null
 
     private fun startAnimationThread() {
         if (canStart()) {
-            animationThread = Thread(this)
-            animationThread!!.start()
+            val thread = Thread(this)
+            animationThread = thread
+            thread.start()
         }
     }
 

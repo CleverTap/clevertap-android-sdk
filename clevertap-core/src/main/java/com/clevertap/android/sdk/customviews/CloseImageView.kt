@@ -17,30 +17,21 @@ import com.clevertap.android.sdk.R
 /**
  * Represents the close button.
  */
+@SuppressLint("ResourceType")
 internal class CloseImageView : AppCompatImageView {
 
-    private val iconSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH)
-    private val touchTargetSize = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH)
+    private val iconSize = scaledPixels(Constants.INAPP_CLOSE_IV_WIDTH)
+    private val touchTargetSize = scaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH)
 
-    @SuppressLint("ResourceType")
-    constructor(context: Context) : super(context) {
+    // Inflated from XML layouts: keep the framework constructors (the init block runs for each).
+    constructor(context: Context) : super(context)
+
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
+
+    init {
         id = VIEW_ID
-        initAccessibility(context)
-    }
-
-    @SuppressLint("ResourceType")
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        id = VIEW_ID
-        initAccessibility(context)
-    }
-
-    @SuppressLint("ResourceType")
-    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle) {
-        id = VIEW_ID
-        initAccessibility(context)
-    }
-
-    private fun initAccessibility(context: Context) {
         contentDescription = context.getString(R.string.ct_inapp_close_btn)
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
     }
@@ -49,20 +40,15 @@ internal class CloseImageView : AppCompatImageView {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         try {
-            val context = context
             // Static R reference (instead of getIdentifier) so R8 resource shrinking cannot strip ct_close
             val closeBitmap: Bitmap? = BitmapFactory.decodeResource(context.resources, R.drawable.ct_close, null)
-
-            if (closeBitmap != null) {
-                val scaledCloseBitmap = Bitmap.createScaledBitmap(
-                    closeBitmap,
-                    iconSize, iconSize, true
-                )
-                val offset = (touchTargetSize - iconSize) / 2f
-                canvas.drawBitmap(scaledCloseBitmap, offset, offset, Paint())
-            } else {
+            if (closeBitmap == null) {
                 Logger.v("Unable to find inapp notif close button image")
+                return
             }
+            val scaledCloseBitmap = Bitmap.createScaledBitmap(closeBitmap, iconSize, iconSize, true)
+            val offset = (touchTargetSize - iconSize) / 2f
+            canvas.drawBitmap(scaledCloseBitmap, offset, offset, Paint())
         } catch (t: Throwable) {
             Logger.v("Error displaying the inapp notif close button image:", t)
         }
@@ -74,12 +60,8 @@ internal class CloseImageView : AppCompatImageView {
     }
 
     @Suppress("SameParameterValue")
-    private fun getScaledPixels(raw: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            raw.toFloat(), resources.displayMetrics
-        ).toInt()
-    }
+    private fun scaledPixels(raw: Int): Int =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, raw.toFloat(), resources.displayMetrics).toInt()
 
     companion object {
         const val VIEW_ID = 199272

@@ -17,8 +17,7 @@ internal open class HorizontalSquareImageView : ImageView {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
-        val height = measuredHeight
         @Suppress("SuspiciousNameCombination")
-        setMeasuredDimension(height, height)
+        setMeasuredDimension(measuredHeight, measuredHeight)
     }
 }

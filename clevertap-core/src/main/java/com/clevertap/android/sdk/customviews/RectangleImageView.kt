@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
+import kotlin.math.roundToInt
 
 @Suppress("SuspiciousNameCombination")
 @SuppressLint("AppCompatCustomView")
@@ -18,8 +19,6 @@ internal open class RectangleImageView : ImageView {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
-        val width = measuredWidth * 0.5625f
-        val finalWidth = Math.round(width)
-        setMeasuredDimension(measuredWidth, finalWidth)
+        setMeasuredDimension(measuredWidth, (measuredWidth * 0.5625f).roundToInt())
     }
 }
