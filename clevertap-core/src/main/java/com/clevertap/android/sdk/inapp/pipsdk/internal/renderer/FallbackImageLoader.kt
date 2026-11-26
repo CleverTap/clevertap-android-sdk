@@ -70,14 +70,19 @@ internal object FallbackImageLoader {
             request.mediaExecutor.execute {
                 val fetched = request.resourceProvider.fetchInAppImageV1(fallbackUrl)
                 request.container.post {
-                    if (request.isReleased()) return@post
+                    if (request.isReleased()) {
+                        return@post
+                    }
                     if (fetched != null) {
                         if (request.onBitmapReady?.invoke(fetched) != true) {
                             addFallbackImageView(request.container, fetched)
                         }
                         request.onSuccess?.invoke()
                     } else {
-                        request.callbacks?.onMediaError(request.primaryUrl, "${request.errorContext} and fallback failed")
+                        request.callbacks?.onMediaError(
+                            request.primaryUrl,
+                            "${request.errorContext} and fallback failed"
+                        )
                         request.onTotalFailure?.invoke()
                     }
                 }

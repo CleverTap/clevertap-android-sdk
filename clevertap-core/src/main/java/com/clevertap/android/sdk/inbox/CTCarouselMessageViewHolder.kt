@@ -89,7 +89,8 @@ internal class CTCarouselMessageViewHolder(itemView: View) : CTInboxBaseMessageV
 
         //Loads the viewpager
         val layoutParams = imageViewPager.layoutParams as LinearLayout.LayoutParams?
-        val carouselViewPagerAdapter = CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position)
+        val carouselViewPagerAdapter =
+            CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position)
         // Detach the recycled holder's listener BEFORE swapping the adapter. setAdapter() resets
         // the current item to 0, and that dispatch would otherwise reach a listener still holding
         // the previous message's data and dots array.

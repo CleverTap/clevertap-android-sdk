@@ -378,13 +378,13 @@ internal class NetworkManager constructor(
                     notifyNetworkHeaderListeners = notifyNetworkHeaderListeners,
                     isUserSwitchFlush = isUserSwitchFlush
                 ).also { isProcessed ->
-                    responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
+                    responseFailureCount = if (isProcessed) { 0 } else { responseFailureCount + 1 }
                 }
             }
 
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
                 handlePushImpressionsResponse(response = response).also { isProcessed ->
-                    responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
+                    responseFailureCount = if (isProcessed) { 0 } else { responseFailureCount + 1 }
                 }
             }
         }

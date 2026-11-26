@@ -137,13 +137,21 @@ internal class AESGCMCrypt(
         val encryptedBytes: ByteArray
     ) {
         override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+            if (this === other) {
+                return true
+            }
+            if (javaClass != other?.javaClass) {
+                return false
+            }
 
             other as AESGCMCryptResult
 
-            if (!iv.contentEquals(other.iv)) return false
-            if (!encryptedBytes.contentEquals(other.encryptedBytes)) return false
+            if (!iv.contentEquals(other.iv)) {
+                return false
+            }
+            if (!encryptedBytes.contentEquals(other.encryptedBytes)) {
+                return false
+            }
 
             return true
         }

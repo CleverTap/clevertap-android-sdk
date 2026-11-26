@@ -486,7 +486,8 @@ public open class CleverTapAPI internal constructor(
     /** Kotlin property syntax, equivalent to [getCTNotificationInboxListener] / [setCTNotificationInboxListener]. */
     public var ctNotificationInboxListener: CTInboxListener?
         @JvmSynthetic @JvmName("ktGetCTNotificationInboxListener") inline get() = getCTNotificationInboxListener()
-        @JvmSynthetic @JvmName("ktSetCTNotificationInboxListener") inline set(value) = setCTNotificationInboxListener(value)
+        @JvmSynthetic @JvmName("ktSetCTNotificationInboxListener")
+        inline set(value) = setCTNotificationInboxListener(value)
 
     //Debug
 
@@ -511,7 +512,8 @@ public open class CleverTapAPI internal constructor(
      *
      * Getter returns the [CTPushNotificationListener] object; setter sets the CTPushNotificationListener.
      */
-    public open fun getCTPushNotificationListener(): CTPushNotificationListener? = coreState.callbackManager.pushNotificationListener
+    public open fun getCTPushNotificationListener(): CTPushNotificationListener? =
+        coreState.callbackManager.pushNotificationListener
 
     public open fun setCTPushNotificationListener(pushNotificationListener: CTPushNotificationListener?) {
         coreState.callbackManager.pushNotificationListener = pushNotificationListener
@@ -520,7 +522,8 @@ public open class CleverTapAPI internal constructor(
     /** Kotlin property syntax, equivalent to [getCTPushNotificationListener] / [setCTPushNotificationListener]. */
     public var ctPushNotificationListener: CTPushNotificationListener?
         @JvmSynthetic @JvmName("ktGetCTPushNotificationListener") inline get() = getCTPushNotificationListener()
-        @JvmSynthetic @JvmName("ktSetCTPushNotificationListener") inline set(value) = setCTPushNotificationListener(value)
+        @JvmSynthetic @JvmName("ktSetCTPushNotificationListener")
+        inline set(value) = setCTPushNotificationListener(value)
 
     /**
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
@@ -622,7 +625,9 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [getUserEventLog] instead.
      * getUserEventLog() provides user-specific event log.
      */
-    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log.")
+    @Deprecated(
+        "since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log."
+    )
     public open fun getDetails(event: String?): EventDetail? = coreState.localDataStore.getEventDetail(event)
 
     /**
@@ -666,7 +671,8 @@ public open class CleverTapAPI internal constructor(
      *
      * Getter returns the [DevicePushTokenRefreshListener] object; setter sets it.
      */
-    public open fun getDevicePushTokenRefreshListener(): DevicePushTokenRefreshListener? = coreState.pushProviders.getDevicePushTokenRefreshListener()
+    public open fun getDevicePushTokenRefreshListener(): DevicePushTokenRefreshListener? =
+        coreState.pushProviders.getDevicePushTokenRefreshListener()
 
     public open fun setDevicePushTokenRefreshListener(tokenRefreshListener: DevicePushTokenRefreshListener?) {
         coreState.pushProviders.setDevicePushTokenRefreshListener(tokenRefreshListener)
@@ -675,7 +681,8 @@ public open class CleverTapAPI internal constructor(
     /** Kotlin property syntax, equivalent to [getDevicePushTokenRefreshListener] / [setDevicePushTokenRefreshListener]. */
     public var devicePushTokenRefreshListener: DevicePushTokenRefreshListener?
         @JvmSynthetic @JvmName("ktGetDevicePushTokenRefreshListener") inline get() = getDevicePushTokenRefreshListener()
-        @JvmSynthetic @JvmName("ktSetDevicePushTokenRefreshListener") inline set(value) = setDevicePushTokenRefreshListener(value)
+        @JvmSynthetic @JvmName("ktSetDevicePushTokenRefreshListener")
+        inline set(value) = setDevicePushTokenRefreshListener(value)
 
     /**
      * This method is used to set the RequestDevicePushTokenListener object
@@ -806,7 +813,8 @@ public open class CleverTapAPI internal constructor(
      *
      * Getter returns the [InAppNotificationListener] object; setter sets it.
      */
-    public open fun getInAppNotificationListener(): InAppNotificationListener? = coreState.callbackManager.inAppNotificationListener
+    public open fun getInAppNotificationListener(): InAppNotificationListener? =
+        coreState.callbackManager.inAppNotificationListener
 
     public open fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?) {
         coreState.callbackManager.inAppNotificationListener = inAppNotificationListener
@@ -1069,7 +1077,8 @@ public open class CleverTapAPI internal constructor(
      * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
-    public open fun getTotalVisits(): Int = coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
+    public open fun getTotalVisits(): Int =
+        coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
 
     /** Kotlin property syntax, equivalent to [getTotalVisits]. */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
@@ -2834,7 +2843,7 @@ public open class CleverTapAPI internal constructor(
                 taskName = taskName,
                 failureMessage = "Failure creating Notification Channel",
                 action = @RequiresApi(api = Build.VERSION_CODES.O) { instance, notificationManager ->
-                    val soundUri = if (customSound) soundUri(context, instance, sound) else null
+                    val soundUri = if (customSound) { soundUri(context, instance, sound) } else { null }
                     val notificationChannel = NotificationChannel(channelId, channelName, importance).apply {
                         description = channelDescription
                         group = groupId // null (the default) for the overloads without a group
@@ -3306,13 +3315,17 @@ public open class CleverTapAPI internal constructor(
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
-        public fun addNotificationRenderedListener(id: String?, notificationRenderedListener: NotificationRenderedListener?) {
+        public fun addNotificationRenderedListener(
+            id: String?,
+            notificationRenderedListener: NotificationRenderedListener?
+        ) {
             notificationRenderedListeners[id] = notificationRenderedListener
         }
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
-        public fun getNotificationRenderedListener(id: String?): NotificationRenderedListener? = notificationRenderedListeners[id]
+        public fun getNotificationRenderedListener(id: String?): NotificationRenderedListener? =
+            notificationRenderedListeners[id]
 
         @RestrictTo(Scope.LIBRARY_GROUP)
         @JvmStatic
@@ -3457,7 +3470,9 @@ public open class CleverTapAPI internal constructor(
             val spikyProxyDomain = manifest.spikeyProxyDomain
             val handshakeDomain = manifest.handshakeDomain
             if (accountId == null || accountToken == null) {
-                Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance")
+                Logger.i(
+                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance"
+                )
                 return null
             }
             if (accountRegion == null) {
@@ -3512,7 +3527,8 @@ public open class CleverTapAPI internal constructor(
         }
 
         @JvmStatic
-        public fun getLiveUpdateNotificationFactory(): ICleverTapLiveUpdateNotificationFactory? = liveUpdateNotificationFactory
+        public fun getLiveUpdateNotificationFactory(): ICleverTapLiveUpdateNotificationFactory? =
+            liveUpdateNotificationFactory
 
         @JvmStatic
         public fun setSignedCallNotificationHandler(notificationHandler: NotificationHandler?) {
@@ -3539,7 +3555,9 @@ public open class CleverTapAPI internal constructor(
             context: Context?, bundle: Bundle?, bitmapSrcUrl: String?,
             fallbackToAppIcon: Boolean, timeoutInMillis: Long, sizeInBytes: Int
         ): Bitmap? {
-            if (checkNotificationBitmapRequestInvalid(context, bundle, timeoutInMillis)) return null
+            if (checkNotificationBitmapRequestInvalid(context, bundle, timeoutInMillis)) {
+                return null
+            }
 
             if (sizeInBytes < 1) {
                 Logger.v("Given sizeInBytes is less than 1 bytes. Not downloading bitmap!")
@@ -3563,7 +3581,11 @@ public open class CleverTapAPI internal constructor(
             ).bitmap
         }
 
-        private fun checkNotificationBitmapRequestInvalid(context: Context?, bundle: Bundle?, timeoutInMillis: Long): Boolean {
+        private fun checkNotificationBitmapRequestInvalid(
+            context: Context?,
+            bundle: Bundle?,
+            timeoutInMillis: Long
+        ): Boolean {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 Logger.v("Notification Bitmap Download is not allowed on main thread")
                 return true
@@ -3606,7 +3628,9 @@ public open class CleverTapAPI internal constructor(
             context: Context?, bundle: Bundle?, bitmapSrcUrl: String?,
             fallbackToAppIcon: Boolean, timeoutInMillis: Long
         ): Bitmap? {
-            if (checkNotificationBitmapRequestInvalid(context, bundle, timeoutInMillis)) return null
+            if (checkNotificationBitmapRequestInvalid(context, bundle, timeoutInMillis)) {
+                return null
+            }
 
             val cleverTapAPI = fromBundle(context, bundle)
             if (cleverTapAPI == null) {

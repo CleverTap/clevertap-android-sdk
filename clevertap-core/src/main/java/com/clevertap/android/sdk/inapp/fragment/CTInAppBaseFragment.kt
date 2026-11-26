@@ -118,7 +118,8 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
             }
             inAppNotification = inApp
             currentOrientation = resources.configuration.orientation
-            generateListener()/*Initialize the below listener only when in app has InAppNotification activity as their host activity
+            generateListener()
+            /*Initialize the below listener only when in app has InAppNotification activity as their host activity
             when requesting permission for notification.*/
             if (context is DidClickForHardPermissionListener) {
                 didClickForHardPermissionListener = context
@@ -128,7 +129,9 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (isOrphan) return
+        if (isOrphan) {
+            return
+        }
         activeMediaUrl = savedInstanceState?.getString(KEY_ACTIVE_MEDIA_URL)
             ?: InAppMediaHandler.resolveMediaUrl(inAppNotification, currentOrientation)
         mediaHandler = createMediaHandler()
@@ -197,13 +200,17 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         !inAppNotification.isShowClose && inAppNotification.swipeToDismiss
 
     override fun didDismiss(data: Bundle?) {
-        if (isOrphan) return
+        if (isOrphan) {
+            return
+        }
         cleanup()
         getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
     }
 
     fun didShow(data: Bundle?) {
-        if (isOrphan) return
+        if (isOrphan) {
+            return
+        }
         getListener()?.inAppNotificationDidShow(inAppNotification, data)
     }
 
@@ -249,7 +256,9 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
             }
 
             val action = button.action
-            if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.type && didClickForHardPermissionListener != null) {
+            if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.type &&
+                didClickForHardPermissionListener != null
+            ) {
                 didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
                     action.shouldFallbackToSettings
                 )
@@ -281,7 +290,7 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         }
         val extras = Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
         // wzrk_c2a: for a whole-image tap use the element id ("image-1"); for a CTA button use its text.
-        val callToAction = if (isImageTap) elementId else button.text
+        val callToAction = if (isImageTap) { elementId } else { button.text }
         return notifyActionTriggered(action, callToAction, extras)
     }
 

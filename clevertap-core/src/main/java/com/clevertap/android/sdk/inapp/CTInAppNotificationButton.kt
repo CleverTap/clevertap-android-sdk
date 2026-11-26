@@ -57,17 +57,33 @@ public class CTInAppNotificationButton : Parcelable {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
 
         other as CTInAppNotificationButton
 
-        if (backgroundColor != other.backgroundColor) return false
-        if (borderColor != other.borderColor) return false
-        if (borderRadius != other.borderRadius) return false
-        if (text != other.text) return false
-        if (textColor != other.textColor) return false
-        if (action != other.action) return false
+        if (backgroundColor != other.backgroundColor) {
+            return false
+        }
+        if (borderColor != other.borderColor) {
+            return false
+        }
+        if (borderRadius != other.borderRadius) {
+            return false
+        }
+        if (text != other.text) {
+            return false
+        }
+        if (textColor != other.textColor) {
+            return false
+        }
+        if (action != other.action) {
+            return false
+        }
 
         return true
     }
@@ -86,7 +102,8 @@ public class CTInAppNotificationButton : Parcelable {
     public companion object {
 
         @JvmField
-        public val CREATOR: Parcelable.Creator<CTInAppNotificationButton> = object : Parcelable.Creator<CTInAppNotificationButton> {
+        public val CREATOR: Parcelable.Creator<CTInAppNotificationButton> =
+            object : Parcelable.Creator<CTInAppNotificationButton> {
             override fun createFromParcel(parcel: Parcel): CTInAppNotificationButton {
                 return CTInAppNotificationButton(parcel)
             }

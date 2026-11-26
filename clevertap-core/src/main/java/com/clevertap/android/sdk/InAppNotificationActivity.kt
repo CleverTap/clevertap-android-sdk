@@ -75,7 +75,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         // it saved for this activity. That fragment's in-app is no longer in memory, and recreating
         // it would run onCreateView against an unset in-app. restoreInApp adds a fresh fragment once
         // the in-app has been read back from storage.
-        super.onCreate(if (restoring) null else savedInstanceState)
+        super.onCreate(if (restoring) { null } else { savedInstanceState })
         if (restoring) {
             // The in-app is no longer in memory, e.g. Android recreated this activity after the app
             // process was killed. Try to show the in-app again from storage; close if that cannot

@@ -37,7 +37,7 @@ internal object HeaderVoteLists {
         if (suppressed.isNotEmpty()) {
             header.put(suppressedMetaKey, JsonUtil.listToJsonArray(suppressed))
         }
-        return if (header.isNotNullAndEmpty()) header else null
+        return if (header.isNotNullAndEmpty()) { header } else { null }
     }
 
     /**

@@ -81,7 +81,9 @@ internal class NdStore(
      */
     fun readEvaluatedServerSideNdIds(): JSONArray {
         val stored = ctPreference.readString(PREFS_EVALUATED_ND_KEY_SS, "")
-        if (stored.isNullOrBlank()) return JSONArray()
+        if (stored.isNullOrBlank()) {
+            return JSONArray()
+        }
         return try {
             JSONArray(stored)
         } catch (e: JSONException) {
@@ -101,7 +103,9 @@ internal class NdStore(
      */
     fun readSuppressedNdIds(): JSONArray {
         val stored = ctPreference.readString(PREFS_SUPPRESSED_ND_KEY, "")
-        if (stored.isNullOrBlank()) return JSONArray()
+        if (stored.isNullOrBlank()) {
+            return JSONArray()
+        }
         return try {
             JSONArray(stored)
         } catch (e: JSONException) {

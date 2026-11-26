@@ -129,7 +129,10 @@ internal class PIPInAppCallbacksBridge(
     }
 
     override fun onMediaError(url: String, error: String) {
-        logger.debug(LOG_TAG, "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error")
+        logger.debug(
+            LOG_TAG,
+            "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error"
+        )
     }
 
     override fun onShowFailed(mediaType: PIPMediaType) {

@@ -133,7 +133,7 @@ internal open class CTInboxListViewFragment : Fragment() {
             ?: return null
         Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [$tabPosition], filter = [$filter]")
         val allMessages = cleverTapAPI.allInboxMessages
-        return if (filter != null) filterMessages(allMessages, filter) else allMessages
+        return if (filter != null) { filterMessages(allMessages, filter) } else { allMessages }
     }
 
     override fun onCreateView(

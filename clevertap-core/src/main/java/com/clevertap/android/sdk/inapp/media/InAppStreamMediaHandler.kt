@@ -109,7 +109,9 @@ internal class InAppStreamMediaHandler
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        if (fragment.activity?.isChangingConfigurations == true) return
+        if (fragment.activity?.isChangingConfigurations == true) {
+            return
+        }
         handle?.softPause()
     }
 

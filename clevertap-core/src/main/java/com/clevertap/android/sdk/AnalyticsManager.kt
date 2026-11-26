@@ -567,7 +567,9 @@ internal open class AnalyticsManager(
             return
         }
 
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
+        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) ||
+            (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)
+        ) {
             config.logger.debug(
                 config.accountId,
                 "Push notification ID Tag is null, not processing Notification Clicked event for:  $extras"
@@ -1064,7 +1066,7 @@ internal open class AnalyticsManager(
             is Boolean -> doDedupeCheck
             else -> false
         }
-        return extras.getString(if (check) Constants.WZRK_PUSH_ID else Constants.NOTIFICATION_ID_TAG)
+        return extras.getString(if (check) { Constants.WZRK_PUSH_ID } else { Constants.NOTIFICATION_ID_TAG })
     }
 
     private fun checkDuplicateNotificationIds(
@@ -1129,11 +1131,11 @@ internal open class AnalyticsManager(
             return
         }
 
-        val gate = if (clicked) inboxClickedSuppressor else inboxViewedSuppressor
+        val gate = if (clicked) { inboxClickedSuppressor } else { inboxViewedSuppressor }
         if (msgId != null && gate.shouldSuppress(msgId)) {
             config.logger.verbose(
                 config.accountId,
-                "Inbox: ${if (clicked) "Clicked" else "Viewed"} suppressed for $msgId"
+                "Inbox: ${if (clicked) { "Clicked" } else { "Viewed" }} suppressed for $msgId"
             )
             return
         }

@@ -456,7 +456,10 @@ public open class CTProductConfigController @Deprecated(
                             //apply defaults
                             activatedConfigs.putAll(defaultConfigs)
                             waitingTobeActivatedConfig.putAll(getStoredValues(activatedFullPath))
-                            config.logger.verbose(logTag, "Loaded configs ready to be applied: $waitingTobeActivatedConfig")
+                            config.logger.verbose(
+                                logTag,
+                                "Loaded configs ready to be applied: $waitingTobeActivatedConfig"
+                            )
                             settingsValue.loadSettings(fileUtils)
                             initializedFlag.set(true)
                         } catch (e: Exception) {

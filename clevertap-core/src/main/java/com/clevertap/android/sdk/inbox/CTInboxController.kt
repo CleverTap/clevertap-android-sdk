@@ -373,7 +373,8 @@ internal open class CTInboxController @WorkerThread constructor(
             messageDAO.isRead = 1
         }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.addOnSuccessListener { callbackManager._notifyInboxMessagesDidUpdate() } //  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
+        //  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
+        task.addOnSuccessListener { callbackManager._notifyInboxMessagesDidUpdate() }
         task.addOnFailureListener { e -> Logger.d("Failed to update message read state for id:$messageId", e) }
 
         task.execute("RunMarkMessageRead", Callable<Void?> {
@@ -491,7 +492,7 @@ internal open class CTInboxController @WorkerThread constructor(
             if (ttl == 0L) {
                 return 0L // infinite TTL — never expires
             }
-            return if (ttl > 0L) ttl else nowSeconds + PENDING_DELETE_DEFAULT_TTL_SECONDS
+            return if (ttl > 0L) { ttl } else { nowSeconds + PENDING_DELETE_DEFAULT_TTL_SECONDS }
         }
     }
 }

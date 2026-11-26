@@ -78,7 +78,9 @@ internal class ImpressionStore(
      */
     private fun getLongListFromPrefs(key: String): List<Long> {
         val serialized = ctPreference.readString(key, "")
-        if (serialized.isNullOrBlank()) return emptyList()
+        if (serialized.isNullOrBlank()) {
+            return emptyList()
+        }
         return serialized.split(",").mapNotNull { it.toLongOrNull() }
     }
 

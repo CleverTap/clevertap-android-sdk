@@ -144,7 +144,7 @@ internal class ProfileChangeTracker {
      * @return The combined path
      */
     private fun buildPath(basePath: String, key: String): String {
-        return if (basePath.isEmpty()) key else "$basePath.$key"
+        return if (basePath.isEmpty()) { key } else { "$basePath.$key" }
     }
 }
 

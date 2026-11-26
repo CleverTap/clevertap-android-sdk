@@ -27,7 +27,8 @@ public open class Var<T> internal constructor(
 
     private var value: T? = defaultValue
 
-    private var hadStarted = false // flag to indicate whether the callbacks were invoked for the starting value of the variable
+    // flag to indicate whether the callbacks were invoked for the starting value of the variable
+    private var hadStarted = false
 
     private val valueChangedHandlers: MutableList<VariableCallback<T>> = ArrayList()
 
@@ -165,7 +166,7 @@ public open class Var<T> internal constructor(
         }
     }
 
-    internal fun rawFileValue(): String? = if (isFileKind) stringValue else null
+    internal fun rawFileValue(): String? = if (isFileKind) { stringValue } else { null }
 
     public open fun addValueChangedCallback(callback: VariableCallback<T>?) {
         if (callback == null) {

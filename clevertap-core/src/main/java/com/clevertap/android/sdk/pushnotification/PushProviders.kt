@@ -483,7 +483,7 @@ internal class PushProviders internal constructor(
                     .setConstraints(constraints)
                     .build()
 
-                val workName = if (existingWorkName.isEmpty()) config.accountId else existingWorkName
+                val workName = if (existingWorkName.isEmpty()) { config.accountId } else { existingWorkName }
 
                 workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.UPDATE, request)
                 StorageHelper.putString(context, PF_WORK_ID, workName)
@@ -709,14 +709,14 @@ internal class PushProviders internal constructor(
         if (pushType == null) {
             return
         }
-        val resolvedToken = if (!TextUtils.isEmpty(token)) token else getCachedToken(pushType)
+        val resolvedToken = if (!TextUtils.isEmpty(token)) { token } else { getCachedToken(pushType) }
         if (TextUtils.isEmpty(resolvedToken)) {
             return
         }
         synchronized(tokenLock) {
             val event = JSONObject()
             val data = JSONObject()
-            val action = if (register) "register" else "unregister"
+            val action = if (register) { "register" } else { "unregister" }
             try {
                 data.put("action", action)
                 data.put("id", resolvedToken)

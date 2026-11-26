@@ -46,7 +46,9 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        if (isOrphan) return null
+        if (isOrphan) {
+            return null
+        }
         return displayHTMLView(inflater, container)
     }
 

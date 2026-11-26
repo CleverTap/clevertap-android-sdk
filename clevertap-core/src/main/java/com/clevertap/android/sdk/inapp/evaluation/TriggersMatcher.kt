@@ -54,7 +54,9 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
         // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
         if (!Utils.areNamesNormalizedEqual(event.eventName, trigger.eventName)
-            && (event.profileAttrName == null || !Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))) {
+            && (event.profileAttrName == null ||
+                !Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))
+        ) {
             return false
         }
 
@@ -273,13 +275,13 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
 
                 else -> null
             }
-        }?.also { return if (isLessThan) actualNumber < it else actualNumber > it }
+        }?.also { return if (isLessThan) { actualNumber < it } else { actualNumber > it } }
 
         val expectedNumber =
             expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        return if (isLessThan) actualNumber < expectedNumber else actualNumber > expectedNumber
+        return if (isLessThan) { actualNumber < expectedNumber } else { actualNumber > expectedNumber }
     }
 
     /**
@@ -350,8 +352,9 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
                 }
             }
             ?.let {
-                if (it.contains(null))
+                if (it.contains(null)) {
                     return false
+                }
 
                 val actualNumber =
                     actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()

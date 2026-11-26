@@ -61,7 +61,8 @@ internal class InboxMessageDAOImpl(
                         this.expires = cursor.getLong(expiresColumnIndex)
                         this.isRead = cursor.getInt(isReadColumnIndex)
                         this.userId =
-                            cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
+                            // This seems redundant if you are already filtering by userId
+                            cursor.getString(userIdColumnIndex)
                         this.tags = cursor.getString(tagsColumnIndex)
                         this.campaignId = cursor.getString(campaignColumnIndex)
                         this.source = readSource(cursor, sourceColumnIndex)
@@ -300,7 +301,9 @@ internal class InboxMessageDAOImpl(
 
     @WorkerThread
     override fun markIndexed(messageIds: List<String>, userId: String): Boolean {
-        if (messageIds.isEmpty()) return true
+        if (messageIds.isEmpty()) {
+            return true
+        }
         val tName = INBOX_MESSAGES.tableName
         val idsTemplateGroup = getTemplateMarkersList(messageIds.size)
         val whereArgs = messageIds.toMutableList().apply { add(userId) }
@@ -361,7 +364,9 @@ internal class InboxMessageDAOImpl(
     }
 
     private fun readSource(cursor: android.database.Cursor, columnIndex: Int): InboxMessageSource {
-        if (columnIndex < 0) return InboxMessageSource.V1
+        if (columnIndex < 0) {
+            return InboxMessageSource.V1
+        }
         val raw = cursor.getString(columnIndex) ?: return InboxMessageSource.V1
         return try {
             InboxMessageSource.valueOf(raw)
@@ -371,7 +376,9 @@ internal class InboxMessageDAOImpl(
     }
 
     private fun readIndexState(cursor: android.database.Cursor, columnIndex: Int): String {
-        if (columnIndex < 0) return InboxIndexState.PENDING_INDEXING
+        if (columnIndex < 0) {
+            return InboxIndexState.PENDING_INDEXING
+        }
         val raw = cursor.getString(columnIndex) ?: return InboxIndexState.PENDING_INDEXING
         return when (raw) {
             InboxIndexState.PENDING_INDEXING, InboxIndexState.INDEXED -> raw

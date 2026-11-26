@@ -153,7 +153,7 @@ internal open class VarCache(
     private fun handleAbVariantsData() {
         try {
             val variantsFromCache = variablesRepo.loadVariantsFromCache()
-            val variants = if (variantsFromCache == null) JSONArray() else JSONArray(variantsFromCache)
+            val variants = if (variantsFromCache == null) { JSONArray() } else { JSONArray(variantsFromCache) }
             abVariants = JsonUtil.listFromJsonSafe(variants)
         } catch (e: Exception) {
             log("Could not load variants", e)

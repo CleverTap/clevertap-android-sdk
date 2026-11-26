@@ -20,9 +20,15 @@ internal object JsonComparisonUtils {
      * @return true if values are deeply equal
      */
     fun areEqual(obj1: Any?, obj2: Any?): Boolean {
-        if (obj1 == null && obj2 == null) return true
-        if (obj1 == null || obj2 == null) return false
-        if (obj1 === obj2) return true
+        if (obj1 == null && obj2 == null) {
+            return true
+        }
+        if (obj1 == null || obj2 == null) {
+            return false
+        }
+        if (obj1 === obj2) {
+            return true
+        }
 
         return when {
             obj1 is JSONObject && obj2 is JSONObject -> jsonObjectsEqual(obj1, obj2)
@@ -36,15 +42,21 @@ internal object JsonComparisonUtils {
      * Compares all keys and recursively checks nested structures.
      */
     private fun jsonObjectsEqual(obj1: JSONObject, obj2: JSONObject): Boolean {
-        if (obj1.length() != obj2.length()) return false
+        if (obj1.length() != obj2.length()) {
+            return false
+        }
 
         obj1.keys().forEach { key ->
-            if (!obj2.has(key)) return false
+            if (!obj2.has(key)) {
+                return false
+            }
 
             val value1 = obj1.get(key)
             val value2 = obj2.get(key)
 
-            if (!areEqual(value1, value2)) return false
+            if (!areEqual(value1, value2)) {
+                return false
+            }
         }
 
         return true
@@ -55,13 +67,17 @@ internal object JsonComparisonUtils {
      * Compares element-by-element in order.
      */
     private fun jsonArraysEqual(arr1: JSONArray, arr2: JSONArray): Boolean {
-        if (arr1.length() != arr2.length()) return false
+        if (arr1.length() != arr2.length()) {
+            return false
+        }
 
         for (i in 0 until arr1.length()) {
             val value1 = arr1.get(i)
             val value2 = arr2.get(i)
 
-            if (!areEqual(value1, value2)) return false
+            if (!areEqual(value1, value2)) {
+                return false
+            }
         }
 
         return true

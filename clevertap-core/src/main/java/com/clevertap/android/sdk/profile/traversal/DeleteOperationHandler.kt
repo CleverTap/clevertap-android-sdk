@@ -34,7 +34,9 @@ internal class DeleteOperationHandler(
         changes: MutableMap<String, ProfileChange>,
         recursiveMerge: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
-        if (!target.has(key)) return
+        if (!target.has(key)) {
+            return
+        }
 
         val oldValue = target.get(key)
 
@@ -69,7 +71,9 @@ internal class DeleteOperationHandler(
         currentPath: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        if (newArray.length() == 0) return
+        if (newArray.length() == 0) {
+            return
+        }
 
         val hasDeleteMarkers = newArray.hasDeleteMarkerElements()
         val hasObjectsToDelete = newArray.hasJsonObjectElements()
@@ -172,7 +176,9 @@ internal class DeleteOperationHandler(
             }
         }
 
-        if (indicesToDelete.isEmpty()) return
+        if (indicesToDelete.isEmpty()) {
+            return
+        }
 
         val oldArrayCopy = oldArray.deepCopy()
         var removedAny = false

@@ -5,7 +5,24 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.db.dao.*
+import com.clevertap.android.sdk.db.dao.DisplayedInAppDAO
+import com.clevertap.android.sdk.db.dao.DisplayedInAppDAOImpl
+import com.clevertap.android.sdk.db.dao.EventDAO
+import com.clevertap.android.sdk.db.dao.EventDAOImpl
+import com.clevertap.android.sdk.db.dao.InboxMessageDAO
+import com.clevertap.android.sdk.db.dao.InboxMessageDAOImpl
+import com.clevertap.android.sdk.db.dao.InboxPendingActionsDAO
+import com.clevertap.android.sdk.db.dao.InboxPendingActionsDAOImpl
+import com.clevertap.android.sdk.db.dao.PendingDelete
+import com.clevertap.android.sdk.db.dao.PendingRead
+import com.clevertap.android.sdk.db.dao.PushNotificationDAO
+import com.clevertap.android.sdk.db.dao.PushNotificationDAOImpl
+import com.clevertap.android.sdk.db.dao.PushPreviewDAO
+import com.clevertap.android.sdk.db.dao.PushPreviewDAOImpl
+import com.clevertap.android.sdk.db.dao.UninstallTimestampDAO
+import com.clevertap.android.sdk.db.dao.UninstallTimestampDAOImpl
+import com.clevertap.android.sdk.db.dao.UserProfileDAO
+import com.clevertap.android.sdk.db.dao.UserProfileDAOImpl
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
@@ -35,7 +52,7 @@ internal class DBAdapter constructor(
         private const val DATABASE_NAME = "clevertap"
 
         fun getDatabaseName(config: CleverTapInstanceConfig): String {
-            return if (config.isDefaultInstance) DATABASE_NAME else DATABASE_NAME + "_" + config.accountId
+            return if (config.isDefaultInstance) { DATABASE_NAME } else { DATABASE_NAME + "_" + config.accountId }
         }
     }
 
@@ -52,7 +69,9 @@ internal class DBAdapter constructor(
     private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger, dbEncryptionHandler) }
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
-    private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }
+    private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy {
+        InboxPendingActionsDAOImpl(dbHelper, logger, clock)
+    }
     private val pushPreviewDAO: PushPreviewDAO by lazy {
         PushPreviewDAOImpl(dbHelper, logger, dbEncryptionHandler, clock)
     }
@@ -109,7 +128,9 @@ internal class DBAdapter constructor(
     fun deleteMessageForId(messageId: String?, userId: String?): Boolean {
         return if (messageId != null && userId != null) {
             inboxMessageDAO.deleteMessage(messageId, userId)
-        } else false
+        } else {
+            false
+        }
     }
 
     @WorkerThread
@@ -119,8 +140,12 @@ internal class DBAdapter constructor(
             val validIds = messageIDs.filterNotNull()
             if (validIds.isNotEmpty()) {
                 inboxMessageDAO.deleteMessages(validIds, userId)
-            } else false
-        } else false
+            } else {
+                false
+            }
+        } else {
+            false
+        }
     }
 
     @WorkerThread
@@ -128,7 +153,9 @@ internal class DBAdapter constructor(
     fun markReadMessageForId(messageId: String?, userId: String?): Boolean {
         return if (messageId != null && userId != null) {
             inboxMessageDAO.markMessageAsRead(messageId, userId)
-        } else false
+        } else {
+            false
+        }
     }
 
     @WorkerThread
@@ -138,8 +165,12 @@ internal class DBAdapter constructor(
             val validIds = messageIDs.filterNotNull()
             if (validIds.isNotEmpty()) {
                 inboxMessageDAO.markMessagesAsRead(validIds, userId)
-            } else false
-        } else false
+            } else {
+                false
+            }
+        } else {
+            false
+        }
     }
 
     @WorkerThread
@@ -159,17 +190,29 @@ internal class DBAdapter constructor(
     @WorkerThread
     @Synchronized
     fun getPendingDeleteIds(userId: String?): Set<String> =
-        if (userId != null) inboxPendingActionsDAO.getPendingDeleteIds(userId) else emptySet()
+        if (userId != null) {
+            inboxPendingActionsDAO.getPendingDeleteIds(userId)
+        } else {
+            emptySet()
+        }
 
     @WorkerThread
     @Synchronized
     fun getPendingDeletes(userId: String?): List<PendingDelete> =
-        if (userId != null) inboxPendingActionsDAO.getPendingDeletes(userId) else emptyList()
+        if (userId != null) {
+            inboxPendingActionsDAO.getPendingDeletes(userId)
+        } else {
+            emptyList()
+        }
 
     @WorkerThread
     @Synchronized
     fun getPendingReads(userId: String?): Set<String> =
-        if (userId != null) inboxPendingActionsDAO.getPendingReads(userId) else emptySet()
+        if (userId != null) {
+            inboxPendingActionsDAO.getPendingReads(userId)
+        } else {
+            emptySet()
+        }
 
     @WorkerThread
     @Synchronized
@@ -179,79 +222,101 @@ internal class DBAdapter constructor(
         wzrkParams: JSONObject?,
         expiresAt: Long
     ): Boolean =
-        if (messageId != null && userId != null)
+        if (messageId != null && userId != null) {
             inboxPendingActionsDAO.addPendingDelete(messageId, userId, wzrkParams, expiresAt)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removePendingDelete(messageId: String?, userId: String?): Boolean =
-        if (messageId != null && userId != null)
+        if (messageId != null && userId != null) {
             inboxPendingActionsDAO.removePendingDelete(messageId, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun markPendingDeletesAwaitingConfirm(messageIds: List<String>?, userId: String?): Boolean =
-        if (!messageIds.isNullOrEmpty() && userId != null)
+        if (!messageIds.isNullOrEmpty() && userId != null) {
             inboxPendingActionsDAO.markPendingDeletesAwaitingConfirm(messageIds, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removeExpiredAwaitingConfirm(userId: String?, nowSeconds: Long): Int =
-        if (userId != null)
+        if (userId != null) {
             inboxPendingActionsDAO.removeExpiredAwaitingConfirm(userId, nowSeconds)
-        else 0
+        } else {
+            0
+        }
 
     @WorkerThread
     @Synchronized
     fun addPendingRead(messageId: String?, userId: String?, expiresAt: Long): Boolean =
-        if (messageId != null && userId != null)
+        if (messageId != null && userId != null) {
             inboxPendingActionsDAO.addPendingRead(messageId, userId, expiresAt)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removePendingRead(messageId: String?, userId: String?): Boolean =
-        if (messageId != null && userId != null)
+        if (messageId != null && userId != null) {
             inboxPendingActionsDAO.removePendingRead(messageId, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun addPendingDeletes(rows: List<PendingDelete>?, userId: String?): Boolean =
-        if (!rows.isNullOrEmpty() && userId != null)
+        if (!rows.isNullOrEmpty() && userId != null) {
             inboxPendingActionsDAO.addPendingDeletes(rows, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removePendingDeletes(messageIds: List<String>?, userId: String?): Boolean =
-        if (!messageIds.isNullOrEmpty() && userId != null)
+        if (!messageIds.isNullOrEmpty() && userId != null) {
             inboxPendingActionsDAO.removePendingDeletes(messageIds, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun addPendingReads(rows: List<PendingRead>?, userId: String?): Boolean =
-        if (!rows.isNullOrEmpty() && userId != null)
+        if (!rows.isNullOrEmpty() && userId != null) {
             inboxPendingActionsDAO.addPendingReads(rows, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removePendingReads(messageIds: List<String>?, userId: String?): Boolean =
-        if (!messageIds.isNullOrEmpty() && userId != null)
+        if (!messageIds.isNullOrEmpty() && userId != null) {
             inboxPendingActionsDAO.removePendingReads(messageIds, userId)
-        else false
+        } else {
+            false
+        }
 
     @WorkerThread
     @Synchronized
     fun removeExpiredPendingReads(userId: String?, nowSeconds: Long): Int =
-        if (userId != null)
+        if (userId != null) {
             inboxPendingActionsDAO.removeExpiredPendingReads(userId, nowSeconds)
-        else 0
+        } else {
+            0
+        }
 
     // =====================================================
     // USER PROFILE OPERATIONS
@@ -262,21 +327,27 @@ internal class DBAdapter constructor(
     fun storeUserProfile(id: String?, deviceId: String?, obj: JSONObject): Long {
         return if (id != null && deviceId != null) {
             userProfileDAO.storeUserProfile(id, deviceId, obj)
-        } else DB_UPDATE_ERROR
+        } else {
+            DB_UPDATE_ERROR
+        }
     }
 
     @Synchronized
     fun fetchUserProfilesByAccountId(accountId: String?): Map<String, JSONObject> {
         return if (accountId != null) {
             userProfileDAO.fetchUserProfilesByAccountId(accountId)
-        } else emptyMap()
+        } else {
+            emptyMap()
+        }
     }
 
     @Synchronized
     fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
         return if (accountId != null && deviceId != null) {
             userProfileDAO.fetchUserProfile(accountId, deviceId)
-        } else null
+        } else {
+            null
+        }
     }
 
     // =====================================================

@@ -30,7 +30,11 @@ internal class PushNotificationDAOImpl(
         }
         
         val tableName = PUSH_NOTIFICATIONS.tableName
-        val expiresAt = if (ttlInSeconds > 0) ttlInSeconds else clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS
+        val expiresAt = if (ttlInSeconds > 0) {
+            ttlInSeconds
+        } else {
+            clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS
+        }
         
         val cv = ContentValues().apply {
             put(Column.DATA, id)
@@ -87,7 +91,9 @@ internal class PushNotificationDAOImpl(
 
     @WorkerThread
     override fun updatePushNotificationIds(ids: Array<String>) {
-        if (ids.isEmpty()) return
+        if (ids.isEmpty()) {
+            return
+        }
         
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)

@@ -62,7 +62,9 @@ internal class InAppStore(
      */
     var mode: String? = null
         set(value) {
-            if (field == value) return
+            if (field == value) {
+                return
+            }
             field = value
 
             when (value) {
@@ -244,7 +246,9 @@ internal class InAppStore(
      */
     fun readEvaluatedServerSideInAppIds(): JSONArray {
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
-        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
+        if (evaluatedServerSideInAppIds.isNullOrBlank()) {
+            return JSONArray()
+        }
 
         return try {
             JSONArray(evaluatedServerSideInAppIds)

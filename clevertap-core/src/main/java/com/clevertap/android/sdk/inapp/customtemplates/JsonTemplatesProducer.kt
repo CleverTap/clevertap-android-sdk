@@ -104,7 +104,9 @@ internal open class JsonTemplatesProducer(
         return when (type) {
             CustomTemplateType.TEMPLATE -> {
                 if (templatesPresenter == null) {
-                    throw CustomTemplateException("JSON definition contains a template definition and a templates presenter is required")
+                    throw CustomTemplateException(
+                        "JSON definition contains a template definition and a templates presenter is required"
+                    )
                 }
 
                 val builder = CustomTemplate.TemplateBuilder()
@@ -116,7 +118,9 @@ internal open class JsonTemplatesProducer(
 
             CustomTemplateType.FUNCTION -> {
                 if (functionsPresenter == null) {
-                    throw CustomTemplateException("JSON definition contains a function definition and a function presenter is required")
+                    throw CustomTemplateException(
+                        "JSON definition contains a function definition and a function presenter is required"
+                    )
                 }
 
                 val isVisual = json.getBoolean("isVisual")
@@ -169,7 +173,9 @@ internal open class JsonTemplatesProducer(
 
                 FILE -> {
                     if (argumentJson.has("value")) {
-                        throw CustomTemplateException("File arguments should not specify a value. Remove value from argument: \"$key\"")
+                        throw CustomTemplateException(
+                            "File arguments should not specify a value. Remove value from argument: \"$key\""
+                        )
                     }
 
                     builder.fileArgument(key)
@@ -177,7 +183,9 @@ internal open class JsonTemplatesProducer(
 
                 ACTION -> {
                     if (argumentJson.has("value")) {
-                        throw CustomTemplateException("Action arguments should not specify a value. Remove value from argument: \"$key\"")
+                        throw CustomTemplateException(
+                            "Action arguments should not specify a value. Remove value from argument: \"$key\""
+                        )
                     }
 
                     builder.actionArgument(key)
@@ -223,14 +231,18 @@ internal open class JsonTemplatesProducer(
 
                 FILE -> {
                     if (argumentJson.has("value")) {
-                        throw CustomTemplateException("File arguments should not specify a value. Remove value from argument: \"$key\"")
+                        throw CustomTemplateException(
+                            "File arguments should not specify a value. Remove value from argument: \"$key\""
+                        )
                     }
 
                     builder.fileArgument(key)
                 }
 
                 ACTION -> {
-                    throw CustomTemplateException("Function templates cannot have action arguments. Remove argument: \"$key\"")
+                    throw CustomTemplateException(
+                        "Function templates cannot have action arguments. Remove argument: \"$key\""
+                    )
                 }
             }
         }

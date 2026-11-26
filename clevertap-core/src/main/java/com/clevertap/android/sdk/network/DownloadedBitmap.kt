@@ -35,16 +35,30 @@ public data class DownloadedBitmap constructor(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
 
         other as DownloadedBitmap
 
-        if (bitmap != other.bitmap) return false
-        if (status != other.status) return false
-        if (downloadTime != other.downloadTime) return false
-        if (!bytes.contentEquals(other.bytes)) return false
-        if (failureReason != other.failureReason) return false
+        if (bitmap != other.bitmap) {
+            return false
+        }
+        if (status != other.status) {
+            return false
+        }
+        if (downloadTime != other.downloadTime) {
+            return false
+        }
+        if (!bytes.contentEquals(other.bytes)) {
+            return false
+        }
+        if (failureReason != other.failureReason) {
+            return false
+        }
 
         return true
     }

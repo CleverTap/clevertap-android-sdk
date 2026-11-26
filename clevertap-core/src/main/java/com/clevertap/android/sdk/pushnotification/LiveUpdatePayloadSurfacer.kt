@@ -23,7 +23,9 @@ internal object LiveUpdatePayloadSurfacer {
 
     @JvmStatic
     fun flatten(dataJson: String?, existingKeys: Set<String>): Map<String, String> {
-        if (dataJson.isNullOrEmpty()) return emptyMap()
+        if (dataJson.isNullOrEmpty()) {
+            return emptyMap()
+        }
         val out = LinkedHashMap<String, String>()
         try {
             val json = JSONObject(dataJson)
@@ -33,7 +35,7 @@ internal object LiveUpdatePayloadSurfacer {
                 if (existingKeys.contains(key)) continue      // root-wins
                 val value = json.get(key)
                 if (value === JSONObject.NULL) continue        // skip JSON null
-                out[key] = if (value is String) value else value.toString()
+                out[key] = if (value is String) { value } else { value.toString() }
             }
         } catch (t: Throwable) {
             // Malformed data -> nothing to surface.

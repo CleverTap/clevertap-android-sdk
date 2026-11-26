@@ -51,8 +51,8 @@ public open class PushNotificationHandler private constructor() : ActionButtonCl
         }
         // A push template handler renders push templates, a signed call handler handles voip push
         // payloads; everything else is rendered by core.
-        val delegate = (if (isForPushTemplates(message)) CleverTapAPI.getNotificationHandler() else null)
-            ?: (if (isForSignedCall(message)) CleverTapAPI.getSignedCallNotificationHandler() else null)
+        val delegate = (if (isForPushTemplates(message)) { CleverTapAPI.getNotificationHandler() } else { null })
+            ?: (if (isForSignedCall(message)) { CleverTapAPI.getSignedCallNotificationHandler() } else { null })
         if (delegate != null) {
             delegate.onMessageReceived(applicationContext, message, pushType)
         } else {

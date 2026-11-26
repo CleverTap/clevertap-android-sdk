@@ -66,7 +66,8 @@ public sealed class CustomTemplateContext private constructor(
     }
 
     public val templateName: String = template.name
-    protected val argumentValues: Map<String, Any> = mergeArguments(template.args, notification.customTemplateData?.getArguments())
+    protected val argumentValues: Map<String, Any> =
+        mergeArguments(template.args, notification.customTemplateData?.getArguments())
     internal val inAppListenerRef = WeakReference(inAppListener)
     private val isAction = notification.customTemplateData?.isAction ?: false
     private val isVisual = template.isVisual

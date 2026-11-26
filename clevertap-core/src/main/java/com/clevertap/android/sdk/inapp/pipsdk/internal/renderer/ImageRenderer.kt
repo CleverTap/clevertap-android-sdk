@@ -56,7 +56,9 @@ internal class ImageRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppImageV1(config.mediaUrl)
                 iv.post {
-                    if (released) return@post
+                    if (released) {
+                        return@post
+                    }
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
                         onMediaReady?.invoke()

@@ -65,7 +65,9 @@ internal class GifRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppGifV1(config.mediaUrl)
                 gv.post {
-                    if (released) return@post
+                    if (released) {
+                        return@post
+                    }
                     if (fetched != null) {
                         gifBytes = fetched
                         gv.setBytes(fetched)

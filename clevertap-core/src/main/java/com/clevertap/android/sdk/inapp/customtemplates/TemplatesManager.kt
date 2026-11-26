@@ -34,13 +34,19 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
                 for (producedTemplate in producer.defineTemplates(ctInstanceConfig)) {
 
                     if (producedTemplate.isSystemDefined) {
-                        throw CustomTemplateException("Cannot define system template with a name \"${producedTemplate.name}\".")
+                        throw CustomTemplateException(
+                            "Cannot define system template with a name \"${producedTemplate.name}\"."
+                        )
                     }
                     if (systemTemplates.contains(producedTemplate)) {
-                        throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is a system template.")
+                        throw CustomTemplateException(
+                            "CustomTemplate with a name \"${producedTemplate.name}\" is a system template."
+                        )
                     }
                     if (templates.contains(producedTemplate)) {
-                        throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is already registered.")
+                        throw CustomTemplateException(
+                            "CustomTemplate with a name \"${producedTemplate.name}\" is already registered."
+                        )
                     }
 
                     templates.add(producedTemplate)

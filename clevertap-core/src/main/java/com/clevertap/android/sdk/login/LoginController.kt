@@ -54,7 +54,7 @@ internal open class LoginController(
         task.execute("resetProfile") {
             try {
                 // Logs the cachedGUID field rather than the cacheGuid param, as the Java original did.
-                val cachedGuidLog = if (cacheGuid != null) cachedGUID else "NULL and cleverTapID $cleverTapID"
+                val cachedGuidLog = if (cacheGuid != null) { cachedGUID } else { "NULL and cleverTapID $cleverTapID" }
                 config.logger.verbose(
                     config.accountId,
                     "asyncProfileSwitchUser:[profile $profile with Cached GUID $cachedGuidLog"

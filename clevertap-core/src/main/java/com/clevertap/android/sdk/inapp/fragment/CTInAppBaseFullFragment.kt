@@ -39,7 +39,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             triggerCloseButtonAction()
         }
 
-        closeImageView.visibility = if (inAppNotification.showCloseButton) View.VISIBLE else View.GONE
+        closeImageView.visibility = if (inAppNotification.showCloseButton) { View.VISIBLE } else { View.GONE }
     }
 
     override fun cleanup() {
@@ -357,7 +357,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         internal fun fittedHalfInterstitialHeight(cardWidth: Int, cardHeight: Int, barHeight: Int): Int? {
             val aspectHeight = (cardWidth * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
             val availableHeight = cardHeight - 2 * barHeight
-            return if (availableHeight > 0 && aspectHeight > availableHeight) availableHeight else null
+            return if (availableHeight > 0 && aspectHeight > availableHeight) { availableHeight } else { null }
         }
 
         /**

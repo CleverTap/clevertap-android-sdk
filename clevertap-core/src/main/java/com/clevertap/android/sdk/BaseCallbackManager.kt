@@ -62,7 +62,9 @@ internal abstract class BaseCallbackManager {
 
     abstract fun setDisplayUnitListener(listener: DisplayUnitListener?)
 
-    abstract fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
+    abstract fun unregisterPushPermissionResponseListener(
+        pushPermissionResponseListener: PushPermissionResponseListener?
+    )
 
     abstract fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener?)
 

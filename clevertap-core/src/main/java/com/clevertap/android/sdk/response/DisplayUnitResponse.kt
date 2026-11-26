@@ -213,7 +213,10 @@ internal class DisplayUnitResponse(
         // everything was cap-filtered, so getAllDisplayUnits() can't keep serving a now-capped unit.
         val hadDeliverableContent = (notifs != null && notifs.length() > 0) || hasNonSuppressed(appLaunched)
         if (!hadDeliverableContent) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact")
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact"
+            )
             return
         }
 
@@ -257,7 +260,10 @@ internal class DisplayUnitResponse(
         if (gated.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(gated)
         } else {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared"
+            )
         }
     }
 
@@ -328,7 +334,11 @@ internal class DisplayUnitResponse(
         val eventProperties: Map<String, Any> = try {
             deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) } ?: emptyMap()
         } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to read App-Launched event props", t)
+            logger.verbose(
+                config.accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to read App-Launched event props",
+                t
+            )
             emptyMap()
         }
         val userLocation = try { coreMetaData?.locationFromUser } catch (t: Throwable) { null }
@@ -339,9 +349,17 @@ internal class DisplayUnitResponse(
             emptyList()
         } else {
             try {
-                evaluator.retainAppLaunchedWithinLimits(content = content, eventProperties = eventProperties, userLocation = userLocation)
+                evaluator.retainAppLaunchedWithinLimits(
+                    content = content,
+                    eventProperties = eventProperties,
+                    userLocation = userLocation
+                )
             } catch (t: Throwable) {
-                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content", t)
+                logger.verbose(
+                    config.accountId,
+                    "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content",
+                    t
+                )
                 emptyList()
             }
         }
@@ -349,9 +367,17 @@ internal class DisplayUnitResponse(
             emptyList()
         } else {
             try {
-                evaluator.retainAppLaunchedWithinLimits(content = cgStubs, eventProperties = eventProperties, userLocation = userLocation)
+                evaluator.retainAppLaunchedWithinLimits(
+                    content = cgStubs,
+                    eventProperties = eventProperties,
+                    userLocation = userLocation
+                )
             } catch (t: Throwable) {
-                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs", t)
+                logger.verbose(
+                    config.accountId,
+                    "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs",
+                    t
+                )
                 emptyList()
             }
         }

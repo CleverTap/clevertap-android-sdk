@@ -301,7 +301,7 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
         }
 
         // Set the appropriate color table.
-        act = if (currentFrame.lct != null) currentFrame.lct else header!!.gct
+        act = if (currentFrame.lct != null) { currentFrame.lct } else { header!!.gct }
         if (act == null) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
             Logger.d(TAG, "No Valid Color Table for frame #$framePointer")
@@ -338,7 +338,7 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
     fun read(`is`: InputStream?, contentLength: Int): Int {
         if (`is` != null) {
             try {
-                val capacity = if (contentLength > 0) (contentLength + 4096) else 16384
+                val capacity = if (contentLength > 0) { (contentLength + 4096) } else { 16384 }
                 val buffer = ByteArrayOutputStream(capacity)
                 var nRead: Int
                 val data = ByteArray(16384)
@@ -483,7 +483,10 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
         }
         // Find the pixels in the next row.
         i = positionInMainPixels + currentFrameIw
-        while (i < positionInMainPixels + currentFrameIw + sampleSize && i < mainPixels.size && i < maxPositionInMainPixels) {
+        while (i < positionInMainPixels + currentFrameIw + sampleSize &&
+            i < mainPixels.size &&
+            i < maxPositionInMainPixels
+        ) {
             val currentColorIndex = mainPixels[i].toInt() and 0xff
             val currentColor = act[currentColorIndex]
             if (currentColor != 0) {
@@ -516,7 +519,7 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
             rawData!!.position(frame.bufferFrameStart)
         }
 
-        val npix = if (frame == null) header!!.width * header!!.height else frame.iw * frame.ih
+        val npix = if (frame == null) { header!!.width * header!!.height } else { frame.iw * frame.ih }
         var available: Int
         val clear: Int
         var codeMask: Int
@@ -692,7 +695,7 @@ internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
     }
 
     private fun getNextBitmap(): Bitmap {
-        val config = if (isFirstFrameTransparent) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
+        val config = if (isFirstFrameTransparent) { Bitmap.Config.ARGB_8888 } else { Bitmap.Config.RGB_565 }
         val result = bitmapProvider.obtain(downsampledWidth, downsampledHeight, config)
         setAlpha(result)
         return result

@@ -42,7 +42,9 @@ internal class GzipBitmapInputStreamReader(
                 decompressedFile.write(bufferForGzipInputStream, 0, bytesRead)
             }
 
-            logger?.verbose("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
+            logger?.verbose(
+                "Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}"
+            )
 
             return getDownloadedBitmapFromStream(
                 dataReadFromStream = decompressedFile,

@@ -142,10 +142,10 @@ public class CTVariableUtils {
                 return diff
             }
 
-            val diffKeys: Iterable<*> = if (diff is Map<*, *>) diff.keys else diff as Iterable<*>
-            val varsKeys: Iterable<*>? = if (vars is Map<*, *>) vars.keys else vars as Iterable<*>?
-            val diffMap: Map<*, *>? = if (diff is Map<*, *>) diff else null
-            val varsMap: Map<*, *>? = if (vars is Map<*, *>) vars else null
+            val diffKeys: Iterable<*> = if (diff is Map<*, *>) { diff.keys } else { diff as Iterable<*> }
+            val varsKeys: Iterable<*>? = if (vars is Map<*, *>) { vars.keys } else { vars as Iterable<*>? }
+            val diffMap: Map<*, *>? = if (diff is Map<*, *>) { diff } else { null }
+            val varsMap: Map<*, *>? = if (vars is Map<*, *>) { vars } else { null }
 
             // Merge dictionaries.
             if (vars is Map<*, *> || diff is Map<*, *>) {
@@ -301,7 +301,7 @@ public class CTVariableUtils {
         public fun deepCopyMap(originalMap: Map<*, *>): MutableMap<Any?, Any?> {
             val copiedMap: MutableMap<Any?, Any?> = HashMap()
             for ((key, value) in originalMap) {
-                copiedMap[key] = if (value is Map<*, *>) deepCopyMap(value) else value
+                copiedMap[key] = if (value is Map<*, *>) { deepCopyMap(value) } else { value }
             }
             return copiedMap
         }

@@ -167,12 +167,21 @@ public open class CTInboxMessage : Parcelable {
         this._data = jsonObject
         try {
             this._messageId = if (jsonObject.has(Constants.KEY_ID)) jsonObject.getString(Constants.KEY_ID) else "0"
-            this._campaignId = if (jsonObject.has(Constants.NOTIFICATION_ID_TAG)) jsonObject
-                .getString(Constants.NOTIFICATION_ID_TAG) else "0_0"
-            this._date = if (jsonObject.has(Constants.KEY_DATE)) jsonObject.getLong(Constants.KEY_DATE)
-            else System.currentTimeMillis() / 1000
-            this._expires = if (jsonObject.has(Constants.KEY_WZRK_TTL)) jsonObject.getLong(Constants.KEY_WZRK_TTL)
-            else System.currentTimeMillis() + 1000 * 60 * 60 * 24
+            this._campaignId = if (jsonObject.has(Constants.NOTIFICATION_ID_TAG)) {
+                jsonObject.getString(Constants.NOTIFICATION_ID_TAG)
+            } else {
+                "0_0"
+            }
+            this._date = if (jsonObject.has(Constants.KEY_DATE)) {
+                jsonObject.getLong(Constants.KEY_DATE)
+            } else {
+                System.currentTimeMillis() / 1000
+            }
+            this._expires = if (jsonObject.has(Constants.KEY_WZRK_TTL)) {
+                jsonObject.getLong(Constants.KEY_WZRK_TTL)
+            } else {
+                System.currentTimeMillis() + 1000 * 60 * 60 * 24
+            }
             this.read = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ)
             if (jsonObject.has(Constants.KEY_TAGS)) {
                 val tagsArray = jsonObject.getJSONArray(Constants.KEY_TAGS)
@@ -182,13 +191,22 @@ public open class CTInboxMessage : Parcelable {
             }
             if (jsonObject.has(Constants.KEY_MSG)) {
                 val cellObject = jsonObject.getJSONObject(Constants.KEY_MSG)
-                this._type = if (cellObject.has(Constants.KEY_TYPE)) CTInboxMessageType
-                    .fromString(cellObject.getString(Constants.KEY_TYPE)) else CTInboxMessageType.fromString("")
-                this._bgColor = if (cellObject.has(Constants.KEY_BG)) cellObject.getString(Constants.KEY_BG) else ""
+                this._type = if (cellObject.has(Constants.KEY_TYPE)) {
+                    CTInboxMessageType.fromString(cellObject.getString(Constants.KEY_TYPE))
+                } else {
+                    CTInboxMessageType.fromString("")
+                }
+                this._bgColor = if (cellObject.has(Constants.KEY_BG)) {
+                    cellObject.getString(Constants.KEY_BG)
+                } else {
+                    ""
+                }
                 if (cellObject.has(Constants.KEY_CONTENT)) {
                     val contentArray = cellObject.getJSONArray(Constants.KEY_CONTENT)
                     for (i in 0 until contentArray.length()) {
-                        this._inboxMessageContents.add(CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i)))
+                        this._inboxMessageContents.add(
+                            CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i))
+                        )
                     }
                 }
 
@@ -206,11 +224,17 @@ public open class CTInboxMessage : Parcelable {
                     }
                 }
 
-                this._orientation = if (cellObject.has(Constants.KEY_ORIENTATION)) cellObject
-                    .getString(Constants.KEY_ORIENTATION) else ""
+                this._orientation = if (cellObject.has(Constants.KEY_ORIENTATION)) {
+                    cellObject.getString(Constants.KEY_ORIENTATION)
+                } else {
+                    ""
+                }
             }
-            this._wzrkParams = if (jsonObject.has(Constants.KEY_WZRK_PARAMS)) jsonObject
-                .getJSONObject(Constants.KEY_WZRK_PARAMS) else null
+            this._wzrkParams = if (jsonObject.has(Constants.KEY_WZRK_PARAMS)) {
+                jsonObject.getJSONObject(Constants.KEY_WZRK_PARAMS)
+            } else {
+                null
+            }
         } catch (e: JSONException) {
             Logger.v("Unable to init CTInboxMessage with JSON - ${e.localizedMessage}")
         }
@@ -248,7 +272,7 @@ public open class CTInboxMessage : Parcelable {
             }
             _orientation = `in`.readString()
             _campaignId = `in`.readString()
-            _wzrkParams = if (`in`.readByte().toInt() == 0x00) null else JSONObject(`in`.readNonNullString())
+            _wzrkParams = if (`in`.readByte().toInt() == 0x00) { null } else { JSONObject(`in`.readNonNullString()) }
         } catch (e: JSONException) {
             Logger.v("Unable to parse CTInboxMessage from parcel - ${e.localizedMessage}")
         }
@@ -280,7 +304,8 @@ public open class CTInboxMessage : Parcelable {
      *
      * @return ArrayList of Strings
      */
-    public open fun getCarouselImages(): ArrayList<String?> = getInboxMessageContents().mapTo(ArrayList()) { it.getMedia() }
+    public open fun getCarouselImages(): ArrayList<String?> =
+        getInboxMessageContents().mapTo(ArrayList()) { it.getMedia() }
 
     /** Kotlin property syntax, equivalent to [getCarouselImages]. */
     public val carouselImages: ArrayList<String?>
@@ -319,7 +344,7 @@ public open class CTInboxMessage : Parcelable {
         dest.writeString(_data.toString())
         dest.writeByte(0x01.toByte())
         dest.writeString(_customData.toString())
-        dest.writeByte((if (read) 0x01 else 0x00).toByte())
+        dest.writeByte((if (read) { 0x01 } else { 0x00 }).toByte())
         dest.writeValue(_type)
         dest.writeByte(0x01.toByte())
         dest.writeList(_tags)

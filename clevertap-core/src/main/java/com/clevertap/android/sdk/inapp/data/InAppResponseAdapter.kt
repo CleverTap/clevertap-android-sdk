@@ -192,7 +192,8 @@ internal class InAppResponseAdapter(
 
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
-    val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
+    val staleInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
 
     // content_fetch directives on this response, parsed to typed items (empty if absent). Downstream
     // (arbitration) consumes these instead of re-reading the raw JSON by key.
