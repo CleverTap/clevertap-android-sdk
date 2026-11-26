@@ -96,32 +96,43 @@ internal class NdEvaluationManager(
         var updated = false
         for (event in events) {
             for (inApp in metadata) {
-                if (!triggersMatcher.matchEvent(whenTriggers = EvalRules.whenTriggers(inApp), event = event)) {
-                    continue
-                }
-                val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
-                if (campaignId.isEmpty()) {
-                    continue
-                }
-
-                ndTriggersManager.increment(campaignId)
-
-                if (ndLimitsMatcher.matchWhenLimits(
-                    whenLimits = EvalRules.whenLimits(inApp),
-                    campaignId = campaignId
-                )) {
-                    val ti = campaignId.toLongOrNull() ?: continue
-                    // Append without a contains() guard: a re-vote while a prior send is in flight must
-                    // not be dropped (onSentHeaders removes only what was sent). Server dedups.
-                    evaluatedNdCampaignIds.add(ti)
-                    updated = true
-                    config.logger.verbose(config.accountId,"ND campaign $ti eligible -> adUnit_eval")
-                }
+                val voted = voteIfEligible(event = event, inApp = inApp)
+                updated = updated || voted
             }
         }
         if (updated) {
             saveEvaluatedNdIds()
         }
+    }
+
+    /**
+     * Votes [inApp] for [event] when its triggers match and (after counting the trigger) its whenLimits
+     * still pass. Returns true if a vote was added.
+     */
+    private fun voteIfEligible(event: EventAdapter, inApp: JSONObject): Boolean {
+        if (!triggersMatcher.matchEvent(whenTriggers = EvalRules.whenTriggers(inApp), event = event)) {
+            return false
+        }
+        val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+        if (campaignId.isEmpty()) {
+            return false
+        }
+
+        ndTriggersManager.increment(campaignId)
+
+        val ti = campaignId.toLongOrNull()
+        val withinLimits = ndLimitsMatcher.matchWhenLimits(
+            whenLimits = EvalRules.whenLimits(inApp),
+            campaignId = campaignId
+        )
+        if (!withinLimits || ti == null) {
+            return false
+        }
+        // Append without a contains() guard: a re-vote while a prior send is in flight must
+        // not be dropped (onSentHeaders removes only what was sent). Server dedups.
+        evaluatedNdCampaignIds.add(ti)
+        config.logger.verbose(config.accountId,"ND campaign $ti eligible -> adUnit_eval")
+        return true
     }
 
     /**
@@ -216,17 +227,8 @@ internal class NdEvaluationManager(
         val cgAcks = ArrayList<JSONObject>()
         var i = 0
         while (i < sorted.size) {
-            val bandPriority = sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1)
             val bandContent = ArrayList<JSONObject>()
-            while (i < sorted.size && sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1) == bandPriority) {
-                val (unit, isStub) = sorted[i]
-                if (isStub) {
-                    cgAcks.add(unit)
-                } else {
-                    bandContent.add(unit)
-                }
-                i++
-            }
+            i = collectPriorityBand(sorted = sorted, start = i, bandContent = bandContent, cgAcks = cgAcks)
             if (bandContent.isNotEmpty()) { // actual delivery -> lock latches; drop lower bands
                 winners.addAll(bandContent)
                 break
@@ -234,6 +236,30 @@ internal class NdEvaluationManager(
             // all-stub band -> acked above, no delivery, fall through to the next band
         }
         return AppLaunchedSelection(winners = winners, cgAcks = cgAcks)
+    }
+
+    /**
+     * Walks the band of [sorted] that starts at [start] (all entries with the same priority), adding its
+     * CG stubs to [cgAcks] and its content to [bandContent]. Returns the index of the next band.
+     */
+    private fun collectPriorityBand(
+        sorted: List<Pair<JSONObject, Boolean>>,
+        start: Int,
+        bandContent: MutableList<JSONObject>,
+        cgAcks: MutableList<JSONObject>
+    ): Int {
+        val bandPriority = sorted[start].first.optInt(Constants.INAPP_PRIORITY, 1)
+        var i = start
+        while (i < sorted.size && sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1) == bandPriority) {
+            val (unit, isStub) = sorted[i]
+            if (isStub) {
+                cgAcks.add(unit)
+            } else {
+                bandContent.add(unit)
+            }
+            i++
+        }
+        return i
     }
 
     /** Result of [selectTopPriorityBand]: content to deliver + CG stubs to ack. */

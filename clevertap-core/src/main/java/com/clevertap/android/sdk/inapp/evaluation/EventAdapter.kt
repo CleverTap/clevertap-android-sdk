@@ -125,16 +125,21 @@ internal class EventAdapter(
         var value = evaluateActualPropertyValue(propertyName)
 
         if (value == null) {
-            value = when (propertyName) {
-                CLTAP_PROP_CAMPAIGN_ID -> evaluateActualPropertyValue(NOTIFICATION_ID_TAG)
-                NOTIFICATION_ID_TAG -> evaluateActualPropertyValue(CLTAP_PROP_CAMPAIGN_ID)
-                CLTAP_PROP_VARIANT -> evaluateActualPropertyValue(INAPP_WZRK_PIVOT)
-                INAPP_WZRK_PIVOT -> evaluateActualPropertyValue(CLTAP_PROP_VARIANT)
-                else -> systemPropToKey[propertyName]?.let { evaluateActualPropertyValue(it) }
-            }
+            value = evaluateAliasPropertyValue(propertyName)
         }
 
         return value
+    }
+
+    /** Looks [propertyName] up under its alias: campaign id / wzrk_id, variant / pivot, or a system prop key. */
+    private fun evaluateAliasPropertyValue(propertyName: String): Any? {
+        return when (propertyName) {
+            CLTAP_PROP_CAMPAIGN_ID -> evaluateActualPropertyValue(NOTIFICATION_ID_TAG)
+            NOTIFICATION_ID_TAG -> evaluateActualPropertyValue(CLTAP_PROP_CAMPAIGN_ID)
+            CLTAP_PROP_VARIANT -> evaluateActualPropertyValue(INAPP_WZRK_PIVOT)
+            INAPP_WZRK_PIVOT -> evaluateActualPropertyValue(CLTAP_PROP_VARIANT)
+            else -> systemPropToKey[propertyName]?.let { evaluateActualPropertyValue(it) }
+        }
     }
 
     private fun evaluateActualPropertyValue(propertyName: String): Any? {

@@ -45,14 +45,13 @@ internal object HeaderVoteLists {
      * but not in the sent header survives). Returns true if the caller should persist.
      */
     fun removeSentEvalIds(sentHeader: JSONObject, evalMetaKey: String, evalIds: MutableList<Long>): Boolean {
+        val sentIds = sentHeader.optJSONArray(evalMetaKey) ?: return false
         var updated = false
-        sentHeader.optJSONArray(evalMetaKey)?.let {
-            for (i in 0 until it.length()) {
-                val id = it.optLong(i)
-                if (id != 0L) {
-                    updated = true
-                    evalIds.remove(id)
-                }
+        for (i in 0 until sentIds.length()) {
+            val id = sentIds.optLong(i)
+            if (id != 0L) {
+                updated = true
+                evalIds.remove(id)
             }
         }
         return updated

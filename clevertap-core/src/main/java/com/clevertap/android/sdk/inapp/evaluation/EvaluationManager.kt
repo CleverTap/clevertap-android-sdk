@@ -407,36 +407,59 @@ internal class EvaluationManager(
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
         for (inApp in inappNotifs) {
-            val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
-            if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
-                continue
-            }
-
-            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
-
-            val matchesTrigger =
-                triggersMatcher.matchEvent(getWhenTriggers(inApp), event)
-            if (matchesTrigger) {
-                Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
-                recordTrigger(campaignId)
-
-                val matchesLimits = limits.matchWhenLimits(getWhenLimits(inApp), campaignId)
-                val discardData = limits.shouldDiscard(getWhenLimits(inApp), campaignId)
-
-                if (discardData) {
-                    clearResource.invoke("") // todo pass correct url
-                }
-                if (matchesLimits) {
-                    Logger.v("INAPP", "Limits matched for event ${event.eventName} against inApp $campaignId")
-                    eligibleInApps.add(inApp)
-                } else {
-                    Logger.v("INAPP", "Limits did not matched for event ${event.eventName} against inApp $campaignId")
-                }
-            } else {
-                Logger.v("INAPP", "Triggers did not matched for event ${event.eventName} against inApp $campaignId")
+            if (isEligibleInApp(
+                    event = event,
+                    inApp = inApp,
+                    clearResource = clearResource,
+                    recordTrigger = recordTrigger,
+                    limits = limits
+                )
+            ) {
+                eligibleInApps.add(inApp)
             }
         }
         return eligibleInApps
+    }
+
+    /**
+     * One step of [collectEligibleInApps]: skips unregistered custom templates, matches the triggers,
+     * records the trigger, then checks the limits. Returns true if [inApp] is eligible.
+     */
+    private fun isEligibleInApp(
+        event: EventAdapter,
+        inApp: JSONObject,
+        clearResource: (url: String) -> Unit,
+        recordTrigger: (campaignId: String) -> Unit,
+        limits: LimitsMatcher
+    ): Boolean {
+        val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
+        if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
+            return false
+        }
+
+        val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+
+        val matchesTrigger =
+            triggersMatcher.matchEvent(getWhenTriggers(inApp), event)
+        if (!matchesTrigger) {
+            Logger.v("INAPP", "Triggers did not matched for event ${event.eventName} against inApp $campaignId")
+            return false
+        }
+        Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
+        recordTrigger(campaignId)
+
+        val matchesLimits = limits.matchWhenLimits(getWhenLimits(inApp), campaignId)
+        val discardData = limits.shouldDiscard(getWhenLimits(inApp), campaignId)
+
+        if (discardData) {
+            clearResource.invoke("") // todo pass correct url
+        }
+        if (matchesLimits) {
+            Logger.v("INAPP", "Limits matched for event ${event.eventName} against inApp $campaignId")
+        } else {
+            Logger.v("INAPP", "Limits did not matched for event ${event.eventName} against inApp $campaignId")
+        }
+        return matchesLimits
     }
 
     @VisibleForTesting
@@ -492,29 +515,27 @@ internal class EvaluationManager(
     ): List<JSONObject> {
         val eligibleInApps = mutableListOf<JSONObject>()
 
-        storeRegistry.inAppStore?.let { store ->
-            // STEP 1: Event evaluation and filtering
-            events.forEach { event ->
-                // Only evaluate if value actually changed (for user attribute events)
-                val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
-                val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
+        val store = storeRegistry.inAppStore ?: return emptyList()
 
-                if (newValue == null || newValue != oldValue) {
-                    eligibleInApps.addAll(
-                        evaluate(event, readInAppsFromStore(store))
-                    )
-                }
+        // STEP 1: Event evaluation and filtering
+        events.forEach { event ->
+            // Only evaluate if value actually changed (for user attribute events)
+            val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
+            val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
+
+            if (newValue == null || newValue != oldValue) {
+                eligibleInApps.addAll(
+                    evaluate(event, readInAppsFromStore(store))
+                )
             }
-
-            // STEP 2: Delegate to unified evaluation engine
-            return selectAndProcessEligibleInApps(
-                eligibleInApps,
-                strategy,
-                shouldUpdateTTLForThisContext = true // CS context allows TTL updates
-            )
-        }.run {
-            return emptyList()
         }
+
+        // STEP 2: Delegate to unified evaluation engine
+        return selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true // CS context allows TTL updates
+        )
     }
 
     @VisibleForTesting
