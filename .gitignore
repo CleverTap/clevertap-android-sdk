@@ -12,3 +12,8 @@ sample/google-services.json
 ct_signing_key.gpg
 /sample/libs/
 /sample/release/
+
+# Personal AI agent files (the rest of .claude/ is shared)
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
