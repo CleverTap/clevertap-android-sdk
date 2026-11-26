@@ -219,7 +219,7 @@ internal class ValidationCheckersBuilder {
  * Uses the builder pattern to create only the necessary validation checkers for each template type.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ValidatorFactory {
+internal class ValidatorFactory private constructor() {
     companion object {
         /** Minimum images for the auto and manual carousel templates. */
         private const val CAROUSEL_MIN_IMAGES = 3

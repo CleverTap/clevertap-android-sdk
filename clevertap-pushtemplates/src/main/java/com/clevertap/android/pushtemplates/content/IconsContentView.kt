@@ -15,6 +15,7 @@ import androidx.annotation.RestrictTo
  * Shared rendering for the icons template collapsed and expanded views.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@Suppress("UnnecessaryAbstractClass") // base of the small/big icons views, never built directly
 internal abstract class IconsContentView(
     context: Context,
     renderer: TemplateRenderer,
@@ -72,8 +73,11 @@ internal abstract class IconsContentView(
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)
 
-            val description = if (altText.isNotEmpty()) altText
-                              else context.getString(fallbackDescriptions[index])
+            val description = if (altText.isNotEmpty()) {
+                altText
+            } else {
+                context.getString(fallbackDescriptions[index])
+            }
             remoteView.setContentDescription(viewId, description)
 
             val fallback = loadImageURLIntoRemoteView(

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.pushnotification.PushType
 /**
  * Huawei (HMS) push constants, e.g. the `HPS` push type used to identify the Huawei push provider.
  */
+@Suppress("UtilityClassWithPublicConstructor") // released public API: an object would break binary compatibility
 public open class HmsConstants {
 
     public companion object {

@@ -6,6 +6,7 @@ package com.clevertap.android.pushtemplates
  * template IDs and notification defaults. Most keys are read by the SDK itself; apps reference them
  * mainly when building or inspecting push payloads (e.g. `PT_DISMISS_ON_CLICK`).
  */
+@Suppress("UtilityClassWithPublicConstructor") // released public API: an object would break binary compatibility
 public open class PTConstants {
 
     public companion object {

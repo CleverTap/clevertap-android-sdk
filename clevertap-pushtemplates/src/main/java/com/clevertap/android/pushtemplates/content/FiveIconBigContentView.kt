@@ -49,8 +49,11 @@ internal class FiveIconBigContentView constructor(
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)
 
-            val description = if (altText.isNotEmpty()) altText
-                              else context.getString(fallbackDescriptions[index])
+            val description = if (altText.isNotEmpty()) {
+                altText
+            } else {
+                context.getString(fallbackDescriptions[index])
+            }
             remoteView.setContentDescription(viewId, description)
 
             val fallback = loadImageURLIntoRemoteView(

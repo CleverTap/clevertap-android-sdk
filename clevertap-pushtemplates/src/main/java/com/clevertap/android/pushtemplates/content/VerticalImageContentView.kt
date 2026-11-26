@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.Constants
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@Suppress("UnnecessaryAbstractClass") // base of the small/big vertical-image views, never built directly
 internal abstract class VerticalImageContentView(
     context: Context,
     renderer: TemplateRenderer,

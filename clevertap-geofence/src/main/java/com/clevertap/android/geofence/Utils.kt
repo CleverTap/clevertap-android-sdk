@@ -89,7 +89,8 @@ internal object Utils {
             if (cleverTapAPI == null) {
                 CTGeofenceAPI.getLogger().debug(
                     CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"
+                    "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! " +
+                        "Dropping this call"
                 )
                 return false
             }

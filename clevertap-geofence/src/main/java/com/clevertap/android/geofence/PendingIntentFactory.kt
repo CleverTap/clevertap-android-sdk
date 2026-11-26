@@ -39,7 +39,7 @@ internal object PendingIntentFactory {
      */
     @JvmStatic
     fun getPendingIntent(context: Context?, pendingIntentType: Int, flags: Int): PendingIntent? {
-        var flags = flags
+        var pendingIntentFlags = flags
         if (context == null) {
             return null
         }
@@ -65,12 +65,12 @@ internal object PendingIntentFactory {
 
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
             /*require mutable PendingIntent object for requesting device location information*/
-            flags = flags or PendingIntent.FLAG_MUTABLE
+            pendingIntentFlags = pendingIntentFlags or PendingIntent.FLAG_MUTABLE
         }
 
         return PendingIntent.getBroadcast(
             context.applicationContext, broadcastSenderRequestCode, intent,
-            flags
+            pendingIntentFlags
         )
     }
 }
