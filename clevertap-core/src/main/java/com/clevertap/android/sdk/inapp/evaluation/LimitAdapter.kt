@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Enumeration representing different types of limits for in-app notifications.
@@ -11,7 +12,8 @@ import org.json.JSONObject
  *
  * @property type The string representation of the limit type.
  */
-enum class LimitType(val type: String) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class LimitType(val type: String) {
 
     Ever("ever"),
     Session("session"),
@@ -45,7 +47,8 @@ enum class LimitType(val type: String) {
  *
  * @param limitJSON The JSON object representing the limit information.
  */
-class LimitAdapter(limitJSON: JSONObject) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class LimitAdapter(limitJSON: JSONObject) {
 
     /**
      * The type of the limit, determined by the [LimitType] enum.

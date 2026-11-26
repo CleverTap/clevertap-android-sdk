@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import androidx.annotation.RestrictTo
 
-class FileStore(private val ctPreference: ICTPreference) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class FileStore(private val ctPreference: ICTPreference) {
 
     fun saveFileUrl(url: String, expiry: Long) {
         ctPreference.writeLong(url, expiry)

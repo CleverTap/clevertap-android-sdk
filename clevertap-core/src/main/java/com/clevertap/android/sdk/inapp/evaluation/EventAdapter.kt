@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.Constants.CLTAP_SDK_VERSION
 import com.clevertap.android.sdk.Constants.INAPP_WZRK_PIVOT
 import com.clevertap.android.sdk.Constants.NOTIFICATION_ID_TAG
 import com.clevertap.android.sdk.Utils
+import androidx.annotation.RestrictTo
 
 /**
  * Represents an event and its associated properties.
@@ -26,7 +27,8 @@ import com.clevertap.android.sdk.Utils
  * @property eventProperties A map of event properties, where keys are property names and values are property values.
  * @property items A list of items associated with the event (used for charged events). Defaults to an empty list.
  */
-class EventAdapter(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class EventAdapter(
     val eventName: String,
     val eventProperties: Map<String, Any?>,
     val items: List<Map<String, Any>?> = listOf(), // for chargedEvent only

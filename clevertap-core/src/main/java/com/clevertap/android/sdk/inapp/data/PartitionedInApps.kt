@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.inapp.data
 
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
-data class PartitionedInApps(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class PartitionedInApps(
     val immediateInApps: JSONArray,
     val delayedInApps: JSONArray
 ) {

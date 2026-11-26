@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.data
 
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Represents the result of evaluating in-app notifications for an event.
@@ -14,7 +15,8 @@ import org.json.JSONObject
  * @property delayedClientSideInApps In-apps with delayAfterTrigger > 0 and <= 1200 seconds to be scheduled
  * @property serverSideInActionInApps Server-side in-action metadata for scheduling
  */
-data class EvaluatedInAppsResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class EvaluatedInAppsResult(
     val immediateClientSideInApps: List<JSONObject>,
     val delayedClientSideInApps: List<JSONObject>,
     val serverSideInActionInApps: List<JSONObject>
@@ -29,7 +31,8 @@ data class EvaluatedInAppsResult(
  * @property immediateInApps In-apps without delay (or delay = 0) ready for immediate display
  * @property delayedInApps In-apps with delayAfterTrigger > 0 and <= 1200 seconds to be scheduled
  */
-data class ClientSideInAppsResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class ClientSideInAppsResult(
     val immediateInApps: List<JSONObject>,
     val delayedInApps: List<JSONObject>
 )

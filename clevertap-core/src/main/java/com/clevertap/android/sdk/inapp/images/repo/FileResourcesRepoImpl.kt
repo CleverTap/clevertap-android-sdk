@@ -221,19 +221,22 @@ internal class FileResourcesRepoImpl constructor(
     }
 }
 
-enum class DownloadState {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class DownloadState {
     QUEUED, IN_PROGRESS, SUCCESSFUL, FAILED
 }
 
 /**
  * Invokes callback once the list of urls passed have finished downloading
  */
-data class DownloadTriggerForUrls(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class DownloadTriggerForUrls(
     val urls: List<String>,
     val callback: () -> Unit
 )
 
-data class DownloadTriggerResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class DownloadTriggerResult(
     val successfulUrls: List<String>,
     val failureUrls: List<String>,
     val allSuccessful: Boolean

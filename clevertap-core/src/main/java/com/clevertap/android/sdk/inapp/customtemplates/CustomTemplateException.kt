@@ -5,4 +5,4 @@ package com.clevertap.android.sdk.inapp.customtemplates
  * validating for correctness of the templates and point to incorrect definitions. Those exceptions should generally
  * not be caught, since they will not be raised when the registered templates are correctly defined.
  */
-class CustomTemplateException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+public class CustomTemplateException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

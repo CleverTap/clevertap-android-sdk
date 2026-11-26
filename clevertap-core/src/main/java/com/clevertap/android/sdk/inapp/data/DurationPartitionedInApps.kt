@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateA
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.InActionOnly
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.UnknownAndInAction
 import org.json.JSONObject
+import androidx.annotation.RestrictTo
 
 /**
  * Sealed class hierarchy representing in-app notifications partitioned by their display duration.
@@ -19,7 +20,8 @@ import org.json.JSONObject
  * - [UnknownAndInAction]: For Server-Side metadata in-apps
  * - [InActionOnly]: For Legacy metadata and AppLaunch Server-Side metadata in-apps
  */
-sealed class DurationPartitionedInApps {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal sealed class DurationPartitionedInApps {
 
     /**
      * Partition containing immediate and delayed duration in-apps.

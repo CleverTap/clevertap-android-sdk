@@ -3,12 +3,14 @@ package com.clevertap.android.sdk.inapp.images.memory
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
 import java.io.File
+import androidx.annotation.RestrictTo
 /**
  * A factory class for creating different types of memory objects for storage purposes.
  *
  * This class provides methods for creating [InAppGifMemoryV1], [InAppImageMemoryV1], and [FileMemoryV2] objects.
  */
-class MemoryCreator {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class MemoryCreator {
     companion object {
 
         private const val IMAGE_CACHE_MIN_KB: Long = 20 * 1024

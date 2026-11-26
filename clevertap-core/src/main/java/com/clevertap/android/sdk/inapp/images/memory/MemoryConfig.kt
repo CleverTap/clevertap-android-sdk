@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
 import java.io.File
+import androidx.annotation.RestrictTo
 /**
  * Configuration dataclass for memory management.
  *
@@ -11,7 +12,8 @@ import java.io.File
  * @property maxDiskSizeKB The maximum size of the file allowed on disk in kilobytes.
  * @property diskDirectory The directory on disk where cached files will be stored.
  */
-data class MemoryConfig(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal data class MemoryConfig(
     val minInMemorySizeKB: Long,
     val optimistic: Long,
     val maxDiskSizeKB: Long,

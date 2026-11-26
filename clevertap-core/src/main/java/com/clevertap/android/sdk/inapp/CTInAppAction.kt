@@ -139,18 +139,19 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
     }
 }
 
-enum class InAppActionType(private val stringValue: String) {
+public enum class InAppActionType(private val stringValue: String) {
     CLOSE("close"),
     OPEN_URL("url"),
     KEY_VALUES("kv"),
     CUSTOM_CODE("custom-code"),
     REQUEST_FOR_PERMISSIONS(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
 
-    override fun toString() = stringValue
+    override fun toString(): String = stringValue
 
-    companion object {
+    public companion object {
 
-        fun fromString(string: String): InAppActionType? {
+        @JvmStatic
+        public fun fromString(string: String): InAppActionType? {
             return values().firstOrNull { it.stringValue == string }
         }
     }

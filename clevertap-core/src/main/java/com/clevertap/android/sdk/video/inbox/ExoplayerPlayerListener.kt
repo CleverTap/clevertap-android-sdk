@@ -7,6 +7,7 @@ import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.CueGroup
 import com.google.android.exoplayer2.trackselection.TrackSelectionParameters
 import com.google.android.exoplayer2.video.VideoSize
+import androidx.annotation.RestrictTo
 
 /**
  * This class addresses an AbstractMethodError because of the Java 8 feature of default methods in interfaces.
@@ -19,7 +20,8 @@ import com.google.android.exoplayer2.video.VideoSize
     message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3PlayerListener instead.",
     replaceWith = ReplaceWith("Media3PlayerListener()")
 )
-open class ExoplayerPlayerListener : Player.Listener {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal open class ExoplayerPlayerListener : Player.Listener {
     override fun onEvents(player: Player, events: Player.Events) {}
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {}
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {}

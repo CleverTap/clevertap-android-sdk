@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
+import androidx.annotation.RestrictTo
 
 /**
  * The `TriggerValue` class represents a value used in trigger conditions for in-app messages.
@@ -10,7 +11,8 @@ import org.json.JSONArray
  * @param value The initial value to be encapsulated (default is null).
  * @param listValue The initial list value to be encapsulated (default is null).
  */
-class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = null) {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = null) {
 
     private var stringValue: String? = null
     private var stringValueCleaned: String? = null
