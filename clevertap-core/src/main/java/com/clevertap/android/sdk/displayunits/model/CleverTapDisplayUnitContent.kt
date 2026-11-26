@@ -314,7 +314,11 @@ public open class CleverTapDisplayUnitContent private constructor(
 
         /** getString(key) when present, "" when absent or when this object is null. */
         private fun JSONObject?.stringOrEmpty(key: String): String =
-            if (this != null && has(key)) getString(key) else ""
+            if (this != null && has(key)) {
+                getString(key)
+            } else {
+                ""
+            }
 
         /**
          * Builds per-item `wzrk_*` attribution by merging BE metadata with

@@ -179,7 +179,7 @@ class CTInboxControllerTest : BaseTestCase() {
         messageIDs = arrayListOf("msg_3", "msg_4")
 
         // When
-        val result = controller._markReadForMessagesWithIds(messageIDs)
+        val result = controller.markReadForMessagesWithIds(messageIDs)
 
         // Then
         assertFalse(result)
@@ -206,7 +206,7 @@ class CTInboxControllerTest : BaseTestCase() {
             )
 
             // When
-            val result = controller._markReadForMessagesWithIds(messageIDs)
+            val result = controller.markReadForMessagesWithIds(messageIDs)
 
             // Then
             verify { dbAdapter.getMessages(userId) } //Called when creating an instance of CTInboxController
@@ -218,7 +218,7 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `markReadInboxMessagesForIDs should call _markReadForMessagesWithIds and not notify callback manager when all messages are invalid`() {
+    fun `markReadInboxMessagesForIDs should call markReadForMessagesWithIds and not notify callback manager when all messages are invalid`() {
         // Given
         controller = CTInboxController(
             cleverTapInstanceConfig,
@@ -244,13 +244,13 @@ class CTInboxControllerTest : BaseTestCase() {
 
             // Then
             verify { ctLockManager.inboxControllerLock }
-            verify { spyController._markReadForMessagesWithIds(messageIDs) }
+            verify { spyController.markReadForMessagesWithIds(messageIDs) }
             verify(exactly = 0) { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }
 
     @Test
-    fun `markReadInboxMessagesForIDs should call _markReadForMessagesWithIds and notify callback manager when some messages are valid`() {
+    fun `markReadInboxMessagesForIDs should call markReadForMessagesWithIds and notify callback manager when some messages are valid`() {
         // Given
         controller = CTInboxController(
             cleverTapInstanceConfig,
@@ -276,7 +276,7 @@ class CTInboxControllerTest : BaseTestCase() {
 
             // Then
             verify { ctLockManager.inboxControllerLock }
-            verify { spyController._markReadForMessagesWithIds(messageIDs) }
+            verify { spyController.markReadForMessagesWithIds(messageIDs) }
             verify(exactly = 2) { callbackManager.notifyInboxMessagesDidUpdate() }
         }
     }

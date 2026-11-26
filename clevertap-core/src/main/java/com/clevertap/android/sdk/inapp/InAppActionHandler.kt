@@ -107,10 +107,14 @@ internal class InAppActionHandler(
         val currentActivity = CoreMetaData.getCurrentActivity()
         if (currentActivity == null) {
             logger.debug(
-                "CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n" +
-                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
-                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
-                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate()."
+                "CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure " +
+                        "the following things:\n" +
+                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before " +
+                        "super.onCreate().\n" +
+                        "   Alternatively, register CleverTap SDK's Application class in the manifest using " +
+                        "com.clevertap.android.sdk.Application.\n" +
+                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, " +
+                        "not onCreate()."
             )
             return false
         }

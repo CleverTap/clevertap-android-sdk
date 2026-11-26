@@ -75,7 +75,8 @@ internal class InAppImageMemoryV1(
     override fun inMemorySize(): Int {
         val selected = max(config.optimistic, config.minInMemorySizeKB).toInt()
 
-        logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")
+        logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = " +
+            "${config.minInMemorySizeKB}, selected = $selected")
 
         return selected
     }

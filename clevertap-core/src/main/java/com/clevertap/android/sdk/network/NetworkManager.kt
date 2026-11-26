@@ -123,7 +123,8 @@ internal class NetworkManager constructor(
             val batchSize = queue.length()
             config.logger.verbose(
                 config.accountId,
-                "Processing batch of $batchSize events (${queueData.eventIds.size} from events, ${queueData.profileEventIds.size} from profile)"
+                "Processing batch of $batchSize events (${queueData.eventIds.size} from events, " +
+                "${queueData.profileEventIds.size} from profile)"
             )
             // Send the combined batch to CleverTap servers
             val networkCallSuccess = sendQueue(

@@ -67,7 +67,8 @@ internal class InAppTimerManager(
                         "process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}"
                     )
                     withContext(NonCancellable) {
-                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")
+                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, " +
+                            "${coroutineContext[Job]?.parent}}")
                         onAppBackground()
                     }
                     ensureActive()

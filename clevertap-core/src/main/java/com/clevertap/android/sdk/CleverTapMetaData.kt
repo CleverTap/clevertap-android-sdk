@@ -10,5 +10,6 @@ properties can be abstracted.
  */
 // Public (restricted) only because the wrapper-used CoreMetaData extends it: Kotlin does not
 // allow a public class to extend a less visible one.
+@Suppress("UnnecessaryAbstractClass") // public marker base for CoreMetaData; shape is part of the public API
 @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
 public abstract class CleverTapMetaData

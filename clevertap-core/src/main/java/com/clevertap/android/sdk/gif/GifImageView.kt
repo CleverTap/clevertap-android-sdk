@@ -151,6 +151,8 @@ internal open class GifImageView : AppCompatImageView, Runnable {
                 // but I use previous frame time to make code more readable
                 val delay = (decoder.getNextDelay() - frameDecodeTime).toInt()
                 if (delay > 0) {
+                    // Paces GIF frames on the view's own animation thread, never the SDK or main thread.
+                    @Suppress("ForbiddenMethodCall")
                     Thread.sleep(if (framesDisplayDuration > 0) { framesDisplayDuration } else { delay.toLong() })
                 }
             } catch (e: InterruptedException) {

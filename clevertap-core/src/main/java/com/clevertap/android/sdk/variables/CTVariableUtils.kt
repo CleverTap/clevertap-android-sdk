@@ -13,7 +13,7 @@ import java.math.BigInteger
  * Static JVM shape is unchanged (companion + @JvmStatic / const val).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-public class CTVariableUtils {
+public class CTVariableUtils private constructor() {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
     public companion object {

@@ -44,7 +44,8 @@ internal enum class ValidationError(val code: Int, private val messageTemplate: 
         512,
         "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: %s"
     ),
-    CHANNEL_ID_NOT_REGISTERED(512, "Unable to render notification on channelId: %s as it is not registered by the app. Falling to default channel. "),
+    CHANNEL_ID_NOT_REGISTERED(512, "Unable to render notification on channelId: %s as it is not registered by the " +
+        "app. Falling to default channel. "),
     NOTIFICATION_VIEWED_DISABLED(
         512,
         "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: %s"
@@ -55,8 +56,10 @@ internal enum class ValidationError(val code: Int, private val messageTemplate: 
     DISCARDED_EVENT_NAME(513, "%s is a discarded event name. Last event aborted."),
     
     // Custom ID errors (514)
-    USE_CUSTOM_ID_FALLBACK(514, "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID"),
-    USE_CUSTOM_ID_MISSING_IN_MANIFEST(514, "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used."),
+    USE_CUSTOM_ID_FALLBACK(514, "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance " +
+        "Configuration. CleverTap SDK will create a fallback device ID"),
+    USE_CUSTOM_ID_MISSING_IN_MANIFEST(514, "CLEVERTAP_USE_CUSTOM_ID has not been specified in the " +
+        "AndroidManifest.xml. Custom CleverTap ID passed will not be used."),
     UNABLE_TO_SET_CT_CUSTOM_ID(514, "CleverTap ID - %s already exists. Unable to set custom CleverTap ID - %s"),
     INVALID_CT_CUSTOM_ID(
         514,

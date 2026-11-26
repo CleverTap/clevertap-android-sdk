@@ -50,28 +50,28 @@ internal open class CTInboxController @WorkerThread constructor(
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("deleteInboxMessage", Callable<Void?> {
             // A null message failed inside the task in Java as well (logged by the executor).
-            val message = checkNotNull(message) { "deleteInboxMessage: no message" }
+            val checkedMessage = checkNotNull(message) { "deleteInboxMessage: no message" }
             // Look up the DAO directly. Must happen BEFORE
             // the local delete wipes the DAO from cache.
-            val v2Dao = findMessageById(message.messageId)?.takeIf { it.source == InboxMessageSource.V2 }
+            val v2Dao = findMessageById(checkedMessage.messageId)?.takeIf { it.source == InboxMessageSource.V2 }
 
             if (v2Dao != null) {
                 val now = clock.currentTimeSeconds()
                 dbAdapter.addPendingDelete(
-                    message.messageId,
+                    checkedMessage.messageId,
                     userId,
                     v2Dao.wzrkParams,
                     resolvePendingActionExpiry(v2Dao, now)
                 )
             }
             synchronized(ctLockManager.inboxControllerLock) {
-                val update = deleteMessageWithId(message.messageId)
+                val update = deleteMessageWithId(checkedMessage.messageId)
                 if (update) {
                     callbackManager.notifyInboxMessagesDidUpdate()
                 }
             }
             if (v2Dao != null) {
-                inboxDeleteCoordinator?.syncDelete(listOf(message), userId)
+                inboxDeleteCoordinator?.syncDelete(listOf(checkedMessage), userId)
             }
             null
         })
@@ -82,11 +82,11 @@ internal open class CTInboxController @WorkerThread constructor(
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("deleteInboxMessagesForIDs", Callable<Void?> {
             // A null list failed inside the task in Java as well (logged by the executor).
-            val messageIDs = checkNotNull(messageIDs) { "deleteInboxMessagesForIDs: no ids" }
+            val checkedMessageIds = checkNotNull(messageIDs) { "deleteInboxMessagesForIDs: no ids" }
             // Partition ids into V1 and V2 BEFORE the local delete wipes
             // the cache.
             val now = clock.currentTimeSeconds()
-            val idSet = messageIDs.toHashSet()
+            val idSet = checkedMessageIds.toHashSet()
             val v2Messages = ArrayList<CTInboxMessage>()
             val pendingRows = ArrayList<PendingDelete>()
             synchronized(messagesLock) {
@@ -103,7 +103,7 @@ internal open class CTInboxController @WorkerThread constructor(
                 dbAdapter.addPendingDeletes(pendingRows, userId)
             }
             synchronized(ctLockManager.inboxControllerLock) {
-                val update = deleteMessagesForIds(messageIDs)
+                val update = deleteMessagesForIds(checkedMessageIds)
                 if (update) {
                     callbackManager.notifyInboxMessagesDidUpdate()
                 }
@@ -136,9 +136,9 @@ internal open class CTInboxController @WorkerThread constructor(
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("markReadInboxMessage", Callable<Void?> {
             // A null message failed inside the task in Java as well (logged by the executor).
-            val message = checkNotNull(message) { "markReadInboxMessage: no message" }
+            val checkedMessage = checkNotNull(message) { "markReadInboxMessage: no message" }
             synchronized(ctLockManager.inboxControllerLock) {
-                val read = markReadForMessageWithId(message.messageId)
+                val read = markReadForMessageWithId(checkedMessage.messageId)
                 if (read) {
                     callbackManager.notifyInboxMessagesDidUpdate()
                 }
@@ -152,9 +152,9 @@ internal open class CTInboxController @WorkerThread constructor(
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("markReadInboxMessagesForIDs", Callable<Void?> {
             // A null list failed inside the task in Java as well (logged by the executor).
-            val messageIDs = checkNotNull(messageIDs) { "markReadInboxMessagesForIDs: no ids" }
+            val checkedMessageIds = checkNotNull(messageIDs) { "markReadInboxMessagesForIDs: no ids" }
             synchronized(ctLockManager.inboxControllerLock) {
-                val read = _markReadForMessagesWithIds(messageIDs)
+                val read = markReadForMessagesWithIds(checkedMessageIds)
                 if (read) {
                     callbackManager.notifyInboxMessagesDidUpdate()
                 }
@@ -201,7 +201,8 @@ internal open class CTInboxController @WorkerThread constructor(
 
             if (!videoSupported && messageDAO.containsVideoOrAudio()) {
                 Logger.d(
-                    "Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
+                    "Dropping inbox message containing video/audio as app does not support video. For more " +
+                    "information checkout CleverTap documentation."
                 )
                 return
             }
@@ -420,7 +421,7 @@ internal open class CTInboxController @WorkerThread constructor(
     }
 
     @AnyThread
-    fun _markReadForMessagesWithIds(messageIDs: List<String>): Boolean {
+    fun markReadForMessagesWithIds(messageIDs: List<String>): Boolean {
         // One pass over `messages` under a single lock
         val idSet = messageIDs.toHashSet()
         val pendingReadRows = ArrayList<PendingRead>()
@@ -491,7 +492,8 @@ internal open class CTInboxController @WorkerThread constructor(
             for (message in messagesList) {
                 if (!videoSupported && message.containsVideoOrAudio()) {
                     Logger.d(
-                        "Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
+                        "Removing inbox message containing video/audio as app does not support video. For more " +
+                        "information checkout CleverTap documentation."
                     )
                     toDelete.add(message)
                     continue

@@ -7,7 +7,11 @@ import android.os.Bundle
 /**
  * Class for handling activity lifecycle events
  */
-@Suppress("unused", "MemberVisibilityCanBePrivate")
+@Suppress(
+    "unused",
+    "MemberVisibilityCanBePrivate",
+    "UtilityClassWithPublicConstructor", // public API: the constructor is in the .api dump
+)
 public class ActivityLifecycleCallback {
 
     public companion object {

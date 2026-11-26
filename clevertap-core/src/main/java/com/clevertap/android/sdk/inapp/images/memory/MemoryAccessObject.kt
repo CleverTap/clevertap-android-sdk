@@ -69,9 +69,9 @@ internal val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
-    it?.let {
+    it?.let { nonNullBitmap ->
         val stream = ByteArrayOutputStream()
-        it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        nonNullBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         stream.toByteArray()
     }
 }

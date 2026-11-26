@@ -309,7 +309,7 @@ class EventQueueManagerTest : BaseTestCase() {
             } just runs
             every {
                 eventQueueManager.initEventEvaluation(
-                    application, json, Constants.PROFILE_EVENT, any()
+                    json, Constants.PROFILE_EVENT, any()
                 )
             } just runs
 
@@ -355,7 +355,7 @@ class EventQueueManagerTest : BaseTestCase() {
             } just runs
             every {
                 eventQueueManager.initEventEvaluation(
-                    application, json, Constants.PROFILE_EVENT, any()
+                    json, Constants.PROFILE_EVENT, any()
                 )
             } just runs
 

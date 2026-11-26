@@ -168,7 +168,8 @@ internal class EventDAOImpl(
             combinedQueueData.hasMore = eventsData.hasMore
         }
 
-        logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")
+        logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, " +
+            "${combinedQueueData.eventIds.size} events")
 
         return combinedQueueData
     }

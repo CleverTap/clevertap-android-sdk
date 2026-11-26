@@ -558,10 +558,12 @@ public object Utils {
     public fun validateCTID(cleverTapID: String?): Boolean {
         val error = when {
             cleverTapID == null ->
-                "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL."
+                "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is " +
+                "NULL."
 
             cleverTapID.isEmpty() ->
-                "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty."
+                "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is " +
+                "empty."
 
             cleverTapID.length > MAX_CUSTOM_CLEVERTAP_ID_LENGTH ->
                 "Custom CleverTap ID passed is greater than 64 characters. "
@@ -623,6 +625,7 @@ public object Utils {
         return "${parts[0]}.$AUTH.${parts[1]}"
     }
 
+    @Suppress("UnusedParameter") // context kept: the wrapper SDKs call this two-argument signature
     @JvmStatic
     public fun isRenderFallback(remoteMessage: RemoteMessage, context: Context?): Boolean {
         // Boolean.parseBoolean semantics: only a case-insensitive "true" is true.

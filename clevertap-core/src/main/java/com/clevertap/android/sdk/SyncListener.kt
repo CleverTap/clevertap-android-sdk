@@ -10,7 +10,8 @@ import org.json.JSONObject
  * </b><br>
  * <code>Use [CleverTapAPI.getCleverTapID] with an [OnInitCleverTapIDListener] instead</code>
  */
-@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
+@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use " +
+    "CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
 public interface SyncListener {
 
     /**
@@ -29,5 +30,6 @@ public interface SyncListener {
      *                    <p><br><span style="color:red;background:#ffcc99" >&#9888; Callback will be received on main
      *                    thread, so avoid doing any lengthy operations from this callback </span></p>
      */
+    @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
     public fun profileDidInitialize(CleverTapID: String?)
 }

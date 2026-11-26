@@ -572,12 +572,14 @@ public open class CleverTapAPI internal constructor(
      * </b><br>
      * <code>Use [CleverTapAPI.getCleverTapID] with an [OnInitCleverTapIDListener] instead</code>
      */
-    @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
+    @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use " +
+        "CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
     @WorkerThread
     public open fun getCleverTapAttributionIdentifier(): String? = coreState.deviceInfo.attributionID
 
     /** Kotlin property syntax, equivalent to [getCleverTapAttributionIdentifier]. */
-    @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
+    @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use " +
+        "CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
     public val cleverTapAttributionIdentifier: String?
         @JvmSynthetic @JvmName("ktGetCleverTapAttributionIdentifier") inline get() = getCleverTapAttributionIdentifier()
 
@@ -623,7 +625,8 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [getUserEventLogCount] instead.
      * getUserEventLogCount() provides user-specific event counts.
      */
-    @Deprecated("since v7.1.0. Use getUserEventLogCount(String) instead. getUserEventLogCount() provides user-specific event counts.")
+    @Deprecated("since v7.1.0. Use getUserEventLogCount(String) instead. getUserEventLogCount() provides " +
+        "user-specific event counts.")
     public open fun getCount(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.count ?: -1
 
     /**
@@ -788,7 +791,8 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [getUserEventLog] instead.
      * It provides user-specific event log with first occurrence timestamp.
      */
-    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with first occurrence timestamp.")
+    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with first " +
+        "occurrence timestamp.")
     public open fun getFirstTime(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.firstTime ?: -1
 
     /**
@@ -815,11 +819,13 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [userEventLogHistory] instead.
      * getUserEventLogHistory() provides user-specific event logs.
      */
-    @Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific event logs.")
+    @Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific " +
+        "event logs.")
     public open fun getHistory(): Map<String, EventDetail>? = coreState.localDataStore.getEventHistory(context)
 
     /** Kotlin property syntax, equivalent to [getHistory]. */
-    @Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific event logs.")
+    @Deprecated("since v7.1.0. Use getUserEventLogHistory() instead. getUserEventLogHistory() provides user-specific " +
+        "event logs.")
     public val history: Map<String, EventDetail>?
         @JvmSynthetic @JvmName("ktGetHistory") inline get() = getHistory()
 
@@ -946,7 +952,8 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [getUserEventLog] instead.
      * It provides user-specific event log with last occurrence timestamp.
      */
-    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with last occurrence timestamp.")
+    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. It provides user-specific event log with last " +
+        "occurrence timestamp.")
     public open fun getLastTime(event: String?): Int = coreState.localDataStore.getEventDetail(event)?.lastTime ?: -1
 
     /**
@@ -985,11 +992,13 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [userLastVisitTs] instead.
      * getUserLastVisitTs() provides user-specific last visit timestamp.
      */
-    @Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last visit timestamp.")
+    @Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last " +
+        "visit timestamp.")
     public open fun getPreviousVisitTime(): Int = coreState.sessionManager.lastVisitTime
 
     /** Kotlin property syntax, equivalent to [getPreviousVisitTime]. */
-    @Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last visit timestamp.")
+    @Deprecated("since v7.1.0. Use getUserLastVisitTs() instead. getUserLastVisitTs() provides user-specific last " +
+        "visit timestamp.")
     public val previousVisitTime: Int
         @JvmSynthetic @JvmName("ktGetPreviousVisitTime") inline get() = getPreviousVisitTime()
 
@@ -1133,12 +1142,14 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [userAppLaunchCount] instead.
      * getUserAppLaunchCount() provides user-specific app launch count.
      */
-    @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
+    @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific " +
+        "app launch count.")
     public open fun getTotalVisits(): Int =
         coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
 
     /** Kotlin property syntax, equivalent to [getTotalVisits]. */
-    @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
+    @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific " +
+        "app launch count.")
     public val totalVisits: Int
         @JvmSynthetic @JvmName("ktGetTotalVisits") inline get() = getTotalVisits()
 
@@ -2060,7 +2071,8 @@ public open class CleverTapAPI internal constructor(
             configLogger.debug(accountId, "Suspending InApp Notifications...")
             configLogger.debug(
                 accountId,
-                "Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again"
+                "Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called " +
+                "again"
             )
             coreState.inAppController.suspendInApps()
         } else {
@@ -2703,6 +2715,7 @@ public open class CleverTapAPI internal constructor(
          * @param _accountId the account ID, or `null` for the default instance
          * @return the instance, or `null` if there is none and it cannot be created
          */
+        @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
         @JvmStatic
         public fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =
             fromAccountId(context, _accountId)

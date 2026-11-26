@@ -18,7 +18,10 @@ public class BitmapDownloadRequestHandlerWithTimeLimit(
 
         Logger.v("handling bitmap download request in BitmapDownloadRequestHandlerWithTimeLimit....")
 
-        val (_, fallbackToAppIcon, context, instanceConfig, downloadTimeLimitInMillis) = bitmapDownloadRequest
+        val fallbackToAppIcon = bitmapDownloadRequest.fallbackToAppIcon
+        val context = bitmapDownloadRequest.context
+        val instanceConfig = bitmapDownloadRequest.instanceConfig
+        val downloadTimeLimitInMillis = bitmapDownloadRequest.downloadTimeLimitInMillis
 
         if (instanceConfig == null || downloadTimeLimitInMillis == -1L) {
             Logger.v("either config is null or downloadTimeLimitInMillis is negative.")

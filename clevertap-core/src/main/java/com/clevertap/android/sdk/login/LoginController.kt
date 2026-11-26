@@ -142,11 +142,13 @@ internal open class LoginController(
     open fun onUserLogin(profile: Map<String, Any?>?, cleverTapID: String?) {
         if (config.enableCustomCleverTapId && cleverTapID == null) {
             Logger.i(
-                "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID"
+                "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and " +
+                "pass a custom CleverTap ID"
             )
         } else if (!config.enableCustomCleverTapId && cleverTapID != null) {
             Logger.i(
-                "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"
+                "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call " +
+                "CleverTapAPI.defaultInstance() without a custom CleverTap ID"
             )
         }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()

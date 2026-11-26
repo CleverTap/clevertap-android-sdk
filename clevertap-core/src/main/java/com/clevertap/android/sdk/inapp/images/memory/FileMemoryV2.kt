@@ -75,7 +75,8 @@ internal class FileMemoryV2(
     override fun inMemorySize(): Int {
         val selected = max(config.optimistic, config.minInMemorySizeKB).toInt()
 
-        logger?.verbose(" File cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")
+        logger?.verbose(" File cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = " +
+            "${config.minInMemorySizeKB}, selected = $selected")
 
         return selected
     }

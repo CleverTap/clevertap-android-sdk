@@ -169,7 +169,8 @@ internal class TriggersMatcher(private val localDataStore: LocalDataStore) {
                 return true
             }
         } catch (e: Exception) {
-            Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")
+            Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: " +
+                "${e.localizedMessage}")
         }
         return false
     }
