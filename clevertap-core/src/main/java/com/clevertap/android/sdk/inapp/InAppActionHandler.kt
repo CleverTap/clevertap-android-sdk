@@ -31,13 +31,7 @@ internal class InAppActionHandler(
     fun openUrl(url: String, launchContext: Context? = null): Boolean {
         try {
             val uri = Uri.parse(url.replace("\n", "").replace("\r", ""))
-            val queryParamSet = uri.getQueryParameterNames()
-            val queryBundle = Bundle()
-            if (!queryParamSet.isNullOrEmpty()) {
-                for (queryName in queryParamSet) {
-                    queryBundle.putString(queryName, uri.getQueryParameter(queryName))
-                }
-            }
+            val queryBundle = queryParametersBundle(uri)
             val intent = Intent(Intent.ACTION_VIEW, uri)
             if (!queryBundle.isEmpty()) {
                 intent.putExtras(queryBundle)
@@ -61,6 +55,17 @@ internal class InAppActionHandler(
             logger.debug("No activity found to open url: $url")
             return false
         }
+    }
+
+    private fun queryParametersBundle(uri: Uri): Bundle {
+        val queryParamSet = uri.getQueryParameterNames()
+        val queryBundle = Bundle()
+        if (!queryParamSet.isNullOrEmpty()) {
+            for (queryName in queryParamSet) {
+                queryBundle.putString(queryName, uri.getQueryParameter(queryName))
+            }
+        }
+        return queryBundle
     }
 
     fun isPlayStoreReviewLibraryAvailable(): Boolean {
