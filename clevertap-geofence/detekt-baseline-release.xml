@@ -28,7 +28,6 @@
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)</ID>
     <ID>ForbiddenMethodCall:Logger.kt$Logger$v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)</ID>
-    <ID>ForbiddenVoid:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$Void?</ID>
     <ID>LargeClass:CTGeofenceAPI.kt$CTGeofenceAPI : GeofenceCallback</ID>
     <ID>LongMethod:BackgroundLocationWork.kt$BackgroundLocationWork$override fun startWork(): ListenableFuture&lt;Result&gt;</ID>
     <ID>LongMethod:CTGeofenceAPI.kt$CTGeofenceAPI$@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) override fun handleGeoFences(fenceList: JSONObject?)</ID>
@@ -144,17 +143,6 @@
     <ID>UnsafeCallOnNullableType:Utils.kt$Utils$isFusedLocationDependencyAvailable!!</ID>
     <ID>UnsafeCallOnNullableType:Utils.kt$Utils$isPlayServicesDependencyAvailable!!</ID>
     <ID>UnsafeCallOnNullableType:Utils.kt$Utils$permission!!</ID>
-    <ID>UseCheckOrError:CTGeofenceAPI.kt$CTGeofenceAPI$throw IllegalStateException( "Geofence SDK must be initialized before initBackgroundLocationUpdates()" )</ID>
-    <ID>UseCheckOrError:CTGeofenceAPI.kt$CTGeofenceAPI$throw IllegalStateException("Geofence SDK must be initialized before triggerLocation()")</ID>
-    <ID>UseCheckOrError:CTGeofenceFactory.kt$CTGeofenceFactory$throw IllegalStateException("Play service APK error :: $errorString")</ID>
-    <ID>UseCheckOrError:CTGeofenceFactory.kt$CTGeofenceFactory$throw IllegalStateException("play-services-location dependency is missing")</ID>
-    <ID>UseCheckOrError:CTLocationFactory.kt$CTLocationFactory$throw IllegalStateException("Play service APK error :: $errorString")</ID>
-    <ID>UseCheckOrError:CTLocationFactory.kt$CTLocationFactory$throw IllegalStateException("play-services-location dependency is missing")</ID>
-    <ID>UseIsNullOrEmpty:CTGeofenceAPI.kt$CTGeofenceAPI$accountId == null || accountId.isEmpty()</ID>
-    <ID>UseIsNullOrEmpty:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$fenceIdList == null || fenceIdList.isEmpty()</ID>
-    <ID>UseIsNullOrEmpty:GoogleGeofenceAdapter.kt$GoogleGeofenceAdapter$fenceList == null || fenceList.isEmpty()</ID>
-    <ID>UseOrEmpty:Utils.kt$Utils$str ?: ""</ID>
-    <ID>UseRequire:Utils.kt$Utils$throw IllegalArgumentException("fromIndex($fromIndex) &gt; toIndex($toIndex)")</ID>
     <ID>VariableNaming:CTGeofenceTaskManager.kt$CTGeofenceTaskManager$private var EXECUTOR_THREAD_ID: Long = 0</ID>
   </CurrentIssues>
 </SmellBaseline>

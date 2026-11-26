@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$mConfig!!</ID>
     <ID>UnsafeCallOnNullableType:HmsSdkHandler.kt$HmsSdkHandler$options!!</ID>
-    <ID>UseLet:CTHmsMessageHandler.kt$CTHmsMessageHandler$if (remoteMessage != null) { mParser.toBundle(remoteMessage) } else { null }</ID>
     <ID>UtilityClassWithPublicConstructor:HmsConstants.kt$HmsConstants</ID>
   </CurrentIssues>
 </SmellBaseline>
