@@ -52,4 +52,6 @@ The release PR (`develop` to `master`) also needs:
   versions from there, so do not edit the generated version files by hand.
 
 The workflow `mandatory_filechanges` needs both a `docs/` and a `templates/` changelog file to change, which
-`copyTemplates` gives you. It blocks a release PR that changes a module's `src/` without these files.
+`copyTemplates` gives you. It blocks a release PR that changes a module's `src/` without these files. If a module has only internal
+changes (tests, refactors), add one honest line such as `Internal refactoring, no change for apps` so the
+check passes. Do not invent a user-visible change.

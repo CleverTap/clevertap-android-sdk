@@ -31,6 +31,7 @@ Options
 
 import argparse
 import os
+import tempfile
 import sys
 
 from google.auth.transport.requests import Request
@@ -78,8 +79,7 @@ def get_service():
                 CLIENT_SECRET, SCOPES
             ).run_local_server(port=0)
         # holds a refresh token: create the file private from the start
-        tmp = TOKEN + ".tmp"
-        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(TOKEN), suffix=".tmp")  # mode 0600
         with os.fdopen(fd, "w") as fh:
             fh.write(creds.to_json())
         os.replace(tmp, TOKEN)

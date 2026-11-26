@@ -12,6 +12,7 @@ Work through the steps in order. If a step fails, stop and tell the user. Do not
 - Name: `task/SDK-1234/short-name` or `bug/SDK-1234/short-name`. The other accepted prefixes are in
   `.github/workflows/on_pr_from_task_to_develop.yml`.
 - A branch whose name does not start with an accepted prefix gets no CI. Rename it before opening the PR.
+  (The release PR is the exception: its head branch is `develop`, which is the only head the release checks accept.)
 - The base branch is `develop`. The only other normal base is `master`, for the release PR (`develop` to `master`,
   see the `release` skill); it has its own checks. A PR into any other branch (for example a release branch) gets no CI.
 
@@ -49,4 +50,5 @@ Give exact results (counts, versions), not just "tests pass".
 ## 7. When CI will not run
 
 Say so in the description, and run the "Manually validate any branch" workflow on the branch
-(lint, detekt, checkstyle, tests, build).
+(lint, detekt, checkstyle and coverage tests are on by default; turn on `build_debug` and `build_release`
+if you need the builds, and `check_mandatory` for a release PR).

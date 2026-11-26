@@ -12,7 +12,7 @@ reaches every app that uses it. These rules are for AI coding agents and for peo
 | `clevertap-pushtemplates` | Push templates (rating, timer, carousel and others) |
 | `clevertap-geofence` | Geofence SDK |
 | `clevertap-hms` | Huawei push |
-| `sample` | Sample app. Flavor `local` uses the modules above, `remote` uses published artifacts |
+| `sample` | Sample app. Flavor `local` uses the modules above, `remote` uses published artifacts, `staging` is a third variant |
 | `instantapp`, `test_shared` | Instant app sample, shared test helpers (`BaseTestCase`) |
 
 minSdk 23, compileSdk 36. Java and Kotlin are mixed. `CleverTapAPI.java` is the public entry point.

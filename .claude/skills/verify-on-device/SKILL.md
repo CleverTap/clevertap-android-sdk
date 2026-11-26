@@ -23,7 +23,7 @@ The sample needs account values in `sample/src/main/AndroidManifest.xml`. Never 
 | See what is on screen (positions, sizes, text) | `adb shell uiautomator dump` then pull the file |
 | Simulate a bigger or smaller screen | `adb shell wm density <number>`, and `adb shell wm density reset` after |
 | Revoke the notification permission | `adb shell pm revoke com.clevertap.demo android.permission.POST_NOTIFICATIONS` |
-| Show the notification permission prompt | Use the sample's push-permission action (it calls `promptForPushPermission`). `pm revoke` alone does not show the prompt. |
+| Show the notification permission prompt | Use the sample's push-permission action (it calls `promptForPushPermission`). `pm revoke` alone does not show the prompt. If it was denied twice, also run `adb shell pm clear-permission-flags com.clevertap.demo android.permission.POST_NOTIFICATIONS user-set user-fixed`. |
 | Look for crashes | `adb logcat -d` and search for `FATAL EXCEPTION` |
 | Screenshot | `adb exec-out screencap -p > shot.png` |
 
