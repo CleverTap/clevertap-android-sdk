@@ -67,7 +67,7 @@ class PIFlushWorkInstrumentationTest{
         val myContext = ApplicationProvider.getApplicationContext<Context>()
         val defaultInstance = CleverTapAPI.getDefaultInstance(myContext)
 
-        val config1 = CleverTapInstanceConfig.createInstance(myContext, "88R-R54-5Z6Z", "452-2bb");
+        val config1 = CleverTapInstanceConfig.createInstance(myContext, "88R-R54-5Z6Z", "452-2bb")!!
         config1.isAnalyticsOnly = true
         val config2 = CleverTapInstanceConfig.createInstance(myContext, "TEST-46W-WWR-R85Z", "TEST-200-064");
 
