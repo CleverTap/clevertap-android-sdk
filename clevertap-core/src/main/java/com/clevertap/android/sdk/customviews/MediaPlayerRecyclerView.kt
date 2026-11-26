@@ -42,7 +42,7 @@ internal class MediaPlayerRecyclerView : RecyclerView {
     }
     private val onChildAttachStateChangeListener: OnChildAttachStateChangeListener =
         object : OnChildAttachStateChangeListener {
-            override fun onChildViewAttachedToWindow(view: View) {}
+            override fun onChildViewAttachedToWindow(view: View) { /* No-op: only a detached row affects playback. */ }
             override fun onChildViewDetachedFromWindow(view: View) {
                 if (playingHolder?.itemView == view) {
                     // The row can return from the view cache without a rebind, so clear its container

@@ -29,43 +29,53 @@ import androidx.annotation.RestrictTo
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal open class ExoplayerPlayerListener : Player.Listener {
-    override fun onEvents(player: Player, events: Player.Events) {}
-    override fun onTimelineChanged(timeline: Timeline, reason: Int) {}
-    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {}
-    override fun onTracksChanged(tracks: Tracks) {}
-    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {}
-    override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) {}
-    override fun onIsLoadingChanged(isLoading: Boolean) {}
-    override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {}
-    override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {}
-    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {}
-    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {}
-    override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {}
-    override fun onIsPlayingChanged(isPlaying: Boolean) {}
-    override fun onRepeatModeChanged(repeatMode: Int) {}
-    override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {}
-    override fun onPlayerError(error: PlaybackException) {}
-    override fun onPlayerErrorChanged(error: PlaybackException?) {}
-    override fun onPositionDiscontinuity(reason: Int) {}
+    override fun onEvents(player: Player, events: Player.Events) { /* No-op default (see class KDoc) */ }
+    override fun onTimelineChanged(timeline: Timeline, reason: Int) { /* No-op default (see class KDoc) */ }
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) { /* No-op default (see class KDoc) */ }
+    override fun onTracksChanged(tracks: Tracks) { /* No-op default (see class KDoc) */ }
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) { /* No-op default (see class KDoc) */ }
+    override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) { /* No-op default (see class KDoc) */ }
+    override fun onIsLoadingChanged(isLoading: Boolean) { /* No-op default (see class KDoc) */ }
+    override fun onAvailableCommandsChanged(availableCommands: Player.Commands) { /* No-op default (see class KDoc) */ }
+    override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {
+        // No-op default (see class KDoc)
+    }
+    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+        // No-op default (see class KDoc)
+    }
+    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) { /* No-op default (see class KDoc) */ }
+    override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
+        // No-op default (see class KDoc)
+    }
+    override fun onIsPlayingChanged(isPlaying: Boolean) { /* No-op default (see class KDoc) */ }
+    override fun onRepeatModeChanged(repeatMode: Int) { /* No-op default (see class KDoc) */ }
+    override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) { /* No-op default (see class KDoc) */ }
+    override fun onPlayerError(error: PlaybackException) { /* No-op default (see class KDoc) */ }
+    override fun onPlayerErrorChanged(error: PlaybackException?) { /* No-op default (see class KDoc) */ }
+    override fun onPositionDiscontinuity(reason: Int) { /* No-op default (see class KDoc) */ }
     override fun onPositionDiscontinuity(
         oldPosition: Player.PositionInfo,
         newPosition: Player.PositionInfo,
         reason: Int
-    ) {}
-    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {}
-    override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) {}
-    override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {}
-    override fun onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs: Long) {}
-    override fun onAudioSessionIdChanged(audioSessionId: Int) {}
-    override fun onAudioAttributesChanged(audioAttributes: AudioAttributes) {}
-    override fun onVolumeChanged(volume: Float) {}
-    override fun onSkipSilenceEnabledChanged(skipSilenceEnabled: Boolean) {}
-    override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) {}
-    override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) {}
-    override fun onVideoSizeChanged(videoSize: VideoSize) {}
-    override fun onSurfaceSizeChanged(width: Int, height: Int) {}
-    override fun onRenderedFirstFrame() {}
-    override fun onCues(cues: MutableList<Cue>) {}
-    override fun onCues(cueGroup: CueGroup) {}
-    override fun onMetadata(metadata: Metadata) {}
+    ) { /* No-op default (see class KDoc) */ }
+    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+        // No-op default (see class KDoc)
+    }
+    override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) { /* No-op default (see class KDoc) */ }
+    override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) { /* No-op default (see class KDoc) */ }
+    override fun onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs: Long) {
+        // No-op default (see class KDoc)
+    }
+    override fun onAudioSessionIdChanged(audioSessionId: Int) { /* No-op default (see class KDoc) */ }
+    override fun onAudioAttributesChanged(audioAttributes: AudioAttributes) { /* No-op default (see class KDoc) */ }
+    override fun onVolumeChanged(volume: Float) { /* No-op default (see class KDoc) */ }
+    override fun onSkipSilenceEnabledChanged(skipSilenceEnabled: Boolean) { /* No-op default (see class KDoc) */ }
+    override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) { /* No-op default (see class KDoc) */ }
+    override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) { /* No-op default (see class KDoc) */ }
+    override fun onVideoSizeChanged(videoSize: VideoSize) { /* No-op default (see class KDoc) */ }
+    override fun onSurfaceSizeChanged(width: Int, height: Int) { /* No-op default (see class KDoc) */ }
+    override fun onRenderedFirstFrame() { /* No-op default (see class KDoc) */ }
+    override fun onCues(cues: MutableList<Cue>) { /* No-op default (see class KDoc) */ }
+    override fun onCues(cueGroup: CueGroup) { /* No-op default (see class KDoc) */ }
+    override fun onMetadata(metadata: Metadata) { /* No-op default (see class KDoc) */ }
 }

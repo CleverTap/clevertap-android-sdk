@@ -262,10 +262,14 @@ internal class PIPManager(
             }
         }
 
-        override fun onActivityCreated(a: Activity, b: Bundle?) {}
-        override fun onActivityResumed(a: Activity) {}
-        override fun onActivityPaused(a: Activity) {}
-        override fun onActivitySaveInstanceState(a: Activity, b: Bundle) {}
+        override fun onActivityCreated(a: Activity, b: Bundle?) {
+            // No-op: PIP reacts to started/stopped/destroyed only
+        }
+        override fun onActivityResumed(a: Activity) { /* No-op: PIP reacts to started/stopped/destroyed only */ }
+        override fun onActivityPaused(a: Activity) { /* No-op: PIP reacts to started/stopped/destroyed only */ }
+        override fun onActivitySaveInstanceState(a: Activity, b: Bundle) {
+            // No-op: PIP reacts to started/stopped/destroyed only
+        }
     }
 
     // ─── Rotation support ─────────────────────────────────────────────────────────
