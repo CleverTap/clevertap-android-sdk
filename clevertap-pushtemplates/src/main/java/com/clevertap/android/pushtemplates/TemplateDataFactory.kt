@@ -378,7 +378,9 @@ internal object TemplateDataFactory {
         return VerticalImageTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = mediaData,
-            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText),
+            collapsedMediaData = createCollapsedMediaDataWithoutFallback(
+                extras, defaultAltText, mediaData.imageBorderData
+            ),
             actions = Utils.getActionKeys(extras),
             text1 = extras.getString(PT_TEXT1),
             text2 = extras.getString(PT_TEXT2),
@@ -517,7 +519,11 @@ internal object TemplateDataFactory {
         )
     }
 
-    private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
+    private fun createCollapsedMediaDataWithoutFallback(
+        extras: Bundle,
+        defaultAltText: String,
+        imageBorderData: ImageBorderData
+    ): MediaData? {
         val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)?.takeIf { it.isNotBlank() }
         val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)?.takeIf { it.isNotBlank() }
         if (bigImageCollapsed == null && gifCollapsed == null) return null
@@ -530,7 +536,8 @@ internal object TemplateDataFactory {
                 url = gifCollapsed,
                 numberOfFrames = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull() ?: 10
             ),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED)),
+            imageBorderData = imageBorderData
         )
     }
 
