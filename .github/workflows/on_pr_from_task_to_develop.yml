@@ -25,6 +25,9 @@ jobs:
       startsWith(github.head_ref, 'ci/') ||
       startsWith(github.head_ref, 'chore/') ||
       startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'release/') ||
+      startsWith(github.head_ref, 'revert/') ||
+      startsWith(github.head_ref, 'SDK-') ||
       startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
@@ -54,6 +57,9 @@ jobs:
       startsWith(github.head_ref, 'ci/') ||
       startsWith(github.head_ref, 'chore/') ||
       startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'release/') ||
+      startsWith(github.head_ref, 'revert/') ||
+      startsWith(github.head_ref, 'SDK-') ||
       startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
@@ -83,6 +89,9 @@ jobs:
       startsWith(github.head_ref, 'ci/') ||
       startsWith(github.head_ref, 'chore/') ||
       startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'release/') ||
+      startsWith(github.head_ref, 'revert/') ||
+      startsWith(github.head_ref, 'SDK-') ||
       startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
@@ -114,6 +123,9 @@ jobs:
       startsWith(github.head_ref, 'ci/') ||
       startsWith(github.head_ref, 'chore/') ||
       startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'release/') ||
+      startsWith(github.head_ref, 'revert/') ||
+      startsWith(github.head_ref, 'SDK-') ||
       startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
@@ -151,6 +163,9 @@ jobs:
       startsWith(github.head_ref, 'ci/') ||
       startsWith(github.head_ref, 'chore/') ||
       startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'release/') ||
+      startsWith(github.head_ref, 'revert/') ||
+      startsWith(github.head_ref, 'SDK-') ||
       startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
