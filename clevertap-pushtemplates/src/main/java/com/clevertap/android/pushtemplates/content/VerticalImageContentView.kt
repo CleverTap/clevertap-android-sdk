@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import com.clevertap.android.pushtemplates.ButtonStyle
@@ -38,13 +39,24 @@ internal abstract class VerticalImageContentView(
 
         setCustomTextColour(buttonData.textColor, R.id.vertical_img_btn)
 
-        val borderColor = buttonData.borderColor?.let { Utils.getColourOrNull(it) }
+        val bitmap = buttonBackgroundBitmap(buttonData)
+        bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
+
+        setupButtonDeepLink(extras, buttonData.deepLink, notificationId, isCollapsed)
+    }
+
+    /**
+     * The button background for [buttonData]'s style, or `null` when a color that style needs is
+     * missing or invalid.
+     */
+    private fun buttonBackgroundBitmap(buttonData: VerticalImageButtonData): Bitmap? {
+        val borderColor = colorOrNull(buttonData.borderColor)
         val borderWidth = buttonData.borderWidth
         val borderRadius = buttonData.borderRadius
-        val bitmap = when (buttonData.style) {
+        return when (buttonData.style) {
             ButtonStyle.GRADIENT_LINEAR -> {
-                val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
-                val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
+                val color1 = colorOrNull(buttonData.gradientColor1)
+                val color2 = colorOrNull(buttonData.gradientColor2)
                 if (color1 != null && color2 != null) {
                     NotificationBitmapUtils.createLinearGradientBitmap(
                         color1, color2, buttonData.gradientDirection,
@@ -56,8 +68,8 @@ internal abstract class VerticalImageContentView(
                 }
             }
             ButtonStyle.GRADIENT_RADIAL -> {
-                val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
-                val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
+                val color1 = colorOrNull(buttonData.gradientColor1)
+                val color2 = colorOrNull(buttonData.gradientColor2)
                 if (color1 != null && color2 != null) {
                     NotificationBitmapUtils.createRadialBitmap(
                         color1, color2, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
@@ -68,7 +80,7 @@ internal abstract class VerticalImageContentView(
                 }
             }
             ButtonStyle.SOLID -> {
-                val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
+                val bgColor = colorOrNull(buttonData.buttonColor)
                 bgColor?.let {
                     NotificationBitmapUtils.createSolidBitmap(
                         it, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
@@ -77,10 +89,10 @@ internal abstract class VerticalImageContentView(
                 }
             }
         }
-        bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
-
-        setupButtonDeepLink(extras, buttonData.deepLink, notificationId, isCollapsed)
     }
+
+    /** The parsed [colour], or `null` when it is missing or invalid. */
+    private fun colorOrNull(colour: String?): Int? = colour?.let { Utils.getColourOrNull(it) }
 
     private fun setupButtonDeepLink(
         extras: Bundle,
