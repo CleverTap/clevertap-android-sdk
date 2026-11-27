@@ -24,7 +24,6 @@ internal class QueueData {
         get() = profileEventIds.isNotEmpty()
 
     override fun toString(): String {
-        return "QueueData: numItems=${data.length()}, eventIds=${eventIds.size}, " +
-            "profileEventIds=${profileEventIds.size}"
+        return "QueueData: numItems=${data.length()}, eventIds=${eventIds.size}, profileEventIds=${profileEventIds.size}"
     }
 }

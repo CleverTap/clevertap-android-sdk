@@ -37,8 +37,7 @@ import androidx.annotation.RestrictTo
  * in v9.0.0. Migrate to Media3 (androidx.media3) and use [com.clevertap.android.sdk.video.inapps.Media3Handle] instead.
  */
 @Deprecated(
-    message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in " +
-        "v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
+    message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
     replaceWith = ReplaceWith("Media3Handle()", "com.clevertap.android.sdk.video.inapps.Media3Handle")
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

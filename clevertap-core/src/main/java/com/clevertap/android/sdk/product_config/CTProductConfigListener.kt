@@ -9,24 +9,18 @@ public interface CTProductConfigListener {
     /**
      * Receives a callback whenever Product Config gets activated.
      */
-    @Deprecated(
-        "Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
-    )
+    @Deprecated("Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public fun onActivated()
 
     /**
      * Receives a callback whenever Product Config is fetched.
      */
-    @Deprecated(
-        "Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
-    )
+    @Deprecated("Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public fun onFetched()
 
     /**
      * Receives a callback whenever Product Config initialises.
      */
-    @Deprecated(
-        "Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK."
-    )
+    @Deprecated("Product Config has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     public fun onInit()
 }

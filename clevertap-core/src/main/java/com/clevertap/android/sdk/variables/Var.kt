@@ -145,8 +145,7 @@ public open class Var<T> internal constructor(
     internal fun warnIfNotStarted() {
         if (!ctVariables.hasVarsRequestCompleted && !printedCallbackWarning) {
             log(
-                "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure " +
-                "the value for " +
+                "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for " +
                     "$name is ready. Otherwise, your app may not use the most up-to-date value."
             )
             printedCallbackWarning = true
@@ -347,8 +346,7 @@ public open class Var<T> internal constructor(
                 return null
             }
             if (CTVariableUtils.FILE != kind && defaultValue == null) {
-                Logger.d("Invalid Operation! Null values are not allowed as default values when defining the " +
-                    "variable '$name'.")
+                Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '$name'.")
                 return null
             }
 

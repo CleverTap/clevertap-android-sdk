@@ -80,6 +80,7 @@
     <ID>MapGetWithNotNullAssertionOperator:RatingTemplateValidator.kt$RatingTemplateValidator$keys[PT_RATING_DEFAULT_DL]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:VerticalImageTemplateValidator.kt$VerticalImageTemplateValidator$keys[PT_BIG_IMG]!!</ID>
     <ID>MapGetWithNotNullAssertionOperator:ZeroBezelTemplateValidator.kt$ZeroBezelTemplateValidator$keys[PT_BIG_IMG]!!</ID>
+    <ID>MaxLineLength:TemplateRenderer.kt$TemplateRenderer$PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")</ID>
     <ID>MayBeConst:PTConstants.kt$PTConstants.Companion$@JvmField public val PT_SILENT_CHANNEL_NAME: CharSequence = "Silent Channel"</ID>
     <ID>NestedBlockDepth:PendingIntentFactory.kt$PendingIntentFactory$@JvmStatic @JvmOverloads fun getPendingIntent( context: Context, notificationId: Int, extras: Bundle, isLauncher: Boolean, identifier: Int, deepLink: String? = null, inputFeedback: String? = null, inputAutoOpen: String? = null, config: CleverTapInstanceConfig? = null ): PendingIntent?</ID>
     <ID>NestedBlockDepth:PushTemplateReceiver.kt$PushTemplateReceiver.TemplateClick$private fun applyBigImageStyle( imgUrl: String?, notificationBuilder: NotificationCompat.Builder, altText: String?, config: CleverTapInstanceConfig? )</ID>

@@ -56,19 +56,14 @@ internal class InAppTimerManager(
         scope.launch {
             logCoroutineInfo("lifeCycleOwner scope launch, $coroutineContext, ${coroutineContext[Job]?.parent}}")
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                logCoroutineInfo(
-                    "process lifeCycleOwner: started, $coroutineContext, ${coroutineContext[Job]?.parent}}"
-                )
+                logCoroutineInfo("process lifeCycleOwner: started, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                 try {
                     onAppForeground()
                     awaitCancellation()
                 } catch (c: CancellationException) {
-                    logCoroutineInfo(
-                        "process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}"
-                    )
+                    logCoroutineInfo("process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                     withContext(NonCancellable) {
-                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, " +
-                            "${coroutineContext[Job]?.parent}}")
+                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                         onAppBackground()
                     }
                     ensureActive()
@@ -200,8 +195,7 @@ internal class InAppTimerManager(
 
             logger.verbose(
                 accountId,
-                "$logTag Id $id - Original delay: ${originalDelayInMs}ms, " +
-                        "Elapsed: ${elapsedTime}ms, Remaining: ${remainingTime}ms"
+                "$logTag Id $id - Original delay: ${originalDelayInMs}ms, Elapsed: ${elapsedTime}ms, Remaining: ${remainingTime}ms"
             )
 
             if (remainingTime > 0) {

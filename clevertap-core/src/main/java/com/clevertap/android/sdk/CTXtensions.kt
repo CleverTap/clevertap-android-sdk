@@ -136,8 +136,7 @@ private fun NotificationManager.tryGetChannel(
     if (shouldSkip) {
         Logger.d(
             Constants.CLEVERTAP_LOG_TAG,
-            "Skipping channel $channelId because heads-up should be hidden in FG but importance is " +
-            "${channel.importance}"
+            "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"
         )
         return null
     }

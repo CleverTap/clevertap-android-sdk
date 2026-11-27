@@ -482,8 +482,7 @@ internal open class DeviceInfo internal constructor(
         if (key == null) {
             config.logger.verbose(
                 config.accountId,
-                "Unable to set current user allowed system events and communications flag from storage: storage key " +
-                "is null"
+                "Unable to set current user allowed system events and communications flag from storage: storage key is null"
             )
             return
         }
@@ -491,8 +490,7 @@ internal open class DeviceInfo internal constructor(
         coreMetaData.enabledSystemEvents = storedAllowedSystemEvents
         config.logger.verbose(
             config.accountId,
-            "Set current user allowed system events and communications flag state from storage to: " +
-            "$storedAllowedSystemEvents for key: $key"
+            "Set current user allowed system events and communications flag state from storage to: $storedAllowedSystemEvents for key: $key"
         )
     }
 
@@ -550,8 +548,7 @@ internal open class DeviceInfo internal constructor(
                 limitAdTracking = limitedAdTracking == true
                 config.logger.verbose(asyncDeviceIdTag, "limitAdTracking = $limitAdTracking")
                 if (limitAdTracking) {
-                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, " +
-                        "falling back to random UUID for CleverTap ID generation")
+                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation")
                     return
                 }
             }
@@ -569,8 +566,7 @@ internal open class DeviceInfo internal constructor(
             synchronized(adIDLock) {
                 if (advertisingID.contains("00000000")) {
                     //Device has opted out of sharing Google Advertising ID
-                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, " +
-                        "falling back to random UUID for CleverTap ID generation")
+                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation")
                     return
                 }
                 googleAdIDValue = advertisingID.replace("-", "")

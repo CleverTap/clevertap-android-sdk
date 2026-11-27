@@ -50,10 +50,8 @@ internal object ManifestValidator {
             appName.isNullOrEmpty() -> Logger.i("Unable to determine Application Class")
             appName == OUR_APPLICATION_CLASS_NAME -> Logger.i(
                 "AndroidManifest.xml uses the CleverTap Application class, " +
-                    "be sure you have properly added the CleverTap Account ID and Token to your " +
-                    "AndroidManifest.xml, \n" +
-                    "or set them programmatically in the onCreate method of your custom application class prior to " +
-                    "calling super.onCreate()"
+                    "be sure you have properly added the CleverTap Account ID and Token to your AndroidManifest.xml, \n" +
+                    "or set them programmatically in the onCreate method of your custom application class prior to calling super.onCreate()"
             )
 
             else -> Logger.i("Application Class is $appName")
@@ -130,10 +128,8 @@ internal object ManifestValidator {
         // for those cases also consider CleverTapAPI.isAppForeground() as a proxy for the SDK being in sync with the activity lifecycle
         if (!ActivityLifecycleCallback.registered && !CleverTapAPI.isAppForeground()) {
             Logger.i(
-                "Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml " +
-                "application tag to com.clevertap.android.sdk.Application, \n or, " +
-                    "if you have a custom Application class, call ActivityLifecycleCallback.register(this); before " +
-                    "super.onCreate() in your class"
+                "Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, " +
+                    "if you have a custom Application class, call ActivityLifecycleCallback.register(this); before super.onCreate() in your class"
             )
             //Check for Application class only if the application lifecycle seems to be a problem
             checkApplicationClass(context)

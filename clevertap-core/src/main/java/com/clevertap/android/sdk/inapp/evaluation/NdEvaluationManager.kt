@@ -273,10 +273,7 @@ internal class NdEvaluationManager(
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
         if (wzrkId.isEmpty()) {
             // CG stubs always ship wzrk_id; log rather than drop silently if one doesn't.
-            config.logger.verbose(
-                config.accountId,
-                "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})"
-            )
+            config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
             return
         }
         suppressedNdCampaigns.add(

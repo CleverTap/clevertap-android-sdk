@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 634**  
-core: 463 · geofence: 51 · hms: 2 · pushtemplates: 118
+**Total baselined findings: 651**  
+core: 479 · geofence: 51 · hms: 2 · pushtemplates: 119
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -16,7 +16,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
 | Library safety | 9 | DoubleMutabilityForCollection (9) |
 | Naming | 2 | FunctionNaming (2) |
-| Style | 49 | MagicNumber (25), ReturnCount (17), ForbiddenMethodCall (7) |
+| Style | 66 | MagicNumber (25), ReturnCount (17), MaxLineLength (17), ForbiddenMethodCall (7) |
 | Complexity | 311 | LongParameterList (72), NestedBlockDepth (70), CyclomaticComplexMethod (62), TooManyFunctions (37), LongMethod (37), LargeClass (28), ComplexCondition (5) |
 | Other | 21 | LoopWithTooManyJumpStatements (11), ThrowsCount (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), MemberNameEqualsClassName (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1) |
 
@@ -63,6 +63,8 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTXtensions.kt` (2)
 - **ReturnCount: 17** (core 14, pushtemplates 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
   Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1), `CTInAppNotification.kt` (1)
+- **MaxLineLength: 17** (core 16, pushtemplates 1). Wrap lines > 120.  
+  Top files: `ValidationResultFactory.kt` (3), `VideoLibChecker.kt` (3), `CTInboxController.kt` (2), `CleverTapAPI.kt` (1), `DeviceInfo.kt` (1), `ExoplayerHandle.kt` (1)
 - **ForbiddenMethodCall: 7** (core 7). Log through `Logger`, no `Thread.sleep`/`println`.  
   Top files: `DefaultXmlParser.kt` (4), `CTDisplayUnitType.kt` (1), `CleverTapResponse.kt` (1), `UrlConnectionHttpClient.kt` (1)
 

@@ -195,8 +195,7 @@ internal open class ActivityLifeCycleManager(
             config.logger.verbose(
                 config.accountId,
                 "Google Play Install Referrer's InstallReferrerClient Class not found - ${t.localizedMessage}" +
-                    " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your " +
-                    "build.gradle"
+                    " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle"
             )
         }
     }

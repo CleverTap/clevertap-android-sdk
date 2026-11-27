@@ -673,8 +673,7 @@ internal open class AnalyticsManager(
         if (extras == null || extras.isEmpty || extras.get(Constants.NOTIFICATION_TAG) == null) {
             config.logger.debug(
                 config.accountId,
-                "Push notification: ${extras ?: "NULL"} not from CleverTap - will not process Notification Viewed " +
-                "event."
+                "Push notification: ${extras ?: "NULL"} not from CleverTap - will not process Notification Viewed event."
             )
             return
         }
@@ -752,8 +751,7 @@ internal open class AnalyticsManager(
             // the bundle can carry title/message/deep-link PII that shouldn't hit Logcat (CWE-532).
             config.logger.debug(
                 config.accountId,
-                "Recorded Live Activity event ($state) for activityId: " +
-                "${extras.getString(Constants.WZRK_LIVE_UPDATE_ID)}"
+                "Recorded Live Activity event ($state) for activityId: ${extras.getString(Constants.WZRK_LIVE_UPDATE_ID)}"
             )
         } catch (e: JSONException) {
             config.logger.debug("Failed to record Live Activity event $e")
@@ -882,8 +880,7 @@ internal open class AnalyticsManager(
     } catch (e: JSONException) {
         config.logger.debug(
             config.accountId,
-            "${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - " +
-            "${e.localizedMessage}"
+            "${Constants.LOG_TAG_SIGNED_CALL}JSON Exception when raising Signed Call event $eventName - ${e.localizedMessage}"
         )
         null
     }
@@ -909,8 +906,7 @@ internal open class AnalyticsManager(
     } catch (e: JSONException) {
         config.logger.debug(
             config.accountId,
-            "${Constants.LOG_TAG_GEOFENCES}JSON Exception when raising GeoFence event $eventName - " +
-            "${e.localizedMessage}"
+            "${Constants.LOG_TAG_GEOFENCES}JSON Exception when raising GeoFence event $eventName - ${e.localizedMessage}"
         )
         null
     }

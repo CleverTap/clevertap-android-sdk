@@ -273,16 +273,14 @@ internal class InAppController(
                     // After inaction duration expires, fetch content from backend
                     logger.verbose(
                         defaultLogTag,
-                        "[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling " +
-                        "fetch API"
+                        "[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling fetch API"
                     )
                     fetchInActionInApp(result.targetId)
                 }
                 is InActionResult.Error -> {
                     logger.verbose(
                         defaultLogTag,
-                        "[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: " +
-                        "${result.targetId}"
+                        "[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"
                     )
                 }
                 is InActionResult.Cancelled -> {
@@ -1129,8 +1127,7 @@ internal class InAppController(
             // Same as showInApp: the In-App waits for the one on screen to close, it is not dropped.
             logger.verbose(
                 defaultLogTag,
-                "In-app ${currentlyDisplayingInApp?.campaignId} is on screen, queuing restored in-app " +
-                "${inApp.campaignId}"
+                "In-app ${currentlyDisplayingInApp?.campaignId} is on screen, queuing restored in-app ${inApp.campaignId}"
             )
             pendingNotifications.add(inApp)
             listener.onRestoreResult(null)
@@ -1415,8 +1412,7 @@ internal class InAppController(
         if (isHtmlType && !networkMonitor.isNetworkOnline()) {
             logger.debug(
                 defaultLogTag,
-                "Not showing HTML InApp due to no internet. An active internet connection is required to display the " +
-                "HTML InApp"
+                "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"
             )
             showNotificationIfAvailable()
             return
@@ -1451,8 +1447,7 @@ internal class InAppController(
                     saveDisplayedInApp(inAppNotification)
                 } catch (t: Throwable) {
                     logger.verbose(
-                        "Please verify the integration of your app. It is not setup to support in-app notifications " +
-                        "yet.",
+                        "Please verify the integration of your app. It is not setup to support in-app notifications yet.",
                         t
                     )
                     currentlyDisplayingInApp = null

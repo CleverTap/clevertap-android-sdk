@@ -312,9 +312,7 @@ public class CustomTemplate private constructor(
                     is Boolean -> booleanArgument(argName, argValue)
                     is String -> stringArgument(argName, argValue)
                     is Map<*, *> -> mapArgument(argName, argValue as Map<String, Any>)
-                    else -> throw CustomTemplateException(
-                        "Unsupported value type ${argValue.javaClass} for argument $argName"
-                    )
+                    else -> throw CustomTemplateException("Unsupported value type ${argValue.javaClass} for argument $argName")
                 }
             }
             return thisRef
@@ -349,9 +347,7 @@ public class CustomTemplate private constructor(
             }
 
             if (name.startsWith(".") || name.endsWith(".") || name.contains("..")) {
-                throw CustomTemplateException(
-                    "Argument name must not begin or end with a \".\" nor have consecutive \".\""
-                )
+                throw CustomTemplateException("Argument name must not begin or end with a \".\" nor have consecutive \".\"")
             }
 
             if (argsNames.contains(name)) {

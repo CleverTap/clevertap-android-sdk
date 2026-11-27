@@ -54,12 +54,7 @@ internal object NativeProgressApi {
     @VisibleForTesting
     internal fun cachedLookup(lookup: () -> Methods): Lazy<Methods?> = lazy {
         runCatching(lookup)
-            .onFailure {
-                PTLog.verbose(
-                    "pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback",
-                    it
-                )
-            }
+            .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
             .getOrNull()
     }
 

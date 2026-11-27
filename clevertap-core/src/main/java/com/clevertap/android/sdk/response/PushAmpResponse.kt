@@ -96,8 +96,7 @@ internal open class PushAmpResponse(
                 } else {
                     logger.verbose(
                         config.accountId,
-                        "Push Notification already shown, ignoring local notification " +
-                        ":${pushObject.getString("wzrk_pid")}"
+                        "Push Notification already shown, ignoring local notification :${pushObject.getString("wzrk_pid")}"
                     )
                 }
             }

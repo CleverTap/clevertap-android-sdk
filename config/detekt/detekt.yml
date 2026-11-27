@@ -114,9 +114,11 @@ style:
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotation: true
     ignoreEnums: true
+  # 150 so log/exception/deprecation messages stay on one line: splitting message text with `+` to fit
+  # 120 made it hard to read and to grep for. Longer messages stay baselined rather than split.
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 150
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: true

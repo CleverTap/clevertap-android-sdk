@@ -276,6 +276,22 @@
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$3</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$5</ID>
     <ID>MagicNumber:ValidationConfig.kt$ValidationConfig.Companion$50</ID>
+    <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
+    <ID>MaxLineLength:CTInboxController.kt$CTInboxController$"Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."</ID>
+    <ID>MaxLineLength:CleverTapAPI.kt$CleverTapAPI$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
+    <ID>MaxLineLength:DeviceInfo.kt$DeviceInfo$config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation")</ID>
+    <ID>MaxLineLength:ExoplayerHandle.kt$ExoplayerHandle$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead."</ID>
+    <ID>MaxLineLength:ExoplayerPlayerListener.kt$ExoplayerPlayerListener$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3PlayerListener instead."</ID>
+    <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$" Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n"</ID>
+    <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"</ID>
+    <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, "</ID>
+    <ID>MaxLineLength:SyncListener.kt$SyncListener$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
+    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_MISSING_IN_PAYLOAD : ValidationError</ID>
+    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$USE_CUSTOM_ID_MISSING_IN_MANIFEST : ValidationError</ID>
+    <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.USE_CUSTOM_ID_FALLBACK$USE_CUSTOM_ID_FALLBACK</ID>
+    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.d("Please add ExoPlayer/Media3 dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")</ID>
+    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibChecker$Logger.i("ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Please migrate to Media3 (androidx.media3).")</ID>
+    <ID>MaxLineLength:VideoLibChecker.kt$VideoLibraryIntegrated.EXOPLAYER$message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3)."</ID>
     <ID>NestedBlockDepth:AESGCMCrypt.kt$AESGCMCrypt$fun performCryptOperation( mode: Int, data: ByteArray, iv: ByteArray? = null, secretKey: SecretKey? = ctKeyGenerator.generateOrGetKey() ): AESGCMCryptResult?</ID>
     <ID>NestedBlockDepth:ARPResponse.kt$ARPResponse$override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$@WorkerThread private fun pushChargedEventInternal(chargeDetails: Map&lt;String, Any&gt;?, items: List&lt;Map&lt;String, Any&gt;&gt;?)</ID>
