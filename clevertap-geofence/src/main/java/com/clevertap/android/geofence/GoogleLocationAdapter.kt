@@ -209,9 +209,9 @@ internal class GoogleLocationAdapter(context: Context) : CTLocationAdapter {
 
         val accuracy = geofenceSettings.locationAccuracy
         when (accuracy) {
-            1 -> locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY
-            2 -> locationAccuracy = Priority.PRIORITY_BALANCED_POWER_ACCURACY
-            3 -> locationAccuracy = Priority.PRIORITY_LOW_POWER
+            CTGeofenceSettings.ACCURACY_HIGH.toInt() -> locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY
+            CTGeofenceSettings.ACCURACY_MEDIUM.toInt() -> locationAccuracy = Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            CTGeofenceSettings.ACCURACY_LOW.toInt() -> locationAccuracy = Priority.PRIORITY_LOW_POWER
         }
     }
 

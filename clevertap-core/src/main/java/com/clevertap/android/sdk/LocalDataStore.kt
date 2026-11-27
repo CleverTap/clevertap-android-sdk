@@ -266,7 +266,7 @@ public open class LocalDataStore internal constructor(
 
             // Default to expire in 20 minutes
             val now = (System.currentTimeMillis() / 1000).toInt()
-            val expiresIn = getIntFromPrefs("local_cache_expires_in", 20 * 60)
+            val expiresIn = getIntFromPrefs("local_cache_expires_in", DEFAULT_LOCAL_CACHE_EXPIRY_SECONDS)
             val lastUpdate = getIntFromPrefs("local_cache_last_update", now)
 
             if (lastUpdate + expiresIn < now) {
@@ -325,7 +325,7 @@ public open class LocalDataStore internal constructor(
         if (!config.isDefaultInstance) {
             return StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), defaultValue)
         }
-        val dummy = -1000
+        val dummy = MISSING_INT_SENTINEL
         val stored = StorageHelper.getInt(context, storageKeyWithSuffix(rawKey), dummy)
         return if (stored != dummy) { stored } else { StorageHelper.getInt(context, rawKey, defaultValue) }
     }
@@ -510,6 +510,11 @@ public open class LocalDataStore internal constructor(
 
     @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
     public companion object {
+        /** Read-default that no stored value uses: tells "not stored under the suffixed key" apart. */
+        private const val MISSING_INT_SENTINEL = -1000
+
+        private const val DEFAULT_LOCAL_CACHE_EXPIRY_SECONDS = 20 * 60
+
         // Written by the executor thread, read by callers; not volatile, exactly as in Java.
         private var executorThreadId: Long = 0
     }

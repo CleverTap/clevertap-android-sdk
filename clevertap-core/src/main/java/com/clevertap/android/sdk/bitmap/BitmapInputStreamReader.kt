@@ -12,6 +12,9 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 
+/** 16 KiB read buffer for the image stream. */
+private const val STREAM_BUFFER_SIZE = 16384
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class BitmapInputStreamReader(
     private val nextBitmapInputStreamReader: IBitmapInputStreamReader? = null,
@@ -25,7 +28,7 @@ internal class BitmapInputStreamReader(
     ): DownloadedBitmap {
 
         Logger.v("reading bitmap input stream in BitmapInputStreamReader....")
-        val bufferForHttpInputStream = ByteArray(16384)
+        val bufferForHttpInputStream = ByteArray(STREAM_BUFFER_SIZE)
         val finalDataFromHttpInputStream = ByteArrayOutputStream()
 
         var totalBytesRead = 0

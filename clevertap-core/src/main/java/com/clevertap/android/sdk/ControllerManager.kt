@@ -117,7 +117,7 @@ internal open class ControllerManager(
     private fun initializeInboxLocked() {
         synchronized(ctLockManager.inboxControllerLock) {
             if (ctInboxController != null) {
-                callbackManager._notifyInboxInitialized()
+                callbackManager.notifyInboxInitialized()
                 return
             }
             // Read the id once: Java re-read the volatile three times while building the controller.
@@ -135,7 +135,7 @@ internal open class ControllerManager(
                 VideoLibChecker.haveVideoPlayerSupport,
                 inboxDeleteCoordinator
             )
-            callbackManager._notifyInboxInitialized()
+            callbackManager.notifyInboxInitialized()
             inboxDeleteCoordinator?.retryPending(deviceId)
         }
     }

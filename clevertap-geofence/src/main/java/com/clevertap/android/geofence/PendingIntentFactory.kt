@@ -24,6 +24,12 @@ internal object PendingIntentFactory {
      */
     const val PENDING_INTENT_GEOFENCE: Int = 2
 
+    /** Request code of the location update [PendingIntent]. */
+    private const val LOCATION_UPDATE_REQUEST_CODE: Int = 10100111
+
+    /** Request code of the geofence update [PendingIntent]. */
+    private const val GEOFENCE_UPDATE_REQUEST_CODE: Int = 1001001
+
     /**
      * Creates [PendingIntent] based on type and flags provided by caller
      *
@@ -45,13 +51,13 @@ internal object PendingIntentFactory {
             PENDING_INTENT_LOCATION -> {
                 intent = Intent(context.applicationContext, CTLocationUpdateReceiver::class.java)
                 intent.setAction(CTGeofenceConstants.ACTION_LOCATION_RECEIVER)
-                broadcastSenderRequestCode = 10100111
+                broadcastSenderRequestCode = LOCATION_UPDATE_REQUEST_CODE
             }
 
             PENDING_INTENT_GEOFENCE -> {
                 intent = Intent(context.applicationContext, CTGeofenceReceiver::class.java)
                 intent.setAction(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER)
-                broadcastSenderRequestCode = 1001001
+                broadcastSenderRequestCode = GEOFENCE_UPDATE_REQUEST_CODE
             }
 
             else -> throw IllegalArgumentException("invalid pendingIntentType")

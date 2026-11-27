@@ -42,10 +42,10 @@ internal open class IdentitySet private constructor(private val identities: Set<
     /**
      * checks if a given key is an identity or not
      *
-     * @param Key - String value of key
+     * @param key - String value of key
      * @return - true , if the given key is an identity key else false.
      */
-    fun contains(Key: String?): Boolean = Utils.containsIgnoreCase(identities, Key)
+    fun contains(key: String?): Boolean = Utils.containsIgnoreCase(identities, key)
 
     /**
      * @return true - if the set contains at least one of the valid identities [Constants.ALL_IDENTITY_KEYS]

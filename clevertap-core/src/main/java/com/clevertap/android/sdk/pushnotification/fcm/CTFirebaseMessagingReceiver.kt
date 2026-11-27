@@ -132,7 +132,7 @@ internal open class CTFirebaseMessagingReceiver : BroadcastReceiver(), Notificat
         )
         CleverTapAPI.addNotificationRenderedListener(key, this)
 
-        val timer = object : CountDownTimer(receiverLifeSpan, 1000) {
+        val timer = object : CountDownTimer(receiverLifeSpan, COUNTDOWN_INTERVAL_MS) {
             override fun onFinish() {
                 finishReceiverAndCancelTimer("receiver life time is expired")
             }
@@ -164,5 +164,6 @@ internal open class CTFirebaseMessagingReceiver : BroadcastReceiver(), Notificat
     private companion object {
 
         private const val TAG = "CTRM"
+        private const val COUNTDOWN_INTERVAL_MS = 1000L
     }
 }

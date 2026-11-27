@@ -128,7 +128,7 @@ public open class CleverTapInstanceConfig : Parcelable {
     /** Parses a `type,prefKey,className,messagingSDKClassName` manifest entry into a [PushType]. */
     private fun addPushTypeFromManifest(provider: String?) {
         val splits = provider?.split(",")?.dropLastWhile { it.isEmpty() } ?: return
-        if (splits.size == 4) {
+        if (splits.size == PUSH_TYPE_FIELD_COUNT) {
             addPushType(PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim()))
         }
     }
@@ -581,6 +581,9 @@ public open class CleverTapInstanceConfig : Parcelable {
         "[${if (tag.isNotEmpty()) { ":$tag" } else { "" }}:$accountIdValue]"
 
     public companion object {
+
+        /** Fields of a `type,prefKey,className,messagingSDKClassName` push type manifest entry. */
+        private const val PUSH_TYPE_FIELD_COUNT = 4
 
         @JvmField
         public val CREATOR: Parcelable.Creator<CleverTapInstanceConfig> =

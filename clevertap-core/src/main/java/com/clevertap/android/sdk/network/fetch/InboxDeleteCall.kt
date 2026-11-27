@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.net.HttpURLConnection
 
 /**
  * Batch V2 inbox-delete sync — N ids in one HTTP call to `inbox/v2/deleteMessages`.
@@ -53,7 +54,7 @@ internal class InboxDeleteCall(
         try {
             ctApi.sendInboxDelete(body).use { response ->
                 when (response.code) {
-                    200 -> {
+                    HttpURLConnection.HTTP_OK -> {
                         logger.verbose("InboxV2", "delete sent successfully (n=${messages.size})")
                         CallResult.Success(Unit)
                     }

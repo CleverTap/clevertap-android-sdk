@@ -63,7 +63,7 @@ internal open class InboxResponse(
             }
             val updated = controllerManager.ctInboxController?.updateMessages(messages) ?: false
             if (updated) {
-                callbackManager._notifyInboxMessagesDidUpdate()
+                callbackManager.notifyInboxMessagesDidUpdate()
             }
         }
     }

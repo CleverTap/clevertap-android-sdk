@@ -39,6 +39,7 @@ internal class ContentFetchManager(
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
         private const val TAG = "ContentFetch"
+        private const val HTTP_TOO_MANY_REQUESTS = 429
     }
 
     var clevertapResponseHandler: ClevertapResponseHandler? = null
@@ -166,7 +167,7 @@ internal class ContentFetchManager(
             return true
         } else {
             when (response.code) {
-                429 -> {
+                HTTP_TOO_MANY_REQUESTS -> {
                     logger.info(
                         TAG,
                         "Content fetch request was rate limited (429). Consider reducing request frequency."

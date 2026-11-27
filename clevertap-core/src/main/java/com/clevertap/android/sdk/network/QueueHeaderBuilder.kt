@@ -18,6 +18,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import androidx.annotation.RestrictTo
 
+/** Int value of [CleverTapAPI.LogLevel.VERBOSE]. */
+private const val DEBUG_LEVEL_VERBOSE = 3
+
 /**
  * Generates JsonObject of the header to be sent with the request for clevertap apis
  */
@@ -164,7 +167,7 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addDebugFlag(header: JSONObject) {
-        if (CleverTapAPI.getDebugLevel() == 3) {
+        if (CleverTapAPI.getDebugLevel() == DEBUG_LEVEL_VERBOSE) {
             header.put("debug", true)
         }
     }

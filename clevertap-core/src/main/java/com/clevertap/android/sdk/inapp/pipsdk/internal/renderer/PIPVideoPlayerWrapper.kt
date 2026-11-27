@@ -23,6 +23,10 @@ import com.clevertap.android.sdk.video.inbox.Media3PlayerListener
 import kotlin.math.min
 import androidx.annotation.RestrictTo
 
+/** Load-error retry back-off: 2 s per failed attempt, capped at 16 s. */
+private const val RETRY_DELAY_STEP_MS = 2000L
+private const val MAX_RETRY_DELAY_MS = 16_000L
+
 /**
  * Self-contained video player for PIP in-app notifications.
  *
@@ -314,7 +318,7 @@ internal class PIPVideoPlayerWrapper {
                 && exception is HttpDataSource.HttpDataSourceException
                 && exception !is HttpDataSource.InvalidResponseCodeException
             ) {
-                return min(loadErrorInfo.errorCount * 2000L, 16_000L)
+                return min(loadErrorInfo.errorCount * RETRY_DELAY_STEP_MS, MAX_RETRY_DELAY_MS)
             }
             return super.getRetryDelayMsFor(loadErrorInfo)
         }

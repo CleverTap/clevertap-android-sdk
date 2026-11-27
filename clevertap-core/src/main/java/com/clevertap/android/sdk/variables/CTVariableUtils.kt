@@ -90,23 +90,18 @@ public class CTVariableUtils {
             for ((key, entryValue) in map) {
                 if (key.contains(".")) {
                     val components = getNameComponents(key)
-                    val namePosition = components.size - 1
-                    var currentMap = result
-                    for ((i, component) in components.withIndex()) {
-                        if (i == namePosition) {
-                            currentMap[component] = entryValue
+                    // No components (e.g. key ".") leaves the result unchanged.
+                    val name = components.lastOrNull() ?: continue
+                    val parentMap = components.dropLast(1).fold(result) { currentMap, component ->
+                        val currentValue = currentMap[component]
+                        if (currentValue !is Map<*, *>) { // null or not a map
+                            // If it is not a map it will fix the invalid data.
+                            HashMap<String, Any?>().also { currentMap[component] = it }
                         } else {
-                            val currentValue = currentMap[component]
-                            if (currentValue !is Map<*, *>) { // null or not a map
-                                // If it is not a map it will fix the invalid data.
-                                val nestedMap: MutableMap<String, Any?> = HashMap()
-                                currentMap[component] = nestedMap
-                                currentMap = nestedMap
-                            } else {
-                                currentMap = JsonUtil.uncheckedCast(currentMap[component])
-                            }
+                            JsonUtil.uncheckedCast(currentValue)
                         }
                     }
+                    parentMap[name] = entryValue
                 } else {
                     result[key] = entryValue
                 }

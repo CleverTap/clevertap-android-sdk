@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 import androidx.annotation.RestrictTo
 
+private const val PRELOAD_TIMEOUT_MINUTES = 5L
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class FilePreloaderExecutors @JvmOverloads constructor(
     override val fileResourceProvider: () -> FileResourceProvider,
@@ -76,7 +78,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         }
         try {
             // dont wait for more than 10 seconds to download.
-            val success = countDownLatch.await(5, TimeUnit.MINUTES)
+            val success = countDownLatch.await(PRELOAD_TIMEOUT_MINUTES, TimeUnit.MINUTES)
             if (success) {
                 preloadFinished.invoke(downloadStatus)
             }

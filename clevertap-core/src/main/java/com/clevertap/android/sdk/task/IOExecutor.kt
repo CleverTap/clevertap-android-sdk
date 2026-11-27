@@ -23,7 +23,11 @@ public class IOExecutor internal constructor(
 ) : ExecutorService by executorService {
 
     internal companion object {
+        private const val KEEP_ALIVE_SECONDS = 60L
+
         fun threadPool(corePoolSize: Int, maximumPoolSize: Int): ExecutorService =
-            ThreadPoolExecutor(corePoolSize, maximumPoolSize, 60L, TimeUnit.SECONDS, LinkedBlockingQueue())
+            ThreadPoolExecutor(
+                corePoolSize, maximumPoolSize, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, LinkedBlockingQueue()
+            )
     }
 }

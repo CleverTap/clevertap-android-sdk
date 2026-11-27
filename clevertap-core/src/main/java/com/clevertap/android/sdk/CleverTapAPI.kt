@@ -172,7 +172,7 @@ public open class CleverTapAPI internal constructor(
         }
 
         val now = clevertapClock.currentTimeSecondsInt()
-        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
+        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > CREATED_POST_APP_LAUNCH_AFTER_SECONDS) {
             coreState.config.setCreatedPostAppLaunch()
         }
 
@@ -2439,6 +2439,14 @@ public open class CleverTapAPI internal constructor(
 
         public const val NOTIFICATION_TAG: String = "wzrk_pn"
 
+        /** An instance created this long after the app entered the foreground is "created post app launch". */
+        private const val CREATED_POST_APP_LAUNCH_AFTER_SECONDS = 5
+
+        /** Length of the supported sound file extensions (".mp3", ".ogg", ".wav"). */
+        private const val SOUND_EXTENSION_LENGTH = 4
+
+        private const val MAX_BITMAP_DOWNLOAD_TIMEOUT_MILLIS = 20000
+
         private var debugLevel = LogLevel.INFO.intValue()
 
         @JvmField
@@ -2877,7 +2885,7 @@ public open class CleverTapAPI internal constructor(
                 instance.configLogger.debug(instance.accountId, "Sound file name not supported")
                 return null
             }
-            val rawName = fileName.substring(0, fileName.length - 4)
+            val rawName = fileName.substring(0, fileName.length - SOUND_EXTENSION_LENGTH)
             if (rawName.isEmpty()) {
                 return null
             }
@@ -3602,7 +3610,7 @@ public open class CleverTapAPI internal constructor(
                 Logger.v("Given timeoutInMillis is less than 1 millis. Not downloading bitmap!")
                 return true
             }
-            if (timeoutInMillis > 20000) {
+            if (timeoutInMillis > MAX_BITMAP_DOWNLOAD_TIMEOUT_MILLIS) {
                 Logger.v("Given timeoutInMillis exceeds 20 secs limit. Not downloading bitmap!")
                 return true
             }

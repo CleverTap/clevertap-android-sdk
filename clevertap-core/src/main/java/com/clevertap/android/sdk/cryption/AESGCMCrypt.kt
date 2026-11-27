@@ -9,6 +9,9 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import androidx.annotation.RestrictTo
 
+/** 128-bit GCM authentication tag. */
+private const val GCM_TAG_LENGTH_BITS = 128
+
 /**
  * This class implements the AES-GCM Crypt algorithm
  *
@@ -112,7 +115,7 @@ internal class AESGCMCrypt(
                 Cipher.DECRYPT_MODE -> {
                     if (iv != null) {
                         // 128-bit authentication tag length
-                        val gcmParameterSpec = GCMParameterSpec(128, iv)
+                        val gcmParameterSpec = GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv)
                         cipher.init(mode, secretKey, gcmParameterSpec)
                         val decryptedBytes = cipher.doFinal(data)
                         AESGCMCryptResult(iv, decryptedBytes)

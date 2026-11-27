@@ -8,6 +8,8 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import androidx.annotation.RestrictTo
 
+private const val AES_KEY_SIZE_BITS = 256
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
 
@@ -27,7 +29,7 @@ internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
     fun generateSecretKey(): SecretKey {
         // If key doesn't exist, generate a new one and store it
         val keyGenerator = KeyGenerator.getInstance("AES")
-        keyGenerator.init(256) // 256-bit AES key
+        keyGenerator.init(AES_KEY_SIZE_BITS)
         val secretKey = keyGenerator.generateKey()
         return secretKey
     }

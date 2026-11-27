@@ -7,6 +7,8 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import androidx.annotation.RestrictTo
 
+private const val DAYS_PER_WEEK = 7
+
 /**
  * Provides functionality for tracking and managing impressions for various campaigns.
  *
@@ -181,7 +183,7 @@ internal class ImpressionManager @JvmOverloads constructor(
         val firstWeekday = calendar.firstDayOfWeek
 
         // Calculate the number of days to subtract to reach the starting day of the week
-        val daysToSubtract = (calendar.get(Calendar.DAY_OF_WEEK) - firstWeekday + 7) % 7
+        val daysToSubtract = (calendar.get(Calendar.DAY_OF_WEEK) - firstWeekday + DAYS_PER_WEEK) % DAYS_PER_WEEK
 
         // Move back number of days till start of week
         calendar.add(Calendar.DAY_OF_YEAR, -daysToSubtract)
