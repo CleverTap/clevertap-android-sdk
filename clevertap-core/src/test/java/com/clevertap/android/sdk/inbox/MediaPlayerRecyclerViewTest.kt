@@ -46,6 +46,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         var addResult = true
         var bindCount = 0
         var isVideoRow = true
+        var mediaVisibleOverride: Boolean? = null
         var messageIdValue: String? = null
         var mediaUrlValue: String? = null
         var muteClick: Function0<Float>? = null
@@ -65,6 +66,17 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         override fun needsMediaPlayer() = isVideoRow
 
         override fun shouldAutoPlay() = true
+
+        /** The middle of the row stands for the middle of its media. */
+        override fun isMediaVisible(): Boolean {
+            mediaVisibleOverride?.let { return it }
+            val visible = android.graphics.Rect()
+            if (!itemView.getLocalVisibleRect(visible)) {
+                return false
+            }
+            val middle = itemView.height / 2
+            return visible.top <= middle && middle <= visible.bottom
+        }
 
         override fun addMediaPlayer(
             currentVolume: Float,
@@ -154,6 +166,14 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     private fun rowAt(position: Int) = list.findViewHolderForAdapterPosition(position) as VideoRowHolder
 
     private fun rowsShowingVideo() = adapter.holders.count { it.showsVideo }
+
+    /** What RecyclerView does when a scroll comes to rest. */
+    private fun listStopsScrolling() {
+        val listeners = RecyclerView::class.java.getDeclaredField("mScrollListeners")
+            .apply { isAccessible = true }.get(list) as List<*>
+        listeners.filterIsInstance<RecyclerView.OnScrollListener>()
+            .forEach { it.onScrollStateChanged(list, RecyclerView.SCROLL_STATE_IDLE) }
+    }
 
     private fun scrollPastTwoRows() = list.scrollBy(0, SCROLL_PAST_TWO_ROWS)
 
@@ -873,11 +893,378 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(1, row.attachCount)
     }
 
+    @Test
+    fun `a row whose play button was pressed plays instead of the most visible row`() {
+        showList(rows = 6)
+        val first = rowAt(0)
+        val chosen = rowAt(1)
+
+        list.playRow(chosen)
+
+        assertEquals(1, chosen.attachCount)
+        assertEquals(0, first.attachCount)
+        assertEquals(1, rowsShowingVideo())
+        verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `the chosen row keeps playing when the list settles`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        list.playVideo()
+        list.playVideo()
+
+        assertEquals(1, chosen.attachCount)
+        assertEquals(0, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `choosing the row that is playing changes nothing`() {
+        showList(rows = 6)
+        val first = rowAt(0)
+        list.playVideo()
+
+        list.playRow(first)
+
+        assertEquals(1, first.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `the video that was playing is stopped and the player is kept when another row is chosen`() {
+        showList(rows = 6)
+        val first = rowAt(0)
+        val chosen = rowAt(1)
+        list.playVideo()
+
+        list.playRow(chosen)
+
+        assertEquals(0, first.container.childCount)
+        assertEquals(View.GONE, first.container.visibility)
+        assertEquals(1, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+        verify(exactly = 1) { handle.stop() }
+        verify(exactly = 0) { handle.release() }
+    }
+
+    @Test
+    fun `a video that was left starts again from its place when its row is chosen`() {
+        showList(rows = 6)
+        every { handle.currentPositionMs() } returns 7_000L
+        every { handle.playerVolume() } returns 1f
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+        list.playRow(rowAt(2)) // the first video is stopped and its place is saved
+
+        list.playRow(chosen)
+
+        verify { handle.startPlaying(any(), "url1", any(), any(), 7_000L) }
+    }
+
+    @Test
+    fun `the choice is dropped when the list stops scrolling with the row away`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        scrollPastTwoRows()
+        listStopsScrolling() // the most visible row takes over
+        assertEquals(0, chosen.container.childCount)
+        assertEquals(1, rowsShowingVideo())
+
+        scrollBackPastTwoRows()
+        listStopsScrolling() // the chosen row is back, but the choice is gone: the top row is the best row again
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(1, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `the choice is dropped when the middle of the row has left the screen`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        list.scrollBy(0, SCROLL_MIDDLE_OF_SECOND_ROW_GONE)
+        assertSame("the chosen row should still be on screen", chosen, rowAt(1))
+        listStopsScrolling()
+
+        assertEquals(0, chosen.container.childCount)
+        assertEquals(1, rowAt(2).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `the choice stays when the middle of the row is still on screen`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        list.scrollBy(0, SCROLL_MIDDLE_OF_SECOND_ROW_STAYS)
+        listStopsScrolling()
+
+        assertEquals(1, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a play button pressed on a row that shows less than a video needs still plays it`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.scrollBy(0, SCROLL_LEAVING_LITTLE_OF_SECOND_ROW) // 350 px of the row are left, a video needs 400
+        assertSame(chosen, rowAt(1))
+
+        list.playRow(chosen)
+
+        assertEquals(1, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a play button pressed on a row whose middle is off screen plays it until the list stops scrolling`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.scrollBy(0, SCROLL_MIDDLE_OF_SECOND_ROW_GONE)
+
+        list.playRow(chosen)
+        assertEquals("the user pressed it, so it plays", 1, chosen.attachCount)
+
+        listStopsScrolling()
+        assertEquals(0, chosen.container.childCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `the choice is kept when the row is not visible yet as the tab returns`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+        list.releasePlayer() // another tab came to rest
+
+        // The tab returns while its page is still moving into place: its media is not on screen yet.
+        chosen.mediaVisibleOverride = false
+        list.onRestartPlayer()
+        assertEquals("the chosen row is not shown yet", 0, chosen.container.childCount)
+
+        chosen.mediaVisibleOverride = null // the page has settled
+        list.playVideo()
+
+        assertEquals("the chosen video plays again", View.VISIBLE, chosen.container.visibility)
+        assertEquals(1, chosen.container.childCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `no chosen video is saved when the user has chosen none`() {
+        showList(rows = 6)
+        list.playVideo()
+
+        assertEquals(null, list.savePickedVideo())
+    }
+
+    @Test
+    fun `a chosen video is saved with its message and media`() {
+        showList(rows = 6)
+        list.playRow(rowAt(1))
+
+        val saved = list.savePickedVideo()!!
+
+        assertEquals("message1", saved.getString("pickedMessageId"))
+        assertEquals("url1", saved.getString("pickedMediaUrl"))
+    }
+
+    @Test
+    fun `a new list plays the video that the old list had chosen`() {
+        showList(rows = 6)
+        list.playRow(rowAt(1))
+        val saved = list.savePickedVideo()
+
+        list.releasePlayer() // the old screen is gone and takes the player view with it
+        (surface.parent as? ViewGroup)?.removeView(surface)
+        showList(rows = 6) // the screen was rotated: a new list with new rows
+        list.restorePickedVideo(saved)
+        list.playVideo()
+
+        assertEquals(1, rowAt(1).attachCount)
+        assertEquals(0, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `restoring nothing or a broken bundle keeps the most visible row playing`() {
+        showList(rows = 6)
+
+        list.restorePickedVideo(null)
+        list.restorePickedVideo(Bundle())
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a restored choice for a message that is not in the list changes nothing`() {
+        showList(rows = 6)
+        list.restorePickedVideo(Bundle().apply { putString("pickedMessageId", "gone") })
+
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a restored choice stays until the list stops scrolling with its row away`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.restorePickedVideo(Bundle().apply {
+            putString("pickedMessageId", "message1")
+            putString("pickedMediaUrl", "url1")
+        })
+
+        scrollPastTwoRows()
+        listStopsScrolling()
+
+        assertEquals(0, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `the choice is dropped when the row now shows another message`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        chosen.messageIdValue = "another message"
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(0, chosen.container.childCount)
+    }
+
+    @Test
+    fun `the choice is dropped when the row now shows other media`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        chosen.mediaUrlValue = "another url"
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(0, chosen.container.childCount)
+    }
+
+    @Test
+    fun `a row that is not a video row cannot be chosen`() {
+        showList(rows = 3, videoPositions = setOf(1))
+
+        list.playRow(rowAt(0))
+
+        assertEquals(0, rowAt(0).attachCount)
+        assertEquals(0, rowsShowingVideo())
+        verify(exactly = 0) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a row without a message id cannot be chosen`() {
+        showList(rows = 3)
+        val row = rowAt(1)
+        row.messageIdValue = null
+
+        list.playRow(row)
+
+        assertEquals(0, row.attachCount)
+        verify(exactly = 0) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a row that is no longer in the list cannot be chosen`() {
+        showList(rows = 3)
+        val row = rowAt(1)
+        list.layoutManager!!.removeView(row.itemView) // detached, so it has no adapter position
+
+        list.playRow(row)
+
+        assertEquals(0, row.attachCount)
+    }
+
+    @Test
+    fun `a released list ignores a choice and creates no player`() {
+        showList(rows = 6)
+        list.playVideo()
+        list.releasePlayer()
+
+        list.playRow(rowAt(1))
+
+        assertEquals(0, rowAt(1).attachCount)
+        assertEquals(0, rowsShowingVideo())
+        verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `the choice survives a release and the restart that follows`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.playRow(chosen)
+
+        list.releasePlayer()
+        list.playVideo() // a late play while released must neither start a player nor drop the choice
+        assertEquals(0, rowsShowingVideo())
+        list.onRestartPlayer()
+
+        assertEquals(2, chosen.attachCount)
+        assertEquals(0, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `pressing play on three rows quickly leaves one video`() {
+        showList(rows = 6)
+        val second = rowAt(1)
+        val third = rowAt(2)
+
+        list.playRow(second)
+        list.playRow(third)
+        list.playRow(second)
+
+        assertEquals(2, second.attachCount)
+        assertEquals(1, third.attachCount)
+        assertEquals(1, rowsShowingVideo())
+        assertEquals(View.VISIBLE, second.container.visibility)
+        verify(exactly = 0) { handle.release() } // the one player is reused, never released and rebuilt
+    }
+
+    @Test
+    fun `a row that fails to take the player after it was chosen is not treated as playing`() {
+        showList(rows = 3)
+        val row = rowAt(1)
+        row.addResult = false
+
+        list.playRow(row)
+
+        assertEquals(1, row.attempts)
+        assertEquals(0, row.attachCount)
+        assertEquals(0, rowsShowingVideo())
+    }
+
     private companion object {
 
         const val LIST_WIDTH = 1080
         const val LIST_HEIGHT = 1920
         const val ROW_HEIGHT = 600
         const val SCROLL_PAST_TWO_ROWS = 1300
+
+        /** Leaves 350 px of the second row on screen, less than the 400 px a video needs, middle on screen. */
+        const val SCROLL_LEAVING_LITTLE_OF_SECOND_ROW = 850
+
+        /** The second row spans 600 to 1200; its middle, 900, is on screen at the top edge or below it. */
+        const val SCROLL_MIDDLE_OF_SECOND_ROW_STAYS = 750
+
+        /** Scrolls the middle of the second row off the top of the list. */
+        const val SCROLL_MIDDLE_OF_SECOND_ROW_GONE = 1000
     }
 }

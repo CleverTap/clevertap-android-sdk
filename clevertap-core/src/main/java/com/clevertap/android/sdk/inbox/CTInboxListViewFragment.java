@@ -53,6 +53,8 @@ import org.json.JSONObject;
 @OptIn(markerClass = UnstableApi.class)
 public class CTInboxListViewFragment extends Fragment {
 
+    private static final String PICKED_VIDEO_KEY = "pickedVideo";
+
     interface InboxListener {
 
         void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
@@ -213,6 +215,7 @@ public class CTInboxListViewFragment extends Fragment {
                 if (mediaRecyclerView.getLayoutManager() != null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
+                mediaRecyclerView.restorePickedVideo(savedInstanceState.getBundle(PICKED_VIDEO_KEY));
             }
             if (!(getActivity() instanceof CTInboxActivity)) {
                 // Outside the inbox screen the fragment keeps its own states, even before its list is built
@@ -249,6 +252,13 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    /** The user pressed the play button of a video row. */
+    void onPlayButtonClicked(CTInboxBaseMessageViewHolder holder) {
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.playRow(holder);
+        }
+    }
+
     /** Releases this tab's player when another tab is chosen. A dialog or split-screen pause does not; onStop() does. */
     void onPageHidden() {
         if (mediaRecyclerView != null) {
@@ -267,6 +277,10 @@ public class CTInboxListViewFragment extends Fragment {
             mediaRecyclerView.rememberPlayingVideo(); // into the states the activity or this fragment keeps
             if (ownVideoStates != null) {
                 outState.putBundle(CTInboxActivity.VIDEO_STATES_KEY, ownVideoStates.save());
+            }
+            Bundle pickedVideo = mediaRecyclerView.savePickedVideo();
+            if (pickedVideo != null) {
+                outState.putBundle(PICKED_VIDEO_KEY, pickedVideo);
             }
         }
 

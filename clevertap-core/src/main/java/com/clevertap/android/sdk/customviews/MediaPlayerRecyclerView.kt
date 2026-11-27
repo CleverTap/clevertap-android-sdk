@@ -29,6 +29,9 @@ class MediaPlayerRecyclerView : RecyclerView {
     /** The message and media the player was started for. The row may show another one later. */
     private class PlayingVideo(val messageId: String?, val mediaUrl: String?)
 
+    /** The video the user chose with its play button. */
+    private class PickedVideo(val messageId: String, val mediaUrl: String?)
+
     private val handle: InboxVideoPlayerHandle
     private val rect = Rect()
     private val states: InboxVideoStates
@@ -36,6 +39,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+                dropPickedVideoIfAway()
                 playVideo()
             }
         }
@@ -113,13 +117,55 @@ class MediaPlayerRecyclerView : RecyclerView {
         registerListeners()
     }
 
+    private var pickedVideo: PickedVideo? = null
+
+    /** True while [playRow] runs: the user has just pressed the play button, so the row is on screen. */
+    private var pickedJustNow = false
+
+    /**
+     * Plays the row whose play button the user pressed. The choice stays while the middle of the row's media
+     * is on screen, also across [releasePlayer] and [onRestartPlayer], and is dropped when the list stops
+     * scrolling with the row away.
+     */
+    fun playRow(holder: CTInboxBaseMessageViewHolder) {
+        if (released || !holder.needsMediaPlayer() || !holder.shouldAutoPlay()
+            || holder.bindingAdapterPosition == NO_POSITION
+        ) {
+            return
+        }
+        val messageId = holder.messageId ?: return
+        pickedVideo = PickedVideo(messageId, holder.mediaUrl)
+        pickedJustNow = true
+        try {
+            playVideo()
+        } finally {
+            pickedJustNow = false
+        }
+    }
+
+    /** The chosen video for a screen that is rebuilt, as after a rotation; null when the user has chosen none. */
+    fun savePickedVideo(): Bundle? {
+        val picked = pickedVideo ?: return null
+        return Bundle().apply {
+            putString(PICKED_MESSAGE_ID_KEY, picked.messageId)
+            putString(PICKED_MEDIA_URL_KEY, picked.mediaUrl)
+        }
+    }
+
+    /** Takes back what [savePickedVideo] gave. The video plays again once its row is on screen. */
+    fun restorePickedVideo(saved: Bundle?) {
+        val messageId = saved?.getString(PICKED_MESSAGE_ID_KEY) ?: return
+        pickedVideo = PickedVideo(messageId, saved.getString(PICKED_MEDIA_URL_KEY))
+    }
+
     fun onRestartPlayer() {
         released = false
         playVideo()
     }
 
     fun playVideo() {
-        val targetHolder = findBestVisibleMediaHolder()
+        val pickedHolder = findPickedHolder()
+        val targetHolder = pickedHolder ?: findBestVisibleMediaHolder()
 
         // Case 1 : No viewholder has video item in it
         if (targetHolder == null) {
@@ -141,7 +187,7 @@ class MediaPlayerRecyclerView : RecyclerView {
                 } else {
                     0
                 }
-                val play = visibleHeight >= 400
+                val play = pickedHolder != null || visibleHeight >= MIN_VISIBLE_HEIGHT
                 if (play && ph.shouldAutoPlay()) {
                     handle.setPlayWhenReady(true)
                 } else {
@@ -248,6 +294,39 @@ class MediaPlayerRecyclerView : RecyclerView {
         return bestHolder
     }
 
+    /** The row the user chose, while the middle of its media is on screen or the user has just pressed it. */
+    private fun findPickedHolder(): CTInboxBaseMessageViewHolder? {
+        val picked = pickedVideo ?: return null
+        val holder = findHolder(picked) ?: return null
+        return if (pickedJustNow || holder.isMediaVisible()) holder else null
+    }
+
+    private fun findHolder(picked: PickedVideo): CTInboxBaseMessageViewHolder? {
+        for (i in 0 until childCount) {
+            val holder = getChildViewHolder(getChildAt(i)) as? CTInboxBaseMessageViewHolder ?: continue
+            if (holder.bindingAdapterPosition != NO_POSITION && holder.needsMediaPlayer()
+                && holder.messageId == picked.messageId && holder.mediaUrl == picked.mediaUrl
+            ) {
+                return holder
+            }
+        }
+        return null
+    }
+
+    /**
+     * Called when the list stops scrolling. Only a scroll tells that the row has really left: a list that is
+     * not laid out yet, as after a return to its tab, must keep the choice, and so must a released list.
+     */
+    private fun dropPickedVideoIfAway() {
+        val picked = pickedVideo ?: return
+        if (released) {
+            return
+        }
+        if (findHolder(picked)?.isMediaVisible() != true) {
+            pickedVideo = null
+        }
+    }
+
     /** Creates the player and its view if they do not exist; a no-op while they are alive. */
     private fun initPlayer() {
         handle.initExoplayer(
@@ -313,5 +392,11 @@ class MediaPlayerRecyclerView : RecyclerView {
         /** A video that was never played starts muted. */
         const val MUTED_VOLUME = 0f
         const val FULL_VOLUME = 1f
+
+        const val PICKED_MESSAGE_ID_KEY = "pickedMessageId"
+        const val PICKED_MEDIA_URL_KEY = "pickedMediaUrl"
+
+        /** A video row plays only while at least this much of it is on screen. */
+        const val MIN_VISIBLE_HEIGHT = 400
     }
 }
