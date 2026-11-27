@@ -27,6 +27,7 @@ import com.clevertap.android.sdk.Constants.NOTIF_TITLE
 import com.clevertap.android.sdk.ManifestInfo
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockkStatic
 import org.json.JSONArray
 import org.junit.After
 import org.junit.Before
@@ -131,6 +132,7 @@ class TemplateRendererTest {
         mockkObject(TemplateDataFactory)
         mockkObject(ValidatorFactory)
         mockkObject(Utils)
+        mockkStatic(Utils::class) // its former-Java statics are @JvmStatic
         mockkObject(ManifestInfo.Companion)
 
         // Default bundle setup

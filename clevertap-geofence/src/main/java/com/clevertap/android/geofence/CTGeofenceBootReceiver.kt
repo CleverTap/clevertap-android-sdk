@@ -15,7 +15,7 @@ import androidx.annotation.RestrictTo
  * A [BroadcastReceiver] which will reset geofence monitoring and location updates on device boot
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class CTGeofenceBootReceiver : BroadcastReceiver() {
+internal open class CTGeofenceBootReceiver : BroadcastReceiver() {
 
     /**
      * Validates necessary location permissions and creates [GeofenceUpdateTask] and

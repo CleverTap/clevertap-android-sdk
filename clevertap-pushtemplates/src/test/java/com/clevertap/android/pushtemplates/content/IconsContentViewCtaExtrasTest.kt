@@ -16,7 +16,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import io.mockk.every
-import io.mockk.mockkStatic
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
@@ -44,7 +44,7 @@ class IconsContentViewCtaExtrasTest {
     fun setUp() {
         // Robolectric's test app has no label for the header.
         context.applicationInfo.nonLocalizedLabel = "Test App"
-        mockkStatic(LaunchPendingIntentFactory::class)
+        mockkObject(LaunchPendingIntentFactory.Companion)
         every { LaunchPendingIntentFactory.getLaunchPendingIntent(any(), any()) } answers {
             capturedBundles.add(firstArg())
             PendingIntent.getActivity(context, 0, Intent(), PendingIntent.FLAG_IMMUTABLE)

@@ -99,7 +99,8 @@ internal open class CTMessageDAO {
 
     companion object {
 
-        internal fun initWithJSON(
+        @JvmStatic // was `public static` in Java; keep the static JVM form
+        fun initWithJSON(
             inboxMessage: JSONObject,
             userId: String?,
             source: InboxMessageSource?

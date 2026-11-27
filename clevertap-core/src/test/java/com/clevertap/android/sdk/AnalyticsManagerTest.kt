@@ -1441,7 +1441,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInAppNotificationStateEvent(isClicked: Boolean) {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inAppNotification = mockk<CTInAppNotification>(relaxed = true)
             val wzrkFields = JSONObject().apply { put("test", "test") }
             every { CTJsonConverter.getWzrkFields(inAppNotification) } returns wzrkFields
@@ -1510,7 +1510,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `wzrk_mid absent when inbox controller is null`() {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-xyz"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1535,7 +1535,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyV1MessageOmitsId(isClicked: Boolean) {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-v1"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1579,7 +1579,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed is skipped for V2 message when isRead=true`() {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-v2-read"
             every { inboxMessage.isRead } returns true
@@ -1598,7 +1598,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed on V1 message fires even when isRead=true`() {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-v1-read"
             every { inboxMessage.isRead } returns true
@@ -1622,7 +1622,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Clicked on isRead=true message still queues`() {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-read"
             every { inboxMessage.isRead } returns true
@@ -1643,7 +1643,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `Viewed on isRead=false message fires normally`() {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "m-unread"
             every { inboxMessage.isRead } returns false
@@ -1663,7 +1663,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyRapidRepeatSuppressed(isClicked: Boolean) {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-rapid"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1687,7 +1687,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInboxMessageStateEventIncludesId(isClicked: Boolean) {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-xyz"
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
@@ -1720,7 +1720,7 @@ class AnalyticsManagerTest {
     }
 
     private fun verifyPushInboxMessageStateEvent(isClicked: Boolean) {
-        mockkObject(CTJsonConverter) {
+        mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             val wzrkFields = JSONObject().apply { put("test", "test") }
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns wzrkFields
@@ -1838,7 +1838,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDeepLink should queue page event with referrer data with install true`() {
-        mockkObject(UriHelper) {
+        mockkStatic(UriHelper::class) {
             val uri = mockk<Uri>()
             val referrer = JSONObject().apply {
                 put("us", "source")
@@ -1872,7 +1872,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDeepLink should queue page event with referrer data with install false`() {
-        mockkObject(UriHelper) {
+        mockkStatic(UriHelper::class) {
             val uri = mockk<Uri>()
             val referrer = JSONObject().apply {
                 put("us", "source")
@@ -1920,7 +1920,7 @@ class AnalyticsManagerTest {
     @Test
     fun `pushInstallReferrer with url should not queue event if called twice within 10 seconds`() {
         mockkStatic(Uri::class) {
-            mockkObject(UriHelper) {
+            mockkStatic(UriHelper::class) {
                 every { Uri.parse(any()) } returns mockk()
                 every { UriHelper.getUrchinFromUri(any()) } returns JSONObject()
 
@@ -1935,7 +1935,7 @@ class AnalyticsManagerTest {
     @Test
     fun `pushInstallReferrer with url should queue event`() {
         mockkStatic(Uri::class) {
-            mockkObject(UriHelper) {
+            mockkStatic(UriHelper::class) {
                 val uri = mockk<Uri>()
                 every { Uri.parse("wzrk://track?install=true&http://test.com") } returns uri
                 every { UriHelper.getUrchinFromUri(uri) } returns JSONObject()
@@ -1968,7 +1968,7 @@ class AnalyticsManagerTest {
     @Test
     fun `pushInstallReferrer with params should queue event`() {
         mockkStatic(StorageHelper::class, Uri::class) {
-            mockkObject(UriHelper) {
+            mockkStatic(UriHelper::class) {
                 every { StorageHelper.getInt(context, "app_install_status", 0) } returns 0
                 every { StorageHelper.putInt(context, "app_install_status", 1) } returns Unit
 

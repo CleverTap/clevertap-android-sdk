@@ -8,6 +8,7 @@ import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.*
+import io.mockk.mockkStatic
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -38,6 +39,7 @@ class TemplateMediaManagerTest {
 
         // Mock static methods
         mockkObject(Utils)
+        mockkStatic(Utils::class) // its former-Java statics are @JvmStatic
     }
 
     @After

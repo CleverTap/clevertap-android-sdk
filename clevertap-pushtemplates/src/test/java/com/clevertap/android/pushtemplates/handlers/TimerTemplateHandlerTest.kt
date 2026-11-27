@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import io.mockk.*
+import io.mockk.mockkStatic
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -72,6 +73,7 @@ class TimerTemplateHandlerTest {
 
         // Mock static methods
         mockkObject(Utils)
+        mockkStatic(Utils::class) // its former-Java statics are @JvmStatic
         mockkObject(ValidatorFactory)
         mockkStatic(PushNotificationUtil::class)
         mockkObject(CleverTapAPI.Companion)

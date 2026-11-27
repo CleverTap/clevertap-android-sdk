@@ -50,6 +50,7 @@ internal object Utils {
     private const val SMALL_TEXT_KEY_PREFIX_LENGTH = 5
 
     /** Throws a [NullPointerException] for a null [context], for the callers to handle. */
+    @JvmStatic
     fun getAppIcon(context: Context?): Bitmap {
         context ?: throw NullPointerException("context")
         // Try to get the app logo first
@@ -161,6 +162,7 @@ internal object Utils {
      * @param isDarkMode Whether to use dark mode colors
      * @return A map containing appropriate colors for the specified mode
      */
+    @JvmStatic
     fun createColorMap(extras: Bundle, isDarkMode: Boolean): Map<String, String> {
         val colorMap = COLOR_KEYS.associateWithTo(HashMap<String, String?>()) { key ->
             getDarkModeAdaptiveColor(extras, isDarkMode, key)
@@ -183,12 +185,15 @@ internal object Utils {
         return if (isDarkMode && colorDark != null) { colorDark } else { color }
     }
 
+    @JvmStatic
     fun isDarkMode(context: Context): Boolean =
         (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
+    @JvmStatic
     fun getTimeStamp(context: Context?, timeMillis: Long): String =
         DateUtils.formatDateTime(context, timeMillis, DateUtils.FORMAT_SHOW_TIME)
 
+    @JvmStatic
     fun getApplicationName(context: Context): String {
         val applicationInfo = context.applicationInfo
         val stringId = applicationInfo.labelRes
@@ -354,6 +359,7 @@ internal object Utils {
         return eProps
     }
 
+    @JvmStatic
     fun getTimerEnd(extras: Bundle, currentTs: Long): Int {
         var value: String? = "-1"
         for (key in extras.keySet()) {
@@ -375,15 +381,18 @@ internal object Utils {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
+    @JvmStatic
     fun isNotificationInTray(context: Context, notificationId: Int): Boolean =
         (context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
             .activeNotifications.any { it.id == notificationId }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
+    @JvmStatic
     fun getNotificationById(context: Context, notificationId: Int): Notification? =
         (context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
             .activeNotifications.firstOrNull { it.id == notificationId }?.notification
 
+    @JvmStatic
     fun getNotificationIds(context: Context): ArrayList<Int> {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return ArrayList()
@@ -467,6 +476,7 @@ internal object Utils {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && channel != null &&
                 channel.importance != NotificationManager.IMPORTANCE_NONE
 
+    @JvmStatic
     fun setBitMapColour(context: Context, resourceID: Int, clr: String?, defaultClr: String?): Bitmap? {
         val color = getColour(clr, defaultClr)
 
@@ -479,6 +489,7 @@ internal object Utils {
         }
     }
 
+    @JvmStatic
     fun getColour(clr: String?, defaultClr: String?): Int = try {
         Color.parseColor(clr)
     } catch (e: Exception) {
@@ -494,6 +505,7 @@ internal object Utils {
      * @param clr the color string to parse (e.g., "#FF0000" for red)
      * @return the parsed color as an [Integer], or `null` if parsing fails
      */
+    @JvmStatic
     fun getColourOrNull(clr: String?): Int? = try {
         Color.parseColor(clr)
     } catch (e: Exception) {
@@ -501,6 +513,7 @@ internal object Utils {
         null
     }
 
+    @JvmStatic
     fun getFlipInterval(extras: Bundle): Int {
         val interval = extras.getString(PTConstants.PT_FLIP_INTERVAL) ?: return PTConstants.PT_FLIP_INTERVAL_TIME
         return try {

@@ -18,6 +18,7 @@ internal object CTFeatureFlagsFactory {
      * The nullable parameters mirror the (still nullable) SDK call sites; every caller passes real
      * instances, which the controller requires.
      */
+    @JvmStatic
     fun getInstance(
         context: Context?,
         guid: String?,

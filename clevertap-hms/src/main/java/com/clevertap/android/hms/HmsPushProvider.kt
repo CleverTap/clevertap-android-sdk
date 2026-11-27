@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.pushnotification.PushType
  * Clevertap's Huawei Plugin Ref: [CTPushProvider]
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class HmsPushProvider @SuppressLint("unused") constructor(
+internal open class HmsPushProvider @SuppressLint("unused") constructor(
     private val ctPushListener: CTPushProviderListener,
     context: Context,
     config: CleverTapInstanceConfig?

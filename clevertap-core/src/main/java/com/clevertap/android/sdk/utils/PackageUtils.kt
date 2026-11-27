@@ -13,6 +13,7 @@ internal object PackageUtils {
 
     private const val GOOGLE_PLAY_STORE_PACKAGE = "com.android.vending"
 
+    @JvmStatic
     fun isGooglePlayServicesAvailable(context: Context): Boolean = try {
         Class.forName("com.google.android.gms.common.GooglePlayServicesUtil")
         GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
@@ -20,6 +21,7 @@ internal object PackageUtils {
         false
     }
 
+    @JvmStatic
     fun isGooglePlayStoreAvailable(context: Context): Boolean =
         isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE) ||
             isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE_OLD)

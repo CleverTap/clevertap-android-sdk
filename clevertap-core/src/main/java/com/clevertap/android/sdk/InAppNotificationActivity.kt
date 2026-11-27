@@ -556,6 +556,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         private const val RESTORE_TIMEOUT_MS: Long = 4000
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
+        @JvmStatic
         fun launchForPushPermissionPrompt(
             activity: Activity,
             config: CleverTapInstanceConfig?,
@@ -571,6 +572,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         }
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
+        @JvmStatic
         fun launchForInAppNotification(
             context: Context,
             inAppNotification: CTInAppNotification,

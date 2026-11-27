@@ -444,9 +444,10 @@ internal fun String?.toJsonOrNull(): JSONObject? {
     }
 }
 
+// Public + @RestrictTo: the Flutter plugin imports it (com.clevertap.android.sdk.isNotNullAndBlank).
 @OptIn(ExperimentalContracts::class)
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal fun String?.isNotNullAndBlank(): Boolean {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+public fun String?.isNotNullAndBlank(): Boolean {
     contract { returns(true) implies (this@isNotNullAndBlank != null) }
     return isNullOrBlank().not()
 }
