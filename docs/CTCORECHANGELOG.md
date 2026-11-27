@@ -11,6 +11,9 @@
 * **App Inbox Videos:** A video now continues from where it was left when you scroll away and back, rotate the
   screen or return to the inbox. A video that was unmuted keeps its sound, and a new video starts muted from the
   beginning. The inbox now uses one video player for all rows instead of creating a new one for each row.
+* **App Inbox Video Play Button:** A video row that is not playing now shows a play button. Pressing it plays that
+  video and stops the one that was playing. Before, a video that did not autoplay, such as the second of two videos
+  that both fit on the screen, could not be played.
 * **Faster Event Delivery On Background:** Queued events are now sent as soon as the app moves to the background, instead of waiting for the next scheduled flush.
 
 #### Bug Fixes

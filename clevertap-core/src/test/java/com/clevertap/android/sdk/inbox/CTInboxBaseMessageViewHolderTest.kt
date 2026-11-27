@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import androidx.fragment.app.FragmentActivity
 import com.clevertap.android.sdk.R
 import com.clevertap.android.shared.test.BaseTestCase
@@ -245,6 +246,180 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
 
         holder.playerReady()
         assertEquals(View.GONE, spinner.visibility)
+    }
+
+    /** The views the real row layouts give a holder: a media area that holds the player container. */
+    private class MediaViews(val mediaLayout: RelativeLayout, val container: FrameLayout)
+
+    private fun bindWithMediaArea(message: CTInboxMessage): MediaViews {
+        val container = FrameLayout(appCtx).apply { visibility = View.GONE }
+        val mediaLayout = RelativeLayout(appCtx).apply {
+            addView(View(appCtx)) // the poster or placeholder
+            addView(container)
+        }
+        holder.mediaLayout = mediaLayout
+        holder.frameLayout = container
+        holder.progressBarFrameLayout = FrameLayout(appCtx)
+        holder.configureWithMessage(message, fragmentSpy, 0)
+        holder.context = appCtx
+        return MediaViews(mediaLayout, container)
+    }
+
+    private fun playButton(views: MediaViews): View? {
+        val label = appCtx.getString(R.string.ct_inbox_play_video_content_description)
+        return (0 until views.mediaLayout.childCount).map { views.mediaLayout.getChildAt(it) }
+            .firstOrNull { it.contentDescription == label }
+    }
+
+    private fun addPlayer() =
+        holder.addMediaPlayer(0f, { 0f }, { _, _, _ -> null }, View(appCtx))
+
+    @Test
+    fun `a video row shows a play button below its player container`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+
+        val button = playButton(views)
+
+        assertTrue("no play button on a video row", button != null)
+        assertEquals(View.VISIBLE, button!!.visibility)
+        assertTrue(
+            "the button must sit below the player container, so a ready video covers it",
+            views.mediaLayout.indexOfChild(button) < views.mediaLayout.indexOfChild(views.container)
+        )
+        assertTrue(button.isClickable)
+    }
+
+    @Test
+    fun `an audio row and a row without media have no play button`() {
+        val audio = bindWithMediaArea(videoMessage("msg_A", contentType = "audio/mpeg"))
+        assertNull(playButton(audio))
+
+        val text = bindWithMediaArea(unreadMessage("msg_text"))
+        assertNull(playButton(text))
+    }
+
+    @Test
+    fun `a row that has the player hides its play button and shows it again when the player leaves`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val button = playButton(views)!!
+
+        addPlayer()
+        assertEquals(View.GONE, button.visibility)
+
+        holder.playerRemoved()
+        assertEquals(View.VISIBLE, button.visibility)
+    }
+
+    @Test
+    fun `a row that is bound again while it has the player keeps its play button hidden`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val button = playButton(views)!!
+        addPlayer()
+
+        holder.configureWithMessage(videoMessage("msg_V"), fragmentSpy, 0)
+
+        assertEquals(View.GONE, button.visibility)
+    }
+
+    @Test
+    fun `a row bound to another message gets a play button even if the player was never reported removed`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val button = playButton(views)!!
+        addPlayer()
+
+        holder.configureWithMessage(videoMessage("msg_other"), fragmentSpy, 0)
+
+        assertEquals(View.VISIBLE, button.visibility)
+    }
+
+    @Test
+    fun `a row bound to a message that is not a video hides the play button`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val button = playButton(views)!!
+
+        holder.configureWithMessage(unreadMessage("msg_text"), fragmentSpy, 0)
+        assertEquals(View.GONE, button.visibility)
+
+        holder.configureWithMessage(videoMessage("msg_audio", contentType = "audio/mpeg"), fragmentSpy, 0)
+        assertEquals(View.GONE, button.visibility)
+
+        holder.configureWithMessage(videoMessage("msg_V2"), fragmentSpy, 0)
+        assertEquals(View.VISIBLE, button.visibility)
+    }
+
+    @Test
+    fun `binding a row many times creates one play button`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val childrenWithButton = views.mediaLayout.childCount
+
+        repeat(5) { holder.configureWithMessage(videoMessage("msg_V$it"), fragmentSpy, 0) }
+
+        assertEquals(childrenWithButton, views.mediaLayout.childCount)
+    }
+
+    @Test
+    fun `pressing the play button asks the list to play the row`() {
+        justRun { fragmentSpy.onPlayButtonClicked(any()) }
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+
+        playButton(views)!!.performClick()
+
+        verify(exactly = 1) { fragmentSpy.onPlayButtonClicked(holder) }
+    }
+
+    @Test
+    fun `the media of a row is visible while its middle is on screen`() {
+        val media = mockk<RelativeLayout>(relaxed = true)
+        every { media.height } returns 600
+        holder.mediaLayout = media
+
+        every { media.getLocalVisibleRect(any()) } answers { firstArg<android.graphics.Rect>().set(0, 0, 1080, 600); true }
+        assertTrue("the whole media is on screen", holder.isMediaVisible())
+
+        every { media.getLocalVisibleRect(any()) } answers { firstArg<android.graphics.Rect>().set(0, 300, 1080, 600); true }
+        assertTrue("the middle is just on screen", holder.isMediaVisible())
+
+        every { media.getLocalVisibleRect(any()) } answers { firstArg<android.graphics.Rect>().set(0, 301, 1080, 600); true }
+        assertFalse("the middle is just off screen at the top", holder.isMediaVisible())
+
+        every { media.getLocalVisibleRect(any()) } answers { firstArg<android.graphics.Rect>().set(0, 0, 1080, 299); true }
+        assertFalse("the middle is just off screen at the bottom", holder.isMediaVisible())
+
+        every { media.getLocalVisibleRect(any()) } returns false
+        assertFalse("none of it is on screen", holder.isMediaVisible())
+    }
+
+    @Test
+    fun `the media of a row that is not laid out or has no media area is not visible`() {
+        assertFalse(holder.isMediaVisible())
+
+        val media = mockk<RelativeLayout>(relaxed = true)
+        every { media.height } returns 0
+        every { media.getLocalVisibleRect(any()) } returns true
+        holder.mediaLayout = media
+        assertFalse(holder.isMediaVisible())
+    }
+
+    @Test
+    fun `a hide of the spinner queued when the player left does not win over the next player`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val spinner = holder.progressBarFrameLayout
+        addPlayer()
+        holder.playerRemoved() // queues the hide of the spinner
+
+        addPlayer() // the same row gets the player again before the queue runs
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(View.VISIBLE, spinner.visibility)
+        assertTrue(views.container.childCount > 0)
+    }
+
+    @Test
+    fun `a row without a media area has no play button and binds without a problem`() {
+        holder.mediaLayout = null
+
+        holder.configureWithMessage(videoMessage("msg_V"), fragmentSpy, 0)
+        holder.playerRemoved()
     }
 
     companion object {

@@ -249,6 +249,13 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    /** The user pressed the play button of a video row. */
+    void onPlayButtonClicked(CTInboxBaseMessageViewHolder holder) {
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.playRow(holder);
+        }
+    }
+
     /** Releases this tab's player when another tab is chosen. A dialog or split-screen pause does not; onStop() does. */
     void onPageHidden() {
         if (mediaRecyclerView != null) {

@@ -676,6 +676,28 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
+    fun test_onPlayButtonClicked_plays_the_row_in_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+        val row = mockk<CTInboxBaseMessageViewHolder>(relaxed = true)
+
+        fragment.onPlayButtonClicked(row)
+
+        verify(exactly = 1) { media.playRow(row) }
+    }
+
+    @Test
+    fun test_onPlayButtonClicked_without_a_media_recycler_does_nothing() {
+        val fragment = viewReadyFragment()
+        fragment.mediaRecyclerView = null
+
+        fragment.onPlayButtonClicked(mockk(relaxed = true))
+
+        assertNull(fragment.mediaRecyclerView)
+    }
+
+    @Test
     fun test_onStop_releases_the_player_of_the_media_recycler() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)

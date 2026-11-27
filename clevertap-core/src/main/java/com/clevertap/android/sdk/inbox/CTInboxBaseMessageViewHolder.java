@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.DisplayMetrics;
@@ -67,6 +68,13 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     private WeakReference<CTInboxListViewFragment> parentWeakReference;
 
     private boolean requiresMediaPlayer;
+    private boolean playerAttached;
+    private ImageView playButton;
+    private final Runnable hideProgress = () -> {
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.GONE);
+        }
+    };
 
     protected final ImageView readDot;
 
@@ -141,6 +149,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         frameLayout.setBackgroundColor(Color.parseColor(message.getBgColor()));
 
         if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.removeCallbacks(hideProgress); // a hide queued by playerRemoved() must not win
             progressBarFrameLayout.setVisibility(View.VISIBLE);
         }
         if (firstContentItem.mediaIsVideo()) {
@@ -169,6 +178,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             frameLayout.addView(muteIcon);
         }
 
+        playerAttached = true;
+        hidePlayButton();
         playMedia.invoke(firstContentItem.getMedia(), firstContentItem.mediaIsAudio(), firstContentItem.mediaIsVideo());
         return true;
     }
@@ -215,9 +226,13 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     ) {
         context = parent.getContext();
         parentWeakReference = new WeakReference<>(parent);
+        if (message == null || !java.util.Objects.equals(message.getMessageId(), inboxMessage.getMessageId())) {
+            playerAttached = false; // a row bound to another message has not got the player
+        }
         message = inboxMessage;
         firstContentItem = message.getInboxMessageContents().get(0);
         requiresMediaPlayer = firstContentItem.mediaIsStreamable();
+        showPlayButton();
     }
 
     int getImageBackgroundColor() {
@@ -280,12 +295,64 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         return firstContentItem != null ? firstContentItem.getMedia() : null;
     }
 
+    /** A video row that does not have the player shows a play button, so the user can start it. */
+    void showPlayButton() {
+        if (mediaLayout == null || !requiresMediaPlayer || playerAttached
+                || firstContentItem == null || !firstContentItem.mediaIsVideo()
+                || message == null || message.getMessageId() == null) {
+            hidePlayButton();
+            return;
+        }
+        if (playButton == null) {
+            playButton = new ImageView(mediaLayout.getContext());
+            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64,
+                    mediaLayout.getResources().getDisplayMetrics());
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(size, size);
+            params.addRule(RelativeLayout.CENTER_IN_PARENT);
+            playButton.setLayoutParams(params);
+            playButton.setImageResource(R.drawable.ct_ic_play);
+            playButton.setContentDescription(
+                    mediaLayout.getContext().getString(R.string.ct_inbox_play_video_content_description));
+            playButton.setOnClickListener(v -> {
+                CTInboxListViewFragment parent = getParent();
+                if (parent != null) {
+                    parent.onPlayButtonClicked(this);
+                }
+            });
+            // Below the player container, so a video that is ready always covers the button
+            FrameLayout playerContainer = getLayoutForMediaPlayer();
+            int index = playerContainer != null ? mediaLayout.indexOfChild(playerContainer) : -1;
+            mediaLayout.addView(playButton, index >= 0 ? index : mediaLayout.getChildCount());
+        }
+        playButton.setVisibility(View.VISIBLE);
+    }
+
+    private void hidePlayButton() {
+        if (playButton != null) {
+            playButton.setVisibility(View.GONE);
+        }
+    }
+
+    /** True while the middle of the media area, where the play button sits, is on screen. */
+    public boolean isMediaVisible() {
+        if (mediaLayout == null || mediaLayout.getHeight() == 0) {
+            return false;
+        }
+        Rect visible = new Rect();
+        if (!mediaLayout.getLocalVisibleRect(visible)) {
+            return false;
+        }
+        int middle = mediaLayout.getHeight() / 2;
+        return visible.top <= middle && middle <= visible.bottom;
+    }
+
     public boolean needsMediaPlayer() {
         return requiresMediaPlayer;
     }
 
     public void playerBuffering() {
         if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.removeCallbacks(hideProgress);
             progressBarFrameLayout.setVisibility(View.VISIBLE);
         }
     }
@@ -304,7 +371,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     public void playerRemoved() {
         // .post here is imp
         if (progressBarFrameLayout != null) {
-            progressBarFrameLayout.post(() -> progressBarFrameLayout.setVisibility(View.GONE));
+            progressBarFrameLayout.post(hideProgress);
         }
         if (muteIcon != null) {
             muteIcon.post(() -> muteIcon.setVisibility(View.GONE));
@@ -315,6 +382,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             // playerReady() left it VISIBLE; nothing else hides it until the next bind.
             frameLayout.setVisibility(View.GONE);
         }
+        playerAttached = false;
+        showPlayButton();
     }
 
     String getImageContentDescription(Context context, CTInboxMessage inboxMessage, int position) {

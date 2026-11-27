@@ -5,6 +5,7 @@
     <string name="ct_inbox_back_button_content_description">Back</string>
     <string name="ct_mute_button_content_description">Mute</string>
     <string name="ct_unmute_button_content_description">Unmute</string>
+    <string name="ct_inbox_play_video_content_description">Play video</string>
     <string name="ct_inbox_media_content_description">Message Media</string>
     <string name="ct_inbox_image_content_description">Message Image</string>
     <string name="ct_inbox_icon_content_description">Message Icon</string>
