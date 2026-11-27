@@ -35,8 +35,9 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
     public fun interface OnGeofenceApiInitializedListener {
 
         /**
-         * Called on the main thread once [initBackgroundLocationUpdates] has registered location
-         * updates.
+         * Called on the main thread when the location update task started by
+         * [initBackgroundLocationUpdates] has finished: it has requested location updates, removed them
+         * (when background location updates are disabled) or skipped a duplicate request.
          */
         @Suppress("FunctionName")
         public fun OnGeofenceApiInitialized()
@@ -171,9 +172,11 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
         @JvmSynthetic @JvmName("ktSetCtLocationUpdatesListener") inline set(value) = setCtLocationUpdatesListener(value)
 
     /**
-     * Returns the settings passed to [init].
+     * Returns the geofence settings in use: the settings passed to the first [init] call (settings passed
+     * to later calls are ignored). When no settings were passed, the default settings are used once the
+     * SDK is activated.
      *
-     * @return the settings, or `null` if none were set (default settings then apply)
+     * @return the settings, or `null` before the SDK has been initialised
      */
     public open fun getGeofenceSettings(): CTGeofenceSettings? {
         return ctGeofenceSettings

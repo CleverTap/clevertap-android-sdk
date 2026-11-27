@@ -7,7 +7,8 @@ import android.util.Log
  * the overloads that take a suffix.
  *
  * The static methods ([d], [i], [v]) follow the global level set with `CleverTapAPI.setDebugLevel`;
- * an instance (see [CleverTapInstanceConfig.getLogger]) follows its own level, set with [setDebugLevel].
+ * an instance (see [CleverTapInstanceConfig.getLogger]) follows its own level, set with [setDebugLevel],
+ * for info messages only; its debug and verbose messages follow the global level too.
  * Info messages are logged at [CleverTapAPI.LogLevel.INFO] and above, debug messages above INFO and
  * verbose messages above [CleverTapAPI.LogLevel.DEBUG]. Overloads without a [Throwable] throw a
  * [NullPointerException] for a `null` message when the level is enabled.
@@ -87,7 +88,8 @@ public class Logger internal constructor(private var debugLevel: Int) : ILogger 
     }
 
     /**
-     * Sets the level of this logger instance.
+     * Sets the level this logger instance uses for info messages. Its debug and verbose messages follow
+     * the global level set with `CleverTapAPI.setDebugLevel`.
      *
      * @param level the [CleverTapAPI.LogLevel.intValue] of a [CleverTapAPI.LogLevel]
      */

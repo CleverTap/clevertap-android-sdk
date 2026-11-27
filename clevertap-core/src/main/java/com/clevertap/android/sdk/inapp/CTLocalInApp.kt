@@ -11,7 +11,9 @@ import org.json.JSONObject
  * Start with [builder]; each step returns the next builder, so the required values are set in order
  * (type, title, message, orientation, positive and negative button) before the optional ones in
  * [Builder.Builder6]. Pass the result of [Builder.Builder6.build] to
- * [com.clevertap.android.sdk.CleverTapAPI.promptPushPrimer]. Both buttons dismiss the in-app.
+ * [com.clevertap.android.sdk.CleverTapAPI.promptPushPrimer]. The positive button asks for the push
+ * permission (see [Builder.Builder6.setFallbackToSettings]) and the in-app is dismissed when that flow
+ * ends; the negative button cancels the request and dismisses the in-app.
  */
 public class CTLocalInApp private constructor() {
 
@@ -46,7 +48,8 @@ public class CTLocalInApp private constructor() {
         private val jsonObject = JSONObject()
 
         /**
-         * Sets the template. The in-app is marked as local and its close button is hidden.
+         * Sets the template. The in-app is marked as local and its `close` flag is set, so the half
+         * interstitial shows its close button; the alert template has no close button.
          *
          * @param inAppType the template to use
          * @return the next step, which sets the title

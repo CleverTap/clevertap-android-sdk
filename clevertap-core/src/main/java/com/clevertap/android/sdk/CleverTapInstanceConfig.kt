@@ -348,15 +348,16 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktSetDebugLevel") inline set(value) = setDebugLevel(value)
 
     /**
-     * The custom proxy domain all events are sent through, if any. Ignored when an account region is
-     * set.
+     * The custom proxy domain events are sent through, if any. Push impression (Notification Viewed)
+     * events use the spiky proxy domain instead. Ignored when an account region is set.
      *
      * @return the proxy domain, or `null` if none was set
      */
     public open fun getProxyDomain(): String? = proxyDomainValue
 
     /**
-     * Sets a custom proxy domain to send all events through.
+     * Sets a custom proxy domain to send events through. Push impression (Notification Viewed) events use
+     * the spiky proxy domain instead.
      *
      * @param proxyDomain the proxy domain, or `null` for none
      */
@@ -434,7 +435,8 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetFcmSenderId") inline get() = getFcmSenderId()
 
     /**
-     * The logger of this instance; it follows this config's debug level.
+     * The logger of this instance. This config's debug level only controls its info messages; debug and
+     * verbose messages follow the global level set with `CleverTapAPI.setDebugLevel`.
      *
      * @return the logger
      */
@@ -602,7 +604,8 @@ public open class CleverTapInstanceConfig : Parcelable {
 
     /**
      * Enables or disables the background sync job, which periodically pulls pending push
-     * notifications (Push Amplification) while the app isn't running.
+     * notifications (Push Amplification). Every instance starts with the manifest's
+     * `CLEVERTAP_BACKGROUND_SYNC` value; this setter overrides it.
      *
      * @param backgroundSync `true` to enable background sync
      */
@@ -672,8 +675,9 @@ public open class CleverTapInstanceConfig : Parcelable {
     }
 
     /**
-     * Sets the encryption level of data the SDK stores on the device, for an additional instance (the
-     * default instance reads the manifest's `CLEVERTAP_ENCRYPTION_LEVEL`).
+     * Sets the encryption level of data the SDK stores on the device. The default instance starts with the
+     * manifest's `CLEVERTAP_ENCRYPTION_LEVEL` and an additional instance starts with none; this setter
+     * overrides the starting value in both cases.
      *
      * @param encryptionLevel the level
      */
@@ -694,8 +698,8 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetEncryptionLevel") inline get() = getEncryptionLevel()
 
     /**
-     * Enables or disables encryption of event data sent over the network for this instance (the default
-     * instance reads the manifest's `CLEVERTAP_ENCRYPTION_IN_TRANSIT`).
+     * Enables or disables encryption of event data sent over the network for this instance. Every instance
+     * starts with the manifest's `CLEVERTAP_ENCRYPTION_IN_TRANSIT` value; this setter overrides it.
      *
      * @param encryptionInTransit `true` to encrypt data in transit
      */

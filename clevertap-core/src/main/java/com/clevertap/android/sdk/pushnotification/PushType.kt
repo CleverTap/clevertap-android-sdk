@@ -110,7 +110,8 @@ public open class PushType(
 
         // Static method to convert JSONObject to PushType
         /**
-         * Parses a push type from the JSON produced by [toJSONObject].
+         * Parses a push type from JSON in the form produced by [toJSONObject]. A push type with a `null`
+         * class name does not round-trip, because [toJSONObject] leaves that key out.
          *
          * @param jsonObject the JSON to parse
          * @return the push type, or `null` if [jsonObject] is `null` or any of the four keys is

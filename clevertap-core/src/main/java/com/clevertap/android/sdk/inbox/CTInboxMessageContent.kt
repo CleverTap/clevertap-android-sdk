@@ -366,8 +366,8 @@ public open class CTInboxMessageContent : Parcelable {
      * permission was already denied (the link's `fbSettings` flag).
      *
      * @param jsonObject of Link
-     * @return the `fbSettings` value, or `false` if [jsonObject] is `null`, has no such key, or it is
-     * not a boolean
+     * @return the `fbSettings` value (the strings "true" and "false" are accepted as well), or `false`
+     * if [jsonObject] is `null`, has no such key, or the value is not a boolean
      */
     public open fun isFallbackSettingsEnabled(jsonObject: JSONObject?): Boolean {
         if (jsonObject == null) {

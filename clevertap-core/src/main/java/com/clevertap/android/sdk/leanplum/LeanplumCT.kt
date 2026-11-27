@@ -252,7 +252,7 @@ public object LeanplumCT {
   }
 
   /**
-   * Tracks a Google Play purchase as a Charged event named [getPurchaseEventName].
+   * Tracks a Google Play purchase as a Charged event whose `event` property is [getPurchaseEventName].
    *
    * @param item the purchased item
    * @param priceMicros the price in micro-units; sent divided by 1,000,000
@@ -280,8 +280,8 @@ public object LeanplumCT {
   }
 
   /**
-   * Tracks a Google Play purchase as a Charged event named [getPurchaseEventName], with extra
-   * properties.
+   * Tracks a Google Play purchase as a Charged event whose `event` property is [getPurchaseEventName],
+   * with extra properties.
    *
    * @param item the purchased item
    * @param priceMicros the price in micro-units; sent divided by 1,000,000

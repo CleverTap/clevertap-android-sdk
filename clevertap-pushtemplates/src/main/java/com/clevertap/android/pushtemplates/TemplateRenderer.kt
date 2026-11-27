@@ -556,13 +556,8 @@ public class TemplateRenderer @JvmOverloads constructor(
 
     public companion object {
         /**
-         * Returns the log level set for PushTemplates
-         *
-         * @return The int value
-         */
-        /**
-         * Enables or disables debugging. If enabled, see debug messages in Android's logcat utility.
-         * Debug messages are tagged as PTLog.
+         * The log level for PushTemplates. Enables or disables debugging. If enabled, see debug messages in
+         * Android's logcat utility. Debug messages are tagged as PTLog.
          *
          * @param debugLevel Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK integration related logging),
          * 2(shows debug output)

@@ -184,7 +184,7 @@ public open class Var<T> internal constructor(
     /**
      * Returns the current value: the latest value received from the server, otherwise the default
      * value. For a file variable it is the local path of the downloaded file, or `null` while
-     * the file is not cached. Logs a warning (once) if called before the first fetch completed.
+     * the file is not cached. Logs a verbose message (once) if called before the first fetch completed.
      *
      * @return the current value
      */
@@ -203,8 +203,8 @@ public open class Var<T> internal constructor(
     /**
      * Registers a callback for changes of this variable's value.
      *
-     * If variables have already been fetched, the callback is also invoked immediately, on the calling
-     * thread. Later changes are delivered on the main thread.
+     * If the first fetch request has already completed (successfully or not), the callback is also
+     * invoked immediately, on the calling thread. Later changes are delivered on the main thread.
      *
      * @param callback the callback; `null` is ignored (and logged)
      * @see removeValueChangedHandler
@@ -250,7 +250,7 @@ public open class Var<T> internal constructor(
 
     /**
      * Returns the current value as a number (a [Double]). A string value is parsed; if it isn't numeric,
-     * the numeric default value is used. Logs a warning (once) if called before the first fetch
+     * the numeric default value is used. Logs a verbose message (once) if called before the first fetch
      * completed.
      *
      * @return the value as a number, or `null` for a non-numeric variable
@@ -262,7 +262,7 @@ public open class Var<T> internal constructor(
 
     /**
      * Returns the current value as a string. For a file variable it is the local path of the
-     * downloaded file. Logs a warning (once) if called before the first fetch completed.
+     * downloaded file. Logs a verbose message (once) if called before the first fetch completed.
      *
      * @return the value as a string, or `null` for a map value, or for a file that is not cached
      */

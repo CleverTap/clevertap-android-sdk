@@ -32,7 +32,7 @@ public interface INotificationRenderer {
      * [Number] is used as is; a [String] is parsed as an integer, or its hash code is used.
      *
      * @param extras the push payload
-     * @return the collapse key, or `null` to let the SDK pick a random id
+     * @return the collapse key, or `null` to let the SDK pick a random id between 0 and 99
      */
     public fun getCollapseKey(extras: Bundle): Any?
 

@@ -11,9 +11,10 @@ public abstract class VariablesChangedCallback : Runnable {
     }
 
     /**
-     * Called when variable values have been updated from the server. Runs on the main thread, except
-     * when the callback is registered after variables were already fetched: then it is called
-     * immediately on the thread that registered it.
+     * Called when variable values have been updated from the server, or loaded from the stored values
+     * when the fetch failed. Runs on the main thread, except when the callback is registered after the
+     * first fetch request has already completed (successfully or not): then it is called immediately on
+     * the thread that registered it.
      */
     public abstract fun variablesChanged()
 }

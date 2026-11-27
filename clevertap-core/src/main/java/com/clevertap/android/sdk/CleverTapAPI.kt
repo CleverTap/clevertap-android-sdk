@@ -2696,12 +2696,14 @@ public open class CleverTapAPI internal constructor(
         }
 
         /**
-         * Returns the instance for an account. When no instance exists yet, it is created from the
-         * default config (for a `null` account ID) or from the config stored for that account.
+         * Returns the instance for an account. When no instance exists at all yet, it is created: from the
+         * default config for a `null` account ID, or for an account ID from the config stored for that
+         * account (or from the default config when its account ID matches). When other instances already
+         * exist and none matches, nothing is created and `null` is returned.
          *
          * @param context a context, needed to create an instance
          * @param _accountId the account ID, or `null` for the default instance
-         * @return the instance, or `null` if there is none and it cannot be created
+         * @return the instance, or `null` if none matches and none could be created
          */
         @JvmStatic
         public fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =

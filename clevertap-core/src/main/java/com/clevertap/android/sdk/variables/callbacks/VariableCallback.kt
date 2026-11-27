@@ -30,7 +30,8 @@ public abstract class VariableCallback<T> : Runnable {
     /**
      * Called with the variable when its value changed (or, for a file ready handler, when its file is
      * ready). Runs on the main thread, except the immediate call made by [Var.addValueChangedCallback]
-     * when variables were already fetched, which runs on the thread that registered the callback.
+     * when the first fetch request had already completed (successfully or not), which runs on the thread
+     * that registered the callback.
      *
      * @param variable the variable
      */
