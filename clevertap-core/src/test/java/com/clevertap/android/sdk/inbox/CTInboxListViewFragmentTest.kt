@@ -540,6 +540,46 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
+    fun test_onSaveInstanceState_saves_the_video_the_user_chose() {
+        val fragment = viewReadyFragment()
+        val chosen = Bundle().apply { putString("pickedMessageId", "m1") }
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        every { media.savePickedVideo() } returns chosen
+        fragment.mediaRecyclerView = media
+        val outState = Bundle()
+
+        fragment.onSaveInstanceState(outState)
+
+        assertEquals("m1", outState.getBundle("pickedVideo")!!.getString("pickedMessageId"))
+    }
+
+    @Test
+    fun test_onSaveInstanceState_saves_nothing_when_the_user_chose_no_video() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        every { media.savePickedVideo() } returns null
+        fragment.mediaRecyclerView = media
+        val outState = Bundle()
+
+        fragment.onSaveInstanceState(outState)
+
+        assertFalse(outState.containsKey("pickedVideo"))
+    }
+
+    @Test
+    fun test_onViewStateRestored_gives_the_chosen_video_back_to_the_list() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+        val chosen = Bundle().apply { putString("pickedMessageId", "m1") }
+        val saved = Bundle().apply { putBundle("pickedVideo", chosen) }
+
+        fragment.onViewStateRestored(saved)
+
+        verify(exactly = 1) { media.restorePickedVideo(chosen) }
+    }
+
+    @Test
     fun test_onSaveInstanceState_inside_the_inbox_screen_leaves_the_states_to_the_activity() {
         val fragment = viewReadyFragment()
         every { fragment.activity } returns inboxActivity()

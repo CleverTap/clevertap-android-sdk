@@ -143,6 +143,21 @@ class MediaPlayerRecyclerView : RecyclerView {
         }
     }
 
+    /** The chosen video for a screen that is rebuilt, as after a rotation; null when the user has chosen none. */
+    fun savePickedVideo(): Bundle? {
+        val picked = pickedVideo ?: return null
+        return Bundle().apply {
+            putString(PICKED_MESSAGE_ID_KEY, picked.messageId)
+            putString(PICKED_MEDIA_URL_KEY, picked.mediaUrl)
+        }
+    }
+
+    /** Takes back what [savePickedVideo] gave. The video plays again once its row is on screen. */
+    fun restorePickedVideo(saved: Bundle?) {
+        val messageId = saved?.getString(PICKED_MESSAGE_ID_KEY) ?: return
+        pickedVideo = PickedVideo(messageId, saved.getString(PICKED_MEDIA_URL_KEY))
+    }
+
     fun onRestartPlayer() {
         released = false
         playVideo()
@@ -377,6 +392,9 @@ class MediaPlayerRecyclerView : RecyclerView {
         /** A video that was never played starts muted. */
         const val MUTED_VOLUME = 0f
         const val FULL_VOLUME = 1f
+
+        const val PICKED_MESSAGE_ID_KEY = "pickedMessageId"
+        const val PICKED_MEDIA_URL_KEY = "pickedMediaUrl"
 
         /** A video row plays only while at least this much of it is on screen. */
         const val MIN_VISIBLE_HEIGHT = 400

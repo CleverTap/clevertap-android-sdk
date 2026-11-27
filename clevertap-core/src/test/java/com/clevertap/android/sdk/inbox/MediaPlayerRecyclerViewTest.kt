@@ -1058,6 +1058,81 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
+    fun `no chosen video is saved when the user has chosen none`() {
+        showList(rows = 6)
+        list.playVideo()
+
+        assertEquals(null, list.savePickedVideo())
+    }
+
+    @Test
+    fun `a chosen video is saved with its message and media`() {
+        showList(rows = 6)
+        list.playRow(rowAt(1))
+
+        val saved = list.savePickedVideo()!!
+
+        assertEquals("message1", saved.getString("pickedMessageId"))
+        assertEquals("url1", saved.getString("pickedMediaUrl"))
+    }
+
+    @Test
+    fun `a new list plays the video that the old list had chosen`() {
+        showList(rows = 6)
+        list.playRow(rowAt(1))
+        val saved = list.savePickedVideo()
+
+        list.releasePlayer() // the old screen is gone and takes the player view with it
+        (surface.parent as? ViewGroup)?.removeView(surface)
+        showList(rows = 6) // the screen was rotated: a new list with new rows
+        list.restorePickedVideo(saved)
+        list.playVideo()
+
+        assertEquals(1, rowAt(1).attachCount)
+        assertEquals(0, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `restoring nothing or a broken bundle keeps the most visible row playing`() {
+        showList(rows = 6)
+
+        list.restorePickedVideo(null)
+        list.restorePickedVideo(Bundle())
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a restored choice for a message that is not in the list changes nothing`() {
+        showList(rows = 6)
+        list.restorePickedVideo(Bundle().apply { putString("pickedMessageId", "gone") })
+
+        list.playVideo()
+
+        assertEquals(1, rowAt(0).attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
+    fun `a restored choice stays until the list stops scrolling with its row away`() {
+        showList(rows = 6)
+        val chosen = rowAt(1)
+        list.restorePickedVideo(Bundle().apply {
+            putString("pickedMessageId", "message1")
+            putString("pickedMediaUrl", "url1")
+        })
+
+        scrollPastTwoRows()
+        listStopsScrolling()
+
+        assertEquals(0, chosen.attachCount)
+        assertEquals(1, rowsShowingVideo())
+    }
+
+    @Test
     fun `the choice is dropped when the row now shows another message`() {
         showList(rows = 6)
         val chosen = rowAt(1)
