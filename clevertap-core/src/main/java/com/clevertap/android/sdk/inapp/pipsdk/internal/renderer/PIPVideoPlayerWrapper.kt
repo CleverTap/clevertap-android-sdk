@@ -23,6 +23,10 @@ import com.clevertap.android.sdk.video.inbox.Media3PlayerListener
 import kotlin.math.min
 import androidx.annotation.RestrictTo
 
+/** Load-error retry back-off: 2 s per failed attempt, capped at 16 s. */
+private const val RETRY_DELAY_STEP_MS = 2000L
+private const val MAX_RETRY_DELAY_MS = 16_000L
+
 /**
  * Self-contained video player for PIP in-app notifications.
  *
@@ -31,10 +35,6 @@ import androidx.annotation.RestrictTo
  * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
  * so the PlayerView is created with `useController = false`.
  */
-/** Load-error retry back-off: 2 s per failed attempt, capped at 16 s. */
-private const val RETRY_DELAY_STEP_MS = 2000L
-private const val MAX_RETRY_DELAY_MS = 16_000L
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PIPVideoPlayerWrapper {
 

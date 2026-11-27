@@ -7,6 +7,8 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import androidx.annotation.RestrictTo
 
+private const val DAYS_PER_WEEK = 7
+
 /**
  * Provides functionality for tracking and managing impressions for various campaigns.
  *
@@ -18,8 +20,6 @@ import androidx.annotation.RestrictTo
  * @property clock           An optional Clock implementation for handling time-related operations.
  * @property locale          An optional Locale specifying the locale to use for date and time calculations.
  */
-private const val DAYS_PER_WEEK = 7
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class ImpressionManager @JvmOverloads constructor(
     private val impressionStoreProvider: () -> ImpressionStore?,
