@@ -22,6 +22,12 @@ runs:
           --max-workers=4 \
           --build-cache
 
+    # Baselines may only shrink: a regenerated baseline must not absorb new findings.
+    - name: detekt baseline ratchet
+      if: always()
+      shell: bash
+      run: bash config/detekt/baseline_ratchet.sh
+
     # Public API guards:
     #  - apiCheck (binary-compatibility-validator): public ABI must match <module>/api/*.api
     #  - apiInteropCheck: no NEW Java/Flutter/React Native interop hazards in the public API and no
