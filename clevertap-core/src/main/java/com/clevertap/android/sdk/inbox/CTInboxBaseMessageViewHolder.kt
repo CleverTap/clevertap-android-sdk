@@ -508,9 +508,9 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
 
     fun hideOneButton(mainButton: Button, secondaryButton: Button, tertiaryButton: Button) {
         tertiaryButton.visibility = View.GONE
-        mainButton.layoutParams = 
+        mainButton.layoutParams =
             LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, TWO_BUTTONS_WEIGHT)
-        secondaryButton.layoutParams = 
+        secondaryButton.layoutParams =
             LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, TWO_BUTTONS_WEIGHT)
         tertiaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
     }
@@ -524,7 +524,7 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
     fun hideTwoButtons(mainButton: Button, secondaryButton: Button, tertiaryButton: Button) {
         secondaryButton.visibility = View.GONE
         tertiaryButton.visibility = View.GONE
-        mainButton.layoutParams = 
+        mainButton.layoutParams =
             LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, ONE_BUTTON_WEIGHT)
         secondaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
         tertiaryButton.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0f)
