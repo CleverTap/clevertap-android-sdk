@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.Logger
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.KeyStore
+import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
@@ -104,13 +105,17 @@ internal class UrlConnectionHttpClient(
                 sslSocketFactory = socketFactory
             }
             if (request.body != null) {
-                doOutput = true
-                outputStream.use {
-                    it.write(request.body.toByteArray(Charsets.UTF_8))
-                }
+                writeRequestBody(connection = this, body = request.body)
             }
         }
         return connection
+    }
+
+    private fun writeRequestBody(connection: HttpsURLConnection, body: String) {
+        connection.doOutput = true
+        connection.outputStream.use {
+            it.write(body.toByteArray(Charsets.UTF_8))
+        }
     }
 
     @VisibleForTesting
@@ -118,17 +123,7 @@ internal class UrlConnectionHttpClient(
         val certificateFactory = CertificateFactory.getInstance("X.509")
         // Use this class's loader: javaClass inside a scope function can point to a JDK class (e.g. KeyStore)
         val classLoader = UrlConnectionHttpClient::class.java.classLoader
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
-            load(null, null) // Use null InputStream & password to create empty key store
-            PINNED_ROOT_CERTIFICATES.forEach { name ->
-                val path = "$CERTIFICATES_DIR/$name.cer"
-                val certificate = classLoader
-                    ?.getResourceAsStream(path)
-                    ?.use { certificateFactory.generateCertificate(it) }
-                    ?: error("Certificate not found: $path")
-                setCertificateEntry(name, certificate)
-            }
-        }
+        val keyStore = buildPinnedKeyStore(certificateFactory, classLoader)
         val trustManagerFactory = TrustManagerFactory
             .getInstance(TrustManagerFactory.getDefaultAlgorithm())
             .apply { init(keyStore) }
@@ -142,5 +137,26 @@ internal class UrlConnectionHttpClient(
             Log.e(Constants.CLEVERTAP_LOG_TAG, "SSL pinning is enabled but could not be set up, using normal HTTPS", e)
         }
         null
+    }
+
+    private fun buildPinnedKeyStore(certificateFactory: CertificateFactory, classLoader: ClassLoader?): KeyStore {
+        return KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+            load(null, null) // Use null InputStream & password to create empty key store
+            PINNED_ROOT_CERTIFICATES.forEach { name ->
+                setCertificateEntry(name, loadPinnedCertificate(certificateFactory, classLoader, name))
+            }
+        }
+    }
+
+    private fun loadPinnedCertificate(
+        certificateFactory: CertificateFactory,
+        classLoader: ClassLoader?,
+        name: String
+    ): Certificate {
+        val path = "$CERTIFICATES_DIR/$name.cer"
+        return classLoader
+            ?.getResourceAsStream(path)
+            ?.use { certificateFactory.generateCertificate(it) }
+            ?: error("Certificate not found: $path")
     }
 }

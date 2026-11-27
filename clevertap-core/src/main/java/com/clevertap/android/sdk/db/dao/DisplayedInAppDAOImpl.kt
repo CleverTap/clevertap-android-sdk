@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -62,19 +63,21 @@ internal class DisplayedInAppDAOImpl(
         return try {
             db.readableDatabase.query(
                 tableName, projection, selection, selectionArgs, null, null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    DisplayedInAppData(
-                        inAppId = inAppId,
-                        inAppData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)),
-                        timeToLive = cursor.getLong(cursor.getColumnIndexOrThrow(Column.TTL))
-                    )
-                } else {
-                    null
-                }
-            }
+            ).use { cursor -> readFirstDisplayedInApp(cursor = cursor, inAppId = inAppId) }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch displayed in-app from $tableName", e)
+            null
+        }
+    }
+
+    private fun readFirstDisplayedInApp(cursor: Cursor, inAppId: String): DisplayedInAppData? {
+        return if (cursor.moveToFirst()) {
+            DisplayedInAppData(
+                inAppId = inAppId,
+                inAppData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)),
+                timeToLive = cursor.getLong(cursor.getColumnIndexOrThrow(Column.TTL))
+            )
+        } else {
             null
         }
     }

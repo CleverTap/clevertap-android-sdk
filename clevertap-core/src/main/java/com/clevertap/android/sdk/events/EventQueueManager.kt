@@ -237,31 +237,7 @@ internal class EventQueueManager(
                 if (CoreMetaData.getActivityCount() == 0) {
                     CoreMetaData.setActivityCount(1)
                 }
-                val type: String?
-                if (eventType == Constants.PAGE_EVENT) {
-                    type = "page"
-                } else if (eventType == Constants.PING_EVENT) {
-                    type = "ping"
-                    attachMeta(event)
-                    if (event.has("bk")) {
-                        cleverTapMetaData.isBgPing = true
-                        event.remove("bk")
-                    }
-
-                    //Add a flag to denote, PING event is for geofence
-                    if (cleverTapMetaData.isLocationForGeofence) {
-                        event.put("gf", true)
-                        cleverTapMetaData.isLocationForGeofence = false
-                        event.put("gfSDKVersion", cleverTapMetaData.geofenceSDKVersion)
-                        cleverTapMetaData.geofenceSDKVersion = 0
-                    }
-                } else if (eventType == Constants.PROFILE_EVENT) {
-                    type = "profile"
-                } else if (eventType == Constants.DATA_EVENT) {
-                    type = "data"
-                } else {
-                    type = "event"
-                }
+                val type = eventTypeName(event = event, eventType = eventType)
 
                 // Complete the received event with the other params
                 val currentActivityName = cleverTapMetaData.screenName
@@ -292,6 +268,39 @@ internal class EventQueueManager(
             } catch (e: Throwable) {
                 config.logger.verbose(config.accountId, "Failed to queue event: $event", e)
             }
+        }
+    }
+
+    /**
+     * Returns the queue "type" for [eventType]. A ping event is also completed here with its
+     * meta, background and geofence fields.
+     */
+    private fun eventTypeName(event: JSONObject, eventType: Int): String {
+        return when (eventType) {
+            Constants.PAGE_EVENT -> "page"
+            Constants.PING_EVENT -> {
+                attachPingFields(event)
+                "ping"
+            }
+            Constants.PROFILE_EVENT -> "profile"
+            Constants.DATA_EVENT -> "data"
+            else -> "event"
+        }
+    }
+
+    private fun attachPingFields(event: JSONObject) {
+        attachMeta(event)
+        if (event.has("bk")) {
+            cleverTapMetaData.isBgPing = true
+            event.remove("bk")
+        }
+
+        //Add a flag to denote, PING event is for geofence
+        if (cleverTapMetaData.isLocationForGeofence) {
+            event.put("gf", true)
+            cleverTapMetaData.isLocationForGeofence = false
+            event.put("gfSDKVersion", cleverTapMetaData.geofenceSDKVersion)
+            cleverTapMetaData.geofenceSDKVersion = 0
         }
     }
 
@@ -345,7 +354,8 @@ internal class EventQueueManager(
         val isAppLaunchedEvent = eventMediator.isAppLaunchedEvent(event)
 
         // Queue event if: (offline AND is regular event) OR (online AND NOT app launched event)
-        if ((isOffline && isRegularEvent) || (!isOffline && !isAppLaunchedEvent)) {
+        val shouldEvaluate = if (isOffline) { isRegularEvent } else { !isAppLaunchedEvent }
+        if (shouldEvaluate) {
             inAppController!!.onQueueEvent(eventName!!, flattenedEventProps, userLocation)
             nativeDisplayController?.onQueueEvent(eventName, flattenedEventProps, userLocation)
         }
@@ -396,68 +406,16 @@ internal class EventQueueManager(
             val profileEvent = JSONObject()
 
             if (baseProfile != null && baseProfile.length() > 0) {
-                val i = baseProfile.keys()
-                val iProfileHandler = IdentityRepoFactory
-                    .getRepo(context, config, validationResultStack)
-                while (i.hasNext()) {
-                    val next = i.next()
-
-                    // need to handle command-based JSONObject props here now
-                    var value: Any? = null
-                    try {
-                        value = baseProfile.getJSONObject(next)
-                    } catch (_: Throwable) {
-                        try {
-                            value = baseProfile.get(next)
-                        } catch (_: JSONException) {
-                            //no-op
-                        }
-                    }
-
-                    if (value != null) {
-                        profileEvent.put(next, value)
-
-                        // cache the valid identifier: guid pairs
-                        val isProfileKey = iProfileHandler.hasIdentity(next)
-
-                        /*If key is present in IdentitySet and removeFromSharedPrefs is true then
-                        proceed to removing PII key(Email) from shared prefs*/
-                        if (isProfileKey && !deviceInfo.isErrorDeviceId) {
-                            try {
-                                if (removeFromSharedPrefs) {
-                                    // Remove the value associated with the GUID
-                                    loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
-                                        guid,
-                                        next
-                                    )
-                                } else {
-                                    // Cache the new value for the GUID
-                                    loginInfoProvider.cacheGUIDForIdentifier(
-                                        guid,
-                                        next,
-                                        value.toString()
-                                    )
-                                }
-                            } catch (_: Throwable) {
-                                // Log or handle the exception if needed; currently no-op
-                            }
-                        }
-                    }
-                }
+                addBaseProfileFields(
+                    baseProfile = baseProfile,
+                    profileEvent = profileEvent,
+                    guid = guid,
+                    removeFromSharedPrefs = removeFromSharedPrefs
+                )
             }
 
             try {
-                val carrier = deviceInfo.carrier
-                if (carrier != null && carrier != "") {
-                    profileEvent.put("Carrier", carrier)
-                }
-
-                val cc = deviceInfo.countryCode
-                if (cc != null && cc != "") {
-                    profileEvent.put("cc", cc)
-                }
-
-                profileEvent.put("tz", TimeZone.getDefault().id)
+                putDeviceFields(profileEvent)
 
                 val event = JSONObject()
                 event.put("profile", profileEvent)
@@ -471,6 +429,86 @@ internal class EventQueueManager(
             }
         } catch (t: Throwable) {
             config.logger.verbose(config.accountId, "Basic profile sync", t)
+        }
+    }
+
+    /**
+     * Copies each readable [baseProfile] field into [profileEvent] and updates the cached
+     * identifier-to-GUID pairs for identity keys.
+     */
+    private fun addBaseProfileFields(
+        baseProfile: JSONObject,
+        profileEvent: JSONObject,
+        guid: String?,
+        removeFromSharedPrefs: Boolean
+    ) {
+        val i = baseProfile.keys()
+        val iProfileHandler = IdentityRepoFactory
+            .getRepo(context, config, validationResultStack)
+        while (i.hasNext()) {
+            val next = i.next()
+
+            val value = readProfileValue(baseProfile = baseProfile, key = next) ?: continue
+            profileEvent.put(next, value)
+
+            // cache the valid identifier: guid pairs
+            val isProfileKey = iProfileHandler.hasIdentity(next)
+
+            /*If key is present in IdentitySet and removeFromSharedPrefs is true then
+            proceed to removing PII key(Email) from shared prefs*/
+            if (isProfileKey && !deviceInfo.isErrorDeviceId) {
+                updateCachedGUID(guid = guid, key = next, value = value, removeFromSharedPrefs = removeFromSharedPrefs)
+            }
+        }
+    }
+
+    private fun putDeviceFields(profileEvent: JSONObject) {
+        val carrier = deviceInfo.carrier
+        if (carrier != null && carrier != "") {
+            profileEvent.put("Carrier", carrier)
+        }
+
+        val cc = deviceInfo.countryCode
+        if (cc != null && cc != "") {
+            profileEvent.put("cc", cc)
+        }
+
+        profileEvent.put("tz", TimeZone.getDefault().id)
+    }
+
+    private fun readProfileValue(baseProfile: JSONObject, key: String): Any? {
+        // need to handle command-based JSONObject props here now
+        var value: Any? = null
+        try {
+            value = baseProfile.getJSONObject(key)
+        } catch (_: Throwable) {
+            try {
+                value = baseProfile.get(key)
+            } catch (_: JSONException) {
+                //no-op
+            }
+        }
+        return value
+    }
+
+    private fun updateCachedGUID(guid: String?, key: String, value: Any, removeFromSharedPrefs: Boolean) {
+        try {
+            if (removeFromSharedPrefs) {
+                // Remove the value associated with the GUID
+                loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
+                    guid,
+                    key
+                )
+            } else {
+                // Cache the new value for the GUID
+                loginInfoProvider.cacheGUIDForIdentifier(
+                    guid,
+                    key,
+                    value.toString()
+                )
+            }
+        } catch (_: Throwable) {
+            // Log or handle the exception if needed; currently no-op
         }
     }
 

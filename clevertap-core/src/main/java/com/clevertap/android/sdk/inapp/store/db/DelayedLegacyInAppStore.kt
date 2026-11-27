@@ -85,23 +85,21 @@ internal class DelayedLegacyInAppStore(
 
     @WorkerThread
     fun getDelayedInApp(inAppId: String): JSONObject? {
-        val encryptedInAppDataString = delayedLegacyInAppDAO.fetchSingleInApp(inAppId)
+        val encryptedInAppDataString = delayedLegacyInAppDAO.fetchSingleInApp(inAppId) ?: return null
 
-        return encryptedInAppDataString?.let {
-            try {
-                // Decrypt the data before parsing to JSONObject
-                val decryptedInAppData = cryptHandler.decrypt(it)
+        return try {
+            // Decrypt the data before parsing to JSONObject
+            val decryptedInAppData = cryptHandler.decrypt(encryptedInAppDataString)
 
-                if (decryptedInAppData == null) {
-                    logger.verbose(accountId, "Failed to decrypt delayed in-app: $inAppId")
-                    return null
-                }
-
-                JSONObject(decryptedInAppData)
-            } catch (e: JSONException) {
-                logger.verbose(accountId, "Error parsing delayed in-app: $inAppId", e)
-                null
+            if (decryptedInAppData == null) {
+                logger.verbose(accountId, "Failed to decrypt delayed in-app: $inAppId")
+                return null
             }
+
+            JSONObject(decryptedInAppData)
+        } catch (e: JSONException) {
+            logger.verbose(accountId, "Error parsing delayed in-app: $inAppId", e)
+            null
         }
     }
 

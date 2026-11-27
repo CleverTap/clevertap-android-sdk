@@ -82,31 +82,37 @@ internal class InAppNotificationInflater(
 
     private fun processInAppMedia(inApp: CTInAppNotification) {
         for (media in inApp.mediaList) {
-            when {
-                media.isGIF() -> {
-                    val bytes = fileResourceProvider.fetchInAppGifV1(media.mediaUrl)
-                    if (bytes == null || bytes.isEmpty()) {
-                        inApp.error = "Error processing GIF"
-                        break
-                    }
-                }
-
-                media.isImage() -> {
-                    val bitmap = fileResourceProvider.fetchInAppImageV1(media.mediaUrl)
-                    if (bitmap == null) {
-                        inApp.error = "Error processing image as bitmap was NULL"
-                        break
-                    }
-                }
-
-                media.isVideo() || media.isAudio() -> {
-                    if (!isVideoSupported) {
-                        inApp.error = "InApp Video/Audio is not supported"
-                        break
-                    }
-                }
+            val error = fetchMediaOrError(media)
+            if (error != null) {
+                inApp.error = error
+                break
             }
         }
+    }
+
+    /** Fetches a gif/image [media] into the cache; returns the error to report if it is unusable, else null. */
+    private fun fetchMediaOrError(media: CTInAppNotificationMedia): String? {
+        return when {
+            media.isGIF() -> {
+                if (isGifMissing(media)) { "Error processing GIF" } else { null }
+            }
+
+            media.isImage() -> {
+                val bitmap = fileResourceProvider.fetchInAppImageV1(media.mediaUrl)
+                if (bitmap == null) { "Error processing image as bitmap was NULL" } else { null }
+            }
+
+            media.isVideo() || media.isAudio() -> {
+                if (!isVideoSupported) { "InApp Video/Audio is not supported" } else { null }
+            }
+
+            else -> null
+        }
+    }
+
+    private fun isGifMissing(media: CTInAppNotificationMedia): Boolean {
+        val bytes = fileResourceProvider.fetchInAppGifV1(media.mediaUrl)
+        return bytes == null || bytes.isEmpty()
     }
 
     private fun notifyListener(

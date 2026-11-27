@@ -138,35 +138,45 @@ internal object ProgressTrackRenderer {
      */
     fun ensureContrast(color: Int, bg: Int): Int {
         val opaqueBg = ColorUtils.setAlphaComponent(bg, OPAQUE_ALPHA)
-        fun meets(c: Int) = ColorUtils.calculateContrast(c, opaqueBg) > MIN_CONTRAST
         val opaque = ColorUtils.setAlphaComponent(color, OPAQUE_ALPHA)
         if (ColorUtils.calculateContrast(opaque, opaqueBg) >= MIN_CONTRAST) { return color }
 
         val adjusted = if (ColorUtils.calculateLuminance(opaqueBg) <= DARK_BG_LUMINANCE) {
-            // ContrastColorUtil.findContrastColorAgainstDark: raise the HSL lightness.
-            val hsl = FloatArray(COLOR_COMPONENTS).also { ColorUtils.colorToHSL(opaque, it) }
-            var low = hsl[2]
-            var high = 1f
-            for (i in 0 until CONTRAST_SEARCH_STEPS) {
-                if (high - low <= HSL_LIGHTNESS_EPSILON) { break }
-                hsl[2] = (low + high) / 2
-                if (meets(ColorUtils.HSLToColor(hsl))) { high = hsl[2] } else { low = hsl[2] }
-            }
-            hsl[2] = high
-            ColorUtils.HSLToColor(hsl)
+            lightenForContrast(opaque, opaqueBg)
         } else {
-            // ContrastColorUtil.findContrastColor: lower the LAB lightness.
-            val lab = DoubleArray(COLOR_COMPONENTS).also { ColorUtils.colorToLAB(opaque, it) }
-            var low = 0.0
-            var high = lab[0]
-            for (i in 0 until CONTRAST_SEARCH_STEPS) {
-                if (high - low <= LAB_LIGHTNESS_EPSILON) { break }
-                val l = (low + high) / 2
-                if (meets(ColorUtils.LABToColor(l, lab[1], lab[2]))) { low = l } else { high = l }
-            }
-            ColorUtils.LABToColor(low, lab[1], lab[2])
+            darkenForContrast(opaque, opaqueBg)
         }
         return ColorUtils.setAlphaComponent(adjusted, Color.alpha(color))
+    }
+
+    private fun meetsContrast(color: Int, opaqueBg: Int): Boolean =
+        ColorUtils.calculateContrast(color, opaqueBg) > MIN_CONTRAST
+
+    /** ContrastColorUtil.findContrastColorAgainstDark: raise the HSL lightness of [opaque]. */
+    private fun lightenForContrast(opaque: Int, opaqueBg: Int): Int {
+        val hsl = FloatArray(COLOR_COMPONENTS).also { ColorUtils.colorToHSL(opaque, it) }
+        var low = hsl[2]
+        var high = 1f
+        for (i in 0 until CONTRAST_SEARCH_STEPS) {
+            if (high - low <= HSL_LIGHTNESS_EPSILON) { break }
+            hsl[2] = (low + high) / 2
+            if (meetsContrast(ColorUtils.HSLToColor(hsl), opaqueBg)) { high = hsl[2] } else { low = hsl[2] }
+        }
+        hsl[2] = high
+        return ColorUtils.HSLToColor(hsl)
+    }
+
+    /** ContrastColorUtil.findContrastColor: lower the LAB lightness of [opaque]. */
+    private fun darkenForContrast(opaque: Int, opaqueBg: Int): Int {
+        val lab = DoubleArray(COLOR_COMPONENTS).also { ColorUtils.colorToLAB(opaque, it) }
+        var low = 0.0
+        var high = lab[0]
+        for (i in 0 until CONTRAST_SEARCH_STEPS) {
+            if (high - low <= LAB_LIGHTNESS_EPSILON) { break }
+            val l = (low + high) / 2
+            if (meetsContrast(ColorUtils.LABToColor(l, lab[1], lab[2]), opaqueBg)) { low = l } else { high = l }
+        }
+        return ColorUtils.LABToColor(low, lab[1], lab[2])
     }
 
     fun layout(
@@ -220,11 +230,7 @@ internal object ProgressTrackRenderer {
                 }
             }
         }
-        val dots = points.map {
-            val color = ensureContrast(it.color ?: spec.defaultColor, spec.backgroundColor)
-            Dot(x(it.position), if (fadeAhead && it.position > clampedProgress) { faded(color) } else { color },
-                it.title?.takeIf { t -> t.isNotEmpty() })
-        }
+        val dots = dots(points, spec, fadeAhead, clampedProgress, ::x)
         // Tracker centered on the progress, kept fully on the canvas at both ends.
         val tracker = if (hasTracker) {
             val left = (progressX - trackerSize / 2f).coerceIn(0f, (width - trackerSize).coerceAtLeast(0f))
@@ -236,6 +242,19 @@ internal object ProgressTrackRenderer {
         val titleBaseline = trackY * 2 + TITLE_GAP_DP * spec.density - titlePaint.fontMetrics.ascent
         return Layout(width, height, trackY, trackThickness, FADED_TRACK_DP * spec.density, dotRadius,
             segmentRects, dots, titleBaseline, progressX, tracker)
+    }
+
+    /** One [Dot] per point, faded when it lies ahead of the progress and [fadeAhead] is set. */
+    private fun dots(
+        points: List<ProgressPayloadParser.PointData>,
+        spec: Spec,
+        fadeAhead: Boolean,
+        clampedProgress: Int,
+        x: (Int) -> Float
+    ): List<Dot> = points.map {
+        val color = ensureContrast(it.color ?: spec.defaultColor, spec.backgroundColor)
+        Dot(x(it.position), if (fadeAhead && it.position > clampedProgress) { faded(color) } else { color },
+            it.title?.takeIf { t -> t.isNotEmpty() })
     }
 
     fun titlePaint(spec: Spec) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {

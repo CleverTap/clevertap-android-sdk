@@ -14,11 +14,9 @@ internal object CancelTemplateHandler {
         if (templateData.cancelNotificationId.isNotNullAndEmpty()) {
             val notificationId = templateData.cancelNotificationId.toInt()
             notificationManager.cancel(notificationId)
-        } else {
-            if (templateData.cancelNotificationIds.isNotEmpty()) {
-                for (ids in templateData.cancelNotificationIds) {
-                    notificationManager.cancel(ids)
-                }
+        } else if (templateData.cancelNotificationIds.isNotEmpty()) {
+            for (ids in templateData.cancelNotificationIds) {
+                notificationManager.cancel(ids)
             }
         }
     }

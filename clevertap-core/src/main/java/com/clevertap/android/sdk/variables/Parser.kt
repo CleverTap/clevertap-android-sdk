@@ -67,38 +67,56 @@ internal open class Parser(private val ctVariables: CTVariables) {
     internal fun parseVariablesHelper(instance: Any?, clazz: Class<*>) {
         try {
             for (field in clazz.fields) {
-                if (!field.isAnnotationPresent(Variable::class.java)) {
-                    continue
-                }
-                val annotation: Variable? = field.getAnnotation(Variable::class.java)
-                val group = annotation?.group.orEmpty()
-                val name = annotation?.name.orEmpty()
-
-                val baseName = name.ifEmpty { field.name }
-                val variableName = if (group.isNotEmpty()) { "$group.$baseName" } else { baseName }
-
-                val fieldType = field.type
-                when (fieldType.toString()) {
-                    "int" -> defineVariable(instance, variableName, field.getInt(instance), NUMBER, field)
-                    "byte" -> defineVariable(instance, variableName, field.getByte(instance), NUMBER, field)
-                    "short" -> defineVariable(instance, variableName, field.getShort(instance), NUMBER, field)
-                    "long" -> defineVariable(instance, variableName, field.getLong(instance), NUMBER, field)
-                    "char" -> defineVariable(instance, variableName, field.getChar(instance), NUMBER, field)
-                    "float" -> defineVariable(instance, variableName, field.getFloat(instance), NUMBER, field)
-                    "double" -> defineVariable(instance, variableName, field.getDouble(instance), NUMBER, field)
-                    "boolean" -> defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field)
-                    else -> when {
-                        fieldType.isPrimitive -> log("Variable $variableName is an unsupported primitive type.")
-                        fieldType.isArray -> log("Variable $variableName is an unsupported type of Array.")
-                        Map::class.java.isAssignableFrom(fieldType) ->
-                            defineVariable(instance, variableName, field.get(instance), DICTIONARY, field)
-
-                        else -> defineVariable(instance, variableName, field.get(instance)?.toString(), STRING, field)
-                    }
-                }
+                parseVariableField(instance = instance, field = field)
             }
         } catch (t: Throwable) {
             log("Error parsing variables:", t)
+        }
+    }
+
+    /** Defines [field] as a variable if it is annotated with @[Variable]; otherwise does nothing. */
+    private fun parseVariableField(instance: Any?, field: Field) {
+        if (!field.isAnnotationPresent(Variable::class.java)) {
+            return
+        }
+        val annotation: Variable? = field.getAnnotation(Variable::class.java)
+        val group = annotation?.group.orEmpty()
+        val name = annotation?.name.orEmpty()
+
+        val baseName = name.ifEmpty { field.name }
+        val variableName = if (group.isNotEmpty()) { "$group.$baseName" } else { baseName }
+
+        defineFieldVariable(instance = instance, variableName = variableName, field = field)
+    }
+
+    /** Defines [field] as a variable, reading its value with the getter that matches its numeric primitive type. */
+    private fun defineFieldVariable(instance: Any?, variableName: String, field: Field) {
+        when (field.type.toString()) {
+            "int" -> defineVariable(instance, variableName, field.getInt(instance), NUMBER, field)
+            "byte" -> defineVariable(instance, variableName, field.getByte(instance), NUMBER, field)
+            "short" -> defineVariable(instance, variableName, field.getShort(instance), NUMBER, field)
+            "long" -> defineVariable(instance, variableName, field.getLong(instance), NUMBER, field)
+            "char" -> defineVariable(instance, variableName, field.getChar(instance), NUMBER, field)
+            "float" -> defineVariable(instance, variableName, field.getFloat(instance), NUMBER, field)
+            "double" -> defineVariable(instance, variableName, field.getDouble(instance), NUMBER, field)
+            else -> defineNonNumberFieldVariable(instance = instance, variableName = variableName, field = field)
+        }
+    }
+
+    /** Defines a boolean, map or string [field] as a variable; logs other primitives and arrays as unsupported. */
+    private fun defineNonNumberFieldVariable(instance: Any?, variableName: String, field: Field) {
+        val fieldType = field.type
+        if (fieldType.toString() == "boolean") {
+            defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field)
+            return
+        }
+        when {
+            fieldType.isPrimitive -> log("Variable $variableName is an unsupported primitive type.")
+            fieldType.isArray -> log("Variable $variableName is an unsupported type of Array.")
+            Map::class.java.isAssignableFrom(fieldType) ->
+                defineVariable(instance, variableName, field.get(instance), DICTIONARY, field)
+
+            else -> defineVariable(instance, variableName, field.get(instance)?.toString(), STRING, field)
         }
     }
 

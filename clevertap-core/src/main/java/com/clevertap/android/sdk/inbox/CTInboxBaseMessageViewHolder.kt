@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Handler
+import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -95,40 +96,9 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
         val displayMetrics = context.resources.displayMetrics
 
         val (width, height) = if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val orientation = message.requireOrientation()
-            when {
-                orientation.equals("l", ignoreCase = true) -> {
-                    val imageHeight = checkNotNull(mediaImage).measuredHeight
-                    (imageHeight * LANDSCAPE_WIDTH_TO_HEIGHT_RATIO).roundToInt() to imageHeight
-                }
-
-                orientation.equals("p", ignoreCase = true) -> {
-                    val side = checkNotNull(squareImage).measuredHeight
-                    side to side
-                }
-
-                else -> {
-                    val defaultImage = defaultImage
-                    val measuredWidth = defaultImage?.measuredWidth ?: 0
-                    val measuredHeight = defaultImage?.measuredHeight ?: 0
-                    if (defaultImage == null || measuredWidth == 0 || measuredHeight == 0) {
-                        val halfWidth = displayMetrics.widthPixels / 2
-                        halfWidth to (halfWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
-                    } else {
-                        measuredWidth to measuredHeight
-                    }
-                }
-            }
+            landscapeMediaPlayerSize(message = message, displayMetrics = displayMetrics)
         } else {
-            val fullWidth = displayMetrics.widthPixels
-            val orientation = message.requireOrientation()
-            val rowHeight = when {
-                orientation.equals("l", ignoreCase = true) -> (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
-                orientation.equals("p", ignoreCase = true) -> fullWidth
-                else -> defaultImage?.measuredHeight?.takeIf { it != 0 }
-                    ?: (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
-            }
-            fullWidth to rowHeight
+            portraitMediaPlayerSize(message = message, displayMetrics = displayMetrics)
         }
 
         videoSurfaceView.layoutParams = FrameLayout.LayoutParams(width, height)
@@ -140,36 +110,13 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
 
         progressBarFrameLayout?.visibility = View.VISIBLE
         if (firstContentItem.mediaIsVideo()) {
-            val muteIcon = ImageView(context).also { muteIcon = it }
-            muteIcon.visibility = View.GONE
-
-            // Initial state setup
-            setMuteIconState(muteIcon, context, currentVolume)
-
-            // 48dp tap target; 9dp padding keeps the visual icon at 30dp
-            val iconSize = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_SIZE_DP, displayMetrics
-            ).toInt()
-            val iconPadding = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_PADDING_DP, displayMetrics
-            ).toInt()
-            muteIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-            val iconTop = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_TOP_MARGIN_DP, displayMetrics
-            ).toInt()
-            val iconRight = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_END_MARGIN_DP, displayMetrics
-            ).toInt()
-            muteIcon.layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply {
-                setMargins(0, iconTop, iconRight, 0)
-                gravity = Gravity.END
-            }
-
-            muteIcon.setOnClickListener {
-                val volume = muteClick.invoke()
-                setMuteIconState(muteIcon, context, volume)
-            }
-            frameLayout.addView(muteIcon)
+            addMuteIcon(
+                frameLayout = frameLayout,
+                context = context,
+                displayMetrics = displayMetrics,
+                currentVolume = currentVolume,
+                muteClick = muteClick
+            )
         }
 
         // A streamable content has a media url.
@@ -179,6 +126,87 @@ internal open class CTInboxBaseMessageViewHolder(itemView: View) : RecyclerView.
             firstContentItem.mediaIsVideo()
         )
         return true
+    }
+
+    /** Player size in a landscape inbox: from the measured media view of the message's orientation. */
+    private fun landscapeMediaPlayerSize(message: CTInboxMessage, displayMetrics: DisplayMetrics): Pair<Int, Int> {
+        val orientation = message.requireOrientation()
+        return when {
+            orientation.equals("l", ignoreCase = true) -> {
+                val imageHeight = checkNotNull(mediaImage).measuredHeight
+                (imageHeight * LANDSCAPE_WIDTH_TO_HEIGHT_RATIO).roundToInt() to imageHeight
+            }
+
+            orientation.equals("p", ignoreCase = true) -> {
+                val side = checkNotNull(squareImage).measuredHeight
+                side to side
+            }
+
+            else -> {
+                val defaultImage = defaultImage
+                val measuredWidth = defaultImage?.measuredWidth ?: 0
+                val measuredHeight = defaultImage?.measuredHeight ?: 0
+                if (defaultImage == null || measuredWidth == 0 || measuredHeight == 0) {
+                    val halfWidth = displayMetrics.widthPixels / 2
+                    halfWidth to (halfWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
+                } else {
+                    measuredWidth to measuredHeight
+                }
+            }
+        }
+    }
+
+    /** Player size in a portrait inbox: full width, height from the message's orientation. */
+    private fun portraitMediaPlayerSize(message: CTInboxMessage, displayMetrics: DisplayMetrics): Pair<Int, Int> {
+        val fullWidth = displayMetrics.widthPixels
+        val orientation = message.requireOrientation()
+        val rowHeight = when {
+            orientation.equals("l", ignoreCase = true) -> (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
+            orientation.equals("p", ignoreCase = true) -> fullWidth
+            else -> defaultImage?.measuredHeight?.takeIf { it != 0 }
+                ?: (fullWidth * LANDSCAPE_HEIGHT_TO_WIDTH_RATIO).roundToInt()
+        }
+        return fullWidth to rowHeight
+    }
+
+    /** Adds the (initially hidden) mute toggle of a video row to [frameLayout]. */
+    private fun addMuteIcon(
+        frameLayout: FrameLayout,
+        context: Context,
+        displayMetrics: DisplayMetrics,
+        currentVolume: Float,
+        muteClick: Function0<Float>
+    ) {
+        val muteIcon = ImageView(context).also { muteIcon = it }
+        muteIcon.visibility = View.GONE
+
+        // Initial state setup
+        setMuteIconState(muteIcon, context, currentVolume)
+
+        // 48dp tap target; 9dp padding keeps the visual icon at 30dp
+        val iconSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_SIZE_DP, displayMetrics
+        ).toInt()
+        val iconPadding = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_PADDING_DP, displayMetrics
+        ).toInt()
+        muteIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+        val iconTop = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_TOP_MARGIN_DP, displayMetrics
+        ).toInt()
+        val iconRight = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, MUTE_ICON_END_MARGIN_DP, displayMetrics
+        ).toInt()
+        muteIcon.layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply {
+            setMargins(0, iconTop, iconRight, 0)
+            gravity = Gravity.END
+        }
+
+        muteIcon.setOnClickListener {
+            val volume = muteClick.invoke()
+            setMuteIconState(muteIcon, context, volume)
+        }
+        frameLayout.addView(muteIcon)
     }
 
     private fun setMuteIconState(icon: ImageView, context: Context, volume: Float) {

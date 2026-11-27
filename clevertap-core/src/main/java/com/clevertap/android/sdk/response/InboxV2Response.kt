@@ -105,8 +105,7 @@ internal class InboxV2Response(
         val out = ArrayList<CTMessageDAO>(messages.length())
         for (i in 0 until messages.length()) {
             val obj = messages.optJSONObject(i) ?: continue
-            val dao = CTMessageDAO.initWithJSON(obj, userId, InboxMessageSource.V2) ?: continue
-            out.add(dao)
+            CTMessageDAO.initWithJSON(obj, userId, InboxMessageSource.V2)?.let { dao -> out.add(dao) }
         }
         return out
     }

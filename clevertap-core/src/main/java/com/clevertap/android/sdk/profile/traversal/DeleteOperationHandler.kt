@@ -85,6 +85,31 @@ internal class DeleteOperationHandler(
         }
     }
 
+    /** Deletes from [oldElement] every field that [newElement] names. */
+    private fun deleteFieldsFromElement(oldElement: JSONObject, newElement: JSONObject) {
+        val elementKeys = newElement.keys()
+        while (elementKeys.hasNext()) {
+            val key = elementKeys.next()
+            val value = newElement.get(key)
+            handleDelete(
+                oldElement,
+                key,
+                value,
+                "",
+                mutableMapOf(),
+                deleteNestedFields
+            )
+        }
+    }
+
+    /** Recursive step for array-element deletes: only a nested object source deletes anything. */
+    private val deleteNestedFields: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit =
+        { target, source, _, _ ->
+            if (source != null) {
+                handleDeleteRecursive(target, source)
+            }
+        }
+
     /**
      * Deletes specific fields from array elements.
      * Each element in newArray specifies which fields to delete from corresponding oldArray element.
@@ -103,29 +128,15 @@ internal class DeleteOperationHandler(
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 
-            if (oldElement is JSONObject && newElement is JSONObject) {
-                val elementKeys = newElement.keys()
-                while (elementKeys.hasNext()) {
-                    val key = elementKeys.next()
-                    val value = newElement.get(key)
-                    handleDelete(
-                        oldElement,
-                        key,
-                        value,
-                        "",
-                        mutableMapOf()
-                    ) { target, source, _, _ ->
-                        if (source != null) {
-                           handleDeleteRecursive(target, source)
-                        }
-                    }
-                }
-                arrayModified = true
+            if (oldElement !is JSONObject || newElement !is JSONObject) {
+                continue
+            }
+            deleteFieldsFromElement(oldElement = oldElement, newElement = newElement)
+            arrayModified = true
 
-                // Mark for removal if empty
-                if (oldElement.length() == 0) {
-                    indicesToRemove.add(i)
-                }
+            // Mark for removal if empty
+            if (oldElement.length() == 0) {
+                indicesToRemove.add(i)
             }
         }
 

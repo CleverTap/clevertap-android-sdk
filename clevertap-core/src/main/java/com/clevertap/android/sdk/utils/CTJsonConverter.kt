@@ -72,13 +72,7 @@ internal object CTJsonConverter {
         }
 
         // send up googleAdID
-        val googleAdID = deviceInfo.googleAdID
-        if (googleAdID != null) {
-            val baseAdIDKey = "GoogleAdID"
-            val adIDKey = if (deviceIsMultiUser) { "${Constants.MULTI_USER_PREFIX}$baseAdIDKey" } else { baseAdIDKey }
-            evtData.put(adIDKey, googleAdID)
-            evtData.put("GoogleAdIDLimit", deviceInfo.isLimitAdTrackingEnabled)
-        }
+        putGoogleAdId(evtData = evtData, deviceInfo = deviceInfo, deviceIsMultiUser = deviceIsMultiUser)
 
         try {
             // Device data
@@ -98,25 +92,7 @@ internal object CTJsonConverter {
             }
             deviceInfo.library?.let { evtData.put("lib", it) }
 
-            val manifestInfo = ManifestInfo.getInstance(deviceInfo.context)
-            val proxyDomain = manifestInfo.proxyDomain
-            if (!proxyDomain.isNullOrEmpty()) {
-                evtData.put("proxyDomain", proxyDomain)
-            }
-
-            val spikyProxyDomain = manifestInfo.spikeyProxyDomain
-            if (!spikyProxyDomain.isNullOrEmpty()) {
-                evtData.put("spikyProxyDomain", spikyProxyDomain)
-            }
-
-            if (manifestInfo.isSSLPinningEnabled) {
-                evtData.put("sslpin", true)
-            }
-
-            //only for 4.3.0 for tracking custom sender ID users.
-            if (!manifestInfo.fcmSenderId.isNullOrEmpty()) {
-                evtData.put("fcmsid", true)
-            }
+            putManifestInfo(evtData = evtData, manifestInfo = ManifestInfo.getInstance(deviceInfo.context))
 
             val cc = deviceInfo.countryCode
             if (!cc.isNullOrEmpty()) {
@@ -124,10 +100,7 @@ internal object CTJsonConverter {
             }
 
             if (enableNetworkInfoReporting) {
-                deviceInfo.isWifiConnected?.let { evtData.put("wifi", it) }
-                deviceInfo.isBluetoothEnabled?.let { evtData.put("BluetoothEnabled", it) }
-                deviceInfo.bluetoothVersion?.let { evtData.put("BluetoothVersion", it) }
-                deviceInfo.networkType?.let { evtData.put("Radio", it) }
+                putNetworkInfo(evtData = evtData, deviceInfo = deviceInfo)
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC", deviceInfo.localInAppCount)
@@ -141,6 +114,44 @@ internal object CTJsonConverter {
         }
 
         return evtData
+    }
+
+    private fun putGoogleAdId(evtData: JSONObject, deviceInfo: DeviceInfo, deviceIsMultiUser: Boolean) {
+        val googleAdID = deviceInfo.googleAdID
+        if (googleAdID != null) {
+            val baseAdIDKey = "GoogleAdID"
+            val adIDKey = if (deviceIsMultiUser) { "${Constants.MULTI_USER_PREFIX}$baseAdIDKey" } else { baseAdIDKey }
+            evtData.put(adIDKey, googleAdID)
+            evtData.put("GoogleAdIDLimit", deviceInfo.isLimitAdTrackingEnabled)
+        }
+    }
+
+    private fun putManifestInfo(evtData: JSONObject, manifestInfo: ManifestInfo) {
+        val proxyDomain = manifestInfo.proxyDomain
+        if (!proxyDomain.isNullOrEmpty()) {
+            evtData.put("proxyDomain", proxyDomain)
+        }
+
+        val spikyProxyDomain = manifestInfo.spikeyProxyDomain
+        if (!spikyProxyDomain.isNullOrEmpty()) {
+            evtData.put("spikyProxyDomain", spikyProxyDomain)
+        }
+
+        if (manifestInfo.isSSLPinningEnabled) {
+            evtData.put("sslpin", true)
+        }
+
+        //only for 4.3.0 for tracking custom sender ID users.
+        if (!manifestInfo.fcmSenderId.isNullOrEmpty()) {
+            evtData.put("fcmsid", true)
+        }
+    }
+
+    private fun putNetworkInfo(evtData: JSONObject, deviceInfo: DeviceInfo) {
+        deviceInfo.isWifiConnected?.let { evtData.put("wifi", it) }
+        deviceInfo.isBluetoothEnabled?.let { evtData.put("BluetoothEnabled", it) }
+        deviceInfo.bluetoothVersion?.let { evtData.put("BluetoothVersion", it) }
+        deviceInfo.networkType?.let { evtData.put("Radio", it) }
     }
 
     //Validation

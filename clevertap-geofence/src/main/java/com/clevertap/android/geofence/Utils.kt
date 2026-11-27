@@ -131,16 +131,23 @@ internal object Utils {
             if (!isPlayServicesDependencyAvailable()) {
                 isFusedLocationDependencyAvailable = false
             } else {
-                isFusedLocationDependencyAvailable = try {
-                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient")
-                    true
-                } catch (e: ClassNotFoundException) {
-                    false
-                }
+                isFusedLocationDependencyAvailable = isFusedLocationProviderClassAvailable()
             }
         }
 
         return isFusedLocationDependencyAvailable!!
+    }
+
+    /**
+     * Checks via reflection whether the Fused Location provider client class is on the classpath.
+     */
+    private fun isFusedLocationProviderClassAvailable(): Boolean {
+        return try {
+            Class.forName("com.google.android.gms.location.FusedLocationProviderClient")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
     }
 
     /**
@@ -298,25 +305,7 @@ internal object Utils {
 
         val settings = JSONObject()
         try {
-            settings.put(CTGeofenceConstants.KEY_LAST_ACCURACY, ctGeofenceSettings.locationAccuracy)
-            settings.put(CTGeofenceConstants.KEY_LAST_FETCH_MODE, ctGeofenceSettings.locationFetchMode)
-            settings.put(
-                CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES,
-                ctGeofenceSettings.isBackgroundLocationUpdatesEnabled
-            )
-            settings.put(CTGeofenceConstants.KEY_LAST_LOG_LEVEL, ctGeofenceSettings.logLevel)
-            settings.put(CTGeofenceConstants.KEY_LAST_GEO_COUNT, ctGeofenceSettings.geofenceMonitoringCount)
-            settings.put(CTGeofenceConstants.KEY_LAST_INTERVAL, ctGeofenceSettings.interval)
-            settings.put(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL, ctGeofenceSettings.fastestInterval)
-            settings.put(
-                CTGeofenceConstants.KEY_LAST_DISPLACEMENT,
-                ctGeofenceSettings.smallestDisplacement.toDouble()
-            )
-            settings.put(
-                CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS,
-                ctGeofenceSettings.geofenceNotificationResponsiveness
-            )
-            settings.put(CTGeofenceConstants.KEY_ID, CTGeofenceAPI.getInstance(context).accountId)
+            putSettings(settings, context, ctGeofenceSettings)
 
             val writeJsonToFile = FileUtils.writeJsonToFile(
                 context, FileUtils.getCachedDirName(context),
@@ -345,6 +334,32 @@ internal object Utils {
                 "Failed to write new settings to file"
             )
         }
+    }
+
+    /**
+     * Copies the persisted fields of [ctGeofenceSettings] and the account id into [settings].
+     */
+    @Throws(JSONException::class)
+    private fun putSettings(settings: JSONObject, context: Context, ctGeofenceSettings: CTGeofenceSettings) {
+        settings.put(CTGeofenceConstants.KEY_LAST_ACCURACY, ctGeofenceSettings.locationAccuracy)
+        settings.put(CTGeofenceConstants.KEY_LAST_FETCH_MODE, ctGeofenceSettings.locationFetchMode)
+        settings.put(
+            CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES,
+            ctGeofenceSettings.isBackgroundLocationUpdatesEnabled
+        )
+        settings.put(CTGeofenceConstants.KEY_LAST_LOG_LEVEL, ctGeofenceSettings.logLevel)
+        settings.put(CTGeofenceConstants.KEY_LAST_GEO_COUNT, ctGeofenceSettings.geofenceMonitoringCount)
+        settings.put(CTGeofenceConstants.KEY_LAST_INTERVAL, ctGeofenceSettings.interval)
+        settings.put(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL, ctGeofenceSettings.fastestInterval)
+        settings.put(
+            CTGeofenceConstants.KEY_LAST_DISPLACEMENT,
+            ctGeofenceSettings.smallestDisplacement.toDouble()
+        )
+        settings.put(
+            CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS,
+            ctGeofenceSettings.geofenceNotificationResponsiveness
+        )
+        settings.put(CTGeofenceConstants.KEY_ID, CTGeofenceAPI.getInstance(context).accountId)
     }
 
     /**

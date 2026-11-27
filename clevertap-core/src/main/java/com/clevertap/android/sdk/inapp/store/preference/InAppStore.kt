@@ -263,18 +263,7 @@ internal class InAppStore(
             val raisedArray = oldFormatted.optJSONArray(Constants.RAISED)
             val profileArray = oldFormatted.optJSONArray(Constants.PROFILE)
 
-            return JSONArray().apply {
-                if (raisedArray != null) {
-                    for (count in 0 until raisedArray.length())  {
-                        put(raisedArray.get(count))
-                    }
-                }
-                if (profileArray != null) {
-                    for (count in 0 until profileArray.length())  {
-                        put(profileArray.get(count))
-                    }
-                }
-            }
+            return concatLegacyArrays(raisedArray, profileArray)
 
         } catch (e: JSONException) {
             // Not legacy-object or invalid JSON: return empty
@@ -317,22 +306,22 @@ internal class InAppStore(
             val raisedArray = oldJsonObject.optJSONArray(Constants.RAISED)
             val profileArray = oldJsonObject.optJSONArray(Constants.PROFILE)
 
-            return JSONArray().apply {
-                if (raisedArray != null) {
-                    for (count in 0 until raisedArray.length())  {
-                        put(raisedArray.get(count))
-                    }
-                }
-                if (profileArray != null) {
-                    for (count in 0 until profileArray.length())  {
-                        put(profileArray.get(count))
-                    }
-                }
-            }
+            return concatLegacyArrays(raisedArray, profileArray)
         } catch (_: JSONException) {
             // Not a legacy-object: return empty to avoid errors.
             return JSONArray()
         }
+    }
+
+    /** The elements of the legacy `raised` array followed by those of the `profile` array (either may be absent). */
+    private fun concatLegacyArrays(raisedArray: JSONArray?, profileArray: JSONArray?): JSONArray {
+        val result = JSONArray()
+        for (array in listOfNotNull(raisedArray, profileArray)) {
+            for (count in 0 until array.length()) {
+                result.put(array.get(count))
+            }
+        }
+        return result
     }
 
     /**

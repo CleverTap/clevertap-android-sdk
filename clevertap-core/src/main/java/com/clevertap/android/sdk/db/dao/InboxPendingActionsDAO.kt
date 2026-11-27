@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -83,10 +84,7 @@ internal class InboxPendingActionsDAOImpl(
                 "${Column.USER_ID} = ?",
                 arrayOf(userId),
                 null, null, null
-            ).use { cursor ->
-                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
-                while (cursor.moveToNext()) result.add(cursor.getString(idIdx))
-            }
+            ).use { cursor -> collectIds(cursor = cursor, result = result) }
         } catch (e: Exception) {
             logger.verbose("Error reading from ${Table.INBOX_PENDING_DELETES.tableName}", e)
         }
@@ -103,33 +101,42 @@ internal class InboxPendingActionsDAOImpl(
                 "${Column.USER_ID} = ? AND ${Column.STATE} = ?",
                 arrayOf(userId, PendingDeleteState.PENDING_SEND),
                 null, null, null
-            ).use { cursor ->
-                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
-                val paramsIdx = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
-                val expiresIdx = cursor.getColumnIndexOrThrow(Column.EXPIRES)
-                while (cursor.moveToNext()) {
-                    val raw = if (cursor.isNull(paramsIdx)) { null } else { cursor.getString(paramsIdx) }
-                    val params = raw?.let {
-                        try {
-                            JSONObject(it)
-                        } catch (e: Exception) {
-                            logger.verbose("Skipping malformed wzrkParams for pending delete row", e)
-                            null
-                        }
-                    }
-                    out.add(
-                        PendingDelete(
-                            cursor.getString(idIdx),
-                            params,
-                            cursor.getLong(expiresIdx)
-                        )
-                    )
-                }
-            }
+            ).use { cursor -> collectPendingDeletes(cursor = cursor, out = out) }
         } catch (e: Exception) {
             logger.verbose("Error reading from ${Table.INBOX_PENDING_DELETES.tableName}", e)
         }
         return out
+    }
+
+    private fun collectIds(cursor: Cursor, result: MutableSet<String>) {
+        val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
+        while (cursor.moveToNext()) result.add(cursor.getString(idIdx))
+    }
+
+    private fun collectPendingDeletes(cursor: Cursor, out: MutableList<PendingDelete>) {
+        val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
+        val paramsIdx = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
+        val expiresIdx = cursor.getColumnIndexOrThrow(Column.EXPIRES)
+        while (cursor.moveToNext()) {
+            val raw = if (cursor.isNull(paramsIdx)) { null } else { cursor.getString(paramsIdx) }
+            val params = raw?.let { parseWzrkParams(it) }
+            out.add(
+                PendingDelete(
+                    cursor.getString(idIdx),
+                    params,
+                    cursor.getLong(expiresIdx)
+                )
+            )
+        }
+    }
+
+    private fun parseWzrkParams(raw: String): JSONObject? {
+        return try {
+            JSONObject(raw)
+        } catch (e: Exception) {
+            logger.verbose("Skipping malformed wzrkParams for pending delete row", e)
+            null
+        }
     }
 
     @WorkerThread
@@ -142,10 +149,7 @@ internal class InboxPendingActionsDAOImpl(
                 "${Column.USER_ID} = ?",
                 arrayOf(userId),
                 null, null, null
-            ).use { cursor ->
-                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
-                while (cursor.moveToNext()) result.add(cursor.getString(idIdx))
-            }
+            ).use { cursor -> collectIds(cursor = cursor, result = result) }
         } catch (e: Exception) {
             logger.verbose("Error reading from ${Table.INBOX_PENDING_READS.tableName}", e)
         }

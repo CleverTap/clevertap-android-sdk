@@ -10,6 +10,8 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListen
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
+import com.clevertap.android.sdk.CleverTapAPI
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Future
 import androidx.annotation.RestrictTo
@@ -134,118 +136,177 @@ internal class PushGeofenceEventTask(context: Context, private val intent: Inten
             context,
             FileUtils.getCachedFullPath(context, CTGeofenceConstants.CACHED_FILE_NAME)
         )
-        if (oldFenceListString.trim { it <= ' ' } != "") {
-            val jsonObject: JSONObject
-            try {
-                jsonObject = JSONObject(oldFenceListString)
-                val jsonArray = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES)
+        if (oldFenceListString.trim { it <= ' ' } == "") {
+            return
+        }
+        val jsonObject: JSONObject
+        try {
+            jsonObject = JSONObject(oldFenceListString)
+            val jsonArray = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES)
+            pushTriggeredGeofences(jsonArray, triggeringGeofences, triggeringLocation, geofenceTransition)
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to read triggered geofences from file", e
+            )
+        }
+    }
 
-                for (triggeredGeofence in triggeringGeofences) {
-                    CTGeofenceAPI.getLogger().debug(
-                        CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Searching Triggered geofence with id = " + triggeredGeofence.requestId
-                                + " in file..."
-                    )
-
-                    var isTriggeredGeofenceFound = false
-
-                    for (i in 0 until jsonArray.length()) {
-                        val geofence = jsonArray.getJSONObject(i)
-                        if (geofence.getInt(CTGeofenceConstants.KEY_ID).toString() == triggeredGeofence.requestId) {
-                            // triggered geofence found in file
-
-                            CTGeofenceAPI.getLogger().debug(
-                                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Triggered geofence with id = " + triggeredGeofence.requestId
-                                        + " is found in file! Sending it to CT SDK"
-                            )
-
-                            isTriggeredGeofenceFound = true
-
-                            if (triggeringLocation != null) {
-                                geofence.put("triggered_lat", triggeringLocation.latitude)
-                                geofence.put("triggered_lng", triggeringLocation.longitude)
-                            }
-
-                            // null when the SDK could not queue the event; future!!.get() below then throws
-                            // inside the try and is logged as a failed push, exactly as the Java version did.
-                            val future: Future<*>?
-
-                            val cleverTapApi = CTGeofenceAPI.getInstance(context).cleverTapApi ?: return
-
-                            val ctGeofenceEventsListener = CTGeofenceAPI
-                                .getInstance(context).getCtGeofenceEventsListener()
-
-                            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                                // send event to CleverTap SDK
-                                future = cleverTapApi.pushGeofenceEnteredEvent(geofence)
-
-                                // send event to Listener on main thread
-                                if (ctGeofenceEventsListener != null) {
-                                    com.clevertap.android.sdk.Utils.runOnUiThread {
-                                        ctGeofenceEventsListener.onGeofenceEnteredEvent(geofence)
-                                    }
-                                }
-                            } else {
-                                // send event to CleverTap SDK
-                                future = cleverTapApi.pushGeoFenceExitedEvent(geofence)
-
-                                // send event to Listener on main thread
-                                if (ctGeofenceEventsListener != null) {
-                                    com.clevertap.android.sdk.Utils.runOnUiThread {
-                                        ctGeofenceEventsListener.onGeofenceExitedEvent(geofence)
-                                    }
-                                }
-                            }
-
-                            try {
-                                CTGeofenceAPI.getLogger().verbose(
-                                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Calling future for geofence event with id = " +
-                                            triggeredGeofence.requestId
-                                )
-                                future!!.get()
-
-                                CTGeofenceAPI.getLogger().verbose(
-                                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Finished calling future for geofence event with id = " +
-                                            triggeredGeofence.requestId
-                                )
-                            } catch (e: Exception) {
-                                CTGeofenceAPI.getLogger().debug(
-                                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Failed to push geofence event with id = " +
-                                            triggeredGeofence.requestId, e
-                                )
-                            }
-                            break
-                        }
-                    }
-
-                    if (!isTriggeredGeofenceFound) {
-                        CTGeofenceAPI.getLogger().debug(
-                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                            "Triggered geofence with id = " + triggeredGeofence.requestId
-                                    + " is not found in file! Dropping this event"
-                        )
-                        if (CTGeofenceAPI.getInstance(context).cleverTapApi != null) {
-                            CTGeofenceAPI.getInstance(context)
-                                .cleverTapApi!!
-                                .pushGeoFenceError(
-                                    CTGeofenceConstants.ERROR_CODE,
-                                    "Triggered geofence with id = " +
-                                            triggeredGeofence.requestId
-                                            + " is not found in file! Dropping this event"
-                                )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                CTGeofenceAPI.getLogger().debug(
-                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to read triggered geofences from file", e
-                )
+    /**
+     * Processes each triggered geofence in order, stopping at the first one that cannot be sent
+     * because the CleverTap instance is unavailable.
+     */
+    @WorkerThread
+    private fun pushTriggeredGeofences(
+        jsonArray: JSONArray,
+        triggeringGeofences: List<Geofence>,
+        triggeringLocation: Location?,
+        geofenceTransition: Int
+    ) {
+        for (triggeredGeofence in triggeringGeofences) {
+            if (!pushTriggeredGeofence(jsonArray, triggeredGeofence, triggeringLocation, geofenceTransition)) {
+                return
             }
+        }
+    }
+
+    /**
+     * Looks up [triggeredGeofence] in the cached [jsonArray] and sends it to CleverTap SDK, or
+     * reports it as not found.
+     *
+     * @return `false` when the CleverTap instance is unavailable and processing must stop
+     */
+    @WorkerThread
+    private fun pushTriggeredGeofence(
+        jsonArray: JSONArray,
+        triggeredGeofence: Geofence,
+        triggeringLocation: Location?,
+        geofenceTransition: Int
+    ): Boolean {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Searching Triggered geofence with id = " + triggeredGeofence.requestId
+                    + " in file..."
+        )
+
+        val geofence = findCachedGeofence(jsonArray, triggeredGeofence)
+        if (geofence == null) {
+            reportGeofenceNotFound(triggeredGeofence)
+            return true
+        }
+
+        // triggered geofence found in file
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Triggered geofence with id = " + triggeredGeofence.requestId
+                    + " is found in file! Sending it to CT SDK"
+        )
+
+        if (triggeringLocation != null) {
+            geofence.put("triggered_lat", triggeringLocation.latitude)
+            geofence.put("triggered_lng", triggeringLocation.longitude)
+        }
+
+        val cleverTapApi = CTGeofenceAPI.getInstance(context).cleverTapApi ?: return false
+
+        sendGeofenceEvent(cleverTapApi, geofence, triggeredGeofence, geofenceTransition)
+        return true
+    }
+
+    /**
+     * Returns the first geofence in [jsonArray] whose id matches the request id of
+     * [triggeredGeofence], or `null` if there is none.
+     */
+    private fun findCachedGeofence(jsonArray: JSONArray, triggeredGeofence: Geofence): JSONObject? {
+        for (i in 0 until jsonArray.length()) {
+            val geofence = jsonArray.getJSONObject(i)
+            if (geofence.getInt(CTGeofenceConstants.KEY_ID).toString() == triggeredGeofence.requestId) {
+                return geofence
+            }
+        }
+        return null
+    }
+
+    /**
+     * Sends the entered/exited event for [geofence] to CleverTap SDK, notifies the
+     * [CTGeofenceEventsListener] on the main thread and waits for the event to be queued.
+     */
+    @WorkerThread
+    private fun sendGeofenceEvent(
+        cleverTapApi: CleverTapAPI,
+        geofence: JSONObject,
+        triggeredGeofence: Geofence,
+        geofenceTransition: Int
+    ) {
+        // null when the SDK could not queue the event; future!!.get() below then throws
+        // inside the try and is logged as a failed push, exactly as the Java version did.
+        val future: Future<*>?
+
+        val ctGeofenceEventsListener = CTGeofenceAPI
+            .getInstance(context).getCtGeofenceEventsListener()
+
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            // send event to CleverTap SDK
+            future = cleverTapApi.pushGeofenceEnteredEvent(geofence)
+
+            // send event to Listener on main thread
+            if (ctGeofenceEventsListener != null) {
+                com.clevertap.android.sdk.Utils.runOnUiThread {
+                    ctGeofenceEventsListener.onGeofenceEnteredEvent(geofence)
+                }
+            }
+        } else {
+            // send event to CleverTap SDK
+            future = cleverTapApi.pushGeoFenceExitedEvent(geofence)
+
+            // send event to Listener on main thread
+            if (ctGeofenceEventsListener != null) {
+                com.clevertap.android.sdk.Utils.runOnUiThread {
+                    ctGeofenceEventsListener.onGeofenceExitedEvent(geofence)
+                }
+            }
+        }
+
+        try {
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Calling future for geofence event with id = " +
+                        triggeredGeofence.requestId
+            )
+            future!!.get()
+
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Finished calling future for geofence event with id = " +
+                        triggeredGeofence.requestId
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to push geofence event with id = " +
+                        triggeredGeofence.requestId, e
+            )
+        }
+    }
+
+    /**
+     * Logs and reports to CleverTap SDK that [triggeredGeofence] is not present in the cached file.
+     */
+    private fun reportGeofenceNotFound(triggeredGeofence: Geofence) {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Triggered geofence with id = " + triggeredGeofence.requestId
+                    + " is not found in file! Dropping this event"
+        )
+        if (CTGeofenceAPI.getInstance(context).cleverTapApi != null) {
+            CTGeofenceAPI.getInstance(context)
+                .cleverTapApi!!
+                .pushGeoFenceError(
+                    CTGeofenceConstants.ERROR_CODE,
+                    "Triggered geofence with id = " +
+                            triggeredGeofence.requestId
+                            + " is not found in file! Dropping this event"
+                )
         }
     }
 

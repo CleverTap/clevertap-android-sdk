@@ -38,29 +38,43 @@ public class CTVariableUtils {
             kinds: MutableMap<String, *>?
         ) {
             if (!nameComponents.isNullOrEmpty()) {
-                var valuesPtr: Any? = values
-                for (component in nameComponents.dropLast(1)) {
-                    valuesPtr = traverse(valuesPtr, component, true) // can be either the actual value, or empty hashmap
-                }
-                if (valuesPtr is Map<*, *>) {
-                    val map: MutableMap<String, Any?> = JsonUtil.uncheckedCast(valuesPtr)
-                    val lastComponent = nameComponents.last()
-                    val currentValue = map[lastComponent]
-
-                    var newValue = value
-                    if (currentValue is Map<*, *> && value is Map<*, *>) {
-                        newValue = mergeHelper(value, currentValue)
-                    } else if (currentValue != null && currentValue == value) {
-                        log("Variable with name $name will override value: $currentValue, with new value: $value.")
-                    }
-
-                    map[lastComponent] = newValue
-                }
+                updateValueAtPath(name = name, nameComponents = nameComponents, value = value, values = values)
             }
             if (kinds != null) {
                 val kindsMap: MutableMap<String?, Any?> = JsonUtil.uncheckedCast(kinds)
                 kindsMap[name] = kind
             }
+        }
+
+        /**
+         * Walks [values] along all but the last of [nameComponents] (creating empty maps on the way)
+         * and stores [value] under the last component, merging it into an existing map value.
+         */
+        private fun updateValueAtPath(
+            name: String?,
+            nameComponents: Array<String>,
+            value: Any?,
+            values: MutableMap<String, *>?
+        ) {
+            var valuesPtr: Any? = values
+            for (component in nameComponents.dropLast(1)) {
+                valuesPtr = traverse(valuesPtr, component, true) // can be either the actual value, or empty hashmap
+            }
+            if (valuesPtr !is Map<*, *>) {
+                return
+            }
+            val map: MutableMap<String, Any?> = JsonUtil.uncheckedCast(valuesPtr)
+            val lastComponent = nameComponents.last()
+            val currentValue = map[lastComponent]
+
+            var newValue = value
+            if (currentValue is Map<*, *> && value is Map<*, *>) {
+                newValue = mergeHelper(value, currentValue)
+            } else if (currentValue != null && currentValue == value) {
+                log("Variable with name $name will override value: $currentValue, with new value: $value.")
+            }
+
+            map[lastComponent] = newValue
         }
 
         /**
@@ -125,43 +139,61 @@ public class CTVariableUtils {
             if (diff == null) {
                 return vars
             }
-            if (diff is Number ||
-                diff is Boolean ||
-                diff is String ||
-                diff is Char ||
-                vars is Number ||
-                vars is Boolean ||
-                vars is String ||
-                vars is Char
-            ) {
+            if (isPrimitive(diff) || isPrimitive(vars)) {
                 return diff
             }
 
-            val diffKeys: Iterable<*> = if (diff is Map<*, *>) { diff.keys } else { diff as Iterable<*> }
-            val varsKeys: Iterable<*>? = if (vars is Map<*, *>) { vars.keys } else { vars as Iterable<*>? }
-            val diffMap: Map<*, *>? = if (diff is Map<*, *>) { diff } else { null }
-            val varsMap: Map<*, *>? = if (vars is Map<*, *>) { vars } else { null }
+            val diffKeys: Iterable<*> = keysOf(diff)
+            val varsKeys: Iterable<*>? = vars?.let(::keysOf)
+            val diffMap: Map<*, *>? = diff as? Map<*, *>
+            val varsMap: Map<*, *>? = vars as? Map<*, *>
 
             // Merge dictionaries.
             if (vars is Map<*, *> || diff is Map<*, *>) {
-                val merged = HashMap<Any?, Any?>()
-                if (varsKeys != null) {
-                    for (key in varsKeys) {
-                        if (diffMap != null && varsMap != null) {
-                            val diffVar = diffMap[key]
-                            val value = varsMap[key]
-                            if (diffVar == null && value != null) {
-                                merged[key] = value
-                            }
-                        }
-                    }
-                }
-                for (key in diffKeys) {
-                    merged[key] = mergeHelper(varsMap?.get(key), diffMap?.get(key))
-                }
-                return merged
+                return mergeMaps(varsKeys = varsKeys, diffKeys = diffKeys, varsMap = varsMap, diffMap = diffMap)
             }
             return null
+        }
+
+        private fun isPrimitive(value: Any?): Boolean {
+            return value is Number || value is Boolean || value is String || value is Char
+        }
+
+        /** The keys of a map, or the elements of any other iterable; throws if [value] is neither. */
+        private fun keysOf(value: Any): Iterable<*> {
+            return if (value is Map<*, *>) { value.keys } else { value as Iterable<*> }
+        }
+
+        private fun mergeMaps(
+            varsKeys: Iterable<*>?,
+            diffKeys: Iterable<*>,
+            varsMap: Map<*, *>?,
+            diffMap: Map<*, *>?
+        ): HashMap<Any?, Any?> {
+            val merged = HashMap<Any?, Any?>()
+            if (varsKeys != null && diffMap != null && varsMap != null) {
+                putVarsNotInDiff(merged = merged, varsKeys = varsKeys, varsMap = varsMap, diffMap = diffMap)
+            }
+            for (key in diffKeys) {
+                merged[key] = mergeHelper(varsMap?.get(key), diffMap?.get(key))
+            }
+            return merged
+        }
+
+        /** Keeps the non-null values of vars that diff does not override. */
+        private fun putVarsNotInDiff(
+            merged: HashMap<Any?, Any?>,
+            varsKeys: Iterable<*>,
+            varsMap: Map<*, *>,
+            diffMap: Map<*, *>
+        ) {
+            for (key in varsKeys) {
+                val diffVar = diffMap[key]
+                val value = varsMap[key]
+                if (diffVar == null && value != null) {
+                    merged[key] = value
+                }
+            }
         }
 
         // check test for more info
@@ -259,36 +291,54 @@ public class CTVariableUtils {
 
                 val vars = JSONObject()
                 for (valueKey in values.keys) {
-                    val kind = kinds[valueKey] as String?
-                    val value = values[valueKey]
-                    if (value is Map<*, *>) {
-                        val flattenedValueMap: MutableMap<String, Any?> = HashMap()
-                        convertNestedMapsToFlatMap("", hashMapOf(valueKey to value), flattenedValueMap)
-                        for ((flattenedKey, flattenedValue) in flattenedValueMap) {
-                            // check if it is file type, in this case we cannot deduce the type from value
-                            val flattenedValueKind: String? = if (FILE == kinds[flattenedKey]) {
-                                FILE
-                            } else {
-                                kindFromValue(flattenedValue)
-                            }
-
-                            val varData = JSONObject()
-                            varData.put("type", flattenedValueKind)
-                            varData.put("defaultValue", flattenedValue)
-                            vars.put(flattenedKey, varData)
-                        }
-                    } else {
-                        val varData = JSONObject()
-                        varData.put("type", kind)
-                        varData.put("defaultValue", value)
-                        vars.put(valueKey, varData)
-                    }
+                    putVarsJsonForKey(vars = vars, valueKey = valueKey, values = values, kinds = kinds)
                 }
                 resultJson.put("vars", vars)
                 return resultJson
             } catch (t: Throwable) {
                 Logger.d(TAG, "Error creating flat vars JSON", t)
                 return JSONObject()
+            }
+        }
+
+        private fun putVarsJsonForKey(
+            vars: JSONObject,
+            valueKey: String,
+            values: Map<String, *>,
+            kinds: Map<String, *>
+        ) {
+            val kind = kinds[valueKey] as String?
+            val value = values[valueKey]
+            if (value is Map<*, *>) {
+                putFlattenedVarsJson(vars = vars, valueKey = valueKey, value = value, kinds = kinds)
+            } else {
+                val varData = JSONObject()
+                varData.put("type", kind)
+                varData.put("defaultValue", value)
+                vars.put(valueKey, varData)
+            }
+        }
+
+        private fun putFlattenedVarsJson(
+            vars: JSONObject,
+            valueKey: String,
+            value: Map<*, *>,
+            kinds: Map<String, *>
+        ) {
+            val flattenedValueMap: MutableMap<String, Any?> = HashMap()
+            convertNestedMapsToFlatMap("", hashMapOf(valueKey to value), flattenedValueMap)
+            for ((flattenedKey, flattenedValue) in flattenedValueMap) {
+                // check if it is file type, in this case we cannot deduce the type from value
+                val flattenedValueKind: String? = if (FILE == kinds[flattenedKey]) {
+                    FILE
+                } else {
+                    kindFromValue(flattenedValue)
+                }
+
+                val varData = JSONObject()
+                varData.put("type", flattenedValueKind)
+                varData.put("defaultValue", flattenedValue)
+                vars.put(flattenedKey, varData)
             }
         }
 

@@ -71,16 +71,29 @@ internal open class LoginInfoProvider(
             val keyInLowerCase = key.lowercase(Locale.getDefault())
             val iterator = cachedGuidJsonObj.keys()
             while (iterator.hasNext()) {
-                val nextJSONObjKey = iterator.next()
-                val actualKeyInLowerCase = nextJSONObjKey.lowercase(Locale.getDefault())
-
-                if (keyInLowerCase in actualKeyInLowerCase && cachedGuidJsonObj.getString(nextJSONObjKey) == guid) {
-                    cachedGuidJsonObj.remove(nextJSONObjKey)
-                    setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length())
-                }
+                removeIfCachedForGuid(
+                    cachedGuidJsonObj = cachedGuidJsonObj,
+                    nextJSONObjKey = iterator.next(),
+                    keyInLowerCase = keyInLowerCase,
+                    guid = guid
+                )
             }
         } catch (t: Throwable) {
             config.logger.verbose(config.accountId, "Error removing cached key: $t")
+        }
+    }
+
+    private fun removeIfCachedForGuid(
+        cachedGuidJsonObj: JSONObject,
+        nextJSONObjKey: String,
+        keyInLowerCase: String,
+        guid: String
+    ) {
+        val actualKeyInLowerCase = nextJSONObjKey.lowercase(Locale.getDefault())
+
+        if (keyInLowerCase in actualKeyInLowerCase && cachedGuidJsonObj.getString(nextJSONObjKey) == guid) {
+            cachedGuidJsonObj.remove(nextJSONObjKey)
+            setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length())
         }
     }
 

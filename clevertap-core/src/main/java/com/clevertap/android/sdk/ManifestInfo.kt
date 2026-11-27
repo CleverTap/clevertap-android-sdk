@@ -174,18 +174,12 @@ public open class ManifestInfo(
         }
 
         private fun fromManifest(context: Context?): ManifestInfo {
-            val metaData = try {
-                // A null context throws here and is swallowed, exactly as the Java version did.
-                val ctx = requireNotNull(context)
-                ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).metaData
-            } catch (t: Throwable) {
-                null
-            } ?: Bundle()
+            val metaData = readMetaData(context)
 
             fun value(key: String) = manifestStringValue(metaData, key)
             fun flag(key: String) = "1" == value(key)
 
-            return ManifestInfo(
+            val manifestInfo = ManifestInfo(
                 // credentials passed to changeCredentials win over the manifest
                 accountId = ccAccountId ?: value(LABEL_ACCOUNT_ID),
                 accountToken = ccAccountToken ?: value(LABEL_TOKEN),
@@ -211,7 +205,19 @@ public open class ManifestInfo(
                 vendorOneProvider = value(LABEL_PUSH_PROVIDER_1),
                 vendorTwoProvider = value(LABEL_PUSH_PROVIDER_2),
                 encryptionInTransit = value(LABEL_ENCRYPTION_IN_TRANSIT)
-            ).also { registerModuleSdkVersions(metaData) }
+            )
+            registerModuleSdkVersions(metaData)
+            return manifestInfo
+        }
+
+        private fun readMetaData(context: Context?): Bundle {
+            return try {
+                // A null context throws here and is swallowed, exactly as the Java version did.
+                val ctx = requireNotNull(context)
+                ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).metaData
+            } catch (t: Throwable) {
+                null
+            } ?: Bundle()
         }
 
         private fun parseEncryptionLevel(manifestEncryptionLevel: String?): Int = try {
@@ -252,25 +258,29 @@ public open class ManifestInfo(
         public fun registerModuleSdkVersions(metaData: Bundle) {
             try {
                 for (key in metaData.keySet()) {
-                    if (key == null || !key.startsWith(LABEL_MODULE_SDK_VERSION_PREFIX)) {
-                        continue
-                    }
-                    val name = key.substring(LABEL_MODULE_SDK_VERSION_PREFIX.length)
-                    @Suppress("DEPRECATION")
-                    val value = metaData.get(key)
-                    if (name.isEmpty() || value == null) {
-                        continue
-                    }
-                    try {
-                        // A numeric android:value is stored as an Integer, anything else as a String
-                        val version = if (value is Int) { value } else { value.toString().toInt() }
-                        CoreMetaData.setSharedCustomSdkVersion(name, version)
-                    } catch (e: NumberFormatException) {
-                        Logger.v("Ignoring non numeric SDK version in manifest for $key")
-                    }
+                    registerModuleSdkVersion(metaData = metaData, key = key)
                 }
             } catch (t: Throwable) {
                 Logger.v("Unable to read module SDK versions from the manifest", t)
+            }
+        }
+
+        private fun registerModuleSdkVersion(metaData: Bundle, key: String?) {
+            if (key == null || !key.startsWith(LABEL_MODULE_SDK_VERSION_PREFIX)) {
+                return
+            }
+            val name = key.substring(LABEL_MODULE_SDK_VERSION_PREFIX.length)
+            @Suppress("DEPRECATION")
+            val value = metaData.get(key)
+            if (name.isEmpty() || value == null) {
+                return
+            }
+            try {
+                // A numeric android:value is stored as an Integer, anything else as a String
+                val version = if (value is Int) { value } else { value.toString().toInt() }
+                CoreMetaData.setSharedCustomSdkVersion(name, version)
+            } catch (e: NumberFormatException) {
+                Logger.v("Ignoring non numeric SDK version in manifest for $key")
             }
         }
     }

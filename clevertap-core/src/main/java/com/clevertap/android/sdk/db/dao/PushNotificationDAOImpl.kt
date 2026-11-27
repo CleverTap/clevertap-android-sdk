@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
@@ -65,19 +66,7 @@ internal class PushNotificationDAOImpl(
             dbHelper.readableDatabase.query(
                 tName, null, "${Column.IS_READ} = 0", 
                 null, null, null, null
-            ).use { cursor ->
-                while (cursor.moveToNext()) {
-                    val dataIndex = cursor.getColumnIndex(Column.DATA)
-                    if (dataIndex >= 0) {
-                        val data = cursor.getString(dataIndex)
-                        logger.verbose("Fetching PID - $data")
-                        if (data != null) {
-                            // this case is practically not possible since we have null check in store
-                            pushIds.add(data)
-                        }
-                    }
-                }
-            }
+            ).use { cursor -> collectPushIds(cursor = cursor, pushIds = pushIds) }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
@@ -137,18 +126,42 @@ internal class PushNotificationDAOImpl(
         var pushId = ""
         
         try {
-            dbHelper.readableDatabase.query(
-                tName, null, "${Column.DATA} = ?", arrayOf(id), 
+            pushId = dbHelper.readableDatabase.query(
+                tName, null, "${Column.DATA} = ?", arrayOf(id),
                 null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-                }
-                logger.verbose("Fetching PID for check - $pushId")
-            }
+            ).use { cursor -> readFirstPushId(cursor = cursor, default = pushId) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
+        return pushId
+    }
+
+    private fun collectPushIds(cursor: Cursor, pushIds: MutableList<String>) {
+        while (cursor.moveToNext()) {
+            val data = readPushId(cursor)
+            if (data != null) {
+                // this case is practically not possible since we have null check in store
+                pushIds.add(data)
+            }
+        }
+    }
+
+    private fun readPushId(cursor: Cursor): String? {
+        val dataIndex = cursor.getColumnIndex(Column.DATA)
+        if (dataIndex < 0) {
+            return null
+        }
+        val data = cursor.getString(dataIndex)
+        logger.verbose("Fetching PID - $data")
+        return data
+    }
+
+    private fun readFirstPushId(cursor: Cursor, default: String): String {
+        var pushId = default
+        if (cursor.moveToFirst()) {
+            pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+        }
+        logger.verbose("Fetching PID for check - $pushId")
         return pushId
     }
 

@@ -45,9 +45,14 @@ internal data class ContentFetchItem(
             ?: return null
         return JSONObject().apply {
             put(Constants.INAPP_ID_IN_PAYLOAD, targetId) // ti <- tgtId
-            for (key in SELECTION_RULE_KEYS) {
-                raw.opt(key)?.takeUnless { it === JSONObject.NULL }?.let { put(key, it) }
-            }
+            copySelectionRuleKeys(into = this)
+        }
+    }
+
+    /** Copies each [SELECTION_RULE_KEYS] key present (and not JSON null) in [raw] into [into]. */
+    private fun copySelectionRuleKeys(into: JSONObject) {
+        for (key in SELECTION_RULE_KEYS) {
+            raw.opt(key)?.takeUnless { it === JSONObject.NULL }?.let { into.put(key, it) }
         }
     }
 

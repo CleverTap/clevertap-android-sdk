@@ -59,15 +59,17 @@ internal class LimitsMatcher(
             LimitType.Days -> manager.perDay(campaignId, limit.frequency) < limit.limit
             LimitType.Weeks -> manager.perWeek(campaignId, limit.frequency) < limit.limit
             LimitType.Ever -> manager.getImpressions(campaignId).size < limit.limit
-            LimitType.OnEvery -> {
-                val triggerCount = triggerManager.getTriggers(campaignId)
-                triggerCount % limit.limit == 0
-            }
+            LimitType.OnEvery, LimitType.OnExactly -> matchTriggerCountLimit(limit, campaignId)
+        }
+    }
 
-            LimitType.OnExactly -> {
-                val triggerCount = triggerManager.getTriggers(campaignId)
-                triggerCount == limit.limit
-            }
+    /** onEvery / onExactly limits: checked against the campaign's trigger count. */
+    private fun matchTriggerCountLimit(limit: LimitAdapter, campaignId: String): Boolean {
+        val triggerCount = triggerManager.getTriggers(campaignId)
+        return if (limit.limitType == LimitType.OnEvery) {
+            triggerCount % limit.limit == 0
+        } else {
+            triggerCount == limit.limit
         }
     }
 

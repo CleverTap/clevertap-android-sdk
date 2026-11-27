@@ -312,6 +312,11 @@ internal open class CTInboxListViewFragment : Fragment() {
             return
         }
 
+        repaintList(freshMessages = freshMessages, noMessageView = noMessageView)
+    }
+
+    /** The view-bound part of [refreshList]: swaps in [freshMessages] and repaints the list or empty state. */
+    private fun repaintList(freshMessages: List<CTInboxMessage>, noMessageView: TextView) {
         val oldCount = inboxMessages.size
         // Detach the shared video surface while its holder is still known;
         // rebinding with the surface attached is the SDK-2330 video regression.
@@ -456,21 +461,7 @@ internal open class CTInboxListViewFragment : Fragment() {
     ) {
         try {
             val firstContent = inboxMessages[position].inboxMessageContents[0]
-            if (jsonObject != null) {
-                // A null link type threw in Java too; the catch below logs only the (null) cause.
-                val linkType = checkNotNull(firstContent.getLinktype(jsonObject))
-                val hardPermissionListener = didClickForHardPermissionListener
-                if (linkType.equals(Constants.KEY_URL, ignoreCase = true)) {
-                    firstContent.getLinkUrl(jsonObject)?.let { fireUrlThroughIntent(it) }
-                } else if (linkType.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION) &&
-                    hardPermissionListener != null
-                ) {
-                    val isFallbackSettings = firstContent.isFallbackSettingsEnabled(jsonObject)
-                    hardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings)
-                }
-            } else {
-                firstContent.actionUrl?.let { fireUrlThroughIntent(it) }
-            }
+            handleClickLink(firstContent = firstContent, jsonObject = jsonObject)
 
             val data = wzrkParamsBundle(position)
             if (!buttonText.isNullOrEmpty()) {
@@ -479,6 +470,28 @@ internal open class CTInboxListViewFragment : Fragment() {
             didClick(data, position, viewPagerPosition, keyValuePayload, buttonIndex)
         } catch (t: Throwable) {
             Logger.d("Error handling notification button click: ${t.cause}")
+        }
+    }
+
+    /**
+     * Opens the clicked item's action url or, for a button ([jsonObject] non-null), its url link, or forwards
+     * a notification-permission link to the hard-permission listener.
+     */
+    private fun handleClickLink(firstContent: CTInboxMessageContent, jsonObject: JSONObject?) {
+        if (jsonObject == null) {
+            firstContent.actionUrl?.let { fireUrlThroughIntent(it) }
+            return
+        }
+        // A null link type threw in Java too; the catch in handleClick logs only the (null) cause.
+        val linkType = checkNotNull(firstContent.getLinktype(jsonObject))
+        val hardPermissionListener = didClickForHardPermissionListener
+        if (linkType.equals(Constants.KEY_URL, ignoreCase = true)) {
+            firstContent.getLinkUrl(jsonObject)?.let { fireUrlThroughIntent(it) }
+        } else if (linkType.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION) &&
+            hardPermissionListener != null
+        ) {
+            val isFallbackSettings = firstContent.isFallbackSettingsEnabled(jsonObject)
+            hardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings)
         }
     }
 
@@ -498,13 +511,13 @@ internal open class CTInboxListViewFragment : Fragment() {
     /** The message's `wzrk_*` params, as strings. */
     private fun wzrkParamsBundle(position: Int): Bundle {
         val wzrkParams = inboxMessages[position].wzrkParams
-        return Bundle().apply {
-            for (keyName in wzrkParams.keys()) {
-                if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                    putString(keyName, wzrkParams.getString(keyName))
-                }
+        val bundle = Bundle()
+        for (keyName in wzrkParams.keys()) {
+            if (keyName.startsWith(Constants.WZRK_PREFIX)) {
+                bundle.putString(keyName, wzrkParams.getString(keyName))
             }
         }
+        return bundle
     }
 
     /** A message is added once per tag matching [filter] (ignoring case), as it always was. */

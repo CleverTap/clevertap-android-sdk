@@ -139,15 +139,15 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
             }
 
             // Drop restricted multi-value fields at 0th level if value is object or array
-            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey.lowercase()) == true) {
-                val isObjectOrArray = when (value) {
-                    is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
-                    else -> false
-                }
-                if (isObjectOrArray) {
-                    recordRemoval(cleanedKey, RemovalReason.RESTRICTED_KEY_NESTED_VALUE, value)
-                    continue
-                }
+            if (isRestrictedNestedValue(
+                    depth = depth,
+                    restrictedMultiValueFields = restrictedMultiValueFields,
+                    cleanedKey = cleanedKey,
+                    value = value
+                )
+            ) {
+                recordRemoval(cleanedKey, RemovalReason.RESTRICTED_KEY_NESTED_VALUE, value)
+                continue
             }
 
             // Special validation for Phone key
@@ -184,6 +184,21 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
         return cleaned
     }
 
+    private fun isRestrictedNestedValue(
+        depth: Int,
+        restrictedMultiValueFields: Set<String>?,
+        cleanedKey: String,
+        value: Any
+    ): Boolean {
+        if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey.lowercase()) == true) {
+            return when (value) {
+                is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
+                else -> false
+            }
+        }
+        return false
+    }
+
     private fun validatePhoneNumber(key: String, value: Any?, deviceCountryCode: String?) {
         if (value !is String) {
             recordRemoval(key, RemovalReason.INVALID_PHONE_NUMBER, value)
@@ -210,7 +225,7 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
         maxValueLength: Int?,
         depth: Int
     ): Any? {
-        if (value == null || value == JSONObject.NULL) {
+        if (isJsonNull(value)) {
             return null
         }
 
@@ -270,6 +285,8 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
             cleaned
         }
     }
+
+    private fun isJsonNull(value: Any?): Boolean = value == null || value == JSONObject.NULL
 
     private fun isEmpty(value: Any): Boolean {
         return when (value) {
@@ -345,7 +362,7 @@ internal class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizati
 
             val value = json.get(key)
 
-            if (value == null || value == JSONObject.NULL) {
+            if (isJsonNull(value)) {
                 recordRemoval(cleanedKey, RemovalReason.NULL_VALUE, "")
                 continue
             }

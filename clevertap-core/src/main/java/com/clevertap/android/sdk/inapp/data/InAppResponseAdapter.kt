@@ -143,35 +143,37 @@ internal class InAppResponseAdapter(
     ) {
         if (clientSideInApps.first) {
             clientSideInApps.second.forEach { jsonObject ->
-                val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
-
-                if (portrait != null) {
-                    val portraitMedia = CTInAppNotificationMedia.create(
-                        portrait,
-                        Configuration.ORIENTATION_PORTRAIT
-                    )
-
-                    if (portraitMedia != null && portraitMedia.mediaUrl.isNotBlank()) {
-                        if (portraitMedia.isImage()) {
-                            imageList.add(portraitMedia.mediaUrl)
-                        } else if (portraitMedia.isGIF()) {
-                            gifList.add(portraitMedia.mediaUrl)
-                        }
-                    }
-                }
-                val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
-                if (landscape != null) {
-                    val landscapeMedia = CTInAppNotificationMedia.create(landscape, Configuration.ORIENTATION_LANDSCAPE)
-
-                    if (landscapeMedia != null && landscapeMedia.mediaUrl.isNotBlank()) {
-                        if (landscapeMedia.isImage()) {
-                            imageList.add(landscapeMedia.mediaUrl)
-                        } else if (landscapeMedia.isGIF()) {
-                            gifList.add(landscapeMedia.mediaUrl)
-                        }
-                    }
-                }
+                addMediaUrl(
+                    mediaJson = jsonObject.optJSONObject(Constants.KEY_MEDIA),
+                    orientation = Configuration.ORIENTATION_PORTRAIT,
+                    imageList = imageList,
+                    gifList = gifList
+                )
+                addMediaUrl(
+                    mediaJson = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE),
+                    orientation = Configuration.ORIENTATION_LANDSCAPE,
+                    imageList = imageList,
+                    gifList = gifList
+                )
             }
+        }
+    }
+
+    /** Adds the url of an image/gif [mediaJson] (if present and non-blank) to [imageList] / [gifList]. */
+    private fun addMediaUrl(
+        mediaJson: JSONObject?,
+        orientation: Int,
+        imageList: MutableList<String>,
+        gifList: MutableList<String>
+    ) {
+        val media = mediaJson?.let { CTInAppNotificationMedia.create(it, orientation) }
+        if (media == null || media.mediaUrl.isBlank()) {
+            return
+        }
+        if (media.isImage()) {
+            imageList.add(media.mediaUrl)
+        } else if (media.isGIF()) {
+            gifList.add(media.mediaUrl)
         }
     }
 

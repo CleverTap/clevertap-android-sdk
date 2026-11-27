@@ -174,24 +174,7 @@ internal open class CTInboxController @WorkerThread constructor(
         val newMessages = ArrayList<CTMessageDAO>()
 
         for (i in 0 until inboxMessages.length()) {
-            try {
-                val messageDAO = CTMessageDAO.initWithJSON(
-                    inboxMessages.getJSONObject(i), this.userId, InboxMessageSource.V1
-                ) ?: continue
-
-                if (!videoSupported && messageDAO.containsVideoOrAudio()) {
-                    Logger.d(
-                        "Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
-                    )
-                    continue
-                }
-
-                newMessages.add(messageDAO)
-
-                Logger.v("Inbox Message for message id - ${messageDAO.id} added")
-            } catch (e: JSONException) {
-                Logger.d("Unable to update notification inbox messages - ${e.localizedMessage}")
-            }
+            addV1Message(inboxMessages = inboxMessages, index = i, newMessages = newMessages)
         }
 
         if (newMessages.isEmpty()) {
@@ -204,6 +187,31 @@ internal open class CTInboxController @WorkerThread constructor(
             trimMessages()
         }
         return true
+    }
+
+    /**
+     * Parses the V1 message at [index] and adds it to [newMessages], unless it cannot be parsed or
+     * contains video/audio that the app does not support.
+     */
+    private fun addV1Message(inboxMessages: JSONArray, index: Int, newMessages: MutableList<CTMessageDAO>) {
+        try {
+            val messageDAO = CTMessageDAO.initWithJSON(
+                inboxMessages.getJSONObject(index), this.userId, InboxMessageSource.V1
+            ) ?: return
+
+            if (!videoSupported && messageDAO.containsVideoOrAudio()) {
+                Logger.d(
+                    "Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation."
+                )
+                return
+            }
+
+            newMessages.add(messageDAO)
+
+            Logger.v("Inbox Message for message id - ${messageDAO.id} added")
+        } catch (e: JSONException) {
+            Logger.d("Unable to update notification inbox messages - ${e.localizedMessage}")
+        }
     }
 
     /**
@@ -235,34 +243,91 @@ internal open class CTInboxController @WorkerThread constructor(
         // response to INDEXED, then sweep V2 rows absent from the authoritative
         // fetch snapshot (cross-device delete signal).
         if (source == InboxV2DeliverySource.FETCH) {
-            val incomingIds = incoming.mapTo(HashSet(incoming.size)) { it.id }
-            if (incomingIds.isNotEmpty()) {
-                config.logger.verbose(config.accountId, "InboxV2: markIndexed ${incomingIds.size} msg(s)")
-                dbAdapter.markIndexed(ArrayList(incomingIds), userId)
-            }
-
-            // Sweep: INDEXED V2 rows (and stale PENDING_INDEXING older than
-            // the grace cutoff) that are absent from this fetch response are
-            // treated as cross-device deletes. Deleted from DB here so the
-            // postReadCleanup re-read below won't see them.
-            val graceCutoff = nowSec - INDEXING_GRACE_SECONDS
-            val sweepable = dbAdapter.findSweepableV2Ids(userId, graceCutoff) as MutableSet<String>
-            sweepable.removeAll(incomingIds)
-            if (sweepable.isNotEmpty()) {
-                config.logger.verbose(
-                    config.accountId,
-                    "InboxV2: cross-device sweep — removing ${sweepable.size} msg(s): $sweepable"
-                )
-                dbAdapter.deleteMessagesForIDs(ArrayList(sweepable), userId)
-                updated = true
-            } else {
-                config.logger.verbose(
-                    config.accountId,
-                    "InboxV2: cross-device sweep — nothing to remove"
-                )
-            }
+            updated = markIndexedAndSweepCrossDeviceDeletes(incoming = incoming, nowSec = nowSec)
         }
 
+        removeExpiredPendingRows(nowSec)
+        val pendingDeletes = dbAdapter.getPendingDeleteIds(userId)
+        val pendingReads = dbAdapter.getPendingReads(userId)
+
+        // Server-caught-up: any incoming message with isRead=1 that was still
+        // pending locally confirms the read — drop the pending row. Must run
+        // BEFORE preWriteFilter, which mutates the incoming DAOs in-place via
+        // the pending-read override and would make every pending id look
+        // server-confirmed.
+        if (pendingReads.isNotEmpty()) {
+            removeServerConfirmedReads(incoming = incoming, pendingReads = pendingReads)
+        }
+
+        val toUpsert = InboxV2Merger.preWriteFilter(
+            incoming, pendingDeletes, pendingReads, videoSupported, nowSec
+        )
+        if (toUpsert.isNotEmpty()) {
+            upsertV2Messages(toUpsert = toUpsert, source = source)
+        }
+        updated = updated || toUpsert.isNotEmpty()
+
+        synchronized(messagesLock) {
+            val full = dbAdapter.getMessages(userId)
+            val cleanup = InboxV2Merger.postReadCleanup(
+                full, pendingDeletes, pendingReads, videoSupported, nowSec
+            )
+
+            if (cleanup.toDelete.isNotEmpty()) {
+                dbAdapter.deleteMessagesForIDs(cleanup.toDelete, userId)
+                updated = true
+            }
+            messagesList = ArrayList(cleanup.finalList)
+        }
+        return updated
+    }
+
+    /**
+     * FETCH-only step of [processV2Response]: promotes the incoming ids to INDEXED, then deletes V2 rows
+     * absent from this authoritative snapshot. Returns true if any row was deleted.
+     */
+    private fun markIndexedAndSweepCrossDeviceDeletes(incoming: List<CTMessageDAO>, nowSec: Long): Boolean {
+        val incomingIds = incoming.mapTo(HashSet(incoming.size)) { it.id }
+        if (incomingIds.isNotEmpty()) {
+            config.logger.verbose(config.accountId, "InboxV2: markIndexed ${incomingIds.size} msg(s)")
+            dbAdapter.markIndexed(ArrayList(incomingIds), userId)
+        }
+
+        // Sweep: INDEXED V2 rows (and stale PENDING_INDEXING older than
+        // the grace cutoff) that are absent from this fetch response are
+        // treated as cross-device deletes. Deleted from DB here so the
+        // postReadCleanup re-read below won't see them.
+        val graceCutoff = nowSec - INDEXING_GRACE_SECONDS
+        val sweepable = dbAdapter.findSweepableV2Ids(userId, graceCutoff) as MutableSet<String>
+        sweepable.removeAll(incomingIds)
+        if (sweepable.isNotEmpty()) {
+            config.logger.verbose(
+                config.accountId,
+                "InboxV2: cross-device sweep — removing ${sweepable.size} msg(s): $sweepable"
+            )
+            dbAdapter.deleteMessagesForIDs(ArrayList(sweepable), userId)
+            return true
+        } else {
+            config.logger.verbose(
+                config.accountId,
+                "InboxV2: cross-device sweep — nothing to remove"
+            )
+            return false
+        }
+    }
+
+    private fun upsertV2Messages(toUpsert: List<CTMessageDAO>, source: InboxV2DeliverySource) {
+        // FETCH is the authoritative source — new rows from this response are
+        // server-confirmed, so write them as INDEXED directly. ON CONFLICT
+        // preserves index_state for existing rows, so this only affects INSERTs.
+        if (source == InboxV2DeliverySource.FETCH) {
+            toUpsert.forEach { it.indexState = InboxIndexState.INDEXED }
+        }
+        dbAdapter.upsertMessages(toUpsert)
+    }
+
+    /** Drops pending-delete and pending-read rows whose TTL has elapsed. */
+    private fun removeExpiredPendingRows(nowSec: Long) {
         // T6.2: drop AWAITING_CONFIRM pending-deletes whose TTL has elapsed.
         val removedDeletes = dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec)
         if (removedDeletes > 0) {
@@ -280,48 +345,14 @@ internal open class CTInboxController @WorkerThread constructor(
                 "InboxV2: removed $removedReads expired pending-read row(s)"
             )
         }
-        val pendingDeletes = dbAdapter.getPendingDeleteIds(userId)
-        val pendingReads = dbAdapter.getPendingReads(userId)
+    }
 
-        // Server-caught-up: any incoming message with isRead=1 that was still
-        // pending locally confirms the read — drop the pending row. Must run
-        // BEFORE preWriteFilter, which mutates the incoming DAOs in-place via
-        // the pending-read override and would make every pending id look
-        // server-confirmed.
-        if (pendingReads.isNotEmpty()) {
-            val confirmedReads = incoming.filter { it.isRead == 1 && it.id in pendingReads }.map { it.id }
-            if (confirmedReads.isNotEmpty()) {
-                dbAdapter.removePendingReads(confirmedReads, userId)
-            }
+    /** Drops the pending-read rows of incoming messages the server already reports as read. */
+    private fun removeServerConfirmedReads(incoming: List<CTMessageDAO>, pendingReads: Set<String>) {
+        val confirmedReads = incoming.filter { it.isRead == 1 && it.id in pendingReads }.map { it.id }
+        if (confirmedReads.isNotEmpty()) {
+            dbAdapter.removePendingReads(confirmedReads, userId)
         }
-
-        val toUpsert = InboxV2Merger.preWriteFilter(
-            incoming, pendingDeletes, pendingReads, videoSupported, nowSec
-        )
-        if (toUpsert.isNotEmpty()) {
-            // FETCH is the authoritative source — new rows from this response are
-            // server-confirmed, so write them as INDEXED directly. ON CONFLICT
-            // preserves index_state for existing rows, so this only affects INSERTs.
-            if (source == InboxV2DeliverySource.FETCH) {
-                toUpsert.forEach { it.indexState = InboxIndexState.INDEXED }
-            }
-            dbAdapter.upsertMessages(toUpsert)
-        }
-        updated = updated || toUpsert.isNotEmpty()
-
-        synchronized(messagesLock) {
-            val full = dbAdapter.getMessages(userId)
-            val cleanup = InboxV2Merger.postReadCleanup(
-                full, pendingDeletes, pendingReads, videoSupported, nowSec
-            )
-
-            if (cleanup.toDelete.isNotEmpty()) {
-                dbAdapter.deleteMessagesForIDs(cleanup.toDelete, userId)
-                updated = true
-            }
-            messagesList = ArrayList(cleanup.finalList)
-        }
-        return updated
     }
 
     @AnyThread

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.usereventlogs
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
@@ -92,13 +93,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.writableDatabase.beginTransaction()
             setOfActualAndNormalizedEventNamePair.forEach {
-                if (eventExistsByDeviceIdAndNormalizedEventName(deviceID, it.second)) {
-                    logger.verbose("UserEventLog: Updating EventLog for event $it")
-                    updateEventByDeviceIdAndNormalizedEventName(deviceID, it.second)
-                } else {
-                    logger.verbose("UserEventLog: Inserting EventLog for event $it")
-                    insertEvent(deviceID, it.first, it.second)
-                }
+                upsertEvent(deviceID = deviceID, actualAndNormalizedEventName = it)
             }
             db.writableDatabase.setTransactionSuccessful()
             db.writableDatabase.endTransaction()
@@ -125,23 +120,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, selection, selectionArgs, null, null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val eventLog = UserEventLog(
-                        eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(
-                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
-                        ),
-                        firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
-                        lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
-                        countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
-                        deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID))
-                    )
-                    eventLog
-                } else {
-                    null
-                }
-            }
+            ).use { cursor -> readFirstEventLog(cursor) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             null
@@ -158,13 +137,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, projection, selection, selectionArgs, null, null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT))
-                } else {
-                    0
-                }
-            }
+            ).use { cursor -> readFirstCount(cursor) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             -1
@@ -188,11 +161,7 @@ internal class UserEventLogDAOImpl(
 
         return try {
             db.readableDatabase.rawQuery(query, selectionArgs).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
-                } else {
-                    false
-                }
+                readExistsFlag(cursor = cursor, resultColumn = resultColumn)
             }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
@@ -220,11 +189,7 @@ internal class UserEventLogDAOImpl(
         """.trimIndent()
         return try {
             db.readableDatabase.rawQuery(query, selectionArgs).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
-                } else {
-                    false
-                }
+                readExistsFlag(cursor = cursor, resultColumn = resultColumn)
             }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
@@ -244,22 +209,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, selection, selectionArgs, null, null, orderBy, null
-            ).use { cursor ->
-                while (cursor.moveToNext()) {
-                    val eventLog = UserEventLog(
-                        eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(
-                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
-                        ),
-                        firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
-                        lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
-                        countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
-                        deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID))
-                    )
-                    eventList.add(eventLog)
-                }
-                eventList
-            }
+            ).use { cursor -> readAllEventLogs(cursor = cursor, eventList = eventList) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             emptyList()
@@ -276,22 +226,7 @@ internal class UserEventLogDAOImpl(
         return try {
             db.readableDatabase.query(
                 tName, null, null, null, null, null, orderBy
-            ).use { cursor ->
-                while (cursor.moveToNext()) {
-                    val eventLog = UserEventLog(
-                        eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
-                        normalizedEventName = cursor.getString(
-                            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
-                        ),
-                        firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
-                        lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
-                        countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
-                        deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID))
-                    )
-                    eventList.add(eventLog)
-                }
-                eventList
-            }
+            ).use { cursor -> readAllEventLogs(cursor = cursor, eventList = eventList) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             emptyList()
@@ -347,5 +282,57 @@ internal class UserEventLogDAOImpl(
             logger.verbose("Error cleaning up extra events in $tName.", e)
             false
         }
+    }
+
+    private fun upsertEvent(deviceID: String, actualAndNormalizedEventName: Pair<String, String>) {
+        if (eventExistsByDeviceIdAndNormalizedEventName(deviceID, actualAndNormalizedEventName.second)) {
+            logger.verbose("UserEventLog: Updating EventLog for event $actualAndNormalizedEventName")
+            updateEventByDeviceIdAndNormalizedEventName(deviceID, actualAndNormalizedEventName.second)
+        } else {
+            logger.verbose("UserEventLog: Inserting EventLog for event $actualAndNormalizedEventName")
+            insertEvent(deviceID, actualAndNormalizedEventName.first, actualAndNormalizedEventName.second)
+        }
+    }
+
+    private fun readEventLog(cursor: Cursor): UserEventLog = UserEventLog(
+        eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
+        normalizedEventName = cursor.getString(
+            cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)
+        ),
+        firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
+        lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
+        countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
+        deviceID = cursor.getString(cursor.getColumnIndexOrThrow(Column.DEVICE_ID))
+    )
+
+    private fun readFirstEventLog(cursor: Cursor): UserEventLog? {
+        return if (cursor.moveToFirst()) {
+            readEventLog(cursor)
+        } else {
+            null
+        }
+    }
+
+    private fun readFirstCount(cursor: Cursor): Int {
+        return if (cursor.moveToFirst()) {
+            cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT))
+        } else {
+            0
+        }
+    }
+
+    private fun readExistsFlag(cursor: Cursor, resultColumn: String): Boolean {
+        return if (cursor.moveToFirst()) {
+            cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
+        } else {
+            false
+        }
+    }
+
+    private fun readAllEventLogs(cursor: Cursor, eventList: MutableList<UserEventLog>): List<UserEventLog> {
+        while (cursor.moveToNext()) {
+            eventList.add(readEventLog(cursor))
+        }
+        return eventList
     }
 }

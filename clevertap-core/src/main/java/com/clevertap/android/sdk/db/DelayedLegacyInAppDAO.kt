@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -89,21 +90,7 @@ internal class DelayedLegacyInAppDAOImpl(
             val now = clock.currentTimeMillis()
 
             delayedInApps.forEach { delayedInApp ->
-                logger.verbose("DelayedLegacyInAppDAO: Batch inserting ${delayedInApp.inAppId}")
-
-                val values = ContentValues().apply {
-                    put(Column.INAPP_ID, delayedInApp.inAppId)
-                    put(Column.DELAY, delayedInApp.delay)
-                    put(Column.DATA, delayedInApp.inAppData)
-                    put(Column.CREATED_AT, now)
-                }
-
-                db.writableDatabase.insertWithOnConflict(
-                    tableName,
-                    null,
-                    values,
-                    SQLiteDatabase.CONFLICT_REPLACE
-                )
+                insertDelayedInApp(tableName = tableName, delayedInApp = delayedInApp, now = now)
             }
 
             db.writableDatabase.setTransactionSuccessful()
@@ -119,6 +106,24 @@ internal class DelayedLegacyInAppDAOImpl(
             }
             false
         }
+    }
+
+    private fun insertDelayedInApp(tableName: String, delayedInApp: DelayedLegacyInAppData, now: Long) {
+        logger.verbose("DelayedLegacyInAppDAO: Batch inserting ${delayedInApp.inAppId}")
+
+        val values = ContentValues().apply {
+            put(Column.INAPP_ID, delayedInApp.inAppId)
+            put(Column.DELAY, delayedInApp.delay)
+            put(Column.DATA, delayedInApp.inAppData)
+            put(Column.CREATED_AT, now)
+        }
+
+        db.writableDatabase.insertWithOnConflict(
+            tableName,
+            null,
+            values,
+            SQLiteDatabase.CONFLICT_REPLACE
+        )
     }
 
     @WorkerThread
@@ -149,15 +154,17 @@ internal class DelayedLegacyInAppDAOImpl(
         return try {
             db.readableDatabase.query(
                 tableName, projection, selection, selectionArgs, null, null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-                } else {
-                    null
-                }
-            }
+            ).use { cursor -> readFirstData(cursor) }
         } catch (e: Exception) {
             logger.verbose("Could not fetch delayed legacy in-app from database $tableName.", e)
+            null
+        }
+    }
+
+    private fun readFirstData(cursor: Cursor): String? {
+        return if (cursor.moveToFirst()) {
+            cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+        } else {
             null
         }
     }

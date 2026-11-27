@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 1009**  
-core: 783 · geofence: 65 · hms: 3 · pushtemplates: 158
+**Total baselined findings: 787**  
+core: 591 · geofence: 53 · hms: 3 · pushtemplates: 140
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -16,9 +16,9 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Exceptions | 10 | TooGenericExceptionThrown (5), ThrowingExceptionsWithoutMessageOrCause (5) |
 | Library safety | 9 | DoubleMutabilityForCollection (9) |
 | Naming | 14 | FunctionParameterNaming (7), VariableNaming (4), FunctionNaming (3) |
-| Style | 171 | MaxLineLength (66), MagicNumber (46), ReturnCount (30), BracesOnIfStatements (19), ForbiddenMethodCall (10) |
-| Complexity | 504 | NestedBlockDepth (179), CyclomaticComplexMethod (117), LongParameterList (72), LongMethod (62), TooManyFunctions (37), LargeClass (29), ComplexCondition (8) |
-| Other | 69 | LoopWithTooManyJumpStatements (21), UnnecessaryAbstractClass (14), UtilityClassWithPublicConstructor (7), NoNameShadowing (5), ThrowsCount (4), UnusedParameter (2), SafeCast (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
+| Style | 156 | MaxLineLength (65), MagicNumber (46), BracesOnIfStatements (18), ReturnCount (17), ForbiddenMethodCall (10) |
+| Complexity | 311 | LongParameterList (72), NestedBlockDepth (70), CyclomaticComplexMethod (62), TooManyFunctions (37), LongMethod (37), LargeClass (28), ComplexCondition (5) |
+| Other | 55 | UnnecessaryAbstractClass (14), LoopWithTooManyJumpStatements (11), UtilityClassWithPublicConstructor (7), NoNameShadowing (5), UnusedParameter (2), ThrowsCount (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
 
@@ -63,50 +63,48 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 ### Style
 
-- **MaxLineLength: 66** (core 60, pushtemplates 5, geofence 1). Wrap lines > 120.  
-  Top files: `CleverTapAPI.kt` (8), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `InAppActionHandler.kt` (4), `ManifestValidator.kt` (4), `Utils.kt` (4)
+- **MaxLineLength: 65** (core 59, pushtemplates 5, geofence 1). Wrap lines > 120.  
+  Top files: `CleverTapAPI.kt` (8), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `InAppActionHandler.kt` (4), `ManifestValidator.kt` (4), `DeviceInfo.kt` (3)
 - **MagicNumber: 46** (core 33, pushtemplates 12, geofence 1). Named constants.  
   Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTInboxBaseMessageViewHolder.kt` (2)
-- **ReturnCount: 30** (core 27, pushtemplates 3). Guard clauses / `when` expressions; max 3 non-guard returns.  
-  Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `InAppNotificationActivity.kt` (2), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1)
-- **BracesOnIfStatements: 19** (core 13, pushtemplates 6). Braces on every if/else (repo convention).  
+- **BracesOnIfStatements: 18** (core 12, pushtemplates 6). Braces on every if/else (repo convention).  
   Top files: `CTInboxMessage.kt` (2), `CleverTapDisplayUnitContent.kt` (2), `DeviceInfo.kt` (2), `EvalRules.kt` (2), `TriggerValue.kt` (2), `VarCache.kt` (2)
+- **ReturnCount: 17** (core 14, pushtemplates 3). Guard clauses / `when` expressions; max 3 non-guard returns.  
+  Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1), `CTInAppNotification.kt` (1)
 - **ForbiddenMethodCall: 10** (core 8, pushtemplates 2). Log through `Logger`, no `Thread.sleep`/`println`.  
   Top files: `DefaultXmlParser.kt` (4), `PushTemplateReceiver.kt` (2), `CTDisplayUnitType.kt` (1), `CleverTapResponse.kt` (1), `GifImageView.kt` (1), `UrlConnectionHttpClient.kt` (1)
 
 ### Complexity
 
-- **NestedBlockDepth: 179** (core 158, pushtemplates 15, geofence 6). Guard clauses, extract functions (threshold 3).  
-  Top files: `UserEventLogDAOImpl.kt` (7), `Utils.kt` (7), `NetworkManager.kt` (6), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `CTInAppNotification.kt` (4)
-- **CyclomaticComplexMethod: 117** (core 94, pushtemplates 20, geofence 3). Split / `when` tables (threshold 10).  
-  Top files: `CTInAppNotification.kt` (5), `TriggersMatcher.kt` (5), `InAppController.kt` (4), `TemplateRenderer.kt` (4), `AnalyticsManager.kt` (3), `DisplayUnitResponse.kt` (3)
 - **LongParameterList: 72** (core 59, pushtemplates 13). Parameter objects / default args.  
   Top files: `CleverTapAPI.kt` (6), `EventDataNormalizer.kt` (5), `OperationHandler.kt` (4), `ArrayOperationHandler.kt` (3), `CTInboxBaseMessageViewHolder.kt` (3), `ProgressStyle.kt` (3)
-- **LongMethod: 62** (core 41, pushtemplates 14, geofence 7). Extract private functions (threshold 50 lines).  
-  Top files: `PushTemplateReceiver.kt` (4), `CTInAppNotification.kt` (3), `PushProviders.kt` (3), `EventDataNormalizer.kt` (2), `EventQueueManager.kt` (2), `InAppController.kt` (2)
+- **NestedBlockDepth: 70** (core 62, pushtemplates 8). Guard clauses, extract functions (threshold 3).  
+  Top files: `NetworkManager.kt` (6), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `CTInAppNotification.kt` (4), `CTInboxMessageContent.kt` (4), `TemplateRenderer.kt` (4)
+- **CyclomaticComplexMethod: 62** (core 44, pushtemplates 16, geofence 2). Split / `when` tables (threshold 10).  
+  Top files: `CTInAppNotification.kt` (5), `InAppController.kt` (4), `TemplateRenderer.kt` (4), `AnalyticsManager.kt` (3), `PushProviders.kt` (3), `PushTemplateReceiver.kt` (3)
 - **TooManyFunctions: 37** (core 35, geofence 1, pushtemplates 1). Split the type/file (threshold 15).  
   Top files: `Utils.kt` (3), `CleverTapAPI.kt` (2), `BaseAnalyticsManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxMessage.kt` (1)
-- **LargeClass: 29** (core 24, pushtemplates 4, geofence 1). Split responsibilities (threshold 300 lines).  
+- **LongMethod: 37** (core 27, pushtemplates 8, geofence 2). Extract private functions (threshold 50 lines).  
+  Top files: `PushTemplateReceiver.kt` (4), `CTInAppNotification.kt` (3), `PushProviders.kt` (3), `EventDataNormalizer.kt` (2), `InAppController.kt` (2), `TemplateRenderer.kt` (2)
+- **LargeClass: 28** (core 23, pushtemplates 4, geofence 1). Split responsibilities (threshold 300 lines).  
   Top files: `CleverTapAPI.kt` (2), `Utils.kt` (2), `AnalyticsManager.kt` (1), `CTInAppNotification.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxController.kt` (1)
-- **ComplexCondition: 8** (core 5, pushtemplates 3). Name the sub-conditions.  
-  Top files: `TemplateRenderer.kt` (2), `CTVariableUtils.kt` (1), `CleverTapAPI.kt` (1), `CleverTapDisplayUnitContent.kt` (1), `EventQueueManager.kt` (1), `InAppResponse.kt` (1)
+- **ComplexCondition: 5** (core 3, pushtemplates 2). Name the sub-conditions.  
+  Top files: `TemplateRenderer.kt` (2), `CleverTapAPI.kt` (1), `CleverTapDisplayUnitContent.kt` (1), `InAppResponse.kt` (1)
 
 ### Other
 
-- **LoopWithTooManyJumpStatements: 21** (core 20, pushtemplates 1). See https://detekt.dev/docs/rules  
-  Top files: `EventDataNormalizer.kt` (2), `CTInboxController.kt` (1), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `EventDAOImpl.kt` (1), `GifImageView.kt` (1)
 - **UnnecessaryAbstractClass: 14** (core 12, pushtemplates 2). See https://detekt.dev/docs/rules  
   Top files: `BaseAnalyticsManager.kt` (1), `BaseEventQueueManager.kt` (1), `BaseLocationManager.kt` (1), `BaseSessionManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInAppBaseFullHtmlFragment.kt` (1)
+- **LoopWithTooManyJumpStatements: 11** (core 10, pushtemplates 1). See https://detekt.dev/docs/rules  
+  Top files: `EventDataNormalizer.kt` (2), `CTProductConfigController.kt` (1), `CleverTapAPI.kt` (1), `GifImageView.kt` (1), `LocalDataStore.kt` (1), `LoginController.kt` (1)
 - **UtilityClassWithPublicConstructor: 7** (core 4, pushtemplates 2, hms 1). See https://detekt.dev/docs/rules  
   Top files: `ActivityLifecycleCallback.kt` (1), `CTVariableUtils.kt` (1), `FileResourcesRepoFactory.kt` (1), `MemoryCreator.kt` (1), `HmsConstants.kt` (1), `PTConstants.kt` (1)
 - **NoNameShadowing: 5** (core 4, geofence 1). See https://detekt.dev/docs/rules  
   Top files: `CTInboxController.kt` (2), `MemoryAccessObject.kt` (1), `PlayStoreReviewHandler.kt` (1), `PendingIntentFactory.kt` (1)
-- **ThrowsCount: 4** (core 4). See https://detekt.dev/docs/rules  
-  Top files: `JsonTemplatesProducer.kt` (2), `CustomTemplate.kt` (1), `TemplatesManager.kt` (1)
 - **UnusedParameter: 2** (core 2). See https://detekt.dev/docs/rules  
   Top files: `EventQueueManager.kt` (1), `Utils.kt` (1)
-- **SafeCast: 2** (core 2). See https://detekt.dev/docs/rules  
-  Top files: `CTVariableUtils.kt` (2)
+- **ThrowsCount: 2** (core 2). See https://detekt.dev/docs/rules  
+  Top files: `CustomTemplate.kt` (1), `JsonTemplatesProducer.kt` (1)
 - **MemberNameEqualsClassName: 2** (core 1, geofence 1). See https://detekt.dev/docs/rules  
   Top files: `CTCaches.kt` (1), `CTGeofenceAPI.kt` (1)
 - **InjectDispatcher: 2** (core 2). See https://detekt.dev/docs/rules  

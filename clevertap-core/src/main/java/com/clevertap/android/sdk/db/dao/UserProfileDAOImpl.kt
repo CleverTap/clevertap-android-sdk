@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -64,23 +65,7 @@ internal class UserProfileDAOImpl(
                 null,
                 null,
                 null
-            ).use { cursor ->
-                val dataIndex = cursor.getColumnIndex(Column.DATA)
-                val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
-                
-                while (cursor.moveToNext()) {
-                    val profileString = cursor.getString(dataIndex)
-                    val deviceIdString = cursor.getString(deviceIdIndex)
-
-                    val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
-                    if (decryptedProfile != null) {
-                        val jsonObject = JSONObject(decryptedProfile)
-                        profiles[deviceIdString] = jsonObject
-                    } else {
-                        logger.verbose("Error decrypting JSON for profile")
-                    }
-                }
-            }
+            ).use { cursor -> collectProfiles(cursor = cursor, profiles = profiles) }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
@@ -94,30 +79,51 @@ internal class UserProfileDAOImpl(
 
         var op: JSONObject? = null
         try {
-            dbHelper.readableDatabase.query(
+            op = dbHelper.readableDatabase.query(
                 tName, null,
                 "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?",
                 arrayOf(accountId, deviceId),
                 null, null, null
-            ).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val dataIndex = cursor.getColumnIndex(Column.DATA)
-                    if (dataIndex >= 0) {
-                        val profileString = cursor.getString(dataIndex)
-                        val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
-                        if (decryptedProfile != null) {
-                            op = JSONObject(decryptedProfile)
-                        } else {
-                            logger.verbose("Failed profile decryption")
-                        }
-                    }
-                } else {
-                    logger.verbose("There was no profile found in DB")
-                }
-            }
+            ).use { cursor -> readFirstProfile(cursor) }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
         return op
+    }
+
+    private fun collectProfiles(cursor: Cursor, profiles: MutableMap<String, JSONObject>) {
+        val dataIndex = cursor.getColumnIndex(Column.DATA)
+        val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
+
+        while (cursor.moveToNext()) {
+            val profileString = cursor.getString(dataIndex)
+            val deviceIdString = cursor.getString(deviceIdIndex)
+
+            val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
+            if (decryptedProfile != null) {
+                val jsonObject = JSONObject(decryptedProfile)
+                profiles[deviceIdString] = jsonObject
+            } else {
+                logger.verbose("Error decrypting JSON for profile")
+            }
+        }
+    }
+
+    private fun readFirstProfile(cursor: Cursor): JSONObject? {
+        if (!cursor.moveToFirst()) {
+            logger.verbose("There was no profile found in DB")
+            return null
+        }
+        val dataIndex = cursor.getColumnIndex(Column.DATA)
+        if (dataIndex < 0) {
+            return null
+        }
+        val profileString = cursor.getString(dataIndex)
+        val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
+        if (decryptedProfile == null) {
+            logger.verbose("Failed profile decryption")
+            return null
+        }
+        return JSONObject(decryptedProfile)
     }
 }

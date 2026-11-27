@@ -102,12 +102,42 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
 
         val orientation = resources.configuration.orientation
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            window?.let { window ->
-                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                WindowInsetsControllerCompat(window, window.decorView).hide(WindowInsetsCompat.Type.systemBars())
-            }
+            hideSystemBars()
         }
-        val (inAppConfig, notification) = try {
+        val (inAppConfig, notification) = loadDisplayingInApp() ?: return
+
+        if (dismissIfOrientationNotSupported(notification = notification, orientation = orientation)) {
+            return
+        }
+
+        if (savedInstanceState == null) {
+            createContentFragment(notification, inAppConfig)?.let { contentFragment ->
+                contentFragment.setArguments(notification, inAppConfig)
+                supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
+                    .add(android.R.id.content, contentFragment, fragmentTag(inAppConfig))
+                    .commitNow()
+            }
+        } else if (isAlertVisible) {
+            createContentFragment(notification, inAppConfig)
+        }
+    }
+
+    private fun hideSystemBars() {
+        window?.let { window ->
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            WindowInsetsControllerCompat(window, window.decorView).hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    /**
+     * Part of [setUp]: reads the config from the intent, sets up the SDK side (push permission handler,
+     * display listener) and finds the in-app in memory. Returns null when [setUp] must stop: the
+     * activity was opened for the push permission prompt, or it is closing because the in-app is
+     * gone or the intent is invalid.
+     */
+    private fun loadDisplayingInApp(): Pair<CleverTapInstanceConfig, CTInAppNotification>? {
+        return try {
             val intentExtras = intent.extras ?: throw IllegalArgumentException()
 
             val intentConfig = intentExtras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG)
@@ -132,7 +162,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
                 showPushPermissionPrompt(
                     intentExtras.getBoolean(INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS, false)
                 )
-                return
+                return null
             }
 
             listenerWeakReference = WeakReference(ctState.inAppController)
@@ -148,7 +178,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
                     "In-app $inAppId is no longer available, closing InAppNotificationActivity"
                 )
                 finish()
-                return
+                return null
             }
             intentConfig.logger.verbose(
                 intentConfig.accountId,
@@ -158,16 +188,21 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         } catch (t: Throwable) {
             Logger.v("Cannot find a valid notification bundle to show!", t)
             finish()
-            return
+            null
         }
+    }
 
-        //Allow rotation for all InApps but respect the flags sent from dashboard
+    /**
+     * Allow rotation for all InApps but respect the flags sent from dashboard: a portrait-only in-app
+     * in landscape (or the reverse) closes the activity. Returns true if it did.
+     */
+    private fun dismissIfOrientationNotSupported(notification: CTInAppNotification, orientation: Int): Boolean {
         if (notification.isPortrait && !notification.isLandscape) {
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 Logger.d("App in Landscape, dismissing portrait InApp Notification")
                 finish()
                 didDismiss(null)
-                return
+                return true
             } else {
                 Logger.d("App in Portrait, displaying InApp Notification anyway")
             }
@@ -178,23 +213,12 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
                 Logger.d("App in Portrait, dismissing landscape InApp Notification")
                 finish()
                 didDismiss(null)
-                return
+                return true
             } else {
                 Logger.d("App in Landscape, displaying InApp Notification anyway")
             }
         }
-
-        if (savedInstanceState == null) {
-            createContentFragment(notification, inAppConfig)?.let { contentFragment ->
-                contentFragment.setArguments(notification, inAppConfig)
-                supportFragmentManager.beginTransaction()
-                    .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
-                    .add(android.R.id.content, contentFragment, fragmentTag(inAppConfig))
-                    .commitNow()
-            }
-        } else if (isAlertVisible) {
-            createContentFragment(notification, inAppConfig)
-        }
+        return false
     }
 
     override fun onResume() {
@@ -211,10 +235,7 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
         // After a process kill this is often the call that creates the SDK instance for the new
         // process. As in setUp, any error closes the screen instead of crashing the app.
         return try {
-            val extras = intent.extras ?: return false
-            val inAppId = extras.getString(Constants.INAPP_ID_KEY) ?: return false
-            val restoreConfig = extras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG) ?: return false
-            val cleverTapAPI = CleverTapAPI.instanceWithConfig(applicationContext, restoreConfig) ?: return false
+            val (inAppId, cleverTapAPI) = restoreTarget() ?: return false
             Logger.v("In-app $inAppId is not in memory, restoring it from storage")
             // This window is transparent and has no content yet, but it still covers the app and
             // would take every tap. Let taps through to the app until the in-app is ready.
@@ -226,6 +247,18 @@ internal class InAppNotificationActivity : FragmentActivity(), InAppListener,
             Logger.v("Could not start restoring the in-app, closing InAppNotificationActivity", t)
             false
         }
+    }
+
+    /**
+     * The id of the in-app to restore and the SDK instance for its config, or null if the intent lacks
+     * either or the instance cannot be created. Called inside [restoreInApp]'s try.
+     */
+    private fun restoreTarget(): Pair<String, CleverTapAPI>? {
+        val extras = intent.extras ?: return null
+        val inAppId = extras.getString(Constants.INAPP_ID_KEY) ?: return null
+        val restoreConfig = extras.getParcelable<CleverTapInstanceConfig>(INTENT_EXTRA_CT_CONFIG) ?: return null
+        val cleverTapAPI = CleverTapAPI.instanceWithConfig(applicationContext, restoreConfig) ?: return null
+        return inAppId to cleverTapAPI
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope
 import com.clevertap.android.sdk.StorageHelper.getPreferences
@@ -47,32 +48,35 @@ internal open class InAppFCManager(
         inapp: CTInAppNotification?,
         hasInAppFrequencyLimitsMaxedOut: (JSONObject, String) -> Boolean
     ): Boolean {
-        try {
-            if (inapp == null) {
-                return false
-            }
-
-            val id = getInAppID(inapp) ?: return true
-
-            /* Evaluate frequency limits again (without Nth triggers)
-               in case the message was added multiple times before being displayed,
-               or queue was paused and the message was added multiple times in the meantime
-            */
-            if (hasInAppFrequencyLimitsMaxedOut.invoke(inapp.jsonDescription, id)) {
-                return false
-            }
-
-            // Exclude from all caps?
-            if (inapp.isExcludeFromCaps) {
-                return true
-            }
-
-            return !hasSessionCapacityMaxedOut(inapp) &&
-                !hasLifetimeCapacityMaxedOut(inapp) &&
-                !hasDailyCapacityMaxedOut(inapp)
+        return try {
+            inapp != null && canShowInApp(inapp, hasInAppFrequencyLimitsMaxedOut)
         } catch (t: Throwable) {
+            false
+        }
+    }
+
+    private fun canShowInApp(
+        inapp: CTInAppNotification,
+        hasInAppFrequencyLimitsMaxedOut: (JSONObject, String) -> Boolean
+    ): Boolean {
+        val id = getInAppID(inapp) ?: return true
+
+        /* Evaluate frequency limits again (without Nth triggers)
+           in case the message was added multiple times before being displayed,
+           or queue was paused and the message was added multiple times in the meantime
+        */
+        if (hasInAppFrequencyLimitsMaxedOut.invoke(inapp.jsonDescription, id)) {
             return false
         }
+
+        // Exclude from all caps?
+        if (inapp.isExcludeFromCaps) {
+            return true
+        }
+
+        return !hasSessionCapacityMaxedOut(inapp) &&
+            !hasLifetimeCapacityMaxedOut(inapp) &&
+            !hasDailyCapacityMaxedOut(inapp)
     }
 
     fun changeUser(newDeviceId: String?) {
@@ -109,24 +113,26 @@ internal open class InAppFCManager(
         val prefs =
             getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
         for ((key, value) in prefs.all) {
-            //inApp: "targetID" -> "todayCount,lifetime"
-            if (value !is String) {
-                continue
-            }
-            val parts = javaSplit(value, ",")
-            if (parts.size == 2) {
-                arr.put(
-                    JSONArray()
-                        .put(0, key)
-                        .put(1, parts[0].toInt())
-                        .put(2, parts[1].toInt())
-                )
-            }
+            val entry = inAppCountEntry(key = key, value = value) ?: continue
+            arr.put(entry)
         }
         arr
     } catch (t: Throwable) {
         Logger.v("Failed to get in apps count", t)
         null
+    }
+
+    /** Parses one stored count into [targetID, todayCount, lifetime], or null if it is malformed. */
+    private fun inAppCountEntry(key: String, value: Any?): JSONArray? {
+        //inApp: "targetID" -> "todayCount,lifetime"
+        if (value !is String) {
+            return null
+        }
+        val parts = javaSplit(value, ",")
+        if (parts.size != 2) {
+            return null
+        }
+        return JSONArray().put(0, key).put(1, parts[0].toInt()).put(2, parts[1].toInt())
     }
 
     fun processResponse(context: Context, response: JSONObject) {
@@ -144,17 +150,21 @@ internal open class InAppFCManager(
             val editor = prefs.edit()
 
             for (i in 0 until arr.length()) {
-                when (val o = arr.get(i)) {
-                    is Int, is String -> {
-                        editor.remove(o.toString())
-                        Logger.d("Purged stale in-app - $o")
-                    }
-                }
+                purgeStaleInApp(editor = editor, staleId = arr.get(i))
             }
 
             StorageHelper.persist(editor)
         } catch (t: Throwable) {
             Logger.v("Failed to purge out stale targets", t)
+        }
+    }
+
+    private fun purgeStaleInApp(editor: SharedPreferences.Editor, staleId: Any) {
+        when (staleId) {
+            is Int, is String -> {
+                editor.remove(staleId.toString())
+                Logger.d("Purged stale in-app - $staleId")
+            }
         }
     }
 
@@ -282,41 +292,43 @@ internal open class InAppFCManager(
             val today = ddMMyyyy.format(clock.newDate())
             val lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), "20140428")
             if (today != lastUpdated) {
-                StorageHelper
-                    .putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), today)
-
-                // Reset today count
-                StorageHelper.putInt(
-                    context,
-                    storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)), 0
-                )
-
-                // Reset the counts for each inapp
-                val prefs = getPreferences(
-                    context,
-                    storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId))
-                )
-                val editor = prefs.edit()
-                for ((inapp, ov) in prefs.all) {
-                    val oldValues = (ov as? String)?.let { javaSplit(it, ",") }
-                    if (oldValues == null || oldValues.size != 2) {
-                        editor.remove(inapp)
-                        continue
-                    }
-
-                    // protocol: todayCount,lifeTimeCount
-                    try {
-                        editor.putString(inapp, "0,${oldValues[1]}")
-                    } catch (t: Throwable) {
-                        config.logger.verbose(config.accountId, "Failed to reset todayCount for inapp $inapp", t)
-                    }
-                }
-
-                StorageHelper.persist(editor)
+                resetDailyCounts(deviceId = deviceId, today = today)
             }
         } catch (e: Exception) {
             config.logger.verbose(config.accountId, "Failed to init inapp manager ${e.localizedMessage}")
         }
+    }
+
+    /** Stores [today] as the last-updated date and resets today's counts, keeping lifetime counts. */
+    private fun resetDailyCounts(deviceId: String?, today: String) {
+        StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), today)
+
+        // Reset today count
+        StorageHelper.putInt(
+            context,
+            storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)), 0
+        )
+
+        // Reset the counts for each inapp
+        val prefs =
+            getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)))
+        val editor = prefs.edit()
+        for ((inapp, ov) in prefs.all) {
+            val oldValues = (ov as? String)?.let { javaSplit(it, ",") }
+            if (oldValues == null || oldValues.size != 2) {
+                editor.remove(inapp)
+                continue
+            }
+
+            // protocol: todayCount,lifeTimeCount
+            try {
+                editor.putString(inapp, "0,${oldValues[1]}")
+            } catch (t: Throwable) {
+                config.logger.verbose(config.accountId, "Failed to reset todayCount for inapp $inapp", t)
+            }
+        }
+
+        StorageHelper.persist(editor)
     }
 
     private fun migrateToNewPrefsKey(deviceId: String?) {
@@ -355,17 +367,7 @@ internal open class InAppFCManager(
             Logger.d("Finished migrating shared preference countsPerInApp from V1 to V3.")
         }
 
-        val inAppStore = storeRegistry.inAppStore
-        val legacyInAppStore = storeRegistry.legacyInAppStore
-        if (inAppStore != null && legacyInAppStore != null) {
-            val accountBasedInApps = legacyInAppStore.readInApps()
-            if (accountBasedInApps.length() > 0) {
-                Logger.d("migrating in-apps from account id to device id based preference.")
-                inAppStore.storeServerSideInApps(Utils.toJSONObjectList(accountBasedInApps))
-                legacyInAppStore.removeInApps()
-                Logger.d("Finished migrating in-apps from account id to device id based preference.")
-            }
-        }
+        migrateAccountBasedInApps()
 
         // Migrate only when the device-scoped date is missing and a legacy one exists.
         if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null ||
@@ -384,6 +386,20 @@ internal open class InAppFCManager(
             context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
             keyCountsShownToday
         )
+    }
+
+    private fun migrateAccountBasedInApps() {
+        val inAppStore = storeRegistry.inAppStore
+        val legacyInAppStore = storeRegistry.legacyInAppStore
+        if (inAppStore != null && legacyInAppStore != null) {
+            val accountBasedInApps = legacyInAppStore.readInApps()
+            if (accountBasedInApps.length() > 0) {
+                Logger.d("migrating in-apps from account id to device id based preference.")
+                inAppStore.storeServerSideInApps(Utils.toJSONObjectList(accountBasedInApps))
+                legacyInAppStore.removeInApps()
+                Logger.d("Finished migrating in-apps from account id to device id based preference.")
+            }
+        }
     }
 
     private fun storageKeyWithSuffix(key: String): String = "$key:${config.accountId}"

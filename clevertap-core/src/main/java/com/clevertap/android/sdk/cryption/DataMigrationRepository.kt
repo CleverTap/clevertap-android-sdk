@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
@@ -87,12 +88,20 @@ internal class DataMigrationRepository(
                 val prefName = file.nameWithoutExtension
                 context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
             }?.forEach { sp ->
-            keysToMigrate.forEach { key ->
-                sp.getString(key, null)?.let { data ->
-                    val encryptedData = migrate(data)
-                    sp.edit { putString(key, encryptedData) }
-                }
+                migrateKeys(sp = sp, keysToMigrate = keysToMigrate, migrate = migrate)
             }
+    }
+
+    private fun migrateKeys(sp: SharedPreferences, keysToMigrate: List<String>, migrate: (String) -> String?) {
+        keysToMigrate.forEach { key ->
+            migrateKey(sp = sp, key = key, migrate = migrate)
+        }
+    }
+
+    private fun migrateKey(sp: SharedPreferences, key: String, migrate: (String) -> String?) {
+        sp.getString(key, null)?.let { data ->
+            val encryptedData = migrate(data)
+            sp.edit { putString(key, encryptedData) }
         }
     }
 }

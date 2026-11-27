@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
@@ -72,33 +73,7 @@ internal class EventDAOImpl(
             ).use { cursor ->
                 val rowCount = cursor.count
                 queueData.hasMore = rowCount > limit
-
-                val colId = cursor.getColumnIndexOrThrow(Column.ID)
-                val colData = cursor.getColumnIndexOrThrow(Column.DATA)
-
-                var pos = 0
-                while (cursor.moveToNext()) {
-                    if (pos == limit) {
-                        break
-                    }
-                    val id = cursor.getString(colId)
-                    val eventData = cursor.getString(colData)
-
-                    val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
-                    if (decryptedData == null) {
-                        logger.verbose("Error parsing event data for id: $id from table: $tName")
-                        continue
-                    }
-                    val jsonEvent = JSONObject(decryptedData)
-                    queueData.data.put(jsonEvent)
-
-                    if (table == Table.PROFILE_EVENTS) {
-                        queueData.profileEventIds.add(id)
-                    } else {
-                        queueData.eventIds.add(id)
-                    }
-                    pos++
-                }
+                readEventRows(cursor = cursor, table = table, limit = limit, queueData = queueData)
             }
         } catch (e: Exception) {
             logger.verbose("Could not fetch records from table $tName", e)
@@ -111,6 +86,50 @@ internal class EventDAOImpl(
         }
         logger.verbose("Fetched $size events from $tName")
         return queueData
+    }
+
+    /**
+     * Reads up to [limit] decryptable rows from [cursor] into [queueData]. Rows that cannot be
+     * decrypted are skipped and do not count towards the limit.
+     */
+    private fun readEventRows(cursor: Cursor, table: Table, limit: Int, queueData: QueueData) {
+        val colId = cursor.getColumnIndexOrThrow(Column.ID)
+        val colData = cursor.getColumnIndexOrThrow(Column.DATA)
+
+        var pos = 0
+        while (cursor.moveToNext()) {
+            if (pos == limit) {
+                break
+            }
+            if (addEventRow(cursor = cursor, colId = colId, colData = colData, table = table, queueData = queueData)) {
+                pos++
+            }
+        }
+    }
+
+    /**
+     * Decrypts the current row of [cursor] and adds it to [queueData].
+     *
+     * @return false if the row could not be decrypted and was skipped
+     */
+    private fun addEventRow(cursor: Cursor, colId: Int, colData: Int, table: Table, queueData: QueueData): Boolean {
+        val id = cursor.getString(colId)
+        val eventData = cursor.getString(colData)
+
+        val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
+        if (decryptedData == null) {
+            logger.verbose("Error parsing event data for id: $id from table: ${table.tableName}")
+            return false
+        }
+        val jsonEvent = JSONObject(decryptedData)
+        queueData.data.put(jsonEvent)
+
+        if (table == Table.PROFILE_EVENTS) {
+            queueData.profileEventIds.add(id)
+        } else {
+            queueData.eventIds.add(id)
+        }
+        return true
     }
 
     /**
@@ -208,53 +227,14 @@ internal class EventDAOImpl(
     @Synchronized
     override fun updateAllEvents(table: Table): Int {
         val tName = table.tableName
-        var rowsUpdated = 0
 
         try {
             // First, read all rows
-            dbHelper.readableDatabase.query(
+            val rowsUpdated = dbHelper.readableDatabase.query(
                 tName,
                 arrayOf(Column.ID, Column.DATA),
                 null, null, null, null, null
-            ).use { cursor ->
-                val colId = cursor.getColumnIndexOrThrow(Column.ID)
-                val colData = cursor.getColumnIndexOrThrow(Column.DATA)
-
-                // Process each row
-                while (cursor.moveToNext()) {
-                    val id = cursor.getString(colId)
-                    val eventData = cursor.getString(colData)
-
-                    if (eventData != null && dbEncryptionHandler.isInCorrectEncryptionFormat(eventData)) {
-                        continue
-                    }
-                    // Decrypt the existing data
-                    val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
-                    if (decryptedData == null) {
-                        logger.verbose("Error decrypting data for id: $id from table: $tName, skipping")
-                        continue
-                    }
-
-                    // Re-encrypt with current encryption settings
-                    val reEncryptedData = dbEncryptionHandler.wrapDbData(decryptedData)
-
-                    // Update the row with re-encrypted data
-                    val cv = ContentValues().apply {
-                        put(Column.DATA, reEncryptedData)
-                    }
-
-                    val updated = dbHelper.writableDatabase.update(
-                        tName,
-                        cv,
-                        "${Column.ID} = ?",
-                        arrayOf(id)
-                    )
-
-                    if (updated > 0) {
-                        rowsUpdated++
-                    }
-                }
-            }
+            ).use { cursor -> reEncryptRows(cursor = cursor, tName = tName) }
 
             logger.verbose("Successfully migrated $rowsUpdated rows in table $tName")
             return rowsUpdated
@@ -263,5 +243,60 @@ internal class EventDAOImpl(
             dbHelper.deleteDatabase()
             return DB_UPDATE_ERROR.toInt()
         }
+    }
+
+    /**
+     * Re-encrypts every row of [cursor] that is not already in the current encryption format.
+     *
+     * @return the number of rows updated
+     */
+    private fun reEncryptRows(cursor: Cursor, tName: String): Int {
+        var rowsUpdated = 0
+        val colId = cursor.getColumnIndexOrThrow(Column.ID)
+        val colData = cursor.getColumnIndexOrThrow(Column.DATA)
+
+        // Process each row
+        while (cursor.moveToNext()) {
+            if (reEncryptRow(cursor = cursor, colId = colId, colData = colData, tName = tName)) {
+                rowsUpdated++
+            }
+        }
+        return rowsUpdated
+    }
+
+    /**
+     * Re-encrypts the current row of [cursor].
+     *
+     * @return true if the row was rewritten, false if it was skipped or the update touched no row
+     */
+    private fun reEncryptRow(cursor: Cursor, colId: Int, colData: Int, tName: String): Boolean {
+        val id = cursor.getString(colId)
+        val eventData = cursor.getString(colData)
+
+        if (eventData != null && dbEncryptionHandler.isInCorrectEncryptionFormat(eventData)) {
+            return false
+        }
+        // Decrypt the existing data
+        val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
+        if (decryptedData == null) {
+            logger.verbose("Error decrypting data for id: $id from table: $tName, skipping")
+            return false
+        }
+
+        // Re-encrypt with current encryption settings
+        val reEncryptedData = dbEncryptionHandler.wrapDbData(decryptedData)
+
+        // Update the row with re-encrypted data
+        val cv = ContentValues().apply {
+            put(Column.DATA, reEncryptedData)
+        }
+
+        val updated = dbHelper.writableDatabase.update(
+            tName,
+            cv,
+            "${Column.ID} = ?",
+            arrayOf(id)
+        )
+        return updated > 0
     }
 }
