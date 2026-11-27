@@ -14,6 +14,7 @@
 * **App Inbox Video Play Button:** A video row that is not playing now shows a play button. Pressing it plays that
   video and stops the one that was playing. Before, a video that did not autoplay, such as the second of two videos
   that both fit on the screen, could not be played.
+* **App Inbox Video Placeholder:** A video without a poster now shows a plain grey area instead of the video camera icon.
 * **Faster Event Delivery On Background:** Queued events are now sent as soon as the app moves to the background, instead of waiting for the next scheduled flush.
 
 #### Bug Fixes
