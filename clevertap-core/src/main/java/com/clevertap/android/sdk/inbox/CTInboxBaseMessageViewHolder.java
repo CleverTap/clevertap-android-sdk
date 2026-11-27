@@ -44,6 +44,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     /** 40% opacity turns the black ct_video_1 circle into the light grey iOS uses. */
     private static final int VIDEO_PLACEHOLDER_ALPHA = 102;
+    private static final int VIDEO_PLACEHOLDER_COLOR = 0xFFDDDDDD;
 
     Context context;
 
@@ -240,7 +241,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     }
 
     /**
-     * Shows the video thumbnail for a message without a poster, fitted inside the media area.
+     * Shows the placeholder for a video message without a poster: a grey media area for the play button to
+     * sit on, with the video drawable of the app or the SDK on it, fitted inside the media area.
      * Set directly rather than through Glide, which rasterises the vector at its 32x18dp intrinsic
      * size and lets the scale type blow that bitmap up into a blurry circle; set as a drawable,
      * the vector redraws sharp at the view's size. The clear() cancels any request still pending
@@ -256,6 +258,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             icon.mutate().setAlpha(VIDEO_PLACEHOLDER_ALPHA);
         }
         imageView.setImageDrawable(icon);
+        // The row binds the background again, so this grey stays with the placeholder only
+        imageView.setBackgroundColor(VIDEO_PLACEHOLDER_COLOR);
     }
 
     CTInboxListViewFragment getParent() {

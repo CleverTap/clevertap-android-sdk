@@ -415,6 +415,14 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
     }
 
     @Test
+    fun `the default video placeholder keeps the 16 to 9 shape of the media area`() {
+        val drawable = androidx.core.content.ContextCompat.getDrawable(appCtx, R.drawable.ct_video_1)
+
+        assertTrue("the placeholder drawable is missing", drawable != null)
+        assertEquals(16 * drawable!!.intrinsicHeight, 9 * drawable.intrinsicWidth)
+    }
+
+    @Test
     fun `a row without a media area has no play button and binds without a problem`() {
         holder.mediaLayout = null
 
