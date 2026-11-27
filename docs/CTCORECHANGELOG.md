@@ -18,6 +18,15 @@
 * **Half-Interstitial In-App:** Fixes the In-App being cut off in portrait on unfolded foldables.
 * **App Inbox Video Container:** Fixes an old video container showing next to another message in App Inbox after a video row was scrolled off screen.
 
+#### Behaviour Changes
+The SDK is now written in Kotlin. Java callers and the binary API are unaffected, except for these
+calls that pass an explicit `null`:
+* `CleverTapAPI.parseVariables((Object[]) null)` and `parseVariablesForClasses((Class[]) null)` now throw a
+  `NullPointerException` (it was logged and ignored before). Passing classes or instances, including null
+  elements, is unaffected.
+* `CleverTapAPI.getUserEventLog(null)` and `getUserEventLogCount(null)` now throw `IllegalStateException`
+  instead of `NullPointerException`.
+
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
   change `static final` fields, so their values are not updated. See [Variables](Variables.md).

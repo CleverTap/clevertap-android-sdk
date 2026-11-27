@@ -113,7 +113,8 @@ Layout-inflated views (`customviews.*`, `gif.GifImageView`) are inflated reflect
 | Type (core) | Used by |
 |---|---|
 | `Utils` | geofence, hms, pushtemplates (+ Leanplum) |
-| `ManifestInfo` | pushtemplates |
+| `ManifestInfo` | pushtemplates, **Signed Call** (`getInstance(Context)` must stay `static`: SDK-6395) |
+| `DeviceInfo` (only the statics `getAppIconAsIntId(Context)`, `getDeviceType(Context)`) | **Signed Call** (`invokestatic`; the class itself stays `internal`, SDK-6395) |
 | `interfaces.AudibleNotification` | pushtemplates |
 | `interfaces.INotificationParser` | hms |
 | `pushnotification.CTPushProvider`, `CTPushProviderListener` | hms |
@@ -138,11 +139,13 @@ baseline but every wrapper keeps compiling. Proper accessors can replace them la
 | `LocalDataStore` | Leanplum-Android-SDK | same |
 | `task.CTExecutorFactory` / `CTExecutors` | Leanplum-Android-SDK | D already covers `CTExecutors`; Leanplum's group is `com.leanplum` so `@RestrictTo` will lint-warn there — acceptable, or expose a minimal API |
 | `variables.CTVariableUtils` | react-native | `@RestrictTo(LIBRARY_GROUP_PREFIX)` (RN plugin group is `com.clevertap.*`) |
+| `CTXtensions.isNotNullAndBlank` (top-level function) | flutter (`import com.clevertap.android.sdk.isNotNullAndBlank`) | public + `@RestrictTo(LIBRARY_GROUP_PREFIX)` (SDK-6395; the first wrapper scan matched class names only) |
 
 ## F. Accidentally public — become `internal` on conversion (≈75)
 
 - **core, root package:** `AnalyticsManager`, `BaseAnalyticsManager`, `BaseCallbackManager`,
-  `CTLockManager`, `CallbackManager`, `ControllerManager`, `DeviceInfo`, `FailureFlushListener`,
+  `CTLockManager`, `CallbackManager`, `ControllerManager`, `DeviceInfo` (except its two
+  Signed Call statics, see D), `FailureFlushListener`,
   `InAppFCManager`, `SessionManager`, `DidClickForHardPermissionListener`
 - **customviews / gif:** `CloseImageView`, `HorizontalSquareImageView`, `RectangleImageView`,
   `SquareImageView`, `VerticalSpaceItemDecoration`, `GifImageView`, `SimpleBitmapProvider`
@@ -187,8 +190,11 @@ baseline but every wrapper keeps compiling. Proper accessors can replace them la
 ## Outcome (migration done, 2026-11-25)
 
 All Java in `clevertap-core`, `-geofence`, `-hms`, `-pushtemplates`, `sample` and every unit test is
-Kotlin, except `pushnotification/work/CTWorkManagerAccessor.java`, kept Java on purpose (its own
-comment: SDK-6153 WorkManager `$Companion` issue).
+Kotlin, except:
+- `pushnotification/work/CTWorkManagerAccessor.java`, kept Java on purpose (its own comment: SDK-6153
+  WorkManager `$Companion` issue);
+- the 16 client-implemented callback types restored as Java by SDK-6395 (see "Java and wrapper
+  compatibility fixes" below).
 
 **Verification on `feat/kotlin-migration`:** all unit tests pass (core 4027 / 26 skipped,
 pushtemplates 661, geofence 121, hms 34 / 2 skipped, 0 failures; baseline was all green),
@@ -227,14 +233,14 @@ Java callers and the binary API are unaffected. Kotlin callers may need small ed
   `CTInboxStyleConfig`/`UTMDetail` getters, instance-config region/proxy/domain getters).
 - Boxed results are nullable: `CTFeatureFlagsController.get`, product config
   `getBoolean/getDouble/getLong`.
-- Listener callback parameter nullability is now fixed by the declaration (Kotlin overrides must
-  match): core listeners take nullable params; `VariableCallback.onValueChanged`,
-  `DisplayUnitListener.onDisplayUnitsLoaded` and geofence `CTGeofenceEventsListener` take non-null.
+- ~~Listener callback parameter nullability is now fixed by the declaration~~ Not any more (SDK-6395):
+  the callback interfaces customers and wrappers implement are Java again, so Kotlin sees platform
+  types and both the nullable and the non-null override spellings compile, exactly as before 9.0.0.
 - Constants moved into companions (`HmsConstants`, `PTConstants`, `CTGeofenceSettings.ACCURACY_*`,
   `CTGeofenceAPI.GEOFENCE_LOG_TAG`): qualified use (`HmsConstants.HPS`) still works; a Kotlin
   `import ...HmsConstants.HPS` must become `import ...HmsConstants.Companion.HPS`.
-- `DisplayUnitCache` and `INotificationRenderer` (interfaces customers implement) have no property
-  syntax: use `getAllDisplayUnits()` / `getActionButtonIconKey()`.
+- `DisplayUnitCache` and `INotificationRenderer` are Java interfaces again (SDK-6395), so Kotlin
+  callers can use either `getAllDisplayUnits()` or `allDisplayUnits`, as before 9.0.0.
 - Previously-public internals are `internal` now (Kotlin callers lose them; Java callers still link).
 
 ### Java-client interop audit
@@ -265,6 +271,92 @@ signatures, mangled/removed members on `@RestrictTo` classes, and new Kotlin par
   - `PushType(type, prefKey, …)` now rejects null `type`/`prefKey`; both wrappers that build
     `PushType`s (flutter `Utils.mapToPushType`, RN `pushTypeFromReadableMap`) already return early
     on null, Leanplum passes literals.
+  - `CleverTapAPI.parseVariables((Object[]) null)` and `parseVariablesForClasses((Class[]) null)` now
+    throw `NullPointerException`. The Java `Parser` caught the NPE from iterating a null array and only
+    logged it. Normal varargs calls (including null *elements*) are unaffected; a nullable vararg
+    array is not expressible in Kotlin without losing the varargs flag.
+  - `CleverTapAPI.getUserEventLog(null)` / `getUserEventLogCount(null)` now throw
+    `IllegalStateException` ("Required value was null.") instead of `NullPointerException`. Both threw
+    before; only the exception type changed.
+  - `INotificationRenderer.setActionButtons(..., nb = null, ...)`: the 9.0.0 Kotlin interface rejected
+    a null builder. Fixed by SDK-6395: the default method is the old Java body again, so a null builder
+    behaves as in 8.x (returned when there are no actions; otherwise each `addAction` failure is
+    caught and logged).
+
+### Java and wrapper compatibility fixes (SDK-6395)
+
+A pre-release audit (JVM linkage of the real shipped consumers, a Java source probe of every A/C/D/E
+class, real compiles of every wrapper) found these regressions; all are fixed:
+
+- **Statics restored (`@JvmStatic`).** Every member that was `public static` in Java and had become a
+  `Companion`/`object` instance method is static again: `ManifestInfo.getInstance(Context)` (still
+  locks `ManifestInfo.class`; Signed Call and push-templates <= 2.7.0 call it), `DeviceInfo.getAppIconAsIntId`
+  / `getDeviceType` (Signed Call), `InAppNotificationActivity.launchForPushPermissionPrompt` /
+  `launchForInAppNotification`, `CTMessageDAO.initWithJSON`, and the bucket-F `object`s
+  (`CTJsonConverter`, `JsonUtil`, `PackageUtils`, `UriHelper`, `ManifestValidator`,
+  `CTFeatureFlagsFactory`, `CTProductConfigFactory`, `IdentityRepoFactory`, push templates `Utils`/`PTLog`).
+  Not restored (deliberate): `Utils.getNotificationGifURI` / `cleanupOldGIFs` (still `internal`; they
+  take the internal `Clock`, and no shipped consumer calls them) and `CTJsonConverter.toJsonArray` /
+  `toJsonString` / `toList` (deleted as unused, bucket F).
+- **Subclassable again.** `CTHmsMessageService`, `HmsPushProvider`, `PTPushNotificationReceiver`,
+  `PushTemplateReceiver`, `CTGeofenceBootReceiver`, `CTLocationUpdateReceiver`, `CTGeofenceReceiver`
+  are `internal open` (their overrides are open); `LaunchPendingIntentFactory` (D) is an open class with
+  a public constructor again (statics in a `@JvmStatic` companion). Bucket-F classes that stay final
+  are listed in the SDK-6395 PR.
+- **Old JVM shapes.** `Constants.SYSTEM_EVENTS` (`String[]`), `LEGACY_IDENTITY_KEYS` /
+  `ALL_IDENTITY_KEYS` / `piiDBKeys` (`HashSet<String>`) and `NULL_STRING_ARRAY` are public static fields
+  again (`@JvmField`); `CTInboxActivity.orientation` is a public static field again;
+  `CTInboxMessage(Parcel)` and `CTInboxStyleConfig(CTInboxStyleConfig)` are private again (a public
+  overload made `new CTInboxMessage(null)` / `super(null)` ambiguous in Java).
+- **Null tolerance restored** (the Java versions returned null or did nothing):
+  `getDevicePushToken(null)` / `getPushToken(null)` return null; `removeCleverTapIDListener(null)`,
+  `removeVariablesChangedCallback(null)`, `removeOneTimeVariablesChangedCallback(null)` and
+  `setRequestDevicePushTokenListener(null)` are no-ops; `CTFcmMessageHandler.processPushAmp(ctx, null)`
+  is a no-op and `CTHmsMessageHandler.processPushAmp(ctx, null)` logs, as before.
+- **Wrapper source compatibility (option A).** The callback types clients implement are Java again, so
+  Kotlin implementations compile with either nullability: `InAppNotificationListener`,
+  `InboxMessageListener`, `DisplayUnitListener`, `InAppNotificationButtonListener`,
+  `InboxMessageButtonListener`, `SyncListener`, `OnInitCleverTapIDListener`,
+  `CTPushNotificationListener`, `CTPushAmpListener`, `DisplayUnitCache`, `NotificationHandler`,
+  `SCDomainListener`, `INotificationRenderer`, `VariableCallback`, and geofence
+  `CTGeofenceEventsListener` / `CTLocationUpdatesListener`. Their JVM shape is unchanged (the only
+  `.api` change is the removal of the Kotlin-only `INotificationRenderer$DefaultImpls`). `Var`'s
+  callback methods take `VariableCallback<in T>` (Java: `VariableCallback<? super T>`, same
+  descriptor), so a `VariableCallback<Any?>` can be registered on a `Var<Any>` again.
+  `isNotNullAndBlank` is public + `@RestrictTo(LIBRARY_GROUP_PREFIX)` again (Flutter imports it).
+
+#### Consumer link check (CI guard)
+
+`apiCheck` compares erased descriptors of the public API, so it cannot see a `static` method moving
+into a `Companion` of a `@RestrictTo` class, a class becoming `final`, or a restricted field changing
+type. Those still crash separately published artifacts that were compiled against an older SDK.
+`config/api-interop/consumer_link_check.py` closes that gap:
+
+- **Inputs:** `config/api-interop/consumers.txt` lists the shipped artifacts (Signed Call 0.0.7.3 -
+  0.0.9.0, push-templates 2.0.0 - 2.7.0, hms 1.3.4 - 1.5.1, geofence 1.0.0 - 1.4.0, leanplum-core
+  7.8.0). clevertap-native-ui-kit is not on Maven Central and is not listed. An older release of an
+  SDK module is checked with that module's fresh classes left out (`replaces=`).
+- **Check:** every class reference and every `Fieldref` / `Methodref` / `InterfaceMethodref` from a
+  consumer into an SDK package is resolved against the freshly built release classes the way the JVM
+  does (JVMS 5.4.3), together with the opcode that uses it: missing class or member, static vs
+  instance (`invokestatic` / `getstatic` on an instance member and the reverse), Methodref vs
+  InterfaceMethodref owner kind, private / package-private / protected access, writes to final
+  fields, extending a final class, overriding a final method, and abstract methods a concrete
+  consumer class leaves unimplemented.
+- **Baseline:** `config/api-interop/consumer_link_baseline.txt` holds only findings that also fail
+  against the pre-migration Java SDK (old hms / Signed Call releases built against the removed
+  `PushConstants$PushType` API, and Leanplum's `LocalDataStore.updateProfileFields`). Any other
+  finding fails the check.
+- **Run:** CI (`.github/mini_flows/codechecks_detekt/action.yml`) downloads the artifacts with
+  `config/api-interop/fetch_consumers.sh` (curl, Maven Central) and runs
+  `./gradlew consumerLinkCheck -PconsumerJarsDir=build/consumer-jars`. Locally,
+  `./gradlew consumerLinkCheck` downloads them itself; where Maven Central is not reachable, pass
+  `-PconsumerJarsDir=<dir>` with pre-downloaded `<artifact>-<version>.aar` files (add
+  `-PconsumerAllowMissing` to skip absent ones), or call the script directly:
+  `python3 config/api-interop/consumer_link_check.py --repo . --jars-dir <dir> [--allow-missing]`.
+- **Proof it works:** against the 9.0.0 build before SDK-6395 it reports the `ManifestInfo.getInstance`
+  (Signed Call, every push-templates 2.x) and `DeviceInfo.getAppIconAsIntId` (Signed Call) breaks;
+  after SDK-6395 it reports none beyond the baseline.
 
 ### Kotlin public surface + explicit API (SDK-6380)
 
