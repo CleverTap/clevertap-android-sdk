@@ -282,6 +282,15 @@ signatures, mangled/removed members on `@RestrictTo` classes, and new Kotlin par
     a null builder. Fixed by SDK-6395: the default method is the old Java body again, so a null builder
     behaves as in 8.x (returned when there are no actions; otherwise each `addAction` failure is
     caught and logged).
+  - `Var.addFileReadyHandler(null)` now throws `NullPointerException` at the call. The Java `Var`
+    stored the null and threw later, when the file became ready, so it failed either way; only the
+    point of failure moved.
+- **`Constants` is a class, no longer an interface.** Its constant values, field types and static
+  flags are identical to 8.x (restored by SDK-6395), so reading `Constants.X` from Java or Kotlin is
+  unaffected. Only `implements Constants` (inheriting the constants by implementing the interface)
+  no longer compiles or links. `Constants` was already `@RestrictTo` in Java, and no shipped consumer
+  implements it (consumer link check). Converting it back to an interface would mean restructuring
+  359 fields for no known caller, so the change is intentional.
 
 ### Java and wrapper compatibility fixes (SDK-6395)
 
