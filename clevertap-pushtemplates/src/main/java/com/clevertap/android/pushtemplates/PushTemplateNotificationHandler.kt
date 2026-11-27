@@ -9,6 +9,17 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.pushnotification.PushType
 
+/**
+ * Renders Push Template payloads. Register it with
+ * `CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler())` so that core passes pushes
+ * with a `pt_id` to it.
+ *
+ * [onMessageReceived] renders the push with a [TemplateRenderer] synchronously on the calling thread
+ * and always returns `true`; [onNewToken] does nothing and returns `true`. [onActionButtonClick]
+ * handles action buttons of templates sent with `pt_dismiss_on_click=true`: it dismisses the
+ * notification (first raising the payload's custom event for a "remind" action) and returns `true`;
+ * otherwise it returns `false`.
+ */
 public open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
     override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {

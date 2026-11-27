@@ -39,6 +39,12 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
         internal var geofenceNotificationResponsiveness =
             GoogleGeofenceAdapter.GEOFENCE_NOTIFICATION_RESPONSIVENESS_IN_MILLISECONDS
 
+        /**
+         * Builds the settings. Values below the minimums are raised to them: the interval and the
+         * fastest interval to their 30-minute defaults, and the smallest displacement to 200 meters.
+         *
+         * @return the settings
+         */
         public fun build(): CTGeofenceSettings {
             // applying minimum interval restriction
             if (interval < GoogleLocationAdapter.INTERVAL_IN_MILLIS) {
@@ -241,6 +247,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
 
     private val smallestDisplacementValue: Float = builder.smallestDisplacement
 
+    /**
+     * Returns the fastest interval for location updates; see [Builder.setFastestInterval].
+     *
+     * @return the fastest interval in milliseconds
+     */
     public open fun getFastestInterval(): Long {
         return fastestIntervalValue
     }
@@ -249,6 +260,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val fastestInterval: Long
         @JvmSynthetic @JvmName("ktGetFastestInterval") inline get() = getFastestInterval()
 
+    /**
+     * Returns the number of geofences to monitor; see [Builder.setGeofenceMonitoringCount].
+     *
+     * @return the geofence count
+     */
     public open fun getGeofenceMonitoringCount(): Int {
         return geofenceMonitoringCountValue
     }
@@ -257,6 +273,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val geofenceMonitoringCount: Int
         @JvmSynthetic @JvmName("ktGetGeofenceMonitoringCount") inline get() = getGeofenceMonitoringCount()
 
+    /**
+     * Returns the CleverTap account ID set with [Builder.setId].
+     *
+     * @return the account ID, or `null` if none was set
+     */
     public open fun getId(): String? {
         return idValue
     }
@@ -265,6 +286,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val id: String?
         @JvmSynthetic @JvmName("ktGetId") inline get() = getId()
 
+    /**
+     * Returns the interval for location updates; see [Builder.setInterval].
+     *
+     * @return the interval in milliseconds
+     */
     public open fun getInterval(): Long {
         return intervalValue
     }
@@ -273,6 +299,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val interval: Long
         @JvmSynthetic @JvmName("ktGetInterval") inline get() = getInterval()
 
+    /**
+     * Returns the location accuracy; see [Builder.setLocationAccuracy].
+     *
+     * @return one of [ACCURACY_HIGH], [ACCURACY_MEDIUM] or [ACCURACY_LOW]
+     */
     public open fun getLocationAccuracy(): Int {
         return locationAccuracyValue.toInt()
     }
@@ -281,6 +312,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val locationAccuracy: Int
         @JvmSynthetic @JvmName("ktGetLocationAccuracy") inline get() = getLocationAccuracy()
 
+    /**
+     * Returns the location fetch mode; see [Builder.setLocationFetchMode].
+     *
+     * @return [FETCH_CURRENT_LOCATION_PERIODIC] or [FETCH_LAST_LOCATION_PERIODIC]
+     */
     public open fun getLocationFetchMode(): Int {
         return locationFetchModeValue.toInt()
     }
@@ -289,6 +325,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val locationFetchMode: Int
         @JvmSynthetic @JvmName("ktGetLocationFetchMode") inline get() = getLocationFetchMode()
 
+    /**
+     * Returns the log level of the Geofence SDK; see [Builder.setLogLevel].
+     *
+     * @return one of [Logger.OFF], [Logger.INFO], [Logger.DEBUG] or [Logger.VERBOSE]
+     */
     @LogLevel
     public open fun getLogLevel(): Int {
         return logLevelValue
@@ -298,6 +339,11 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val logLevel: Int
         @JvmSynthetic @JvmName("ktGetLogLevel") inline get() = getLogLevel()
 
+    /**
+     * Returns the minimum displacement between location updates; see [Builder.setSmallestDisplacement].
+     *
+     * @return the displacement in meters
+     */
     public open fun getSmallestDisplacement(): Float {
         return smallestDisplacementValue
     }
@@ -306,6 +352,12 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
     public val smallestDisplacement: Float
         @JvmSynthetic @JvmName("ktGetSmallestDisplacement") inline get() = getSmallestDisplacement()
 
+    /**
+     * Returns whether background location updates are enabled; see
+     * [Builder.enableBackgroundLocationUpdates].
+     *
+     * @return `true` if background location updates are enabled
+     */
     public open fun isBackgroundLocationUpdatesEnabled(): Boolean {
         return backgroundLocationUpdatesValue
     }
@@ -316,6 +368,12 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
         @JvmName("ktIsBackgroundLocationUpdatesEnabled")
         inline get() = isBackgroundLocationUpdatesEnabled()
 
+    /**
+     * Returns the geofence notification responsiveness; see
+     * [Builder.setGeofenceNotificationResponsiveness].
+     *
+     * @return the responsiveness in milliseconds
+     */
     public open fun getGeofenceNotificationResponsiveness(): Int {
         return geofenceNotificationResponsivenessValue
     }
@@ -386,6 +444,7 @@ public open class CTGeofenceSettings private constructor(builder: Builder) {
          */
         public const val FETCH_LAST_LOCATION_PERIODIC: Byte = 2 // Work Manager // call getLastLocation()
 
+        /** The default number of geofences to monitor. */
         public const val DEFAULT_GEO_MONITOR_COUNT: Int = 50
     }
 }

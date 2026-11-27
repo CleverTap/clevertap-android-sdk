@@ -12,6 +12,10 @@ public class ActivityLifecycleCallback {
 
     public companion object {
 
+        /**
+         * `true` once [register] has attached the SDK's lifecycle callbacks to the [Application];
+         * further [register] calls are then ignored. Set by the SDK — read it, don't write it.
+         */
         @JvmField
         public var registered: Boolean = false
 

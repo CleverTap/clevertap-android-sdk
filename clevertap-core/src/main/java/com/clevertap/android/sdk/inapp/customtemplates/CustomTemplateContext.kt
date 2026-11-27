@@ -65,6 +65,7 @@ public sealed class CustomTemplateContext private constructor(
         }
     }
 
+    /** The name of the [CustomTemplate] this context was created for. */
     public val templateName: String = template.name
     protected val argumentValues: Map<String, Any> =
         mergeArguments(template.args, notification.customTemplateData?.getArguments())

@@ -80,6 +80,11 @@ public open class CleverTapDisplayUnitContent private constructor(
         @JvmSynthetic @JvmName("ktGetContentType") inline get() = getContentType()
         @JvmSynthetic @JvmName("ktSetContentType") internal inline set(value) = setContentType(value)
 
+    /**
+     * Returns the error recorded when this content could not be parsed from its JSON.
+     *
+     * @return the error message, or `null` if it was built successfully
+     */
     public open fun getError(): String? = errorValue
 
     /** Kotlin property syntax, equivalent to [getError]. */
@@ -240,6 +245,7 @@ public open class CleverTapDisplayUnitContent private constructor(
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CleverTapDisplayUnitContent] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CleverTapDisplayUnitContent> =
             object : Parcelable.Creator<CleverTapDisplayUnitContent> {

@@ -65,6 +65,11 @@ private const val TAG = "TemplateRenderer"
 /** Length of a sound file extension (".mp3", ".ogg", ".wav") stripped to get the raw resource name. */
 private const val SOUND_FILE_EXTENSION_LENGTH = 4
 
+/**
+ * The [INotificationRenderer] that builds Push Template notifications from a push payload.
+ * [PushTemplateNotificationHandler] uses it for the pushes it receives; it can also be passed to
+ * `CleverTapAPI.renderPushNotification`.
+ */
 public class TemplateRenderer @JvmOverloads constructor(
     context: Context,
     private val extras: Bundle,
@@ -81,10 +86,16 @@ public class TemplateRenderer @JvmOverloads constructor(
     internal val actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
+    /** Push Templates log levels, for [debugLevel]. */
     public enum class LogLevel(private val value: Int) {
         @Suppress("unused")
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
+        /**
+         * Returns the integer value of this level: -1 ([OFF]), 0 ([INFO]), 2 ([DEBUG]) or 3 ([VERBOSE]).
+         *
+         * @return the integer value
+         */
         public fun intValue(): Int {
             return value
         }
@@ -545,13 +556,8 @@ public class TemplateRenderer @JvmOverloads constructor(
 
     public companion object {
         /**
-         * Returns the log level set for PushTemplates
-         *
-         * @return The int value
-         */
-        /**
-         * Enables or disables debugging. If enabled, see debug messages in Android's logcat utility.
-         * Debug messages are tagged as PTLog.
+         * The log level for PushTemplates. Enables or disables debugging. If enabled, see debug messages in
+         * Android's logcat utility. Debug messages are tagged as PTLog.
          *
          * @param debugLevel Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK integration related logging),
          * 2(shows debug output)

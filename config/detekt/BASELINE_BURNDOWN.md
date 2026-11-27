@@ -2,8 +2,8 @@
 
 Generated from the per-module baselines (`<module>/detekt-baseline-release.xml`) on the post-migration code (feat/kotlin-migration + SDK-6375 idiomatic pass). Everything below is **ignored by the build today**; new code must not add to it. Regenerate after fixing: `./gradlew :<module>:detektBaselineRelease`, then `python3 config/detekt/burndown.py .` to refresh this file.
 
-**Total baselined findings: 1905**  
-core: 1563 · geofence: 138 · hms: 3 · pushtemplates: 201
+**Total baselined findings: 1600**  
+core: 1299 · geofence: 101 · hms: 3 · pushtemplates: 197
 
 Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofence/detekt-baseline-release.xml`; `clevertap-hms/detekt-baseline-release.xml`; `clevertap-pushtemplates/detekt-baseline-release.xml`
 
@@ -18,7 +18,6 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 | Naming | 22 | FunctionParameterNaming (8), PackageNaming (7), VariableNaming (4), FunctionNaming (3) |
 | Style | 297 | ReturnCount (83), MagicNumber (75), MaxLineLength (66), ForbiddenMethodCall (54), BracesOnIfStatements (19) |
 | Complexity | 784 | LongMethod (246), NestedBlockDepth (186), LongParameterList (124), CyclomaticComplexMethod (121), TooManyFunctions (69), LargeClass (30), ComplexCondition (8) |
-| Public docs | 305 | UndocumentedPublicFunction (224), UndocumentedPublicProperty (47), UndocumentedPublicClass (34) |
 | Other | 71 | LoopWithTooManyJumpStatements (22), UnnecessaryAbstractClass (14), UtilityClassWithPublicConstructor (7), NoNameShadowing (6), ThrowsCount (4), UnusedParameter (2), SafeCast (2), MemberNameEqualsClassName (2), InjectDispatcher (2), ArrayPrimitive (2), UselessCallOnNotNull (1), SpreadOperator (1), ObjectLiteralToLambda (1), HasPlatformType (1), FunctionOnlyReturningConstant (1), ForbiddenComment (1), EmptyDefaultConstructor (1), DestructuringDeclarationWithTooManyEntries (1) |
 
 ## By rule (with how to fix and where)
@@ -95,15 +94,6 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CleverTapAPI.kt` (2), `Utils.kt` (2), `AnalyticsManager.kt` (1), `CTInAppNotification.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxController.kt` (1)
 - **ComplexCondition: 8** (core 5, pushtemplates 3). Name the sub-conditions.  
   Top files: `TemplateRenderer.kt` (2), `CTVariableUtils.kt` (1), `CleverTapAPI.kt` (1), `CleverTapDisplayUnitContent.kt` (1), `EventQueueManager.kt` (1), `InAppResponse.kt` (1)
-
-### Public docs
-
-- **UndocumentedPublicFunction: 224** (core 195, geofence 28, pushtemplates 1). KDoc on public functions.  
-  Top files: `CleverTapInstanceConfig.kt` (31), `CleverTapAPI.kt` (25), `LeanplumCT.kt` (22), `Logger.kt` (20), `CTLocalInApp.kt` (18), `CTInboxStyleConfig.kt` (14)
-- **UndocumentedPublicProperty: 47** (core 41, geofence 6). KDoc on public properties.  
-  Top files: `CTInAppNotification.kt` (21), `Logger.kt` (4), `CTLocalInApp.kt` (3), `CTInAppNotificationButton.kt` (2), `CTInboxImageData.kt` (2), `CleverTapInstanceConfig.kt` (2)
-- **UndocumentedPublicClass: 34** (core 28, geofence 3, pushtemplates 3). KDoc on public types (start with bucket-A API; @RestrictTo types can stay brief).  
-  Top files: `CTLocalInApp.kt` (8), `Logger.kt` (3), `TemplateRenderer.kt` (2), `Application.kt` (1), `CTInAppAction.kt` (1), `CTInAppNotification.kt` (1)
 
 ### Other
 

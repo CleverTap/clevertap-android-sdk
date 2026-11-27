@@ -172,10 +172,6 @@
     <ID>TooManyFunctions:PushTemplateReceiver.kt$PushTemplateReceiver$TemplateClick</ID>
     <ID>TooManyFunctions:TemplateDataFactory.kt$TemplateDataFactory</ID>
     <ID>TooManyFunctions:Utils.kt$Utils</ID>
-    <ID>UndocumentedPublicClass:PushTemplateNotificationHandler.kt$PushTemplateNotificationHandler : ActionButtonClickHandler</ID>
-    <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer : INotificationRendererAudibleNotification</ID>
-    <ID>UndocumentedPublicClass:TemplateRenderer.kt$TemplateRenderer$LogLevel</ID>
-    <ID>UndocumentedPublicFunction:TemplateRenderer.kt$TemplateRenderer.LogLevel$public fun intValue(): Int</ID>
     <ID>UnnecessaryAbstractClass:IconsContentView.kt$IconsContentView$IconsContentView</ID>
     <ID>UnnecessaryAbstractClass:VerticalImageContentView.kt$VerticalImageContentView$VerticalImageContentView</ID>
     <ID>UnsafeCallOnNullableType:CarouselTemplateValidator.kt$CarouselTemplateValidator$keys[PT_DEEPLINK_LIST]!!</ID>

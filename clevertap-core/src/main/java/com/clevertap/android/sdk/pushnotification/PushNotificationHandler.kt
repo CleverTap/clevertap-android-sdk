@@ -10,6 +10,13 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle
 
+/**
+ * The SDK's [NotificationHandler]: renders CleverTap pushes and forwards new push tokens to CleverTap.
+ * Use it from a custom messaging service (see [getPushNotificationHandler]) to hand CleverTap
+ * payloads to the SDK. Push Template payloads (with a `pt_id`) are passed to the handler set with
+ * [CleverTapAPI.setNotificationHandler], Signed Call payloads to the one set with
+ * [CleverTapAPI.setSignedCallNotificationHandler]; core renders the rest on the calling thread.
+ */
 public open class PushNotificationHandler private constructor() : ActionButtonClickHandler {
 
     private object SingletonNotificationHandler {
@@ -72,6 +79,11 @@ public open class PushNotificationHandler private constructor() : ActionButtonCl
 
     public companion object {
 
+        /**
+         * Returns the shared [PushNotificationHandler] instance.
+         *
+         * @return the singleton handler
+         */
         @JvmStatic
         public fun getPushNotificationHandler(): NotificationHandler = SingletonNotificationHandler.INSTANCE
 
@@ -93,6 +105,12 @@ public open class PushNotificationHandler private constructor() : ActionButtonCl
             toSurface.forEach { (key, value) -> message.putString(key, value) }
         }
 
+        /**
+         * Returns whether a push payload is for Push Templates.
+         *
+         * @param extras the push payload
+         * @return `true` if [extras] has a `pt_id` that is neither empty nor `"0"`
+         */
         @JvmStatic
         public fun isForPushTemplates(extras: Bundle?): Boolean {
             val ptId = extras?.getString("pt_id")

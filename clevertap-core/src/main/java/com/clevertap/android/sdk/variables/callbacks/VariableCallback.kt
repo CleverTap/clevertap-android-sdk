@@ -9,6 +9,12 @@ public abstract class VariableCallback<T> : Runnable {
 
     private var variable: Var<T>? = null
 
+    /**
+     * Sets the variable passed to [onValueChanged] when this callback runs. The SDK calls it before
+     * posting the callback; you don't need to.
+     *
+     * @param variable the variable
+     */
     public open fun setVariable(variable: Var<T>?) {
         this.variable = variable
     }
@@ -21,5 +27,13 @@ public abstract class VariableCallback<T> : Runnable {
         }
     }
 
+    /**
+     * Called with the variable when its value changed (or, for a file ready handler, when its file is
+     * ready). Runs on the main thread, except the immediate call made by [Var.addValueChangedCallback]
+     * when the first fetch request had already completed (successfully or not), which runs on the thread
+     * that registered the callback.
+     *
+     * @param variable the variable
+     */
     public abstract fun onValueChanged(variable: Var<T>)
 }

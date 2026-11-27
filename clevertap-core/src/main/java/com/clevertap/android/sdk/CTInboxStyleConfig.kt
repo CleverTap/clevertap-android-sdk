@@ -67,6 +67,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getBackButtonColor(): String? = backButtonColorValue
 
+    /**
+     * Sets the color of the back button on the top navigation toolbar.
+     *
+     * @param backButtonColor the hex code of the color, for example `#000000`
+     */
     public open fun setBackButtonColor(backButtonColor: String?) {
         backButtonColorValue = backButtonColor
     }
@@ -83,6 +88,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getFirstTabTitle(): String? = firstTabTitleValue
 
+    /**
+     * Sets the title of the first tab of the App Inbox (the tab that shows all messages).
+     *
+     * @param title the title
+     */
     public open fun setFirstTabTitle(title: String?) {
         firstTabTitleValue = title
     }
@@ -99,6 +109,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getInboxBackgroundColor(): String? = inboxBackgroundColorValue
 
+    /**
+     * Sets the background color for the entire inbox.
+     *
+     * @param inboxBackgroundColor the hex code of the color
+     */
     public open fun setInboxBackgroundColor(inboxBackgroundColor: String?) {
         inboxBackgroundColorValue = inboxBackgroundColor
     }
@@ -115,6 +130,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getNavBarColor(): String? = navBarColorValue
 
+    /**
+     * Sets the color of the top navigation toolbar.
+     *
+     * @param navBarColor the hex code of the color
+     */
     public open fun setNavBarColor(navBarColor: String?) {
         navBarColorValue = navBarColor
     }
@@ -131,6 +151,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getNavBarTitle(): String? = navBarTitleValue
 
+    /**
+     * Sets the title shown in the top navigation toolbar.
+     *
+     * @param navBarTitle the title
+     */
     public open fun setNavBarTitle(navBarTitle: String?) {
         navBarTitleValue = navBarTitle
     }
@@ -147,6 +172,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getNavBarTitleColor(): String? = navBarTitleColorValue
 
+    /**
+     * Sets the color of the title in the top navigation toolbar.
+     *
+     * @param navBarTitleColor the hex code of the color
+     */
     public open fun setNavBarTitleColor(navBarTitleColor: String?) {
         navBarTitleColorValue = navBarTitleColor
     }
@@ -163,6 +193,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getNoMessageViewText(): String? = noMessageViewTextValue
 
+    /**
+     * Sets the text shown when there are no messages in the App Inbox.
+     *
+     * @param noMessageViewText the text
+     */
     public open fun setNoMessageViewText(noMessageViewText: String?) {
         noMessageViewTextValue = noMessageViewText
     }
@@ -180,6 +215,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getNoMessageViewTextColor(): String? = noMessageViewTextColorValue
 
+    /**
+     * Sets the color of the text shown when there are no messages in the App Inbox.
+     *
+     * @param noMessageViewTextColor the hex code of the color
+     */
     public open fun setNoMessageViewTextColor(noMessageViewTextColor: String?) {
         noMessageViewTextColorValue = noMessageViewTextColor
     }
@@ -196,6 +236,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getSelectedTabColor(): String? = selectedTabColorValue
 
+    /**
+     * Sets the color of the selected tab.
+     *
+     * @param selectedTabColor the hex code of the color
+     */
     public open fun setSelectedTabColor(selectedTabColor: String?) {
         selectedTabColorValue = selectedTabColor
     }
@@ -212,6 +257,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getSelectedTabIndicatorColor(): String? = selectedTabIndicatorColorValue
 
+    /**
+     * Sets the color of the indicator of the selected tab.
+     *
+     * @param selectedTabIndicatorColor the hex code of the color
+     */
     public open fun setSelectedTabIndicatorColor(selectedTabIndicatorColor: String?) {
         selectedTabIndicatorColorValue = selectedTabIndicatorColor
     }
@@ -228,6 +278,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getTabBackgroundColor(): String? = tabBackgroundColorValue
 
+    /**
+     * Sets the background color of the tabs.
+     *
+     * @param tabBackgroundColor the hex code of the color
+     */
     public open fun setTabBackgroundColor(tabBackgroundColor: String?) {
         tabBackgroundColorValue = tabBackgroundColor
     }
@@ -247,6 +302,12 @@ public open class CTInboxStyleConfig() : Parcelable {
     @Suppress("UNCHECKED_CAST")
     public open fun getTabs(): ArrayList<String> = ArrayList(tabsValue.orEmpty().asList()) as ArrayList<String>
 
+    /**
+     * Sets the names of up to two extra tabs; messages are shown in a tab when they carry its name as a
+     * tag. A `null` or empty list is ignored, and only the first two entries are kept.
+     *
+     * @param tabs the tab names
+     */
     public open fun setTabs(tabs: ArrayList<String>?) {
         if (tabs.isNullOrEmpty()) {
             return
@@ -266,6 +327,11 @@ public open class CTInboxStyleConfig() : Parcelable {
      */
     public open fun getUnselectedTabColor(): String? = unselectedTabColorValue
 
+    /**
+     * Sets the color of the unselected tabs.
+     *
+     * @param unselectedTabColor the hex code of the color
+     */
     public open fun setUnselectedTabColor(unselectedTabColor: String?) {
         unselectedTabColorValue = unselectedTabColor
     }
@@ -275,6 +341,11 @@ public open class CTInboxStyleConfig() : Parcelable {
         @JvmSynthetic @JvmName("ktGetUnselectedTabColor") inline get() = getUnselectedTabColor()
         @JvmSynthetic @JvmName("ktSetUnselectedTabColor") inline set(value) = setUnselectedTabColor(value)
 
+    /**
+     * Returns whether tabs were configured with [setTabs].
+     *
+     * @return `true` if at least one tab name is set
+     */
     public open fun isUsingTabs(): Boolean = !tabsValue.isNullOrEmpty()
 
     /** Kotlin property syntax, equivalent to [isUsingTabs]. */
@@ -299,6 +370,7 @@ public open class CTInboxStyleConfig() : Parcelable {
 
     public companion object {
 
+        /** [Parcelable.Creator] that restores a [CTInboxStyleConfig] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CTInboxStyleConfig> = object : Parcelable.Creator<CTInboxStyleConfig> {
             override fun createFromParcel(parcel: Parcel): CTInboxStyleConfig = CTInboxStyleConfig(parcel)

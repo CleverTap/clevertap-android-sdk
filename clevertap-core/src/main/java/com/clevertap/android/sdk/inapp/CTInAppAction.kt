@@ -153,6 +153,10 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
     }
 }
 
+/**
+ * The kinds of action an in-app button or custom template action can perform. [toString] returns the
+ * identifier used in the in-app payload, for example `kv`.
+ */
 public enum class InAppActionType(private val stringValue: String) {
     CLOSE("close"),
     OPEN_URL("url"),
@@ -164,6 +168,12 @@ public enum class InAppActionType(private val stringValue: String) {
 
     public companion object {
 
+        /**
+         * Looks up an action type by its payload identifier (the value of [toString]).
+         *
+         * @param string the payload identifier, for example `url`
+         * @return the matching action type, or `null` if none matches
+         */
         @JvmStatic
         public fun fromString(string: String): InAppActionType? {
             return values().firstOrNull { it.stringValue == string }

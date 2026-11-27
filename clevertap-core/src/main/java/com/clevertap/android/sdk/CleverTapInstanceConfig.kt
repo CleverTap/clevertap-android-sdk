@@ -19,6 +19,15 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
+/**
+ * Configuration of one CleverTap SDK instance: account credentials, region and domains, logging and
+ * the feature switches below.
+ *
+ * The default instance's config is read from the `AndroidManifest.xml` meta-data
+ * ([getDefaultInstance]); an additional instance's config is created with `createInstance(...)` and
+ * passed to [CleverTapAPI.instanceWithConfig]. Make all changes before that call: later changes have
+ * no effect on the created instance.
+ */
 public open class CleverTapInstanceConfig : Parcelable {
 
     private var accountIdValue: String? = null
@@ -251,6 +260,12 @@ public open class CleverTapInstanceConfig : Parcelable {
 
     override fun describeContents(): Int = 0
 
+    /**
+     * Enables or disables personalization: the local store of profile properties and event details
+     * behind APIs such as `getProperty` and `getUserEventLog`. Enabled by default.
+     *
+     * @param enablePersonalization `false` to disable personalization
+     */
     public open fun enablePersonalization(enablePersonalization: Boolean) {
         personalization = enablePersonalization
     }
@@ -266,6 +281,12 @@ public open class CleverTapInstanceConfig : Parcelable {
     public val accountId: String
         @JvmSynthetic @JvmName("ktGetAccountId") inline get() = getAccountId()
 
+    /**
+     * The CleverTap account region (manifest `CLEVERTAP_REGION` for the default instance). When set,
+     * the SDK sends data to the region's domain instead of a proxy or handshake domain.
+     *
+     * @return the region, or `null` if none was configured
+     */
     public open fun getAccountRegion(): String? = accountRegionValue
 
     /** Kotlin property syntax, equivalent to [getAccountRegion]. */
@@ -283,12 +304,23 @@ public open class CleverTapInstanceConfig : Parcelable {
     public val accountToken: String
         @JvmSynthetic @JvmName("ktGetAccountToken") inline get() = getAccountToken()
 
+    /**
+     * The push channels this instance registers tokens for: FCM by default, plus any added with
+     * [addPushType] or declared in the manifest. The live list is returned.
+     *
+     * @return the push types
+     */
     public open fun getPushTypes(): ArrayList<PushType> = pushTypesValue
 
     /** Kotlin property syntax, equivalent to [getPushTypes]. */
     public val pushTypes: ArrayList<PushType>
         @JvmSynthetic @JvmName("ktGetPushTypes") inline get() = getPushTypes()
 
+    /**
+     * Adds a push channel; a type already in [getPushTypes] is not added twice.
+     *
+     * @param allowedPushType the push type to add
+     */
     public open fun addPushType(allowedPushType: PushType) {
         if (allowedPushType !in pushTypesValue) {
             pushTypesValue.add(allowedPushType)
@@ -300,6 +332,11 @@ public open class CleverTapInstanceConfig : Parcelable {
      */
     public open fun getDebugLevel(): Int = debugLevelValue
 
+    /**
+     * Sets this instance's debug level and updates its [logger].
+     *
+     * @param debugLevel the level, the [CleverTapAPI.LogLevel.intValue] of a [CleverTapAPI.LogLevel]
+     */
     public open fun setDebugLevel(debugLevel: Int) {
         debugLevelValue = debugLevel
         loggerValue.setDebugLevel(debugLevel)
@@ -310,8 +347,20 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetDebugLevel") inline get() = getDebugLevel()
         @JvmSynthetic @JvmName("ktSetDebugLevel") inline set(value) = setDebugLevel(value)
 
+    /**
+     * The custom proxy domain events are sent through, if any. Push impression (Notification Viewed)
+     * events use the spiky proxy domain instead. Ignored when an account region is set.
+     *
+     * @return the proxy domain, or `null` if none was set
+     */
     public open fun getProxyDomain(): String? = proxyDomainValue
 
+    /**
+     * Sets a custom proxy domain to send events through. Push impression (Notification Viewed) events use
+     * the spiky proxy domain instead.
+     *
+     * @param proxyDomain the proxy domain, or `null` for none
+     */
     public open fun setProxyDomain(proxyDomain: String?) {
         proxyDomainValue = proxyDomain
     }
@@ -321,8 +370,18 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetProxyDomain") inline get() = getProxyDomain()
         @JvmSynthetic @JvmName("ktSetProxyDomain") inline set(value) = setProxyDomain(value)
 
+    /**
+     * The custom proxy domain push impression (Notification Viewed) events are sent through, if any.
+     *
+     * @return the spiky proxy domain, or `null` if none was set
+     */
     public open fun getSpikyProxyDomain(): String? = spikyProxyDomainValue
 
+    /**
+     * Sets a custom proxy domain for push impression (Notification Viewed) events.
+     *
+     * @param spikyProxyDomain the proxy domain, or `null` for none
+     */
     public open fun setSpikyProxyDomain(spikyProxyDomain: String?) {
         spikyProxyDomainValue = spikyProxyDomain
     }
@@ -332,8 +391,19 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetSpikyProxyDomain") inline get() = getSpikyProxyDomain()
         @JvmSynthetic @JvmName("ktSetSpikyProxyDomain") inline set(value) = setSpikyProxyDomain(value)
 
+    /**
+     * The custom domain used for the initial handshake when neither a region nor a proxy domain is
+     * set.
+     *
+     * @return the handshake domain, or `null` if none was set
+     */
     public open fun getCustomHandshakeDomain(): String? = customHandshakeDomainValue
 
+    /**
+     * Sets a custom domain for the initial handshake.
+     *
+     * @param handshakeDomain the handshake domain, or `null` for none
+     */
     public open fun setCustomHandshakeDomain(handshakeDomain: String?) {
         customHandshakeDomainValue = handshakeDomain
     }
@@ -343,22 +413,44 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktGetCustomHandshakeDomain") inline get() = getCustomHandshakeDomain()
         @JvmSynthetic @JvmName("ktSetCustomHandshakeDomain") inline set(value) = setCustomHandshakeDomain(value)
 
+    /**
+     * Sets this instance's debug level and updates its [logger].
+     *
+     * @param debugLevel the level
+     */
     public open fun setDebugLevel(debugLevel: CleverTapAPI.LogLevel) {
         setDebugLevel(debugLevel.intValue())
     }
 
+    /**
+     * The FCM sender ID read from the manifest's `FCM_SENDER_ID` meta-data (with any `id:` prefix
+     * removed).
+     *
+     * @return the sender ID, or `null` if none is declared
+     */
     public open fun getFcmSenderId(): String? = fcmSenderIdValue
 
     /** Kotlin property syntax, equivalent to [getFcmSenderId]. */
     public val fcmSenderId: String?
         @JvmSynthetic @JvmName("ktGetFcmSenderId") inline get() = getFcmSenderId()
 
+    /**
+     * The logger of this instance. This config's debug level only controls its info messages; debug and
+     * verbose messages follow the global level set with `CleverTapAPI.setDebugLevel`.
+     *
+     * @return the logger
+     */
     public open fun getLogger(): Logger = loggerValue
 
     /** Kotlin property syntax, equivalent to [getLogger]. */
     public val logger: Logger
         @JvmSynthetic @JvmName("ktGetLogger") inline get() = getLogger()
 
+    /**
+     * The package name read from the manifest's `CLEVERTAP_APP_PACKAGE` meta-data.
+     *
+     * @return the package name, or `null` if none is declared
+     */
     public open fun getPackageName(): String? = packageNameValue
 
     /** Kotlin property syntax, equivalent to [getPackageName]. */
@@ -374,8 +466,20 @@ public open class CleverTapInstanceConfig : Parcelable {
     public val identityKeys: Array<String>?
         @JvmSynthetic @JvmName("ktGetIdentityKeys") inline get() = getIdentityKeys()
 
+    /**
+     * Whether this instance only sends analytics: user engagement features (for example App Inbox,
+     * in-app controls, push token processing, background sync and variable fetching) are disabled.
+     * `false` by default.
+     *
+     * @return `true` for an analytics-only instance
+     */
     public open fun isAnalyticsOnly(): Boolean = analyticsOnlyValue
 
+    /**
+     * Makes this an analytics-only instance; see [isAnalyticsOnly].
+     *
+     * @param analyticsOnly `true` to disable the engagement features
+     */
     public open fun setAnalyticsOnly(analyticsOnly: Boolean) {
         analyticsOnlyValue = analyticsOnly
     }
@@ -385,12 +489,22 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktIsAnalyticsOnly") inline get() = isAnalyticsOnly()
         @JvmSynthetic @JvmName("ktSetAnalyticsOnly") inline set(value) = setAnalyticsOnly(value)
 
+    /**
+     * Whether the manifest's `CLEVERTAP_BETA` meta-data enables beta features.
+     *
+     * @return `true` if beta is enabled
+     */
     public open fun isBeta(): Boolean = beta
 
     /** Kotlin property syntax, equivalent to [isBeta]. */
     public val isBeta: Boolean
         @JvmSynthetic @JvmName("ktIsBeta") inline get() = isBeta()
 
+    /**
+     * Whether this is the config of the default instance, read from the manifest.
+     *
+     * @return `true` for the default instance's config
+     */
     public open fun isDefaultInstance(): Boolean = defaultInstance
 
     /** Kotlin property syntax, equivalent to [isDefaultInstance]. */
@@ -407,6 +521,12 @@ public open class CleverTapInstanceConfig : Parcelable {
         logger.verbose(defaultSuffix(tag), message, throwable)
     }
 
+    /**
+     * Sets the profile keys used to identify a user on login, for an additional instance. Ignored for
+     * the default instance, which reads them from the manifest's `CLEVERTAP_IDENTIFIER` meta-data.
+     *
+     * @param identityKeys the identity keys, for example `Identity`, `Email` or `Phone`
+     */
     public open fun setIdentityKeys(@IdentityType vararg identityKeys: String) {
         if (!defaultInstance) {
             @Suppress("UNCHECKED_CAST")
@@ -418,6 +538,12 @@ public open class CleverTapInstanceConfig : Parcelable {
         }
     }
 
+    /**
+     * Enables or disables collection of the Google Advertising ID by this instance. The initial value
+     * comes from the manifest's `CLEVERTAP_USE_GOOGLE_AD_ID` meta-data (`false` if absent).
+     *
+     * @param value `true` to collect the Google Advertising ID
+     */
     public open fun useGoogleAdId(value: Boolean) {
         useGoogleAdId = value
     }
@@ -448,8 +574,19 @@ public open class CleverTapInstanceConfig : Parcelable {
         dest.writeString(pushTypesJson().toString())
     }
 
+    /**
+     * Whether a custom CleverTap ID may be supplied. The initial value comes from the manifest's
+     * `CLEVERTAP_USE_CUSTOM_ID` meta-data.
+     *
+     * @return `true` if custom CleverTap IDs are enabled
+     */
     public open fun getEnableCustomCleverTapId(): Boolean = enableCustomCleverTapIdValue
 
+    /**
+     * Enables or disables custom CleverTap IDs for this instance.
+     *
+     * @param enableCustomCleverTapId `true` to allow a custom CleverTap ID
+     */
     public open fun setEnableCustomCleverTapId(enableCustomCleverTapId: Boolean) {
         enableCustomCleverTapIdValue = enableCustomCleverTapId
     }
@@ -465,6 +602,13 @@ public open class CleverTapInstanceConfig : Parcelable {
     @RestrictTo(Scope.LIBRARY)
     public open fun isBackgroundSync(): Boolean = backgroundSyncValue
 
+    /**
+     * Enables or disables the background sync job, which periodically pulls pending push
+     * notifications (Push Amplification). Every instance starts with the manifest's
+     * `CLEVERTAP_BACKGROUND_SYNC` value; this setter overrides it.
+     *
+     * @param backgroundSync `true` to enable background sync
+     */
     public open fun setBackgroundSync(backgroundSync: Boolean) {
         backgroundSyncValue = backgroundSync
     }
@@ -474,6 +618,11 @@ public open class CleverTapInstanceConfig : Parcelable {
         @JvmSynthetic @JvmName("ktIsBackgroundSync") inline get() = isBackgroundSync()
         @JvmSynthetic @JvmName("ktSetBackgroundSync") inline set(value) = setBackgroundSync(value)
 
+    /**
+     * Whether this instance was created after the app had already launched. Set by the SDK.
+     *
+     * @return `true` if the instance was created after app launch
+     */
     public open fun isCreatedPostAppLaunch(): Boolean = createdPostAppLaunch
 
     /** Kotlin property syntax, equivalent to [isCreatedPostAppLaunch]. */
@@ -487,6 +636,11 @@ public open class CleverTapInstanceConfig : Parcelable {
     @RestrictTo(Scope.LIBRARY)
     public open fun isDisableAppLaunchedEvent(): Boolean = disableAppLaunchedEventValue
 
+    /**
+     * Disables or enables the automatic App Launched event for this instance.
+     *
+     * @param disableAppLaunchedEvent `true` to stop raising App Launched
+     */
     public open fun setDisableAppLaunchedEvent(disableAppLaunchedEvent: Boolean) {
         disableAppLaunchedEventValue = disableAppLaunchedEvent
     }
@@ -500,6 +654,11 @@ public open class CleverTapInstanceConfig : Parcelable {
     internal val isPersonalizationEnabled: Boolean
         get() = personalization
 
+    /**
+     * Whether SSL pinning is enabled by the manifest's `CLEVERTAP_SSL_PINNING` meta-data.
+     *
+     * @return `true` if SSL pinning is enabled
+     */
     public open fun isSslPinningEnabled(): Boolean = sslPinning
 
     /** Kotlin property syntax, equivalent to [isSslPinningEnabled]. */
@@ -515,20 +674,45 @@ public open class CleverTapInstanceConfig : Parcelable {
         createdPostAppLaunch = true
     }
 
+    /**
+     * Sets the encryption level of data the SDK stores on the device. The default instance starts with the
+     * manifest's `CLEVERTAP_ENCRYPTION_LEVEL` and an additional instance starts with none; this setter
+     * overrides the starting value in both cases.
+     *
+     * @param encryptionLevel the level
+     */
     public open fun setEncryptionLevel(encryptionLevel: EncryptionLevel) {
         encryptionLevelValue = encryptionLevel.intValue()
     }
 
+    /**
+     * The encryption level of data the SDK stores on the device, as [EncryptionLevel.intValue].
+     *
+     * @return 0 (none), 1 (medium) or 2 (full data)
+     * @see EncryptionLevel.fromInt
+     */
     public open fun getEncryptionLevel(): Int = encryptionLevelValue
 
     /** Kotlin property syntax, equivalent to [getEncryptionLevel]. */
     public val encryptionLevel: Int
         @JvmSynthetic @JvmName("ktGetEncryptionLevel") inline get() = getEncryptionLevel()
 
+    /**
+     * Enables or disables encryption of event data sent over the network for this instance. Every instance
+     * starts with the manifest's `CLEVERTAP_ENCRYPTION_IN_TRANSIT` value; this setter overrides it.
+     *
+     * @param encryptionInTransit `true` to encrypt data in transit
+     */
     public open fun setEncryptionInTransit(encryptionInTransit: Boolean) {
         encryptionInTransitValue = if (encryptionInTransit) { "1" } else { "0" }
     }
 
+    /**
+     * Whether event data is encrypted over the network.
+     *
+     * @return `true` if encryption in transit is enabled; `false` also when the configured value is
+     * not a number
+     */
     public open fun isEncryptionInTransitEnabled(): Boolean = try {
         // a null value fails to parse, as it did in Java
         encryptionInTransitValue.orEmpty().toInt() > 0
@@ -585,6 +769,7 @@ public open class CleverTapInstanceConfig : Parcelable {
         /** Fields of a `type,prefKey,className,messagingSDKClassName` push type manifest entry. */
         private const val PUSH_TYPE_FIELD_COUNT = 4
 
+        /** [Parcelable.Creator] that restores a [CleverTapInstanceConfig] from a [Parcel]. */
         @JvmField
         public val CREATOR: Parcelable.Creator<CleverTapInstanceConfig> =
             object : Parcelable.Creator<CleverTapInstanceConfig> {
@@ -614,6 +799,7 @@ public open class CleverTapInstanceConfig : Parcelable {
         private const val KEY_BETA = "beta"
         private const val KEY_IDENTITY_TYPES = "identityTypes"
         private const val KEY_PACKAGE_NAME = "packageName"
+        /** JSON key of the encryption level in the config's serialized form. */
         public const val KEY_ENCRYPTION_LEVEL: String = "encryptionLevel"
         private const val KEY_PUSH_TYPES = "allowedPushTypes"
         private const val KEY_ENCRYPTION_IN_TRANSIT = "encryptionInTransit"

@@ -220,6 +220,11 @@ internal class DatabaseHelper internal constructor(
     }
 }
 
+/**
+ * The SQLite tables of the SDK's local database.
+ *
+ * @property tableName the SQL table name
+ */
  public enum class Table(public val tableName: String) {
     EVENTS("events"),
     PROFILE_EVENTS("profileEvents"),

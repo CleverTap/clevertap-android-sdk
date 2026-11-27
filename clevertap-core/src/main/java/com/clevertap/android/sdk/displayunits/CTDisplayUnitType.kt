@@ -5,6 +5,8 @@ import com.clevertap.android.sdk.Constants
 
 /**
  * supported Display Unit Types
+ *
+ * @property type the type string used in the Display Unit payload, for example `simple-image`
  */
 public enum class CTDisplayUnitType(@JvmField public val type: String) {
 

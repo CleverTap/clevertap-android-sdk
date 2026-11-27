@@ -19,15 +19,53 @@ import org.json.JSONArray
 /**
  * Renders a CleverTap push notification. Pass an implementation to
  * [com.clevertap.android.sdk.CleverTapAPI.renderPushNotification].
+ *
+ * The SDK calls the methods below while it builds the notification, holding its push rendering
+ * lock, on a background thread: a CleverTap executor thread for
+ * [com.clevertap.android.sdk.CleverTapAPI.renderPushNotification], or the thread that delivered the
+ * push (for example the FCM service thread) when the SDK renders a received push itself.
  */
 public interface INotificationRenderer {
 
+    /**
+     * Returns the collapse key, used to derive the notification id when the payload sets none. A
+     * [Number] is used as is; a [String] is parsed as an integer, or its hash code is used.
+     *
+     * @param extras the push payload
+     * @return the collapse key, or `null` to let the SDK pick a random id between 0 and 99
+     */
     public fun getCollapseKey(extras: Bundle): Any?
 
+    /**
+     * Returns the notification message. An empty or `null` message makes the SDK treat the push as
+     * silent and not render it (except for Live Updates rendered by a non-core renderer).
+     *
+     * @param extras the push payload
+     * @return the message, or `null` if there is none
+     */
     public fun getMessage(extras: Bundle): String?
 
+    /**
+     * Returns the notification title.
+     *
+     * @param extras the push payload
+     * @param context a context, for example to read the app name as a fallback
+     * @return the title, or `null` if there is none
+     */
     public fun getTitle(extras: Bundle, context: Context): String?
 
+    /**
+     * Applies the content of the push to the notification builder. The SDK has already created [nb]
+     * for the notification channel and set its priority (and badge and sound where applicable); it
+     * posts the returned builder's notification under [notificationId].
+     *
+     * @param extras the push payload
+     * @param context a context
+     * @param nb the builder prepared by the SDK
+     * @param config the configuration of the CleverTap instance rendering the push
+     * @param notificationId the id the notification will be posted with
+     * @return the builder to post, or `null` to not show a notification
+     */
     public fun renderNotification(
         extras: Bundle,
         context: Context,
@@ -36,10 +74,36 @@ public interface INotificationRenderer {
         notificationId: Int
     ): NotificationCompat.Builder?
 
+    /**
+     * Receives the small icon the SDK resolved: the manifest's CleverTap notification icon, or the app
+     * icon. Implementations keep it to use in [renderNotification].
+     *
+     * @param smallIcon the drawable resource id
+     * @param context a context
+     */
     public fun setSmallIcon(smallIcon: Int, context: Context)
 
+    /**
+     * Returns the key under which each action button object in the payload stores its icon name.
+     *
+     * @return the icon key, for example `ico`
+     */
     public fun getActionButtonIconKey(): String
 
+    /**
+     * Adds the action buttons described by [actions] to [nb]. Each action is a JSON object with a label
+     * (`l`), id (`id`), optional deep link (`dl`), optional icon (key [getActionButtonIconKey]) and
+     * auto-cancel flag (`ac`, default `true`); actions without a label or id are skipped. Clicks are
+     * routed through `CTNotificationIntentService` when it is available and needed, otherwise straight
+     * to the deep link or the app's launch activity.
+     *
+     * @param context a context; must not be `null`
+     * @param extras the push payload, copied into each action's intent
+     * @param notificationId the id of the notification the buttons belong to
+     * @param nb the builder to add the actions to
+     * @param actions the action button JSON objects, or `null` for none
+     * @return [nb]
+     */
     public fun setActionButtons(
         context: Context?,
         extras: Bundle?,

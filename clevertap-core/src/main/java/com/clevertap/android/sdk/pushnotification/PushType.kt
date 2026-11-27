@@ -20,6 +20,11 @@ public open class PushType(
 
     private val _ctProviderClassName: String? = className
 
+    /**
+     * Returns the fully qualified name of the CleverTap push provider class for this channel.
+     *
+     * @return the provider class name, or `null` if it was not supplied
+     */
     public open fun getCtProviderClassName(): String? = _ctProviderClassName
 
     /** Kotlin property syntax, equivalent to [getCtProviderClassName]. */
@@ -28,6 +33,12 @@ public open class PushType(
 
     private val _messagingSDKClassName: String? = messagingSDKClassName
 
+    /**
+     * Returns the fully qualified name of a messaging SDK class whose presence on the classpath
+     * enables this channel.
+     *
+     * @return the messaging SDK class name, or `null` if it was not supplied
+     */
     public open fun getMessagingSDKClassName(): String? = _messagingSDKClassName
 
     /** Kotlin property syntax, equivalent to [getMessagingSDKClassName]. */
@@ -36,6 +47,11 @@ public open class PushType(
 
     private val _tokenPrefKey: String = prefKey
 
+    /**
+     * Returns the preference key under which the SDK stores this channel's push token.
+     *
+     * @return the token preference key
+     */
     public open fun getTokenPrefKey(): String = _tokenPrefKey
 
     /** Kotlin property syntax, equivalent to [getTokenPrefKey]. */
@@ -44,6 +60,11 @@ public open class PushType(
 
     private val _type: String = type
 
+    /**
+     * Returns the identifier of this push channel, for example `fcm`.
+     *
+     * @return the push type identifier
+     */
     public open fun getType(): String = _type
 
     /** Kotlin property syntax, equivalent to [getType]. */
@@ -53,6 +74,13 @@ public open class PushType(
     override fun toString(): String = " [PushType:$_type] "
 
     // Method to convert PushType to JSONObject
+    /**
+     * Serialises this push type to JSON with the keys `type`, `tokenPrefKey`, `ctProviderClassName`
+     * and `messagingSDKClassName` (a `null` class name leaves its key out).
+     *
+     * @return the JSON form, or `null` if it could not be built
+     * @see fromJSONObject
+     */
     public open fun toJSONObject(): JSONObject? = try {
         JSONObject().apply {
             put("ctProviderClassName", _ctProviderClassName)
@@ -81,6 +109,14 @@ public open class PushType(
     public companion object {
 
         // Static method to convert JSONObject to PushType
+        /**
+         * Parses a push type from JSON in the form produced by [toJSONObject]. A push type with a `null`
+         * class name does not round-trip, because [toJSONObject] leaves that key out.
+         *
+         * @param jsonObject the JSON to parse
+         * @return the push type, or `null` if [jsonObject] is `null` or any of the four keys is
+         * missing
+         */
         @JvmStatic
         public fun fromJSONObject(jsonObject: JSONObject?): PushType? {
             jsonObject ?: return null

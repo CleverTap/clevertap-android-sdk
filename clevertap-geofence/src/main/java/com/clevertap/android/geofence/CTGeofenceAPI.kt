@@ -28,8 +28,17 @@ import java.util.concurrent.Future
  */
 public open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallback {
 
+    /**
+     * Notified when the Geofence SDK has finished initialising background location updates. Register
+     * it with [setOnGeofenceApiInitializedListener].
+     */
     public fun interface OnGeofenceApiInitializedListener {
 
+        /**
+         * Called on the main thread when the location update task started by
+         * [initBackgroundLocationUpdates] has finished: it has requested location updates, removed them
+         * (when background location updates are disabled) or skipped a duplicate request.
+         */
         @Suppress("FunctionName")
         public fun OnGeofenceApiInitialized()
     }
@@ -116,10 +125,20 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
         })
     }
 
+    /**
+     * Returns the listener set with [setCtGeofenceEventsListener].
+     *
+     * @return the listener, or `null` if none is set
+     */
     public open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener? {
         return mCtGeofenceEventsListener
     }
 
+    /**
+     * Sets the listener notified, on the main thread, when the user enters or exits a geofence.
+     *
+     * @param ctGeofenceEventsListener the listener, or `null` to remove it
+     */
     public open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?) {
         this.mCtGeofenceEventsListener = ctGeofenceEventsListener
     }
@@ -129,10 +148,20 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
         @JvmSynthetic @JvmName("ktGetCtGeofenceEventsListener") inline get() = getCtGeofenceEventsListener()
         @JvmSynthetic @JvmName("ktSetCtGeofenceEventsListener") inline set(value) = setCtGeofenceEventsListener(value)
 
+    /**
+     * Returns the listener set with [setCtLocationUpdatesListener].
+     *
+     * @return the listener, or `null` if none is set
+     */
     public open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener? {
         return mCtLocationUpdatesListener
     }
 
+    /**
+     * Sets the listener notified, on the main thread, of each location update the SDK receives.
+     *
+     * @param ctLocationUpdatesListener the listener, or `null` to remove it
+     */
     public open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?) {
         this.mCtLocationUpdatesListener = ctLocationUpdatesListener
     }
@@ -142,6 +171,13 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
         @JvmSynthetic @JvmName("ktGetCtLocationUpdatesListener") inline get() = getCtLocationUpdatesListener()
         @JvmSynthetic @JvmName("ktSetCtLocationUpdatesListener") inline set(value) = setCtLocationUpdatesListener(value)
 
+    /**
+     * Returns the geofence settings in use: the settings passed to the first [init] call (settings passed
+     * to later calls are ignored). When no settings were passed, the default settings are used once the
+     * SDK is activated.
+     *
+     * @return the settings, or `null` before the SDK has been initialised
+     */
     public open fun getGeofenceSettings(): CTGeofenceSettings? {
         return ctGeofenceSettings
     }
@@ -503,6 +539,7 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
     }
 
     public companion object {
+        /** The logcat tag of the Geofence SDK's logs. */
         public const val GEOFENCE_LOG_TAG: String = "CTGeofence"
 
         private var ctGeofenceAPI: CTGeofenceAPI? = null
@@ -525,6 +562,12 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
             }
         }
 
+        /**
+         * Returns the Geofence SDK's logger. Its level follows [CTGeofenceSettings.getLogLevel] once
+         * the SDK is initialised; before that it is [Logger.DEBUG].
+         *
+         * @return the logger
+         */
         @JvmStatic
         public fun getLogger(): Logger {
             return logger

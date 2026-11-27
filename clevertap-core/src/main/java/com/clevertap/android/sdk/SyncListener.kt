@@ -13,6 +13,12 @@ import org.json.JSONObject
 @Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")
 public interface SyncListener {
 
+    /**
+     * Intended to report profile changes. The SDK no longer calls this method; it is kept only so
+     * existing implementations still compile.
+     *
+     * @param updates the changed profile properties
+     */
     public fun profileDataUpdated(updates: JSONObject?)
 
     /**
