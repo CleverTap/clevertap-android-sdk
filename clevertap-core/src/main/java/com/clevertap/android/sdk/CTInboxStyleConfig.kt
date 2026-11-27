@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.inbox.CTInboxActivity
 
 /**
@@ -25,7 +26,10 @@ public open class CTInboxStyleConfig() : Parcelable {
     private var tabsValue: Array<String?>? = emptyArray()
     private var unselectedTabColorValue: String? = "#808080"
 
-    internal constructor(config: CTInboxStyleConfig) : this() {
+    // Private (Java had it package-private): a JVM-public (CTInboxStyleConfig) overload would make a
+    // Java subclass's `super(null)` ambiguous with the protected (Parcel) constructor. The SDK copies
+    // through [immutableCopyOf].
+    private constructor(config: CTInboxStyleConfig) : this() {
         navBarColorValue = config.navBarColorValue
         navBarTitleValue = config.navBarTitleValue
         navBarTitleColorValue = config.navBarTitleColorValue
@@ -379,5 +383,9 @@ public open class CTInboxStyleConfig() : Parcelable {
         }
 
         private const val MAX_TABS = 2
+
+        /** Returns a copy of [config], detached from later changes the caller makes to it. */
+        @RestrictTo(RestrictTo.Scope.LIBRARY)
+        internal fun immutableCopyOf(config: CTInboxStyleConfig): CTInboxStyleConfig = CTInboxStyleConfig(config)
     }
 }

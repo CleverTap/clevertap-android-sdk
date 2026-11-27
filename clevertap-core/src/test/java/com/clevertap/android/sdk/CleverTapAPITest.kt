@@ -25,6 +25,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.test.assertNull
 
 class CleverTapAPITest : BaseTestCase() {
 
@@ -1206,5 +1207,52 @@ class CleverTapAPITest : BaseTestCase() {
         verify {
             coreState.varCache.variants()
         }
+    }
+
+    // SDK-6395: Java returned null / did nothing for a null argument; these must not throw.
+
+    @Test
+    fun getDevicePushToken_nullType_returnsNull() {
+        initializeCleverTapAPI()
+        every { coreState.pushProviders.getCachedToken(null) } returns null
+
+        assertNull(cleverTapAPI.getDevicePushToken(null))
+        verify { coreState.pushProviders.getCachedToken(null) }
+    }
+
+    @Test
+    fun getPushToken_nullType_returnsNull() {
+        initializeCleverTapAPI()
+        every { coreState.pushProviders.getCachedToken(null) } returns null
+
+        assertNull(cleverTapAPI.getPushToken(null))
+        verify { coreState.pushProviders.getCachedToken(null) }
+    }
+
+    @Test
+    fun removeCleverTapIDListener_null_isNoOp() {
+        initializeCleverTapAPI()
+
+        cleverTapAPI.removeCleverTapIDListener(null)
+    }
+
+    @Test
+    fun removeVariablesChangedCallbacks_null_isNoOp() {
+        initializeCleverTapAPI()
+
+        cleverTapAPI.removeVariablesChangedCallback(null)
+        cleverTapAPI.removeOneTimeVariablesChangedCallback(null)
+
+        verify {
+            coreState.cTVariables.removeVariablesChangedCallback(null)
+            coreState.cTVariables.removeOneTimeVariablesChangedHandler(null)
+        }
+    }
+
+    @Test
+    fun setRequestDevicePushTokenListener_null_doesNotThrow() {
+        initializeCleverTapAPI()
+
+        cleverTapAPI.setRequestDevicePushTokenListener(null)
     }
 }

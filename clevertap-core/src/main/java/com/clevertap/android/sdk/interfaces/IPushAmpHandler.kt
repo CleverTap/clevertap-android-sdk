@@ -11,7 +11,7 @@ import androidx.annotation.RestrictTo
  * @param T Type of notification message
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public fun interface IPushAmpHandler<T : Any> {
+public fun interface IPushAmpHandler<T> {
 
     /**
      * Processes notification message for Pull Notifications

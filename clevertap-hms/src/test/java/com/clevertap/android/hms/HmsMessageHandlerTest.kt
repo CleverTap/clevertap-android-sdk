@@ -20,6 +20,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import io.mockk.verify
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
@@ -88,6 +89,16 @@ class HmsMessageHandlerTest : BaseTestCase() {
                 CleverTapAPI.tokenRefresh(any(), eq(HMS_TOKEN), eq(HPS))
             } throws RuntimeException("Something Went Wrong")
             assertFalse(mHandlerCT.onNewToken(application, HMS_TOKEN))
+        }
+    }
+
+    @Test
+    fun testProcessPushAmp_Null_Message_DoesNotThrow() {
+        mockkObject(CleverTapAPI.Companion) {
+            mHandlerCT.processPushAmp(application, null)
+
+            verify(exactly = 0) { parser.toBundle(any()) }
+            verify(exactly = 0) { CleverTapAPI.processPushNotification(any(), any()) }
         }
     }
 }

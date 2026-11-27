@@ -266,4 +266,18 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.handleAbVariantsResponse(someJsonArray)
     verify { varCache.updateAbVariants(JsonUtil.listFromJsonFromDefault(someJsonArray)) }
   }
+
+  @Test
+  fun removeCallbacks_null_isNoOp() {
+    val callback = mockk<VariablesChangedCallback>(relaxed = true)
+    ctVariables.addVariablesChangedCallback(callback)
+    ctVariables.addOneTimeVariablesChangedCallback(callback)
+
+    // Java's list.remove(null) was a no-op; registered callbacks stay.
+    ctVariables.removeVariablesChangedCallback(null)
+    ctVariables.removeOneTimeVariablesChangedHandler(null)
+
+    ctVariables.removeVariablesChangedCallback(callback)
+    ctVariables.removeOneTimeVariablesChangedHandler(callback)
+  }
 }

@@ -16,7 +16,7 @@ import com.google.firebase.messaging.RemoteMessage
  */
 public open class CTFcmMessageHandler internal constructor(
     private val parser: INotificationParser<RemoteMessage>
-) : IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
+) : IFcmMessageHandler, IPushAmpHandler<RemoteMessage?> {
 
     public constructor() : this(FcmNotificationParser())
 
@@ -71,7 +71,8 @@ public open class CTFcmMessageHandler internal constructor(
      * Use this method if you are rendering notification by your own and wants to support your custom rendered
      * notification for Pull Notifications
      */
-    override fun processPushAmp(context: Context?, message: RemoteMessage) {
-        parser.toBundle(message)?.let { CleverTapAPI.processPushNotification(context, it) }
+    override fun processPushAmp(context: Context?, message: RemoteMessage?) {
+        // A null message is a no-op: the Java parser returned a null bundle for it.
+        message?.let { parser.toBundle(it) }?.let { CleverTapAPI.processPushNotification(context, it) }
     }
 }
