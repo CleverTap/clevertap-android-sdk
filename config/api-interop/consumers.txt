@@ -1,0 +1,44 @@
+# Shipped artifacts that link against clevertap-core (and the other SDK modules) at runtime, checked
+# by consumer_link_check.py against every SDK build. Downloaded from Maven Central by
+# fetch_consumers.sh.
+#
+# Format: <group>:<artifact>:<version> <aar|jar> [replaces=<sdk module>]
+#   replaces=  the SDK module this artifact is an (older) release of; that module's freshly built
+#              classes are left out, so the artifact is checked against the rest of the SDK only.
+#
+# Not listed: clevertap-native-ui-kit is not published on Maven Central (it can be checked locally by
+# putting its .aar in --jars-dir and adding a line).
+
+# Signed Call SDK (uses ManifestInfo, DeviceInfo, CoreState, CTExecutors, CTXtensions, ...)
+com.clevertap.android:clevertap-signedcall-sdk:0.0.7.3 aar
+com.clevertap.android:clevertap-signedcall-sdk:0.0.7.7 aar
+com.clevertap.android:clevertap-signedcall-sdk:0.0.8.1 aar
+com.clevertap.android:clevertap-signedcall-sdk:0.0.9.0 aar
+
+# Push Templates: apps can upgrade core without upgrading push templates
+com.clevertap.android:push-templates:2.0.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.1.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.2.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.3.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.4.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.5.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.6.0 aar replaces=clevertap-pushtemplates
+com.clevertap.android:push-templates:2.7.0 aar replaces=clevertap-pushtemplates
+
+# Huawei push
+com.clevertap.android:clevertap-hms-sdk:1.3.4 aar replaces=clevertap-hms
+com.clevertap.android:clevertap-hms-sdk:1.4.0 aar replaces=clevertap-hms
+com.clevertap.android:clevertap-hms-sdk:1.5.0 aar replaces=clevertap-hms
+com.clevertap.android:clevertap-hms-sdk:1.5.1 aar replaces=clevertap-hms
+
+# Geofence
+com.clevertap.android:clevertap-geofence-sdk:1.0.0 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.0.1 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.0.2 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.1.0 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.2.0 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.3.0 aar replaces=clevertap-geofence
+com.clevertap.android:clevertap-geofence-sdk:1.4.0 aar replaces=clevertap-geofence
+
+# Leanplum (CleverTap migration path: LocalDataStore, CoreMetaData, CTExecutorFactory, ...)
+com.leanplum:leanplum-core:7.8.0 aar

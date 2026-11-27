@@ -13,7 +13,7 @@ import androidx.annotation.RestrictTo
  * and in killed state.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class CTGeofenceReceiver : BroadcastReceiver() {
+internal open class CTGeofenceReceiver : BroadcastReceiver() {
 
     /**
      * Creates [PushGeofenceEventTask] and sends it to Queue using [CTGeofenceTaskManager]

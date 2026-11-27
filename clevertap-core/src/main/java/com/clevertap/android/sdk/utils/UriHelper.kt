@@ -12,6 +12,7 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal object UriHelper {
 
+    @JvmStatic
     fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle {
         val customPairs = Bundle()
         if (url == null) {
@@ -39,6 +40,7 @@ internal object UriHelper {
         return customPairs
     }
 
+    @JvmStatic
     fun getUrchinFromUri(uri: Uri?): JSONObject {
         val referrer = JSONObject()
         try {

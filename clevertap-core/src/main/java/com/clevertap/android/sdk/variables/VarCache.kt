@@ -55,7 +55,7 @@ internal open class VarCache(
             return
         }
 
-        val nameComponents = checkNotNull(variable.nameComponents())
+        val nameComponents = variable.nameComponents()
         val firstComponent = nameComponents[0]
         val defaultValue = valuesFromClient[firstComponent]
         val mergedMap: MutableMap<String, Any?> = JsonUtil.uncheckedCast(merged)
@@ -82,7 +82,7 @@ internal open class VarCache(
     @Synchronized
     open fun registerVariable(variable: Var<*>) {
         log("registerVariable() called with: var = [${variable.name()}]")
-        vars[checkNotNull(variable.name())] = variable
+        vars[variable.name()] = variable
 
         val defaultValue = variable.defaultValue().let {
             if (it is Map<*, *>) {

@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import androidx.annotation.RestrictTo
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class PTPushNotificationReceiver : CTPushNotificationReceiver() {
+internal open class PTPushNotificationReceiver : CTPushNotificationReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         //Removes the deeplink key from bundle if deepLink is not present and launch activity.

@@ -10,6 +10,7 @@ internal object PTLog {
     private fun isEnabled(level: TemplateRenderer.LogLevel): Boolean =
         TemplateRenderer.debugLevel >= level.intValue()
 
+    @JvmStatic
     fun debug(message: String) {
         if (isEnabled(TemplateRenderer.LogLevel.DEBUG)) {
             Log.d(PTConstants.LOG_TAG, message)
@@ -22,6 +23,7 @@ internal object PTLog {
         }
     }
 
+    @JvmStatic
     fun verbose(message: String) {
         if (isEnabled(TemplateRenderer.LogLevel.VERBOSE)) {
             Log.v(PTConstants.LOG_TAG, message)
@@ -29,6 +31,7 @@ internal object PTLog {
     }
 
     // Gated on INFO, not DEBUG, as it always was.
+    @JvmStatic
     fun debug(message: String?, t: Throwable?) {
         if (isEnabled(TemplateRenderer.LogLevel.INFO)) {
             Log.d(PTConstants.LOG_TAG, message, t)
@@ -41,6 +44,7 @@ internal object PTLog {
         }
     }
 
+    @JvmStatic
     fun verbose(message: String?, t: Throwable?) {
         if (isEnabled(TemplateRenderer.LogLevel.VERBOSE)) {
             Log.v(PTConstants.LOG_TAG, message, t)

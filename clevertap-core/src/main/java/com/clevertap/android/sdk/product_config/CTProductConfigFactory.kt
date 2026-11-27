@@ -26,6 +26,7 @@ internal object CTProductConfigFactory {
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      */
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
+    @JvmStatic
     fun getInstance(
         context: Context?,
         deviceInfo: DeviceInfo,

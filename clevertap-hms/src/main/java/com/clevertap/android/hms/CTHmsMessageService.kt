@@ -11,7 +11,7 @@ import androidx.annotation.RestrictTo
  * Clevertap's Implementation for Huawei Message service
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class CTHmsMessageService : HmsMessageService() {
+internal open class CTHmsMessageService : HmsMessageService() {
 
     private val mHandler: IHmsMessageHandler = CTHmsMessageHandler(HmsNotificationParser())
 

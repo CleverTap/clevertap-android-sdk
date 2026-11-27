@@ -44,7 +44,7 @@ import androidx.annotation.RestrictTo
  */
 @Suppress("DEPRECATION")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class PushTemplateReceiver : BroadcastReceiver() {
+internal open class PushTemplateReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         Utils.createSilentNotificationChannel(context)

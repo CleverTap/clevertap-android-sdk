@@ -694,8 +694,8 @@ public open class CleverTapAPI internal constructor(
      * Implement CleverTapAPI.DevicePushTokenRefreshListener to get a callback once the token is
      * available
      */
-    // Java dereferenced a null type too (NPE); the parameter stays nullable for Kotlin source compatibility.
-    public open fun getDevicePushToken(type: PushType?): String? = coreState.pushProviders.getCachedToken(type!!)
+    // A null type returns null (PushProviders.getCachedToken handles it), as in Java.
+    public open fun getDevicePushToken(type: PushType?): String? = coreState.pushProviders.getCachedToken(type)
 
     /**
      * The DevicePushTokenRefreshListener.
@@ -726,8 +726,10 @@ public open class CleverTapAPI internal constructor(
      *
      * @param requestTokenListener The [RequestDevicePushTokenListener] object
      */
+    // Nullable on purpose: Java passed null here without a crash at the call; a null listener is a no-op.
+    @Suppress("CanBeNonNullable")
     @RestrictTo(Scope.LIBRARY_GROUP)
-    public open fun setRequestDevicePushTokenListener(requestTokenListener: RequestDevicePushTokenListener) {
+    public open fun setRequestDevicePushTokenListener(requestTokenListener: RequestDevicePushTokenListener?) {
         try {
             Logger.v(LOG_TAG, "${FCM_LOG_TAG}Requesting FCM token using googleservices.json")
             FirebaseMessaging
@@ -744,17 +746,17 @@ public open class CleverTapAPI internal constructor(
                                 "${FCM_LOG_TAG}FCM token using googleservices.json failed",
                                 task.exception
                             )
-                            requestTokenListener.onDevicePushToken(null, FCM)
+                            requestTokenListener?.onDevicePushToken(null, FCM)
                             return
                         }
                         val token = task.result
                         Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token")
-                        requestTokenListener.onDevicePushToken(token, FCM)
+                        requestTokenListener?.onDevicePushToken(token, FCM)
                     }
                 })
         } catch (t: Throwable) {
             Logger.v(LOG_TAG, "${FCM_LOG_TAG}Error requesting FCM token", t)
-            requestTokenListener.onDevicePushToken(null, FCM)
+            requestTokenListener?.onDevicePushToken(null, FCM)
         }
     }
 
@@ -1070,7 +1072,8 @@ public open class CleverTapAPI internal constructor(
     /**
      * Returns the token for a particular push type
      */
-    public open fun getPushToken(pushType: PushType): String? = coreState.pushProviders.getCachedToken(pushType)
+    // A null type returns null (PushProviders.getCachedToken handles it), as in Java.
+    public open fun getPushToken(pushType: PushType?): String? = coreState.pushProviders.getCachedToken(pushType)
 
     /**
      * Returns the number of screens which have been displayed by the app
@@ -2005,7 +2008,7 @@ public open class CleverTapAPI internal constructor(
 
         // make styleConfig immutable. Java dereferenced a null styleConfig too (NPE); the parameter
         // stays nullable for Kotlin source compatibility.
-        val immutableStyleConfig = CTInboxStyleConfig(styleConfig!!)
+        val immutableStyleConfig = CTInboxStyleConfig.immutableCopyOf(styleConfig!!)
 
         val intent = Intent(context, CTInboxActivity::class.java)
             .putExtra("styleConfig", immutableStyleConfig)
@@ -2144,7 +2147,7 @@ public open class CleverTapAPI internal constructor(
      * @param onInitCleverTapIDListener The same listener instance passed to
      *                                  [getCleverTapID] that should be removed.
      */
-    public open fun removeCleverTapIDListener(onInitCleverTapIDListener: OnInitCleverTapIDListener) {
+    public open fun removeCleverTapIDListener(onInitCleverTapIDListener: OnInitCleverTapIDListener?) {
         coreState.callbackManager.removeOnInitCleverTapIDListener(onInitCleverTapIDListener)
     }
 
@@ -2401,7 +2404,7 @@ public open class CleverTapAPI internal constructor(
      *
      * @param callback Callback to remove.
      */
-    public open fun removeVariablesChangedCallback(callback: VariablesChangedCallback) {
+    public open fun removeVariablesChangedCallback(callback: VariablesChangedCallback?) {
         coreState.cTVariables.removeVariablesChangedCallback(callback)
     }
 
@@ -2410,7 +2413,7 @@ public open class CleverTapAPI internal constructor(
      *
      * @param callback Callback to remove.
      */
-    public open fun removeOneTimeVariablesChangedCallback(callback: VariablesChangedCallback) {
+    public open fun removeOneTimeVariablesChangedCallback(callback: VariablesChangedCallback?) {
         coreState.cTVariables.removeOneTimeVariablesChangedHandler(callback)
     }
 

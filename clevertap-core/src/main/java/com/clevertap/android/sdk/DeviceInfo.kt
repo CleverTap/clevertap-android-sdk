@@ -706,6 +706,7 @@ internal open class DeviceInfo internal constructor(
          * @param context The Android context
          * @return The integer identifier for the image resource
          */
+        @JvmStatic // Signed Call links `invokestatic DeviceInfo.getAppIconAsIntId`
         fun getAppIconAsIntId(context: Context): Int = context.applicationInfo.icon
 
         /**
@@ -714,6 +715,7 @@ internal open class DeviceInfo internal constructor(
          * @param context context
          * @return one of the possible value of [DeviceType]
          */
+        @JvmStatic // was `public static` in Java (cross-SDK consumers link the static form)
         @DeviceType
         fun getDeviceType(context: Context?): Int {
             if (cachedDeviceType != NULL) {

@@ -157,14 +157,14 @@ public open class Var<T> internal constructor(
      *
      * @return the name, for example `group.subgroup.name`
      */
-    public open fun name(): String? = name
+    public open fun name(): String = name
 
     /**
      * Returns the variable's name split at each ".".
      *
      * @return the name components, for example `["group", "subgroup", "name"]`
      */
-    public open fun nameComponents(): Array<String>? = nameComponents
+    public open fun nameComponents(): Array<String> = nameComponents
 
     /**
      * Returns the variable's kind: `string`, `boolean`, `number`, `group` (a map) or `file`.
@@ -209,18 +209,19 @@ public open class Var<T> internal constructor(
      * @param callback the callback; `null` is ignored (and logged)
      * @see removeValueChangedHandler
      */
-    public open fun addValueChangedCallback(callback: VariableCallback<T>?) {
+    public open fun addValueChangedCallback(callback: VariableCallback<in T>?) {
         if (callback == null) {
             log("Invalid callback parameter provided.")
             return
         }
+        val handler = callback.forThisVar()
 
         synchronized(valueChangedHandlers) {
-            valueChangedHandlers.add(callback)
+            valueChangedHandlers.add(handler)
         }
 
         if (ctVariables.hasVarsRequestCompleted) {
-            callback.onValueChanged(this)
+            handler.onValueChanged(this)
         }
     }
 
@@ -229,9 +230,9 @@ public open class Var<T> internal constructor(
      *
      * @param handler the callback to remove
      */
-    public open fun removeValueChangedHandler(handler: VariableCallback<T>?) {
+    public open fun removeValueChangedHandler(handler: VariableCallback<in T>?) {
         synchronized(valueChangedHandlers) {
-            valueChangedHandlers.remove(handler)
+            valueChangedHandlers.remove(handler?.forThisVar())
         }
     }
 
@@ -286,9 +287,9 @@ public open class Var<T> internal constructor(
      * @param handler the handler
      * @see removeFileReadyHandler
      */
-    public open fun addFileReadyHandler(handler: VariableCallback<T>) {
+    public open fun addFileReadyHandler(handler: VariableCallback<in T>) {
         synchronized(fileReadyHandlers) {
-            fileReadyHandlers.add(handler)
+            fileReadyHandlers.add(handler.forThisVar())
         }
     }
 
@@ -297,11 +298,16 @@ public open class Var<T> internal constructor(
      *
      * @param handler Handler to be removed.
      */
-    public open fun removeFileReadyHandler(handler: VariableCallback<T>) {
+    public open fun removeFileReadyHandler(handler: VariableCallback<in T>) {
         synchronized(fileReadyHandlers) {
-            fileReadyHandlers.remove(handler)
+            fileReadyHandlers.remove(handler.forThisVar())
         }
     }
+
+    // `in T` lets a VariableCallback<Any?> be registered on a Var<Any> (as Java's Var allowed). The
+    // callback only ever receives this Var, so viewing it as VariableCallback<T> is safe (erased).
+    @Suppress("UNCHECKED_CAST")
+    private fun VariableCallback<in T>.forThisVar(): VariableCallback<T> = this as VariableCallback<T>
 
     public companion object {
 

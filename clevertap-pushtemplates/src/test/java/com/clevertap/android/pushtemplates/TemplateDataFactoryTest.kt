@@ -74,6 +74,7 @@ import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
+import io.mockk.mockkStatic
 import org.json.JSONArray
 import org.junit.After
 import org.junit.Before
@@ -112,6 +113,7 @@ class TemplateDataFactoryTest {
         
         // Mock static methods
         mockkObject(Utils)
+        mockkStatic(Utils::class) // its former-Java statics are @JvmStatic
         
         // Default mock behaviors
         every { Utils.fromJson(any()) } returns mockBundle

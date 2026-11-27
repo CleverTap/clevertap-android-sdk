@@ -25,7 +25,7 @@ import com.clevertap.android.pushtemplates.VerticalImageButtonData
 import com.clevertap.android.pushtemplates.VerticalImageTemplateData
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import io.mockk.every
-import io.mockk.mockkStatic
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
@@ -51,7 +51,7 @@ class VerticalImageContentViewButtonTest {
     @Before
     fun setUp() {
         context.applicationInfo.nonLocalizedLabel = "Test App"
-        mockkStatic(LaunchPendingIntentFactory::class)
+        mockkObject(LaunchPendingIntentFactory.Companion)
         every { LaunchPendingIntentFactory.getLaunchPendingIntent(any(), any()) } returns
             PendingIntent.getActivity(context, 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
         every { LaunchPendingIntentFactory.getActivityIntent(any(), any()) } returns

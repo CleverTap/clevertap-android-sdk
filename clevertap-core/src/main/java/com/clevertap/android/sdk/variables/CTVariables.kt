@@ -181,13 +181,14 @@ internal open class CTVariables(internal val varCache: VarCache) {
         }
     }
 
-    open fun removeVariablesChangedCallback(callback: VariablesChangedCallback) {
+    // A null callback is a no-op (Java's list.remove(null))
+    open fun removeVariablesChangedCallback(callback: VariablesChangedCallback?) {
         synchronized(variablesChangedCallbacks) {
             variablesChangedCallbacks.remove(callback)
         }
     }
 
-    open fun removeOneTimeVariablesChangedHandler(callback: VariablesChangedCallback) {
+    open fun removeOneTimeVariablesChangedHandler(callback: VariablesChangedCallback?) {
         synchronized(oneTimeVariablesChangedCallbacks) {
             oneTimeVariablesChangedCallbacks.remove(callback)
         }

@@ -191,7 +191,9 @@ public object Constants {
     public const val KEY_ND_TRIGGERS_PER_TARGET: String = "nd_triggers_per_target" // onEvery/onExactly trigger counts
     public const val INAPP_ID_IN_PAYLOAD: String = "ti"
     public const val LOCATION_PING_INTERVAL_IN_SECONDS: Int = 10
-    public val SYSTEM_EVENTS: List<String> = listOf(
+    // @JvmField + the Java types (String[] / HashSet) keep the former interface-field JVM shape.
+    @JvmField
+    public val SYSTEM_EVENTS: Array<String> = arrayOf(
         NOTIFICATION_CLICKED_EVENT_NAME,
         NOTIFICATION_VIEWED_EVENT_NAME,
         GEOFENCE_ENTERED_EVENT_NAME,
@@ -465,9 +467,14 @@ public object Constants {
     public const val SP_KEY_PROFILE_IDENTITIES: String = "SP_KEY_PROFILE_IDENTITIES"
 
     // valid profile identifier keys (hash sets: callers iterate them in the former HashSet order)
-    public val LEGACY_IDENTITY_KEYS: Set<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL)
-    public val ALL_IDENTITY_KEYS: Set<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE)
-    public val piiDBKeys: Set<String> =
+    @JvmField
+    public val LEGACY_IDENTITY_KEYS: HashSet<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL)
+
+    @JvmField
+    public val ALL_IDENTITY_KEYS: HashSet<String> = hashSetOf(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE)
+
+    @JvmField
+    public val piiDBKeys: HashSet<String> =
         hashSetOf(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE)
 
     /**
@@ -480,6 +487,7 @@ public object Constants {
     public const val APP_INBOX_CTA2_INDEX: Int = 1
     public const val APP_INBOX_CTA3_INDEX: Int = 2
 
+    @JvmField
     public val NULL_STRING_ARRAY: Array<String> = arrayOf()
     public const val PT_NOTIF_ID: String = "notificationId"
     public const val CLOSE_SYSTEM_DIALOGS: String = "close_system_dialogs"

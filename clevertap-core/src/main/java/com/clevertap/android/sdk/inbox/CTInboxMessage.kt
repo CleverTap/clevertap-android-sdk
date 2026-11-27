@@ -313,8 +313,10 @@ public open class CTInboxMessage : Parcelable {
     // The 0x00 branches below are only reachable with a Parcel that this class did not write
     // (writeToParcel always writes customData, tags and inboxMessageContents); they leave the
     // non-null defaults in place instead of storing null.
+    // Private, as in Java: a JVM-public (Parcel) overload would make Java `new CTInboxMessage(null)`
+    // ambiguous with the (JSONObject) constructor. Only CREATOR calls it.
     @Suppress("DEPRECATION")
-    internal constructor(`in`: Parcel) {
+    private constructor(`in`: Parcel) {
         try {
             _title = `in`.readString()
             _body = `in`.readString()

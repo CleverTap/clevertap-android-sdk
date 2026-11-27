@@ -16,6 +16,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import io.mockk.mockk
+import io.mockk.verify
 
 @RunWith(RobolectricTestRunner::class)
 class CTFcmMessageHandlerTest : BaseTestCase() {
@@ -74,6 +76,17 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
                 )
             } throws RuntimeException("Something Went Wrong")
             assertFalse(mHandlerCT.onNewToken(application, FCM_TOKEN))
+        }
+    }
+
+    @Test
+    fun testProcessPushAmp_Null_Message_IsNoOp() {
+        val parser = mockk<FcmNotificationParser>(relaxed = true)
+        mockkObject(CleverTapAPI.Companion) {
+            CTFcmMessageHandler(parser).processPushAmp(application, null)
+
+            verify(exactly = 0) { parser.toBundle(any()) }
+            verify(exactly = 0) { CleverTapAPI.processPushNotification(any(), any()) }
         }
     }
 }

@@ -17,6 +17,7 @@ internal object IdentityRepoFactory {
      *
      * @return - repo provider
      */
+    @JvmStatic
     fun getRepo(
         context: Context,
         config: CleverTapInstanceConfig,

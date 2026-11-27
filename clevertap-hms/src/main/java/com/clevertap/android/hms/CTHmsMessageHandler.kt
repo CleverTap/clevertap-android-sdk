@@ -17,7 +17,7 @@ import com.huawei.hms.push.RemoteMessage
  */
 public open class CTHmsMessageHandler internal constructor(
     private val mParser: INotificationParser<RemoteMessage>
-) : IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
+) : IHmsMessageHandler, IPushAmpHandler<RemoteMessage?> {
 
     public constructor() : this(HmsNotificationParser())
 
@@ -70,9 +70,10 @@ public open class CTHmsMessageHandler internal constructor(
      * Use this method if you are rendering notification by your own and wants to support your custom rendered
      * notification for Pull Notifications
      */
-    override fun processPushAmp(context: Context?, message: RemoteMessage) {
+    override fun processPushAmp(context: Context?, message: RemoteMessage?) {
         try {
-            val messageBundle = mParser.toBundle(message)
+            // A null message is logged below, as the Java version's catch-all did.
+            val messageBundle = mParser.toBundle(requireNotNull(message))
             if (messageBundle != null) {
                 CleverTapAPI.processPushNotification(context, messageBundle)
             }

@@ -136,6 +136,8 @@ public open class ManifestInfo(
         // End - Capture the credentials from ChangeCredentials
 
         // Locks on ManifestInfo.class, the monitor the former `static synchronized` method used.
+        // @JvmStatic: Signed Call and push-templates <= 2.7.0 link `invokestatic ManifestInfo.getInstance`.
+        @JvmStatic
         public fun getInstance(context: Context?): ManifestInfo = synchronized(ManifestInfo::class.java) {
             instance ?: fromManifest(context).also { instance = it }
         }

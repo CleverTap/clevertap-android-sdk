@@ -11,8 +11,10 @@ import androidx.annotation.RestrictTo
 internal object JsonUtil {
 
     @Suppress("UNCHECKED_CAST")
+    @JvmStatic
     fun <T> uncheckedCast(obj: Any?): T = obj as T
 
+    @JvmStatic
     fun fromJson(json: String?): MutableMap<String, Any?>? {
         if (json == null) {
             return null
@@ -29,11 +31,13 @@ internal object JsonUtil {
      * Nullable overload, faithful to the Java original: `null` in, `null` out.
      */
     @JvmName("listToNullableJsonArray")
+    @JvmStatic
     fun listToJsonArray(list: Iterable<*>?): JSONArray? = list?.let { listToJsonArray(it) }
 
     /**
      * Non-null overload: what the existing Kotlin callers (always passing a non-null list) see.
      */
+    @JvmStatic
     fun listToJsonArray(list: Iterable<*>): JSONArray {
         val obj = JSONArray()
         for (item in list) {
@@ -45,6 +49,7 @@ internal object JsonUtil {
     /**
      * Non-null overload: what the existing Kotlin callers (always passing a non-null object) see.
      */
+    @JvmStatic
     fun <T> mapFromJson(json: JSONObject): MutableMap<String, T> {
         val result: MutableMap<String, T> = HashMap()
         for (key in json.keys()) {
@@ -57,13 +62,17 @@ internal object JsonUtil {
      * Nullable overload, faithful to the Java original: `null` in, `null` out.
      */
     @JvmName("mapFromNullableJson")
+    @JvmStatic
     fun <T> mapFromJson(json: JSONObject?): MutableMap<String, T>? = json?.let { mapFromJson<T>(it) }
 
+    @JvmStatic
     fun <T> listFromJsonFromDefault(json: JSONArray?): MutableList<T> =
         uncheckedCast(listFromJson<Any?>(json) ?: mutableListOf<Any?>())
 
+    @JvmStatic
     fun <T> listFromJson(json: JSONArray?): MutableList<T>? = json?.let { listFromJsonSafe(it) }
 
+    @JvmStatic
     fun <T> listFromJsonSafe(json: JSONArray): MutableList<T> {
         val result: MutableList<Any?> = ArrayList(json.length())
         for (i in 0 until json.length()) {
@@ -97,6 +106,7 @@ internal object JsonUtil {
         return obj
     }
 
+    @JvmStatic
     fun toJson(map: Map<String, *>?): String? {
         if (map == null) {
             return null
@@ -109,6 +119,7 @@ internal object JsonUtil {
         }
     }
 
+    @JvmStatic
     fun toJson(list: List<*>?): String? {
         if (list == null) {
             return null

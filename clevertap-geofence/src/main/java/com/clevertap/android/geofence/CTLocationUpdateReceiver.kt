@@ -17,7 +17,7 @@ import androidx.annotation.RestrictTo
  * smallest displacement as set by Client through [CTGeofenceAPI.init]
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class CTLocationUpdateReceiver : BroadcastReceiver() {
+internal open class CTLocationUpdateReceiver : BroadcastReceiver() {
 
     /**
      * Creates [PushLocationEventTask] and sends it to Queue using [CTGeofenceTaskManager]

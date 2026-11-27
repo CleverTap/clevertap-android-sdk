@@ -27,6 +27,7 @@ internal object ManifestValidator {
 
     private const val CLEVERTAP_PACKAGE_PREFIX = "com.clevertap.android."
 
+    @JvmStatic
     fun validate(context: Context, deviceInfo: DeviceInfo, pushProviders: PushProviders) {
         if (!Utils.hasPermission(context, "android.permission.INTERNET")) {
             Logger.d("Missing Permission: android.permission.INTERNET")

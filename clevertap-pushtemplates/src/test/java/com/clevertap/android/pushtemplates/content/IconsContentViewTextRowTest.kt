@@ -15,7 +15,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TemplateType
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import io.mockk.every
-import io.mockk.mockkStatic
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
@@ -39,7 +39,7 @@ class IconsContentViewTextRowTest {
     @Before
     fun setUp() {
         context.applicationInfo.nonLocalizedLabel = "Test App"
-        mockkStatic(LaunchPendingIntentFactory::class)
+        mockkObject(LaunchPendingIntentFactory.Companion)
         every { LaunchPendingIntentFactory.getLaunchPendingIntent(any(), any()) } returns
             PendingIntent.getActivity(context, 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
     }

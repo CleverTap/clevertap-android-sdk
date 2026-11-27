@@ -21,6 +21,7 @@ internal object CTJsonConverter {
 
     private const val TAG = "CTJsonConverter"
 
+    @JvmStatic
     fun toJsonObject(json: String?, logger: ILogger, logtag: String?): JSONObject {
         if (json == null) {
             return JSONObject()
@@ -33,6 +34,7 @@ internal object CTJsonConverter {
         }
     }
 
+    @JvmStatic
     fun displayUnitFromExtras(extras: Bundle): JSONObject {
         val pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)
         Logger.v(TAG, "Received Display Unit via push payload: $pushJsonPayload")
@@ -52,6 +54,7 @@ internal object CTJsonConverter {
         "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC"
     )
 
+    @JvmStatic
     fun from(
         deviceInfo: DeviceInfo,
         coreMetaData: CoreMetaData,
@@ -155,6 +158,7 @@ internal object CTJsonConverter {
     }
 
     //Validation
+    @JvmStatic
     fun getErrorObject(vr: ValidationResult): JSONObject {
         val error = JSONObject()
         try {
@@ -166,6 +170,7 @@ internal object CTJsonConverter {
         return error
     }
 
+    @JvmStatic
     fun pushIdsToJSONArray(pushIds: Array<out String?>): JSONArray {
         val renderedTargets = JSONArray()
         for (pushId in pushIds) {
@@ -178,6 +183,7 @@ internal object CTJsonConverter {
     /**
      * The `wzrk_` fields of the in-app's JSON description. A null in-app throws (callers catch it).
      */
+    @JvmStatic
     fun getWzrkFields(root: CTInAppNotification?): JSONObject {
         val jsonObject = checkNotNull(root) { "in-app notification is null" }.jsonDescription
         val fields = JSONObject()
@@ -189,8 +195,10 @@ internal object CTJsonConverter {
         return fields
     }
 
+    @JvmStatic
     fun getWzrkFields(root: CTInboxMessage): JSONObject = root.wzrkParams
 
+    @JvmStatic
     fun <T> toArray(jsonArray: JSONArray): Array<Any?> {
         val array = arrayOfNulls<Any>(jsonArray.length())
         try {

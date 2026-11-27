@@ -279,7 +279,9 @@ public open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.
 
     public companion object {
 
-        internal var orientation: Int = 0
+        // Public static field, as in Java (`CTInboxActivity.orientation`).
+        @JvmField
+        public var orientation: Int = 0
 
         internal const val VIDEO_STATES_KEY = "videoStates"
 

@@ -1,0 +1,17 @@
+# Consumer link findings accepted as pre-existing: every entry fails against the pre-migration (Java)
+# 9.0.0 SDK as well, so it is not a regression of this build. Keep this list small; never add a
+# finding that links against the previous SDK release.
+#  - hms 1.3.4/1.4.0 and Signed Call 0.0.7.x/0.0.8.x: built against the old PushConstants$PushType
+#    and onNewToken(String) push-type API that core replaced long before 9.0.0.
+#  - Leanplum 7.8.0: calls LocalDataStore.updateProfileFields(Map), which core no longer had.
+# Format: <group>:<artifact> | <consumer class> | <reference> | <kind>  (see consumer_link_check.py)
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/CTHmsMessageHandler | IM com/clevertap/android/sdk/interfaces/NotificationHandler.onNewToken(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z | NO_MEMBER
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/CTHmsMessageHandler | class com/clevertap/android/sdk/pushnotification/PushConstants$PushType | NO_CLASS
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/HmsConstants | class com/clevertap/android/sdk/pushnotification/PushConstants$PushType | NO_CLASS
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/HmsPushProvider | IM com/clevertap/android/sdk/pushnotification/CTPushProviderListener.onNewToken(Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushConstants$PushType;)V | NO_MEMBER
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/HmsPushProvider | class com/clevertap/android/sdk/pushnotification/PushConstants$PushType | NO_CLASS
+com.clevertap.android:clevertap-hms-sdk | com/clevertap/android/hms/HmsPushProvider | missing impl com/clevertap/android/sdk/pushnotification/CTPushProvider.getPushType()Lcom/clevertap/android/sdk/pushnotification/PushType; | MISSING_IMPL
+com.clevertap.android:clevertap-signedcall-sdk | com/clevertap/android/signedcall/fcm/SignedCallNotificationHandler | missing impl com/clevertap/android/sdk/interfaces/NotificationHandler.onNewToken(Landroid/content/Context;Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)Z | MISSING_IMPL
+com.clevertap.android:clevertap-signedcall-sdk | com/clevertap/android/signedcall/init/SignedCallAPI$1 | class com/clevertap/android/sdk/pushnotification/PushConstants$PushType | NO_CLASS
+com.clevertap.android:clevertap-signedcall-sdk | com/clevertap/android/signedcall/init/SignedCallAPI$1 | missing impl com/clevertap/android/sdk/CleverTapAPI$RequestDevicePushTokenListener.onDevicePushToken(Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)V | MISSING_IMPL
+com.leanplum:leanplum-core | com/leanplum/utils/CTUtils | M com/clevertap/android/sdk/LocalDataStore.updateProfileFields(Ljava/util/Map;)V | NO_MEMBER
