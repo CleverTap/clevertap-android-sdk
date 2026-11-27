@@ -61,7 +61,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
 
 - **MagicNumber: 25** (core 13, pushtemplates 11, geofence 1). Named constants.  
   Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTXtensions.kt` (2)
-- **ReturnCount: 17** (core 14, pushtemplates 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
+- **ReturnCount: 17** (core 14, pushtemplates 3). Guard clauses / `when` expressions; max 3 non-guard returns.  
   Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1), `CTInAppNotification.kt` (1)
 - **MaxLineLength: 17** (core 16, pushtemplates 1). Wrap lines > 120.  
   Top files: `ValidationResultFactory.kt` (3), `VideoLibChecker.kt` (3), `CTInboxController.kt` (2), `CleverTapAPI.kt` (1), `DeviceInfo.kt` (1), `ExoplayerHandle.kt` (1)
@@ -78,7 +78,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CTInAppNotification.kt` (5), `InAppController.kt` (4), `TemplateRenderer.kt` (4), `AnalyticsManager.kt` (3), `PushProviders.kt` (3), `PushTemplateReceiver.kt` (3)
 - **TooManyFunctions: 37** (core 35, geofence 1, pushtemplates 1). Split the type/file (threshold 15).  
   Top files: `Utils.kt` (3), `CleverTapAPI.kt` (2), `BaseAnalyticsManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxMessage.kt` (1)
-- **LongMethod: 37** (core 27, pushtemplates 8, geofence 2). Extract private functions (threshold 30 lines).  
+- **LongMethod: 37** (core 27, pushtemplates 8, geofence 2). Extract private functions (threshold 50 lines).  
   Top files: `PushTemplateReceiver.kt` (4), `CTInAppNotification.kt` (3), `PushProviders.kt` (3), `EventDataNormalizer.kt` (2), `InAppController.kt` (2), `TemplateRenderer.kt` (2)
 - **LargeClass: 28** (core 23, pushtemplates 4, geofence 1). Split responsibilities (threshold 300 lines).  
   Top files: `CleverTapAPI.kt` (2), `Utils.kt` (2), `AnalyticsManager.kt` (1), `CTInAppNotification.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxController.kt` (1)
