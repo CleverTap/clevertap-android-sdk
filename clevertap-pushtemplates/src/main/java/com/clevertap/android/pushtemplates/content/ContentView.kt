@@ -111,8 +111,8 @@ internal open class ContentView(
         )
     }
 
-    fun setCustomBackgroundColour(pt_bg: String?, resId: Int) {
-        pt_bg?.takeIf { it.isNotEmpty() }?.let {
+    fun setCustomBackgroundColour(bgColor: String?, resId: Int) {
+        bgColor?.takeIf { it.isNotEmpty() }?.let {
             Utils.getColourOrNull(it)?.let { color ->
                 remoteView.setInt(
                     resId,
@@ -123,8 +123,8 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomTextColour(pt_text_clr: String?, resId: Int) {
-        pt_text_clr?.takeIf { it.isNotEmpty() }?.let {
+    fun setCustomTextColour(textColor: String?, resId: Int) {
+        textColor?.takeIf { it.isNotEmpty() }?.let {
             Utils.getColourOrNull(it)?.let { color ->
                 remoteView.setTextColor(
                     resId,

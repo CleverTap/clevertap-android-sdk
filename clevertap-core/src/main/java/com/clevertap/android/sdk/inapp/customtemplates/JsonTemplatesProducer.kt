@@ -104,9 +104,7 @@ internal open class JsonTemplatesProducer(
         return when (type) {
             CustomTemplateType.TEMPLATE -> {
                 if (templatesPresenter == null) {
-                    throw CustomTemplateException(
-                        "JSON definition contains a template definition and a templates presenter is required"
-                    )
+                    throw CustomTemplateException("JSON definition contains a template definition and a templates presenter is required")
                 }
 
                 val builder = CustomTemplate.TemplateBuilder()
@@ -118,9 +116,7 @@ internal open class JsonTemplatesProducer(
 
             CustomTemplateType.FUNCTION -> {
                 if (functionsPresenter == null) {
-                    throw CustomTemplateException(
-                        "JSON definition contains a function definition and a function presenter is required"
-                    )
+                    throw CustomTemplateException("JSON definition contains a function definition and a function presenter is required")
                 }
 
                 val isVisual = json.getBoolean("isVisual")

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification
 import org.json.JSONObject
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // intentional base of AnalyticsManager, config/flag controllers, fakes
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseAnalyticsManager {
 

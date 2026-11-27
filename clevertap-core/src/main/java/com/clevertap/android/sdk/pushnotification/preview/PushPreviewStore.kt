@@ -75,8 +75,7 @@ internal class PushPreviewStore(
             val elapsed = clock.currentTimeMillis() - startedAt
             logger.verbose(
                 accountId,
-                "Push preview ${if (saved) { "remembered" } else { "not saved" }} in $elapsed ms, " +
-                    "key=${key.take(KEY_LOG_CHARS)}, expires=$expiresAt"
+                "Push preview ${if (saved) { "remembered" } else { "not saved" }} in $elapsed ms, key=${key.take(KEY_LOG_CHARS)}, expires=$expiresAt"
             )
         }
     }

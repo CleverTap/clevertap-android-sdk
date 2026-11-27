@@ -17,16 +17,16 @@ internal class CTCaches private constructor(
 
     companion object {
 
-        private var ctCaches: CTCaches? = null
+        private var cachedInstance: CTCaches? = null
         fun instance(
             inAppImageMemoryV1: Memory<Bitmap>,
             inAppGifMemoryV1: Memory<ByteArray>,
             fileMemory: Memory<ByteArray>
         ): CTCaches {
-            if (ctCaches == null) {
+            if (cachedInstance == null) {
                 synchronized(this) {
-                    if (ctCaches == null) {
-                        ctCaches = CTCaches(
+                    if (cachedInstance == null) {
+                        cachedInstance = CTCaches(
                             inAppImageMemoryV1 = inAppImageMemoryV1,
                             inAppGifMemoryV1 = inAppGifMemoryV1,
                             fileMemory = fileMemory
@@ -34,12 +34,12 @@ internal class CTCaches private constructor(
                     }
                 }
             }
-            return ctCaches!!
+            return cachedInstance!!
         }
 
         fun clear() {
             synchronized(this) {
-                ctCaches = null
+                cachedInstance = null
             }
         }
     }

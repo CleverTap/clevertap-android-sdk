@@ -152,7 +152,11 @@ internal open class DeviceInfo internal constructor(
 
         private fun readCountryCode(): String? = try {
             val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as android.telephony.TelephonyManager?
-            if (tm != null) tm.simCountryIso else ""
+            if (tm != null) {
+                tm.simCountryIso
+            } else {
+                ""
+            }
         } catch (ignore: Throwable) {
             ""
         }
@@ -544,10 +548,7 @@ internal open class DeviceInfo internal constructor(
                 limitAdTracking = limitedAdTracking == true
                 config.logger.verbose(asyncDeviceIdTag, "limitAdTracking = $limitAdTracking")
                 if (limitAdTracking) {
-                    config.logger.debug(
-                        config.accountId,
-                        "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation"
-                    )
+                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation")
                     return
                 }
             }
@@ -565,10 +566,7 @@ internal open class DeviceInfo internal constructor(
             synchronized(adIDLock) {
                 if (advertisingID.contains("00000000")) {
                     //Device has opted out of sharing Google Advertising ID
-                    config.logger.debug(
-                        config.accountId,
-                        "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation"
-                    )
+                    config.logger.debug(config.accountId, "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation")
                     return
                 }
                 googleAdIDValue = advertisingID.replace("-", "")

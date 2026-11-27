@@ -18,6 +18,7 @@ import androidx.annotation.RestrictTo
 /** Density the server-side button radius is expressed for. */
 private const val REFERENCE_DPI = 480.0f
 
+@Suppress("UnnecessaryAbstractClass") // shared base of the full-screen native fragments
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment() {
 

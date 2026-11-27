@@ -623,6 +623,7 @@ public object Utils {
         return "${parts[0]}.$AUTH.${parts[1]}"
     }
 
+    @Suppress("UnusedParameter") // context kept: the wrapper SDKs call this two-argument signature
     @JvmStatic
     public fun isRenderFallback(remoteMessage: RemoteMessage, context: Context?): Boolean {
         // Boolean.parseBoolean semantics: only a case-insensitive "true" is true.

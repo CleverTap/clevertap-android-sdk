@@ -9,6 +9,7 @@ import androidx.annotation.RestrictTo
 /**
  * Abstract Response that will be wrapped by [CleverTapResponseDecorator] objects
  */
+@Suppress("UnnecessaryAbstractClass") // base of the response-decorator chain; only subclasses are instantiated
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CleverTapResponse {
 

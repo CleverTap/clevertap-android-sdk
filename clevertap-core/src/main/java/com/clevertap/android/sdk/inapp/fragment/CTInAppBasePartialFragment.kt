@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.InAppDisplayListener
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // shared base of the header/footer in-app fragments
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAppDisplayListener {
 

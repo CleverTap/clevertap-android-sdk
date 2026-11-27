@@ -106,16 +106,19 @@ style:
   active: true
   MagicNumber:
     active: true
-    ignoreNumbers: ['-1', '0', '1', '2', '100']
+    # Unit conversions (ms<->s, bytes<->KB, micro/nano) read clearly inline; naming them adds nothing.
+    ignoreNumbers: ['-1', '0', '1', '2', '100', '1000', '1024', '1000000']
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: true
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotation: true
     ignoreEnums: true
+  # 150 so log/exception/deprecation messages stay on one line: splitting message text with `+` to fit
+  # 120 made it hard to read and to grep for. Longer messages stay baselined rather than split.
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 150
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: true

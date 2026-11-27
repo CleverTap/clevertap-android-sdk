@@ -79,10 +79,7 @@ internal object FallbackImageLoader {
                         }
                         request.onSuccess?.invoke()
                     } else {
-                        request.callbacks?.onMediaError(
-                            request.primaryUrl,
-                            "${request.errorContext} and fallback failed"
-                        )
+                        request.callbacks?.onMediaError(request.primaryUrl, "${request.errorContext} and fallback failed")
                         request.onTotalFailure?.invoke()
                     }
                 }

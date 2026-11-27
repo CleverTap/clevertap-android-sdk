@@ -14,15 +14,19 @@ import java.util.concurrent.Executor
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class CTExecutors {
 
+    @Suppress("VariableNaming") // @JvmField constant-style name read by the wrapper SDKs
     @JvmField
     public val IO_EXECUTOR: IOExecutor
 
+    @Suppress("VariableNaming") // @JvmField constant-style name read by the wrapper SDKs
     @JvmField
     public val MAIN_EXECUTOR: MainThreadExecutor = MainThreadExecutor()
 
+    @Suppress("VariableNaming") // @JvmField constant-style name read by the wrapper SDKs
     @JvmField
     public val CURRENT_THREAD_EXECUTOR: Executor = Executor { it.run() }
 
+    @Suppress("VariableNaming") // @JvmField constant-style name read by the wrapper SDKs
     @JvmField
     public val DEFAULT_CALLBACK_EXECUTOR: MainThreadExecutor = MAIN_EXECUTOR
 

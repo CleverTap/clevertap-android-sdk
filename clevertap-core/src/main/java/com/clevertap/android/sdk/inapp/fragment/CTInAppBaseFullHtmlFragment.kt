@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // shared base of the full-screen HTML in-app fragments; only subclasses are shown
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 

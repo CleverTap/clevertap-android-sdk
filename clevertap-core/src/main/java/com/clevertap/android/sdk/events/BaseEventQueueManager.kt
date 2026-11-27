@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.util.concurrent.Future
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // intentional base of EventQueueManager and test fakes
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseEventQueueManager {
 

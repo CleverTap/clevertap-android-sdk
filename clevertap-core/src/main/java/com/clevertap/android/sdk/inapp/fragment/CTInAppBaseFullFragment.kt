@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // shared base of the full-screen in-app fragments; only subclasses are shown
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
 

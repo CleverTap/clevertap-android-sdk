@@ -32,23 +32,14 @@ internal enum class ValidationError(val code: Int, private val messageTemplate: 
     EVENT_NAME_INVALID_CHARACTERS(510, "Event name '%s' contains invalid characters. Cleaned to '%s'"),
 
     // Profile validation errors (512)
-    INVALID_COUNTRY_CODE(
-        512,
-        "Device country code not available and profile phone: %s does not appear to start with country code"
-    ),
+    INVALID_COUNTRY_CODE(512, "Device country code not available and profile phone: %s does not appear to start with country code"),
     INVALID_PHONE(512, "Invalid phone number"),
     EMPTY_KEY(512, "Found an empty key. Skipping and continuing"),
     EMPTY_KEY_ABORT(512, "Found an empty key. Aborting the operation"),
     PROP_VALUE_NOT_PRIMITIVE(512, "Property value for property %s wasn't a primitive (%s)"),
-    CHANNEL_ID_MISSING_IN_PAYLOAD(
-        512,
-        "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: %s"
-    ),
+    CHANNEL_ID_MISSING_IN_PAYLOAD(512, "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: %s"),
     CHANNEL_ID_NOT_REGISTERED(512, "Unable to render notification on channelId: %s as it is not registered by the app. Falling to default channel. "),
-    NOTIFICATION_VIEWED_DISABLED(
-        512,
-        "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: %s"
-    ),
+    NOTIFICATION_VIEWED_DISABLED(512, "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: %s"),
     
     // Event name restrictions (513)
     RESTRICTED_EVENT_NAME(513, "%s is a restricted event name. Last event aborted."),
@@ -58,10 +49,7 @@ internal enum class ValidationError(val code: Int, private val messageTemplate: 
     USE_CUSTOM_ID_FALLBACK(514, "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID"),
     USE_CUSTOM_ID_MISSING_IN_MANIFEST(514, "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used."),
     UNABLE_TO_SET_CT_CUSTOM_ID(514, "CleverTap ID - %s already exists. Unable to set custom CleverTap ID - %s"),
-    INVALID_CT_CUSTOM_ID(
-        514,
-        "Attempted to set invalid custom CleverTap ID - %s, falling back to default error CleverTap ID - %s"
-    ),
+    INVALID_CT_CUSTOM_ID(514, "Attempted to set invalid custom CleverTap ID - %s, falling back to default error CleverTap ID - %s"),
     
     // Key validation errors (520)
     KEY_INVALID_CHARACTERS(520, "Key '%s' contains invalid characters. Cleaned to '%s'"),

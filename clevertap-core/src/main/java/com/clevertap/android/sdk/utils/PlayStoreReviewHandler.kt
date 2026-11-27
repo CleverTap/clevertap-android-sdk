@@ -41,7 +41,7 @@ internal class PlayStoreReviewHandler {
                 val currentActivity = CoreMetaData.getCurrentActivity()
                 if (currentActivity != null) {
                     val flow = manager.launchReviewFlow(currentActivity, reviewInfo)
-                    flow.addOnCompleteListener { task ->
+                    flow.addOnCompleteListener { _ ->
                         // The API does not indicate whether the user reviewed or not,
                         // or even whether the review dialog was shown.
                         onCompleted()

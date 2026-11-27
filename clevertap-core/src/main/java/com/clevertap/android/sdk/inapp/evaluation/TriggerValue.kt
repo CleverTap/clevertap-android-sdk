@@ -38,7 +38,13 @@ internal class TriggerValue(val value: Any? = null, private var listValue: List<
             is Number -> numberValue = value
             is List<*> -> {
                 listValue = value
-                listValueWithCleanedStringIfPresent = value.map { if (it is String) it.trim().lowercase() else it }
+                listValueWithCleanedStringIfPresent = value.map {
+                    if (it is String) {
+                        it.trim().lowercase()
+                    } else {
+                        it
+                    }
+                }
             }
 
             is JSONArray -> {

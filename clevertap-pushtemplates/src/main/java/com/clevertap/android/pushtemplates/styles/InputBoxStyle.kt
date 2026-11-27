@@ -31,13 +31,13 @@ internal class InputBoxStyle(
         notificationBuilder: NotificationCompat.Builder,
         contentViewSmall: RemoteViews?,
         contentViewBig: RemoteViews?,
-        pt_title: String?,
+        notificationTitle: String?,
         pIntent: PendingIntent?,
         dIntent: PendingIntent?
     ): NotificationCompat.Builder {
         return super.setNotificationBuilderBasics(
             notificationBuilder, contentViewSmall,
-            contentViewBig, pt_title, pIntent, dIntent
+            contentViewBig, notificationTitle, pIntent, dIntent
         ).setContentText(data.textData.message)
     }
 

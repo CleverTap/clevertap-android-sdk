@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import androidx.annotation.RestrictTo
 
+@Suppress("UnnecessaryAbstractClass") // intentional abstract base for SessionManager; never instantiated directly
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal abstract class BaseSessionManager {
 

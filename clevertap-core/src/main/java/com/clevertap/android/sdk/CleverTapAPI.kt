@@ -658,9 +658,7 @@ public open class CleverTapAPI internal constructor(
      * @deprecated since `v7.1.0`. Use [getUserEventLog] instead.
      * getUserEventLog() provides user-specific event log.
      */
-    @Deprecated(
-        "since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log."
-    )
+    @Deprecated("since v7.1.0. Use getUserEventLog(String) instead. getUserEventLog() provides user-specific event log.")
     public open fun getDetails(event: String?): EventDetail? = coreState.localDataStore.getEventDetail(event)
 
     /**
@@ -1134,8 +1132,7 @@ public open class CleverTapAPI internal constructor(
      * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
-    public open fun getTotalVisits(): Int =
-        coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
+    public open fun getTotalVisits(): Int = coreState.localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)?.count ?: 0
 
     /** Kotlin property syntax, equivalent to [getTotalVisits]. */
     @Deprecated("since v7.1.0. Use getUserAppLaunchCount() instead. getUserAppLaunchCount() provides user-specific app launch count.")
@@ -2703,6 +2700,7 @@ public open class CleverTapAPI internal constructor(
          * @param _accountId the account ID, or `null` for the default instance
          * @return the instance, or `null` if there is none and it cannot be created
          */
+        @Suppress("FunctionParameterNaming") // public API: parameter name is visible to Kotlin named-argument callers
         @JvmStatic
         public fun getGlobalInstance(context: Context?, _accountId: String?): CleverTapAPI? =
             fromAccountId(context, _accountId)
@@ -3618,9 +3616,7 @@ public open class CleverTapAPI internal constructor(
             val spikyProxyDomain = manifest.spikeyProxyDomain
             val handshakeDomain = manifest.handshakeDomain
             if (accountId == null || accountToken == null) {
-                Logger.i(
-                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance"
-                )
+                Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance")
                 return null
             }
             if (accountRegion == null) {

@@ -187,8 +187,7 @@ public class TemplateRenderer @JvmOverloads constructor(
                                 .getUnloadedFiveIconsCount() > 2
                         ) {
                             PTLog.debug(
-                                "More than 2 images were not retrieved in 5CTA Notification, " +
-                                    "reverting to basic template."
+                                "More than 2 images were not retrieved in 5CTA Notification, reverting to basic template."
                             )
                             buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                         } else {
@@ -218,7 +217,10 @@ public class TemplateRenderer @JvmOverloads constructor(
                          */
                         if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
                             iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
-                            PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
+                            PTLog.debug(
+                                "More than 2 images were not retrieved in Icons Template Notification, " +
+                                    "reverting to basic template."
+                            )
                             buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                         } else {
                             iconsNotificationBuilder
@@ -246,9 +248,7 @@ public class TemplateRenderer @JvmOverloads constructor(
                     }
                 }
                 templateData.baseContent.notificationBehavior.dismissAfter == null && !templateData.renderTerminal -> {
-                    PTLog.debug(
-                        "Timer already expired and renderTerminal is configured as false. Skipping notification"
-                    )
+                    PTLog.debug("Timer already expired and renderTerminal is configured as false. Skipping notification")
                     null
                 }
                 templateData.baseContent.notificationBehavior.dismissAfter == null -> {

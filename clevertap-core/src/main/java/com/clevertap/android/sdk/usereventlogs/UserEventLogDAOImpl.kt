@@ -240,15 +240,11 @@ internal class UserEventLogDAOImpl(
             return false
         }
         if (numberOfRowsToCleanup < 0) {
-            logger.verbose(
-                "Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0"
-            )
+            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0")
             return false
         }
         if (numberOfRowsToCleanup >= threshold) {
-            logger.verbose(
-                "Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold"
-            )
+            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold")
             return false
         }
 

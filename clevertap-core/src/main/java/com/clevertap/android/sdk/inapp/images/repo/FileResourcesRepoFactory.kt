@@ -18,62 +18,60 @@ import androidx.annotation.RestrictTo
  * based on the `USE_COROUTINES` flag.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class FileResourcesRepoFactory {
-    companion object {
-        /**
-         * Flag indicating whether to use Kotlin Coroutines for file cleanup and preloading or Executors.
-         */
-        private const val USE_COROUTINES = true
-        /**
-         * Creates a [FileResourcesRepoImpl] instance with the appropriate cleanup and preloading strategies.
-         *
-         * @param context The application context.
-         * @param logger The logger for logging events.
-         * @param storeRegistry The registry for accessing various stores.
-         *
-         * @return A new instance of [FileResourcesRepoImpl].
-         */
-        @JvmStatic
-        fun createFileResourcesRepo(
-            context: Context,
-            logger: Logger,
-            storeRegistry: StoreRegistry
-        ): FileResourcesRepoImpl {
+internal object FileResourcesRepoFactory {
+    /**
+     * Flag indicating whether to use Kotlin Coroutines for file cleanup and preloading or Executors.
+     */
+    private const val USE_COROUTINES = true
+    /**
+     * Creates a [FileResourcesRepoImpl] instance with the appropriate cleanup and preloading strategies.
+     *
+     * @param context The application context.
+     * @param logger The logger for logging events.
+     * @param storeRegistry The registry for accessing various stores.
+     *
+     * @return A new instance of [FileResourcesRepoImpl].
+     */
+    @JvmStatic
+    fun createFileResourcesRepo(
+        context: Context,
+        logger: Logger,
+        storeRegistry: StoreRegistry
+    ): FileResourcesRepoImpl {
 
-            val inAppAssetStore = storeRegistry.inAppAssetsStore
-            val fileStore = storeRegistry.filesStore
-            val legacyInAppStore = storeRegistry.legacyInAppStore
+        val inAppAssetStore = storeRegistry.inAppAssetsStore
+        val fileStore = storeRegistry.filesStore
+        val legacyInAppStore = storeRegistry.legacyInAppStore
 
-            val cleanupStrategy: FileCleanupStrategy
-            val preloadStrategy: FilePreloaderStrategy
+        val cleanupStrategy: FileCleanupStrategy
+        val preloadStrategy: FilePreloaderStrategy
 
-            val fileResourceProviderLambda = { FileResourceProvider.getInstance(context, logger) }
+        val fileResourceProviderLambda = { FileResourceProvider.getInstance(context, logger) }
 
-            if (USE_COROUTINES) {
-                cleanupStrategy = FileCleanupStrategyCoroutine(
-                    fileResourceProviderLambda,
-                )
-                preloadStrategy = FilePreloaderCoroutine(
-                    fileResourceProviderLambda,
-                    logger = logger
-                )
-            } else {
-                cleanupStrategy = FileCleanupStrategyExecutors(
-                    fileResourceProviderLambda,
-                )
-                preloadStrategy = FilePreloaderExecutors(
-                    fileResourceProviderLambda,
-                    logger = logger
-                )
-            }
-
-            return FileResourcesRepoImpl(
-                cleanupStrategy = cleanupStrategy,
-                preloaderStrategy = preloadStrategy,
-                inAppAssetsStore = inAppAssetStore,
-                fileStore = fileStore,
-                legacyInAppsStore = legacyInAppStore
+        if (USE_COROUTINES) {
+            cleanupStrategy = FileCleanupStrategyCoroutine(
+                fileResourceProviderLambda,
+            )
+            preloadStrategy = FilePreloaderCoroutine(
+                fileResourceProviderLambda,
+                logger = logger
+            )
+        } else {
+            cleanupStrategy = FileCleanupStrategyExecutors(
+                fileResourceProviderLambda,
+            )
+            preloadStrategy = FilePreloaderExecutors(
+                fileResourceProviderLambda,
+                logger = logger
             )
         }
+
+        return FileResourcesRepoImpl(
+            cleanupStrategy = cleanupStrategy,
+            preloaderStrategy = preloadStrategy,
+            inAppAssetsStore = inAppAssetStore,
+            fileStore = fileStore,
+            legacyInAppsStore = legacyInAppStore
+        )
     }
 }

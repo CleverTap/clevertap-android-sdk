@@ -219,10 +219,7 @@ internal class DisplayUnitResponse(
         // everything was cap-filtered, so getAllDisplayUnits() can't keep serving a now-capped unit.
         val hadDeliverableContent = (notifs != null && notifs.length() > 0) || hasNonSuppressed(appLaunched)
         if (!hadDeliverableContent) {
-            logger.verbose(
-                config.accountId,
-                "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact"
-            )
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact")
             return
         }
 
@@ -277,10 +274,7 @@ internal class DisplayUnitResponse(
         if (gated.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(gated)
         } else {
-            logger.verbose(
-                config.accountId,
-                "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared"
-            )
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
         }
     }
 
