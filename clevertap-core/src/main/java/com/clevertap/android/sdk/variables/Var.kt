@@ -157,14 +157,14 @@ public open class Var<T> internal constructor(
      *
      * @return the name, for example `group.subgroup.name`
      */
-    public open fun name(): String? = name
+    public open fun name(): String = name
 
     /**
      * Returns the variable's name split at each ".".
      *
      * @return the name components, for example `["group", "subgroup", "name"]`
      */
-    public open fun nameComponents(): Array<String>? = nameComponents
+    public open fun nameComponents(): Array<String> = nameComponents
 
     /**
      * Returns the variable's kind: `string`, `boolean`, `number`, `group` (a map) or `file`.

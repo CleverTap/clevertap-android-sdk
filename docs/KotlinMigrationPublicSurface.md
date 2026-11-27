@@ -325,6 +325,180 @@ class, real compiles of every wrapper) found these regressions; all are fixed:
   descriptor), so a `VariableCallback<Any?>` can be registered on a `Var<Any>` again.
   `isNotNullAndBlank` is public + `@RestrictTo(LIBRARY_GROUP_PREFIX)` again (Flutter imports it).
 
+#### Nullable returns that were platform types in Java (option A 2d)
+
+Kotlin cannot declare a platform type, so every return that Java left un-annotated had to become
+either `T` or `T?`. Each one was re-checked: it is declared non-null only when **every** path returns a
+non-null value and the compiler proves it (no `!!`, `checkNotNull`, `?: throw` or `error()` added),
+counting all branches, catch blocks, async/lazy init windows, config variants (analytics-only,
+personalization off) and later reassignment. Everything else stays nullable, and the wrappers
+(Flutter, Leanplum) are patched with `?.` / `!!` instead.
+
+Scope: public and `@RestrictTo`-public methods/properties of the bucket A/D/E, wrapper-used and
+Signed Call classes whose new return is `@Nullable` while the old Java return had no `@Nullable`
+(found from the bytecode annotations of both builds). `DeviceInfo` (18 getters) is left out: it is a
+Kotlin `internal` class, so Kotlin callers cannot see its nullability, and Signed Call (pure Java)
+uses only its two `int` statics. `Var.value()` returns `T`, not `T?`; a `Var<*>` receiver gives
+`Any?` in Kotlin and no declaration-side change fixes that (`T : Any` breaks `Var<Any?>` users), so
+Flutter `:946` needs a wrapper `!!`.
+
+Result: 149 returns checked, **2 made non-null** (`Var.name()`, `Var.nameComponents()`), 147 stay
+nullable. Four of those (`CTFeatureFlagsController.get`, product config `getBoolean` / `getDouble` /
+`getLong`) never return null, but a non-null `Boolean`/`Double`/`Long` return compiles to a
+primitive, which would change the JVM descriptor.
+
+| Method | Verdict | Evidence |
+|---|---|---|
+| `CTGeofenceSettings.getId` (CTGeofenceSettings.kt:281) | stays nullable | builder field is nullable (no id set) |
+| `CTInboxStyleConfig.getBackButtonColor` (CTInboxStyleConfig.kt:72) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getFirstTabTitle` (CTInboxStyleConfig.kt:93) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getInboxBackgroundColor` (CTInboxStyleConfig.kt:114) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getNavBarColor` (CTInboxStyleConfig.kt:135) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getNavBarTitle` (CTInboxStyleConfig.kt:156) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getNavBarTitleColor` (CTInboxStyleConfig.kt:177) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getNoMessageViewText` (CTInboxStyleConfig.kt:198) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getNoMessageViewTextColor` (CTInboxStyleConfig.kt:220) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getSelectedTabColor` (CTInboxStyleConfig.kt:241) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getSelectedTabIndicatorColor` (CTInboxStyleConfig.kt:262) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getTabBackgroundColor` (CTInboxStyleConfig.kt:283) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CTInboxStyleConfig.getUnselectedTabColor` (CTInboxStyleConfig.kt:332) | stays nullable | the setter accepts null and the Parcel constructor uses `readString()` (CTInboxStyleConfig.kt:49-61) |
+| `CleverTapAPI.featureFlag` (CleverTapAPI.kt:406) | stays nullable | null for `isAnalyticsOnly` (CleverTapFactory.kt:851) and until the async `initFeatureFlags` task runs (CleverTapFactory.kt:598); field starts null (ControllerManager.kt:51) |
+| `CleverTapAPI.getCTNotificationInboxListener` (CleverTapAPI.kt:494) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getCTPushAmpListener` (CleverTapAPI.kt:519) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getCTPushNotificationListener` (CleverTapAPI.kt:541) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getCleverTapAttributionIdentifier` (CleverTapAPI.kt:577) | stays nullable | same as `getCleverTapID` (DeviceInfo.kt:438) |
+| `CleverTapAPI.getCleverTapID` (CleverTapAPI.kt:593) | stays nullable | `DeviceInfo.deviceID` = stored id ?: fallback id, both nullable before the id barrier (DeviceInfo.kt:340) |
+| `CleverTapAPI.getDetails` (CleverTapAPI.kt:662) | stays nullable | `LocalDataStore.getEventDetail` returns null when personalization is off / no event / on error (LocalDataStore.kt:68-75) |
+| `CleverTapAPI.getUserEventLog` (CleverTapAPI.kt:680) | stays nullable | returns null when personalization is disabled; DAO read returns null for an unknown event |
+| `CleverTapAPI.getDevicePushToken` (CleverTapAPI.kt:698) | stays nullable | `PushProviders.getCachedToken` returns null for null type / no token |
+| `CleverTapAPI.getDevicePushTokenRefreshListener` (CleverTapAPI.kt:705) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getHistory` (CleverTapAPI.kt:819) | stays nullable | `getEventHistory` returns null from its catch (LocalDataStore.kt:83-94) |
+| `CleverTapAPI.getInAppNotificationListener` (CleverTapAPI.kt:855) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getInboxMessageForId` (CleverTapAPI.kt:921) | stays nullable | null when the inbox is not initialised or the id is unknown (`inboxControllerOrLog()?`, CTInboxController.kt:119) |
+| `CleverTapAPI.getLocation` (CleverTapAPI.kt:963) | stays nullable | `findBestLocation` returns null without a LocationManager/permission (LocationManager.kt:27-30) |
+| `CleverTapAPI.getProperty` (CleverTapAPI.kt:1032) | stays nullable | returns null when personalization is disabled, or the property is unknown |
+| `CleverTapAPI.getProfile` (CleverTapAPI.kt:1061) | stays nullable | returns null when personalization is disabled |
+| `CleverTapAPI.getPushToken` (CleverTapAPI.kt:1076) | stays nullable | same as `getDevicePushToken` |
+| `CleverTapAPI.getSyncListener` (CleverTapAPI.kt:1095) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.productConfig` (CleverTapAPI.kt:1406) | stays nullable | CoreState.kt:89-95 `initProductConfig` returns early for `isAnalyticsOnly`, so the controller stays null (CoreState.kt:78) |
+| `CleverTapAPI.pushSignedCallEvent` (CleverTapAPI.kt:1593) | stays nullable | `raiseEventForSignedCall` returns null from its catch (AnalyticsManager.kt:875-885) |
+| `CleverTapAPI.pushGeoFenceExitedEvent` (CleverTapAPI.kt:1613) | stays nullable | `raiseEventForGeofences` returns null from its catch (AnalyticsManager.kt:888) |
+| `CleverTapAPI.pushGeofenceEnteredEvent` (CleverTapAPI.kt:1623) | stays nullable | same as `pushGeoFenceExitedEvent` |
+| `CleverTapAPI.setLocationForGeofences` (CleverTapAPI.kt:1878) | stays nullable | `LocationManager.updateLocation` returns null for a null location and on two early returns (LocationManager.kt:52-70) |
+| `CleverTapAPI.renderPushNotification` (CleverTapAPI.kt:2164) | stays nullable | returns null from its catch |
+| `CleverTapAPI.defineVariable` (CleverTapAPI.kt:2241) | stays nullable | `Var.define` returns null for an invalid name or a null non-file default (Var.kt:348-356) |
+| `CleverTapAPI.defineFileVariable` (CleverTapAPI.kt:2252) | stays nullable | same as `defineVariable` |
+| `CleverTapAPI.getVariableValue` (CleverTapAPI.kt:2279) | stays nullable | null for a null name or an unknown variable |
+| `CleverTapAPI.getVariable` (CleverTapAPI.kt:2287) | stays nullable | null for a null name or an unknown variable |
+| `CleverTapAPI.getLocale` (CleverTapAPI.kt:2464) | stays nullable | `DeviceInfo.customLocale` is null unless set (DeviceInfo.kt:264) |
+| `CleverTapAPI.getDefaultInstance` (CleverTapAPI.kt:3088) | stays nullable | null when no default config can be built (no account id/token in the manifest) |
+| `CleverTapAPI.instanceWithConfig` (CleverTapAPI.kt:3208) | stays nullable | returns null for a null config |
+| `CleverTapAPI.getNotificationHandler` (CleverTapAPI.kt:3455) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapAPI.getSignedCallNotificationHandler` (CleverTapAPI.kt:3463) | stays nullable | listener/handler getter: null until the app registers one |
+| `CleverTapInstanceConfig.getAccountRegion` (CleverTapInstanceConfig.kt:290) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getProxyDomain` (CleverTapInstanceConfig.kt:356) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getSpikyProxyDomain` (CleverTapInstanceConfig.kt:377) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getCustomHandshakeDomain` (CleverTapInstanceConfig.kt:399) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getFcmSenderId` (CleverTapInstanceConfig.kt:430) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getPackageName` (CleverTapInstanceConfig.kt:452) | stays nullable | unset by default (`= null`) and restored from a Parcel/JSON |
+| `CleverTapInstanceConfig.getIdentityKeys` (CleverTapInstanceConfig.kt:461) | stays nullable | assigned from a Parcel `createStringArray()` (nullable) and from the manifest |
+| `CleverTapInstanceConfig.getDefaultInstance` (CleverTapInstanceConfig.kt:809) | stays nullable | null when the manifest has no account id/token |
+| `CleverTapInstanceConfig.createInstance` (CleverTapInstanceConfig.kt:832) | stays nullable | returns null for a null account id or token (CleverTapInstanceConfig.kt:850-852) |
+| `CoreMetaData.getLocationFromUser` (CoreMetaData.kt:50) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getAppInboxActivity` (CoreMetaData.kt:84) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getScreenName` (CoreMetaData.kt:90) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getCampaign` (CoreMetaData.kt:120) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getMedium` (CoreMetaData.kt:142) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getSource` (CoreMetaData.kt:154) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getWzrkParams` (CoreMetaData.kt:165) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getCurrentActivity` (CoreMetaData.kt:222) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `CoreMetaData.getCurrentActivityName` (CoreMetaData.kt:237) | stays nullable | state that is null until set (activity, UTM, location, screen) |
+| `LocalDataStore.readUserEventLog` (LocalDataStore.kt:219) | stays nullable | DB/profile read: null for unknown keys or when the device id is not yet known |
+| `LocalDataStore.getProfileProperty` (LocalDataStore.kt:294) | stays nullable | DB/profile read: null for unknown keys or when the device id is not yet known |
+| `ManifestInfo.getAccountId` (ManifestInfo.kt:18) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getNotificationIcon` (ManifestInfo.kt:26) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getExcludedActivities` (ManifestInfo.kt:27) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getIntentServiceName` (ManifestInfo.kt:35) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getDevDefaultPushChannelId` (ManifestInfo.kt:36) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getProfileKeys` (ManifestInfo.kt:37) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getVendorOneProvider` (ManifestInfo.kt:39) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getVendorTwoProvider` (ManifestInfo.kt:40) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `ManifestInfo.getEncryptionInTransit` (ManifestInfo.kt:41) | stays nullable | public constructor takes it nullable, and manifest meta-data may be absent |
+| `UTMDetail.getCampaign` (UTMDetail.kt:21) | stays nullable | settable to null; null when the URI has no such parameter |
+| `UTMDetail.getMedium` (UTMDetail.kt:42) | stays nullable | settable to null; null when the URI has no such parameter |
+| `UTMDetail.getSource` (UTMDetail.kt:63) | stays nullable | settable to null; null when the URI has no such parameter |
+| `Utils.convertToTitleCase` (Utils.kt) | stays nullable | returns the input for null/empty input |
+| `Utils.getBitmapFromURL` (Utils.kt) | stays nullable | `DownloadedBitmap.bitmap` is null on a failed download |
+| `Utils.optionalStringKey` (Utils.kt) | stays nullable | returns null when the key is absent |
+| `Utils.readAssetFile` (Utils.kt) | stays nullable | `Scanner.next()` is an un-annotated platform value; non-null only by assertion |
+| `Utils.getNormalizedName` (Utils.kt) | stays nullable | returns null for a null name |
+| `CleverTapDisplayUnit.getBgColor` (CleverTapDisplayUnit.kt:69) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getContents` (CleverTapDisplayUnit.kt:80) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getCustomExtras` (CleverTapDisplayUnit.kt:91) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getError` (CleverTapDisplayUnit.kt:125) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getJsonObject` (CleverTapDisplayUnit.kt:136) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getType` (CleverTapDisplayUnit.kt:147) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getUnitID` (CleverTapDisplayUnit.kt:158) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnit.getWZRKFields` (CleverTapDisplayUnit.kt:169) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getActionUrl` (CleverTapDisplayUnitContent.kt:59) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getContentType` (CleverTapDisplayUnitContent.kt:72) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getError` (CleverTapDisplayUnitContent.kt:88) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getIcon` (CleverTapDisplayUnitContent.kt:99) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getMedia` (CleverTapDisplayUnitContent.kt:110) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getMessage` (CleverTapDisplayUnitContent.kt:133) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getMessageColor` (CleverTapDisplayUnitContent.kt:144) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getPosterUrl` (CleverTapDisplayUnitContent.kt:155) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getTitle` (CleverTapDisplayUnitContent.kt:166) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `CleverTapDisplayUnitContent.getTitleColor` (CleverTapDisplayUnitContent.kt:177) | stays nullable | constructor/Parcel field is nullable (bad or partial payload) |
+| `EventDetail.getName` (EventDetail.kt:51) | stays nullable | constructor parameter is nullable |
+| `CTFeatureFlagsController.getGuid` (CTFeatureFlagsController.kt:43) | stays nullable | constructor parameter is nullable |
+| `CTFeatureFlagsController.get` (CTFeatureFlagsController.kt:84) | stays nullable | never null, but `Boolean`/`Double`/`Long` non-null compiles to a primitive and would change the JVM descriptor |
+| `CTInboxMessage.getActionUrl` (CTInboxMessage.kt:26) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getBgColor` (CTInboxMessage.kt:41) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getBody` (CTInboxMessage.kt:57) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getCampaignId` (CTInboxMessage.kt:70) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getImageUrl` (CTInboxMessage.kt:140) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getOrientation` (CTInboxMessage.kt:182) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getTitle` (CTInboxMessage.kt:211) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessage.getType` (CTInboxMessage.kt:224) | stays nullable | field starts null and stays null when the payload lacks it (some are Parcel-only) |
+| `CTInboxMessageContent.getActionUrl` (CTInboxMessageContent.kt:21) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getContentType` (CTInboxMessageContent.kt:32) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getIcon` (CTInboxMessageContent.kt:47) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getIconContentDescription` (CTInboxMessageContent.kt:58) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinks` (CTInboxMessageContent.kt:69) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getMedia` (CTInboxMessageContent.kt:80) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getMediaContentDescription` (CTInboxMessageContent.kt:91) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getMessage` (CTInboxMessageContent.kt:102) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getMessageColor` (CTInboxMessageContent.kt:113) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getPosterUrl` (CTInboxMessageContent.kt:124) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getTitle` (CTInboxMessageContent.kt:145) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getTitleColor` (CTInboxMessageContent.kt:156) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinkBGColor` (CTInboxMessageContent.kt:193) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinkColor` (CTInboxMessageContent.kt:215) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinkKeyValue` (CTInboxMessageContent.kt:262) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinkText` (CTInboxMessageContent.kt:288) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinkUrl` (CTInboxMessageContent.kt:311) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `CTInboxMessageContent.getLinktype` (CTInboxMessageContent.kt:348) | stays nullable | field starts null, or the method returns null for null/missing JSON or from its catch |
+| `INotificationParser.toBundle` (INotificationParser.kt:18) | stays nullable | interface contract: implementations return null for non-CleverTap messages |
+| `CTProductConfigController.getBoolean` (CTProductConfigController.kt:173) | stays nullable | never null, but `Boolean`/`Double`/`Long` non-null compiles to a primitive and would change the JVM descriptor |
+| `CTProductConfigController.getDouble` (CTProductConfigController.kt:187) | stays nullable | never null, but `Boolean`/`Double`/`Long` non-null compiles to a primitive and would change the JVM descriptor |
+| `CTProductConfigController.getLong` (CTProductConfigController.kt:216) | stays nullable | never null, but `Boolean`/`Double`/`Long` non-null compiles to a primitive and would change the JVM descriptor |
+| `ProductConfigSettings.getGuid` (ProductConfigSettings.kt:71) | stays nullable | constructor parameter is nullable |
+| `LaunchPendingIntentFactory.getLaunchPendingIntent` (LaunchPendingIntentFactory.kt:34) | stays nullable | returns null without a launch intent and deep link (documented) |
+| `LaunchPendingIntentFactory.getActivityIntent` (LaunchPendingIntentFactory.kt:50) | stays nullable | returns null without a launch intent and deep link (documented) |
+| `PushType.getCtProviderClassName` (PushType.kt:28) | stays nullable | constructor parameter is nullable |
+| `PushType.getMessagingSDKClassName` (PushType.kt:42) | stays nullable | constructor parameter is nullable |
+| `PushType.toJSONObject` (PushType.kt:84) | stays nullable | returns null from its catch |
+| `PushType.fromJSONObject` (PushType.kt:120) | stays nullable | returns null for null input / on error |
+| `CTVariableUtils.mergeHelper` (CTVariableUtils.kt:140) | stays nullable | returns null by design for unknown kinds / missing keys |
+| `CTVariableUtils.traverse` (CTVariableUtils.kt:203) | stays nullable | returns null by design for unknown kinds / missing keys |
+| `CTVariableUtils.kindFromValue` (CTVariableUtils.kt:224) | stays nullable | returns null by design for unknown kinds / missing keys |
+| `Var.name` (Var.kt:160) | **non-null** | backing `private val name: String` (Var.kt:17) |
+| `Var.nameComponents` (Var.kt:167) | **non-null** | backing `private val nameComponents: Array<String>` (Var.kt:18) |
+| `Var.kind` (Var.kt:174) | stays nullable | `kind` is null when `kindFromValue` does not recognise the default (CTVariableUtils `else -> null`) |
+| `Var.numberValue` (Var.kt:259) | stays nullable | null for non-numeric variables |
+| `Var.stringValue` (Var.kt:270) | stays nullable | null for a map or null value, and for a file that is not cached |
+
 #### Consumer link check (CI guard)
 
 `apiCheck` compares erased descriptors of the public API, so it cannot see a `static` method moving

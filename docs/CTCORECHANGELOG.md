@@ -26,6 +26,9 @@ calls that pass an explicit `null`:
   elements, is unaffected.
 * `CleverTapAPI.getUserEventLog(null)` and `getUserEventLogCount(null)` now throw `IllegalStateException`
   instead of `NullPointerException`.
+* Kotlin subclasses of `CTFcmMessageHandler` or `CTHmsMessageHandler` that override
+  `processPushAmp(context, message)` must declare `message` nullable (`RemoteMessage?`); a null message is
+  ignored (FCM) or logged (HMS), as in earlier versions. Java subclasses are unaffected.
 
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
