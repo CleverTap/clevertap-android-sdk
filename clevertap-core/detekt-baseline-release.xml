@@ -35,7 +35,6 @@
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI$jsonObject: JSONObject?</ID>
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI$scDomainListener: SCDomainListener?</ID>
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI$styleConfig: CTInboxStyleConfig?</ID>
-    <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI$type: PushType?</ID>
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI.Companion$activity: Activity?</ID>
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI.Companion$context: Context?</ID>
     <ID>CanBeNonNullable:CleverTapAPI.kt$CleverTapAPI.Companion$extras: Bundle?</ID>
@@ -44,8 +43,6 @@
     <ID>CanBeNonNullable:DeviceInfo.kt$DeviceInfo$val deviceLocale: String? get() = deviceCachedInfo.locale</ID>
     <ID>CanBeNonNullable:DeviceInfo.kt$DeviceInfo.Companion$context: Context?</ID>
     <ID>CanBeNonNullable:EventMediator.kt$EventMediator$event: JSONObject?</ID>
-    <ID>CanBeNonNullable:INotificationRenderer.kt$INotificationRenderer$context: Context?</ID>
-    <ID>CanBeNonNullable:INotificationRenderer.kt$INotificationRenderer$extras: Bundle?</ID>
     <ID>CanBeNonNullable:InAppController.kt$InAppController$type: InAppActionType?</ID>
     <ID>CanBeNonNullable:InboxVideoStates.kt$InboxVideoStates$saved: Bundle?</ID>
     <ID>CanBeNonNullable:LeanplumCT.kt$LeanplumCT$cleverTapInstance: CleverTapAPI?</ID>
@@ -106,7 +103,6 @@
     <ID>CyclomaticComplexMethod:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
     <ID>CyclomaticComplexMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
     <ID>CyclomaticComplexMethod:GifImageView.kt$GifImageView$override fun run()</ID>
-    <ID>CyclomaticComplexMethod:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
     <ID>CyclomaticComplexMethod:InAppController.kt$InAppController$@MainThread private fun onRestoredInAppReady(inApp: CTInAppNotification, listener: RestoredInAppListener)</ID>
     <ID>CyclomaticComplexMethod:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>CyclomaticComplexMethod:InAppController.kt$InAppController$override fun inAppNotificationActionTriggered( inAppNotification: CTInAppNotification, action: CTInAppAction, callToAction: String, additionalData: Bundle?, activityContext: Context? ): Bundle</ID>
@@ -184,7 +180,6 @@
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanAnyValue( value: Any?, parentKey: String, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): Any?</ID>
     <ID>LongMethod:EventDataNormalizer.kt$EventDataNormalizer$@Throws(JSONException::class) private fun cleanMapInternal( map: Map&lt;*, *&gt;, restrictedMultiValueFields: Set&lt;String&gt;?, deviceCountryCode: String?, keyCharsNotAllowed: Set&lt;Char&gt;?, maxKeyLength: Int?, valueCharsNotAllowed: Set&lt;Char&gt;?, maxValueLength: Int?, depth: Int ): JSONObject</ID>
     <ID>LongMethod:HttpBitmapLoader.kt$HttpBitmapLoader$@JvmStatic public fun getHttpBitmap( bitmapOperation: HttpBitmapOperation, bitmapDownloadRequest: BitmapDownloadRequest ): DownloadedBitmap</ID>
-    <ID>LongMethod:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
     <ID>LongMethod:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>LongMethod:InAppController.kt$InAppController$override fun inAppNotificationActionTriggered( inAppNotification: CTInAppNotification, action: CTInAppAction, callToAction: String, additionalData: Bundle?, activityContext: Context? ): Bundle</ID>
     <ID>LongMethod:InAppResponse.kt$InAppResponse$override fun processResponse( jsonBody: JSONObject?, stringBody: String?, context: Context, responseContext: ResponseContext )</ID>
@@ -285,7 +280,6 @@
     <ID>MaxLineLength:InAppActionHandler.kt$InAppActionHandler$" Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n"</ID>
     <ID>MaxLineLength:LoginController.kt$LoginController$"CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID"</ID>
     <ID>MaxLineLength:ManifestValidator.kt$ManifestValidator$"Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, "</ID>
-    <ID>MaxLineLength:SyncListener.kt$SyncListener$@Deprecated("Deprecated as of version 4.2.0 and will be removed in future versions. Use CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) instead")</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$CHANNEL_ID_MISSING_IN_PAYLOAD : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError$USE_CUSTOM_ID_MISSING_IN_MANIFEST : ValidationError</ID>
     <ID>MaxLineLength:ValidationResultFactory.kt$ValidationError.USE_CUSTOM_ID_FALLBACK$USE_CUSTOM_ID_FALLBACK</ID>
@@ -333,7 +327,6 @@
     <ID>NestedBlockDepth:DefaultXmlParser.kt$DefaultXmlParser$open fun getDefaultsFromXmlParser(xmlParser: XmlResourceParser, defaultsMap: MutableMap&lt;String, String&gt;)</ID>
     <ID>NestedBlockDepth:DeviceInfo.kt$DeviceInfo$private fun getWindowManager(): WindowManager?</ID>
     <ID>NestedBlockDepth:GifImageView.kt$GifImageView$override fun run()</ID>
-    <ID>NestedBlockDepth:INotificationRenderer.kt$INotificationRenderer$public fun setActionButtons( context: Context?, extras: Bundle?, notificationId: Int, nb: NotificationCompat.Builder, actions: JSONArray? ): NotificationCompat.Builder</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$override fun inAppNotificationActionTriggered( inAppNotification: CTInAppNotification, action: CTInAppAction, callToAction: String, additionalData: Bundle?, activityContext: Context? ): Bundle</ID>
     <ID>NestedBlockDepth:InAppController.kt$InAppController$override fun inAppNotificationDidDismiss( inAppNotification: CTInAppNotification, formData: Bundle? )</ID>
@@ -353,8 +346,8 @@
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$fun _createNotification(context: Context, extras: Bundle?, notificationId: Int)</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun createOrResetWorker(isPingFrequencyUpdated: Boolean)</ID>
     <ID>NestedBlockDepth:PushProviders.kt$PushProviders$private fun triggerNotification(context: Context, extras: Bundle, notificationId: Int)</ID>
-    <ID>NestedBlockDepth:UriHelper.kt$UriHelper$fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle</ID>
-    <ID>ObjectLiteralToLambda:CleverTapAPI.kt$CleverTapAPI$object : OnCompleteListener&lt;String&gt; { override fun onComplete(task: com.google.android.gms.tasks.Task&lt;String&gt;) { if (!task.isSuccessful) { Logger.v( LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json failed", task.exception ) requestTokenListener.onDevicePushToken(null, FCM) return } val token = task.result Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token") requestTokenListener.onDevicePushToken(token, FCM) } }</ID>
+    <ID>NestedBlockDepth:UriHelper.kt$UriHelper$@JvmStatic fun getAllKeyValuePairs(url: String?, encodeValues: Boolean): Bundle</ID>
+    <ID>ObjectLiteralToLambda:CleverTapAPI.kt$CleverTapAPI$object : OnCompleteListener&lt;String&gt; { override fun onComplete(task: com.google.android.gms.tasks.Task&lt;String&gt;) { if (!task.isSuccessful) { Logger.v( LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json failed", task.exception ) requestTokenListener?.onDevicePushToken(null, FCM) return } val token = task.result Logger.v(LOG_TAG, "${FCM_LOG_TAG}FCM token using googleservices.json - $token") requestTokenListener?.onDevicePushToken(token, FCM) } }</ID>
     <ID>ReturnCount:AnalyticsManager.kt$AnalyticsManager$override fun pushNotificationClickedEvent(extras: Bundle?)</ID>
     <ID>ReturnCount:BitmapDownloader.kt$BitmapDownloader$public fun downloadBitmap(srcUrl: String): DownloadedBitmap</ID>
     <ID>ReturnCount:CTFirebaseMessagingReceiver.kt$CTFirebaseMessagingReceiver$@SuppressLint("RestrictedApi") override fun onReceive(context: Context?, intent: Intent?)</ID>
@@ -431,7 +424,6 @@
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI$jsonObject!!</ID>
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI$scDomainListener!!</ID>
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI$styleConfig!!</ID>
-    <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI$type!!</ID>
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI.Companion$activity!!</ID>
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI.Companion$context!!</ID>
     <ID>UnsafeCallOnNullableType:CleverTapAPI.kt$CleverTapAPI.Companion$extras!!</ID>
@@ -449,9 +441,6 @@
     <ID>UnsafeCallOnNullableType:FileResourceProvider.kt$FileResourceProvider$dataToSaveBlock(downloadedData)!!</ID>
     <ID>UnsafeCallOnNullableType:FileResourceProvider.kt$FileResourceProvider$downloadedBitmap.bitmap!!</ID>
     <ID>UnsafeCallOnNullableType:FileResourceProvider.kt$FileResourceProvider$downloadedBitmap.bytes!!</ID>
-    <ID>UnsafeCallOnNullableType:INotificationRenderer.kt$INotificationRenderer$actionLaunchIntent!!</ID>
-    <ID>UnsafeCallOnNullableType:INotificationRenderer.kt$INotificationRenderer$context!!</ID>
-    <ID>UnsafeCallOnNullableType:INotificationRenderer.kt$INotificationRenderer$extras!!</ID>
     <ID>UnsafeCallOnNullableType:InAppController.kt$InAppController$inAppNotification.customExtras!!</ID>
     <ID>UnsafeCallOnNullableType:InAppGifMemoryV1.kt$InAppGifMemoryV1$gifDiskMemory!!</ID>
     <ID>UnsafeCallOnNullableType:InAppGifMemoryV1.kt$InAppGifMemoryV1$gifInMemory!!</ID>

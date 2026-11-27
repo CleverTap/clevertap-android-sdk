@@ -40,6 +40,7 @@ public class com/clevertap/android/sdk/CTInboxStyleConfig : android/os/Parcelabl
 	public static final field Companion Lcom/clevertap/android/sdk/CTInboxStyleConfig$Companion;
 	public fun <init> ()V
 	protected fun <init> (Landroid/os/Parcel;)V
+	public synthetic fun <init> (Lcom/clevertap/android/sdk/CTInboxStyleConfig;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun describeContents ()I
 	public fun getBackButtonColor ()Ljava/lang/String;
 	public fun getFirstTabTitle ()Ljava/lang/String;
@@ -1059,6 +1060,7 @@ public final class com/clevertap/android/sdk/inbox/CTInboxImageData {
 public class com/clevertap/android/sdk/inbox/CTInboxMessage : android/os/Parcelable {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
 	public static final field Companion Lcom/clevertap/android/sdk/inbox/CTInboxMessage$Companion;
+	public synthetic fun <init> (Landroid/os/Parcel;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lorg/json/JSONObject;)V
 	public fun describeContents ()I
 	public fun getActionUrl ()Ljava/lang/String;
@@ -1279,10 +1281,6 @@ public abstract interface class com/clevertap/android/sdk/pushnotification/INoti
 	public abstract fun renderNotification (Landroid/os/Bundle;Landroid/content/Context;Landroidx/core/app/NotificationCompat$Builder;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;I)Landroidx/core/app/NotificationCompat$Builder;
 	public fun setActionButtons (Landroid/content/Context;Landroid/os/Bundle;ILandroidx/core/app/NotificationCompat$Builder;Lorg/json/JSONArray;)Landroidx/core/app/NotificationCompat$Builder;
 	public abstract fun setSmallIcon (ILandroid/content/Context;)V
-}
-
-public final class com/clevertap/android/sdk/pushnotification/INotificationRenderer$DefaultImpls {
-	public static fun setActionButtons (Lcom/clevertap/android/sdk/pushnotification/INotificationRenderer;Landroid/content/Context;Landroid/os/Bundle;ILandroidx/core/app/NotificationCompat$Builder;Lorg/json/JSONArray;)Landroidx/core/app/NotificationCompat$Builder;
 }
 
 public final class com/clevertap/android/sdk/pushnotification/NotificationInfo {
