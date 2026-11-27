@@ -67,7 +67,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CleverTapAPI.kt` (8), `InAppController.kt` (5), `AnalyticsManager.kt` (4), `InAppActionHandler.kt` (4), `ManifestValidator.kt` (4), `Utils.kt` (4)
 - **MagicNumber: 46** (core 33, pushtemplates 12, geofence 1). Named constants.  
   Top files: `CtDatabase.kt` (5), `ValidationConfig.kt` (3), `FiveIconBigContentView.kt` (3), `FiveIconSmallContentView.kt` (3), `PendingIntentFactory.kt` (3), `CTInboxBaseMessageViewHolder.kt` (2)
-- **ReturnCount: 30** (core 27, pushtemplates 3). Guard clauses / `when` expressions; max 2 non-guard returns.  
+- **ReturnCount: 30** (core 27, pushtemplates 3). Guard clauses / `when` expressions; max 3 non-guard returns.  
   Top files: `InAppController.kt` (3), `PushProviders.kt` (3), `InAppNotificationActivity.kt` (2), `AnalyticsManager.kt` (1), `BitmapDownloader.kt` (1), `CTFirebaseMessagingReceiver.kt` (1)
 - **BracesOnIfStatements: 19** (core 13, pushtemplates 6). Braces on every if/else (repo convention).  
   Top files: `CTInboxMessage.kt` (2), `CleverTapDisplayUnitContent.kt` (2), `DeviceInfo.kt` (2), `EvalRules.kt` (2), `TriggerValue.kt` (2), `VarCache.kt` (2)
@@ -82,7 +82,7 @@ Baseline files: `clevertap-core/detekt-baseline-release.xml`; `clevertap-geofenc
   Top files: `CTInAppNotification.kt` (5), `TriggersMatcher.kt` (5), `InAppController.kt` (4), `TemplateRenderer.kt` (4), `AnalyticsManager.kt` (3), `DisplayUnitResponse.kt` (3)
 - **LongParameterList: 72** (core 59, pushtemplates 13). Parameter objects / default args.  
   Top files: `CleverTapAPI.kt` (6), `EventDataNormalizer.kt` (5), `OperationHandler.kt` (4), `ArrayOperationHandler.kt` (3), `CTInboxBaseMessageViewHolder.kt` (3), `ProgressStyle.kt` (3)
-- **LongMethod: 62** (core 41, pushtemplates 14, geofence 7). Extract private functions (threshold 30 lines).  
+- **LongMethod: 62** (core 41, pushtemplates 14, geofence 7). Extract private functions (threshold 50 lines).  
   Top files: `PushTemplateReceiver.kt` (4), `CTInAppNotification.kt` (3), `PushProviders.kt` (3), `EventDataNormalizer.kt` (2), `EventQueueManager.kt` (2), `InAppController.kt` (2)
 - **TooManyFunctions: 37** (core 35, geofence 1, pushtemplates 1). Split the type/file (threshold 15).  
   Top files: `Utils.kt` (3), `CleverTapAPI.kt` (2), `BaseAnalyticsManager.kt` (1), `CTInAppBaseFullFragment.kt` (1), `CTInboxBaseMessageViewHolder.kt` (1), `CTInboxMessage.kt` (1)
