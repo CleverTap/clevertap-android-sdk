@@ -57,6 +57,7 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
         fragmentSpy = spyk(CTInboxListViewFragment())
         every { fragmentSpy.activity } returns activity
         justRun { fragmentSpy.didShow(any(), any()) }
+        fragmentSpy.haveVideoPlayerSupport = true
     }
 
     private fun unreadMessage(id: String): CTInboxMessage {
@@ -420,6 +421,26 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
 
         assertTrue("the placeholder drawable is missing", drawable != null)
         assertEquals(16 * drawable!!.intrinsicHeight, 9 * drawable.intrinsicWidth)
+    }
+
+    @Test
+    fun `a video row has no play button when the app has no video library`() {
+        fragmentSpy.haveVideoPlayerSupport = false
+
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+
+        assertNull("a play button here could not do anything", playButton(views))
+    }
+
+    @Test
+    fun `a play button that is shown is hidden again when the app has no video library`() {
+        val views = bindWithMediaArea(videoMessage("msg_V"))
+        val button = playButton(views)!!
+
+        fragmentSpy.haveVideoPlayerSupport = false
+        holder.configureWithMessage(videoMessage("msg_V2"), fragmentSpy, 0)
+
+        assertEquals(View.GONE, button.visibility)
     }
 
     @Test

@@ -303,7 +303,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     void showPlayButton() {
         if (mediaLayout == null || !requiresMediaPlayer || playerAttached
                 || firstContentItem == null || !firstContentItem.mediaIsVideo()
-                || message == null || message.getMessageId() == null) {
+                || message == null || message.getMessageId() == null || !hasVideoPlayer()) {
             hidePlayButton();
             return;
         }
@@ -329,6 +329,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             mediaLayout.addView(playButton, index >= 0 ? index : mediaLayout.getChildCount());
         }
         playButton.setVisibility(View.VISIBLE);
+    }
+
+    /** Without ExoPlayer or Media3 the list has no player, so a play button could not do anything. */
+    private boolean hasVideoPlayer() {
+        CTInboxListViewFragment parent = getParent();
+        return parent != null && parent.haveVideoPlayerSupport;
     }
 
     private void hidePlayButton() {
