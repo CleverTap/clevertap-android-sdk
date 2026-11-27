@@ -38,6 +38,18 @@ runs:
       run: |
         ./gradlew apiCheck apiInteropCheck --continue --build-cache
 
+    # Consumer link check: shipped artifacts compiled against older SDKs (Signed Call, push-templates,
+    # hms, geofence, Leanplum - config/api-interop/consumers.txt) must still link against the built
+    # release classes (no NoSuchMethodError / IncompatibleClassChangeError / VerifyError). Downloads
+    # the artifacts from Maven Central with curl; fails on findings not in
+    # config/api-interop/consumer_link_baseline.txt.
+    - name: Consumer link check (shipped artifacts vs this build)
+      if: always()
+      shell: bash
+      run: |
+        bash config/api-interop/fetch_consumers.sh build/consumer-jars
+        ./gradlew consumerLinkCheck -PconsumerJarsDir=build/consumer-jars --build-cache
+
     - name: Upload All Detekt Reports
       if: always()
       uses: actions/upload-artifact@v4

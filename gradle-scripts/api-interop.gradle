@@ -176,3 +176,38 @@ tasks.register("apiInteropBaseline") {
         logger.lifecycle("apiInteropBaseline: wrote ${findings.size()} finding(s) to ${baselineFile}")
     }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Consumer link check (SDK-6395): shipped artifacts built against older SDK versions (Signed Call,
+// push-templates, hms, geofence, Leanplum - config/api-interop/consumers.txt) must still link against
+// this build. Resolves every field/method/class reference they make into the SDK the way the JVM
+// does (static vs instance, access, final classes/methods, missing members). See
+// config/api-interop/consumer_link_check.py.
+//
+//   ./gradlew consumerLinkCheck                          downloads the artifacts (curl, Maven Central)
+//   ./gradlew consumerLinkCheck -PconsumerJarsDir=<dir>  uses pre-downloaded <artifact>-<version>.aar|jar
+//   add -PconsumerAllowMissing                           to skip archives that are not in <dir>
+// Baseline (pre-existing findings only): config/api-interop/consumer_link_baseline.txt
+def consumerJarsDir = project.findProperty("consumerJarsDir") ?: "${buildDir}/consumer-jars"
+
+tasks.register("fetchConsumerJars", Exec) {
+    group = "verification"
+    description = "Downloads the artifacts in config/api-interop/consumers.txt from Maven Central."
+    onlyIf { !project.hasProperty("consumerJarsDir") }
+    commandLine "bash", "${rootDir}/config/api-interop/fetch_consumers.sh", consumerJarsDir
+}
+
+tasks.register("consumerLinkCheck", Exec) {
+    group = "verification"
+    description = "Fails if a shipped consumer artifact would no longer link against this SDK build."
+    dependsOn "fetchConsumerJars"
+    sdkModules.each { m ->
+        dependsOn ":${m}:compileReleaseKotlin", ":${m}:compileReleaseJavaWithJavac"
+    }
+    def cmd = ["python3", "-I", "${rootDir}/config/api-interop/consumer_link_check.py",
+               "--repo", "${rootDir}", "--jars-dir", "${consumerJarsDir}"]
+    if (project.hasProperty("consumerAllowMissing")) {
+        cmd << "--allow-missing"
+    }
+    commandLine cmd
+}
