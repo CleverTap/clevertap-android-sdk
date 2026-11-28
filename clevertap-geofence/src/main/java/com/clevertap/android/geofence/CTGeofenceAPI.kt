@@ -209,7 +209,7 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
      * @param fenceList instance of [JSONObject] containing geofence list to register to OS
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun handleGeoFences(fenceList: JSONObject?) {
+    override fun handleGeoFences(fenceList: JSONObject) {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
             return
         }
@@ -239,14 +239,6 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
                     "We don't have ACCESS_BACKGROUND_LOCATION permission! dropping geofence update call"
                 )
             }
-            return
-        }
-
-        if (fenceList == null) {
-            logger.debug(
-                GEOFENCE_LOG_TAG,
-                "Geofence response is null! dropping further processing"
-            )
             return
         }
 
@@ -316,7 +308,8 @@ public open class CTGeofenceAPI private constructor(context: Context) : Geofence
         locationUpdateTask.setOnCompleteListener(CTGeofenceTask.OnCompleteListener {
             if (onGeofenceApiInitializedListener != null) {
                 com.clevertap.android.sdk.Utils.runOnUiThread {
-                    onGeofenceApiInitializedListener!!.OnGeofenceApiInitialized()
+                    // Re-read on the main thread: a listener cleared after the hop is not called.
+                    onGeofenceApiInitializedListener?.OnGeofenceApiInitialized()
                 }
             }
         })

@@ -238,8 +238,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "onDisplayUnitsLoaded() called")
         // Per-slide wzrk_* attribution, logged as soon as a server response carries
         // units so the split-of-clicks payload can be checked without opening a screen.
-        Log.i(ND_TAG, "onDisplayUnitsLoaded - ${units?.size ?: 0} unit(s)")
-        units?.forEach { it.logSlides() }
+        Log.i(ND_TAG, "onDisplayUnitsLoaded - ${units.size} unit(s)")
+        units.forEach { it.logSlides() }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -283,7 +283,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "profileDataUpdated() called")
     }
 
-    override fun profileDidInitialize(CleverTapID: String?) {
+    override fun profileDidInitialize(CleverTapID: String) {
         Log.i(TAG, "profileDidInitialize() called")
     }
 
@@ -311,17 +311,17 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         mDialog.show()
     }
 
-    override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
+    override fun beforeShow(extras: MutableMap<String, Any>): Boolean {
         Log.i(TAG, "InApp---> beforeShow() called")
         return true
     }
 
-    override fun onShow(ctInAppNotification: CTInAppNotification?) {
+    override fun onShow(ctInAppNotification: CTInAppNotification) {
         Log.i(TAG, "InApp---> onShow() called")
     }
 
     override fun onDismissed(
-        extras: MutableMap<String, Any>?,
+        extras: MutableMap<String, Any>,
         actionExtras: MutableMap<String, Any>?
     ) {
         Log.i(TAG, "InApp---> onDismissed() called")
@@ -347,7 +347,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         }
     }
 
-    override fun onInAppButtonClick(payload: HashMap<String, String>?) {
+    override fun onInAppButtonClick(payload: HashMap<String, String>) {
         Log.i(TAG, "onInAppButtonClick() called")
     }
 

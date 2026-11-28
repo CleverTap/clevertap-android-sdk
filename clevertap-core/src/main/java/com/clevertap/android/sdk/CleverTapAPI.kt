@@ -97,7 +97,7 @@ public open class CleverTapAPI internal constructor(
          * @param token the device token
          * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
          */
-        public fun devicePushTokenDidRefresh(token: String?, type: PushType?)
+        public fun devicePushTokenDidRefresh(token: String, type: PushType)
     }
 
     /**
@@ -110,7 +110,7 @@ public open class CleverTapAPI internal constructor(
          * @param token the device token
          * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
          */
-        public fun onDevicePushToken(token: String?, type: PushType?)
+        public fun onDevicePushToken(token: String?, type: PushType)
     }
 
     /**
@@ -432,8 +432,8 @@ public open class CleverTapAPI internal constructor(
         coreState.callbackManager.scDomainListener = scDomainListener
 
         val domain = coreState.networkManager.getDomain(EventGroup.REGULAR) ?: return
-        // Java dereferenced the listener here too: a null listener with a known domain is an NPE.
-        scDomainListener!!.onSCDomainAvailable(getSCDomain(domain))
+        // Clearing the listener with null has nothing to notify.
+        scDomainListener?.onSCDomainAvailable(getSCDomain(domain))
     }
 
     /**
@@ -1286,13 +1286,12 @@ public open class CleverTapAPI internal constructor(
     override fun messageDidClick(
         ctInboxActivity: CTInboxActivity?,
         contentPageIndex: Int,
-        inboxMessage: CTInboxMessage?,
+        inboxMessage: CTInboxMessage,
         data: Bundle?,
         keyValue: HashMap<String, String>?,
         buttonIndex: Int
     ) {
-        // CTInboxActivity always passes the clicked message; Java threw an NPE for null as well.
-        coreState.analyticsManager.pushInboxMessageStateEvent(true, inboxMessage!!, data)
+        coreState.analyticsManager.pushInboxMessageStateEvent(true, inboxMessage, data)
 
         Logger.v("clicked inbox notification.")
         //notify the onInboxItemClicked callback if the listener is set.

@@ -283,7 +283,7 @@ internal open class DeviceInfo internal constructor(
         forceUpdateDeviceId(generateGUID())
     }
 
-    fun forceUpdateCustomCleverTapID(cleverTapID: String?): String? {
+    fun forceUpdateCustomCleverTapID(cleverTapID: String?): String {
         if (Utils.validateCTID(cleverTapID)) {
             config.logger.info(config.accountId, "Setting CleverTap ID to custom CleverTap ID : $cleverTapID")
             val id = Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID
@@ -588,7 +588,7 @@ internal open class DeviceInfo internal constructor(
 
     private fun generateGUID(): String = GUID_PREFIX + UUID.randomUUID().toString().replace("-", "")
 
-    fun initDeviceID(cleverTapID: String?): String? {
+    fun initDeviceID(cleverTapID: String?): String {
         config.logger.verbose(asyncDeviceIdTag, "Called initDeviceID()")
         //Show logging as per Manifest flag
         if (config.enableCustomCleverTapId) {

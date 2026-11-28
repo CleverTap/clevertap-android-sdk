@@ -22,9 +22,7 @@ import com.clevertap.android.sdk.pushnotification.PushType
  */
 public open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
-    override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {
-        // A null extras threw here in Java as well (the caller logs the failure).
-        requireNotNull(extras) { "onActionButtonClick needs the notification extras" }
+    override fun onActionButtonClick(context: Context, extras: Bundle, notificationId: Int): Boolean {
         val actionID = extras.getString(PTConstants.PT_ACTION_ID)
         val dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK)
         @Suppress("DEPRECATION")
@@ -41,7 +39,7 @@ public open class PushTemplateNotificationHandler : ActionButtonClickHandler {
         return true
     }
 
-    override fun onMessageReceived(applicationContext: Context?, message: Bundle?, pushType: String?): Boolean {
+    override fun onMessageReceived(applicationContext: Context?, message: Bundle, pushType: String?): Boolean {
         try {
             PTLog.debug("Inside Push Templates")
             // initial setup
@@ -51,10 +49,10 @@ public open class PushTemplateNotificationHandler : ActionButtonClickHandler {
             )
             if (cleverTapAPI != null) {
                 val config = cleverTapAPI.getInstanceConfig()
-                // Java dereferenced both unchecked; the catch below logs the failure.
+                // Java dereferenced the context unchecked; the catch below logs the failure.
                 val templateRenderer: INotificationRenderer = TemplateRenderer(
                     requireNotNull(applicationContext) { "No application context" },
-                    requireNotNull(message) { "No message" },
+                    message,
                     config
                 )
                 cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message)

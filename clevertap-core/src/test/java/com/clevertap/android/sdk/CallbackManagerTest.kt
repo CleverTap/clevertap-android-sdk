@@ -70,7 +70,7 @@ class CallbackManagerTest : BaseTestCase() {
     @Test
     fun test_SetterGetterGeofenceCallback() {
         val listener = object : GeofenceCallback {
-            override fun handleGeoFences(jsonObject: JSONObject?) {}
+            override fun handleGeoFences(jsonObject: JSONObject) {}
             override fun triggerLocation() {}
         }
         callbackManager.geofenceCallback = listener
@@ -87,15 +87,15 @@ class CallbackManagerTest : BaseTestCase() {
     @Test
     fun test_SetterGetterInAppNotificationListener() {
         val listener = object : InAppNotificationListener {
-            override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
+            override fun beforeShow(extras: MutableMap<String, Any>): Boolean {
                 return true
             }
 
-            override fun onShow(ctInAppNotification: CTInAppNotification?) {
+            override fun onShow(ctInAppNotification: CTInAppNotification) {
                 TODO("Not yet implemented")
             }
 
-            override fun onDismissed(extras: MutableMap<String, Any>?, actionExtras: MutableMap<String, Any>?) {}
+            override fun onDismissed(extras: MutableMap<String, Any>, actionExtras: MutableMap<String, Any>?) {}
         }
         callbackManager.inAppNotificationListener = listener
         assertEquals(listener, callbackManager.inAppNotificationListener)
@@ -142,7 +142,7 @@ class CallbackManagerTest : BaseTestCase() {
         val listener = object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {}
 
-            override fun profileDidInitialize(CleverTapID: String?) {}
+            override fun profileDidInitialize(CleverTapID: String) {}
         }
         callbackManager.syncListener = listener
         assertEquals(listener, callbackManager.syncListener)
@@ -243,14 +243,14 @@ class CallbackManagerTest : BaseTestCase() {
 
         val syncListenrSpy = spyk(object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {}
-            override fun profileDidInitialize(cleverTapID: String?) {}
+            override fun profileDidInitialize(cleverTapID: String) {}
         })
         callbackManager.syncListener = syncListenrSpy
 
         // if sync listener is function is called with null string, then it will not return without any further actions
         callbackManager.notifyUserProfileInitialized(null)
         verify(exactly = 0) {
-            syncListenrSpy.profileDidInitialize(null)
+            syncListenrSpy.profileDidInitialize(any())
         }
 
         // if sync listener is set on callback manager and function is called with non-empty string, then it will call synclistener's profileDidInitialize

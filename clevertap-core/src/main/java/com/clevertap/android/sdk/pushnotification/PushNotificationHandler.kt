@@ -26,16 +26,15 @@ public open class PushNotificationHandler private constructor() : ActionButtonCl
 
     private fun isForSignedCall(extras: Bundle?): Boolean = extras?.getString("source") == "signedcall"
 
-    override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean = false
+    override fun onActionButtonClick(context: Context, extras: Bundle, notificationId: Int): Boolean = false
 
     @Synchronized
     override fun onMessageReceived(
         applicationContext: Context?,
-        message: Bundle?,
+        message: Bundle,
         pushType: String?
     ): Boolean {
-        // A null message threw a NullPointerException in Java; `!!` keeps that.
-        message!!.putLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, System.currentTimeMillis())
+        message.putLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, System.currentTimeMillis())
         val cleverTapAPI = CleverTapAPI
             .getGlobalInstance(applicationContext, getAccountIdFromNotificationBundle(message))
         val info = CleverTapAPI.getNotificationInfo(message)

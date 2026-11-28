@@ -194,7 +194,7 @@
     <ID>LongParameterList:ArrayOperationHandler.kt$ArrayOperationHandler$( oldArray: JSONArray, newArray: JSONArray, basePath: String, changes: MutableMap&lt;String, ProfileChange&gt;, operation: ProfileOperation, recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap&lt;String, ProfileChange&gt;) -&gt; Unit )</ID>
     <ID>LongParameterList:ArrayOperationHandler.kt$ArrayOperationHandler$( parentJson: JSONObject, key: String, oldArray: JSONArray, newArray: JSONArray, currentPath: String, changes: MutableMap&lt;String, ProfileChange&gt;, operation: ProfileOperation, recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap&lt;String, ProfileChange&gt;) -&gt; Unit )</ID>
     <ID>LongParameterList:ArrayOperationHandler.kt$ArrayOperationHandler$( parentJson: JSONObject, key: String, oldArray: JSONArray, newArray: JSONArray, path: String, changes: MutableMap&lt;String, ProfileChange&gt; )</ID>
-    <ID>LongParameterList:CTInboxActivity.kt$CTInboxActivity.InboxActivityListener$( ctInboxActivity: CTInboxActivity?, contentPageIndex: Int, inboxMessage: CTInboxMessage?, data: Bundle?, keyValue: HashMap&lt;String, String&gt;?, buttonIndex: Int )</ID>
+    <ID>LongParameterList:CTInboxActivity.kt$CTInboxActivity.InboxActivityListener$( ctInboxActivity: CTInboxActivity?, contentPageIndex: Int, inboxMessage: CTInboxMessage, data: Bundle?, keyValue: HashMap&lt;String, String&gt;?, buttonIndex: Int )</ID>
     <ID>LongParameterList:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$( content: CTInboxMessageContent, ctaLayout: LinearLayout, ctas: Array&lt;Button&gt;, inboxMessage: CTInboxMessage, position: Int, parent: CTInboxListViewFragment )</ID>
     <ID>LongParameterList:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$( content: CTInboxMessageContent, mediaLayout: RelativeLayout, target: ImageView, imageScale: ImageView.ScaleType, posterScale: ImageView.ScaleType, audioScale: ImageView.ScaleType, posterLogsGlideNotice: Boolean = false, transparentPlaceholder: Boolean = false )</ID>
     <ID>LongParameterList:CTInboxBaseMessageViewHolder.kt$CTInboxBaseMessageViewHolder$( inboxMessage: CTInboxMessage, content: CTInboxMessageContent, mediaLayout: RelativeLayout, mediaImage: ImageView, squareImage: ImageView, defaultImage: ImageView, progressBar: FrameLayout, squarePosterLogsGlideNotice: Boolean = false, transparentSquarePlaceholder: Boolean = false )</ID>
@@ -354,7 +354,7 @@
     <ID>ReturnCount:CTInAppNotification.kt$CTInAppNotification$private fun validateNotifBundle(notif: Bundle): Boolean</ID>
     <ID>ReturnCount:CTProductConfigController.kt$CTProductConfigController$private fun getStoredValues(fullFilePath: String): HashMap&lt;String, String&gt;</ID>
     <ID>ReturnCount:CleverTapAPI.kt$CleverTapAPI.Companion$private fun soundUri(context: Context?, instance: CleverTapAPI, sound: String?): Uri?</ID>
-    <ID>ReturnCount:DeviceInfo.kt$DeviceInfo$fun initDeviceID(cleverTapID: String?): String?</ID>
+    <ID>ReturnCount:DeviceInfo.kt$DeviceInfo$fun initDeviceID(cleverTapID: String?): String</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$@MainThread private fun showInApp(inAppNotification: CTInAppNotification)</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$private fun _showNotificationIfAvailable()</ID>
     <ID>ReturnCount:InAppController.kt$InAppController$private fun tryAppLaunchFastPath( a1Winner: List&lt;JSONObject&gt;, contentFetchItems: List&lt;ContentFetchItem&gt;, appLaunchedProperties: Map&lt;String, Any&gt;, userLocation: Location? ): Boolean</ID>

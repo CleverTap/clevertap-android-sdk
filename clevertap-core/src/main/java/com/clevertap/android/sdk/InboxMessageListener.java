@@ -1,13 +1,16 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 
 /**
  * Receives App Inbox item and CTA clicks. Register it with
  * {@link CleverTapAPI#setCTInboxMessageListener(InboxMessageListener)}.
  * <p>
- * Kept in Java on purpose (SDK-6395): Kotlin sees the parameters as platform types, so wrapper SDKs
- * and apps can override them with nullable or non-null types. Do not convert this file to Kotlin.
+ * Kept in Java on purpose (SDK-6395) so the 8.x bytecode shape stays the same. The parameters carry
+ * androidx nullability annotations that match what the SDK passes (SDK-6396), so a Kotlin override
+ * must declare the same nullability. Do not convert this file to Kotlin.
  *
  * @see InboxMessageButtonListener
  */
@@ -29,5 +32,5 @@ public interface InboxMessageListener {
      *                         <p>
      *                         Called on the main thread.
      */
-    void onInboxItemClicked(CTInboxMessage message, int contentPageIndex, int buttonIndex);
+    void onInboxItemClicked(@NonNull CTInboxMessage message, int contentPageIndex, int buttonIndex);
 }
