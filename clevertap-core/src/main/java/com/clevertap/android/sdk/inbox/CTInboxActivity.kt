@@ -36,7 +36,7 @@ public open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.
     public interface InboxActivityListener {
 
         public fun messageDidClick(
-            ctInboxActivity: CTInboxActivity?, contentPageIndex: Int, inboxMessage: CTInboxMessage?, data: Bundle?,
+            ctInboxActivity: CTInboxActivity?, contentPageIndex: Int, inboxMessage: CTInboxMessage, data: Bundle?,
             keyValue: HashMap<String, String>?, buttonIndex: Int
         )
 

@@ -14,6 +14,7 @@ import io.mockk.verify
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Test
+import java.lang.reflect.Proxy
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -87,6 +88,32 @@ class TemplatesManagerTest {
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(functionName1))
 
         assertFalse(templatesManagerNewConfig.isTemplateRegistered("non-registered"))
+    }
+
+    @Test
+    fun `createInstance() should skip a producer whose defineTemplates returns null`() {
+        // A Java producer can return null although the Kotlin return type is non-null.
+        val nullProducer = Proxy.newProxyInstance(
+            TemplateProducer::class.java.classLoader,
+            arrayOf(TemplateProducer::class.java)
+        ) { _, _, _ -> null } as TemplateProducer
+        TemplatesManager.register(nullProducer)
+        TemplatesManager.register {
+            templatesSet(
+                template {
+                    name("template1")
+                    presenter(mockTemplatePresenter)
+                }
+            )
+        }
+        val ctConfig = getMockedCtInstanceConfig("account", "token")
+        val logger = ctConfig.logger
+
+        val templatesManager = createTemplatesManager(ctConfig)
+
+        assertTrue(templatesManager.isTemplateRegistered("template1"))
+        assertTrue(templatesManager.isTemplateRegistered(SYSTEM_TEMPLATE_NAME))
+        verify { logger.debug("account", match<String> { it.contains("defineTemplates returned null") }) }
     }
 
     @Test

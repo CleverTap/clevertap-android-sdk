@@ -72,7 +72,7 @@ internal abstract class BaseCallbackManager {
 
     abstract fun removeOnInitCleverTapIDListener(listener: OnInitCleverTapIDListener?)
 
-    abstract fun notifyCleverTapIDChanged(id: String?)
+    abstract fun notifyCleverTapIDChanged(id: String)
 
     abstract var fetchVariablesCallback: FetchVariablesCallback?
 

@@ -30,6 +30,32 @@ calls that pass an explicit `null`:
   `processPushAmp(context, message)` must declare `message` nullable (`RemoteMessage?`); a null message is
   ignored (FCM) or logged (HMS), as in earlier versions. Java subclasses are unaffected.
 
+##### Kotlin source changes
+These affect Kotlin code only. Java callers and implementers are unaffected.
+* Many getters that could already return `null` are now declared nullable (`T?`), for example
+  `getCleverTapID()` and `CleverTapAPI.getDefaultInstance(context, region)`. Kotlin callers need `?.` or a null
+  check.
+* Callback interfaces now carry nullability annotations that match what the SDK passes, so Kotlin overrides
+  must use the same nullability. If your override declared one of these parameters as `T?`, change it to `T`:
+  * `InAppNotificationListener.beforeShow(extras)` and the `extras` of `onDismissed(extras, actionExtras)`
+  * `InAppNotificationButtonListener.onInAppButtonClick(payload)`
+  * `InboxMessageButtonListener.onInboxButtonClick(payload)`
+  * `InboxMessageListener.onInboxItemClicked(message, contentPageIndex, buttonIndex)`
+  * `DisplayUnitListener.onDisplayUnitsLoaded(units)`
+  * `SyncListener.profileDidInitialize(cleverTapID)`
+  * `CTPushNotificationListener.onNotificationClickedPayloadReceived(payload)`
+  * `CTPushAmpListener.onPushAmpPayloadReceived(extras)`
+  * `CleverTapAPI.DevicePushTokenRefreshListener.devicePushTokenDidRefresh(token, type)` (both parameters)
+
+  These are non-null too, though overrides usually declare them that way already:
+  `InAppNotificationListener.onShow`, `OnInitCleverTapIDListener.onInitCleverTapID`,
+  `VariableCallback.onValueChanged`, the `message` of `NotificationHandler.onMessageReceived`, and the geofence
+  `CTGeofenceEventsListener` callbacks.
+* These parameters are nullable, so the override must declare them as `T?`:
+  * `CTLocationUpdatesListener.onLocationUpdates(location)` (geofence)
+  * the `actionExtras` of `InAppNotificationListener.onDismissed(extras, actionExtras)`
+  * the `applicationContext` and `pushType` of `NotificationHandler.onMessageReceived(applicationContext, message, pushType)`
+
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
   change `static final` fields, so their values are not updated. See [Variables](Variables.md).

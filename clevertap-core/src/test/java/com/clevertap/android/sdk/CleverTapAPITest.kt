@@ -3,7 +3,9 @@ package com.clevertap.android.sdk
 import android.location.Location
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
+import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inbox.CTInboxController
+import com.clevertap.android.sdk.interfaces.SCDomainListener
 import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
@@ -129,7 +131,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_setGeofenceCallback() {
         // Arrange
         val geofenceCallback = object : GeofenceCallback {
-            override fun handleGeoFences(jsonObject: JSONObject?) {
+            override fun handleGeoFences(jsonObject: JSONObject) {
             }
 
             override fun triggerLocation() {
@@ -1254,5 +1256,26 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         cleverTapAPI.setRequestDevicePushTokenListener(null)
+    }
+
+    @Test
+    fun setSCDomainListener_null_withKnownDomain_doesNotThrow() {
+        every { coreState.networkManager.getDomain(EventGroup.REGULAR) } returns "eu1.clevertap-prod.com"
+        initializeCleverTapAPI()
+
+        cleverTapAPI.setSCDomainListener(null)
+
+        assertNull(coreState.callbackManager.scDomainListener)
+    }
+
+    @Test
+    fun setSCDomainListener_withKnownDomain_notifiesTheSCDomain() {
+        every { coreState.networkManager.getDomain(EventGroup.REGULAR) } returns "eu1.clevertap-prod.com"
+        val listener = mockk<SCDomainListener>(relaxed = true)
+        initializeCleverTapAPI()
+
+        cleverTapAPI.setSCDomainListener(listener)
+
+        verify { listener.onSCDomainAvailable(Utils.getSCDomain("eu1.clevertap-prod.com")) }
     }
 }

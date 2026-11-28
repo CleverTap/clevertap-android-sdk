@@ -129,7 +129,7 @@ internal open class CallbackManager(
         onInitCleverTapIDListeners.remove(listener)
     }
 
-    override fun notifyCleverTapIDChanged(id: String?) {
+    override fun notifyCleverTapIDChanged(id: String) {
         synchronized(onInitCleverTapIDListeners) {
             onInitCleverTapIDListeners.forEach { it?.onInitCleverTapID(id) }
         }

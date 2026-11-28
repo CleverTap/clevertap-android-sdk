@@ -308,10 +308,12 @@ internal class PushProviders internal constructor(
         }
 
     override fun onNewToken(freshToken: String?, pushType: PushType?) {
-        if (!TextUtils.isEmpty(freshToken)) {
-            doTokenRefresh(freshToken, pushType)
-            deviceTokenDidRefresh(freshToken, pushType)
+        // Every CTPushProvider passes its own push type, so a null type never reaches the listener.
+        if (freshToken.isNullOrEmpty() || pushType == null) {
+            return
         }
+        doTokenRefresh(freshToken, pushType)
+        deviceTokenDidRefresh(freshToken, pushType)
     }
 
     //Push
@@ -562,7 +564,7 @@ internal class PushProviders internal constructor(
     }
 
     //Push
-    private fun deviceTokenDidRefresh(token: String?, type: PushType?) {
+    private fun deviceTokenDidRefresh(token: String, type: PushType) {
         tokenRefreshListener?.let {
             config.logger.debug(config.accountId, "Notifying devicePushTokenDidRefresh: $token")
             it.devicePushTokenDidRefresh(token, type)

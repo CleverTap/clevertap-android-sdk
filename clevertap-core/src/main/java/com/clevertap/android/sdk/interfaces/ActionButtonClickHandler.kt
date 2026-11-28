@@ -7,5 +7,5 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface ActionButtonClickHandler : NotificationHandler {
 
-    public fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean
+    public fun onActionButtonClick(context: Context, extras: Bundle, notificationId: Int): Boolean
 }

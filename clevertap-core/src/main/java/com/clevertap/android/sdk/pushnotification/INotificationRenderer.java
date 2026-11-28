@@ -8,6 +8,7 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
@@ -32,9 +33,10 @@ import org.json.JSONObject;
  * {@code CleverTapAPI.renderPushNotification}, or the thread that delivered the push (for example
  * the FCM service thread) when the SDK renders a received push itself.
  * <p>
- * Kept in Java on purpose (SDK-6395): Kotlin sees the parameters as platform types, so customer
- * renderers keep compiling with the override signatures they used before, and
- * {@link #setActionButtons} stays a plain Java default method. Do not convert this file to Kotlin.
+ * Kept in Java on purpose (SDK-6395) so the 8.x bytecode shape stays the same and
+ * {@link #setActionButtons} stays a plain Java default method. The parameters carry androidx
+ * nullability annotations that match what the SDK passes (SDK-6396), so a Kotlin override must
+ * declare the same nullability. Do not convert this file to Kotlin.
  */
 public interface INotificationRenderer {
 
@@ -46,7 +48,7 @@ public interface INotificationRenderer {
      * @return the collapse key, or {@code null} to let the SDK pick a random id
      */
     @Nullable
-    Object getCollapseKey(final Bundle extras);
+    Object getCollapseKey(@NonNull final Bundle extras);
 
     /**
      * Returns the notification message. An empty or {@code null} message makes the SDK treat the push
@@ -56,7 +58,7 @@ public interface INotificationRenderer {
      * @return the message, or {@code null} if there is none
      */
     @Nullable
-    String getMessage(Bundle extras);
+    String getMessage(@NonNull Bundle extras);
 
     /**
      * Returns the notification title.
@@ -66,7 +68,7 @@ public interface INotificationRenderer {
      * @return the title, or {@code null} if there is none
      */
     @Nullable
-    String getTitle(Bundle extras, final Context context);
+    String getTitle(@NonNull Bundle extras, @NonNull final Context context);
 
     /**
      * Applies the content of the push to the notification builder. The SDK has already created
@@ -81,8 +83,8 @@ public interface INotificationRenderer {
      * @return the builder to post, or {@code null} to not show a notification
      */
     @Nullable
-    NotificationCompat.Builder renderNotification(final Bundle extras, final Context context,
-            final Builder nb, final CleverTapInstanceConfig config, final int notificationId);
+    NotificationCompat.Builder renderNotification(@NonNull final Bundle extras, @NonNull final Context context,
+            @NonNull final Builder nb, @NonNull final CleverTapInstanceConfig config, final int notificationId);
 
     /**
      * Receives the small icon the SDK resolved: the manifest's CleverTap notification icon, or the app
@@ -91,13 +93,14 @@ public interface INotificationRenderer {
      * @param smallIcon the drawable resource id
      * @param context   a context
      */
-    void setSmallIcon(int smallIcon, final Context context);
+    void setSmallIcon(int smallIcon, @NonNull final Context context);
 
     /**
      * Returns the key under which each action button object in the payload stores its icon name.
      *
      * @return the icon key, for example {@code ico}
      */
+    @Nullable
     String getActionButtonIconKey();
 
     /**
@@ -108,18 +111,20 @@ public interface INotificationRenderer {
      * {@code CTNotificationIntentService} when it is available and needed, otherwise straight to the
      * deep link or the app's launch activity.
      *
-     * @param context        a context; must not be {@code null}
-     * @param extras         the push payload, copied into each action's intent
+     * @param context        a context; the default implementation needs a non-null one
+     * @param extras         the push payload, copied into each action's intent; the default
+     *                       implementation needs a non-null one
      * @param notificationId the id of the notification the buttons belong to
      * @param nb             the builder to add the actions to
      * @param actions        the action button JSON objects, or {@code null} for none
      * @return {@code nb}
      */
+    @NonNull
     default NotificationCompat.Builder setActionButtons(
-            Context context,
-            Bundle extras,
+            @Nullable Context context,
+            @Nullable Bundle extras,
             int notificationId,
-            NotificationCompat.Builder nb, JSONArray actions
+            @NonNull NotificationCompat.Builder nb, @Nullable JSONArray actions
     ) {
 
         String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();

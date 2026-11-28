@@ -124,7 +124,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 override fun profileDataUpdated(updates: JSONObject?) {//no op
                 }
 
-                override fun profileDidInitialize(CleverTapID: String?) {
+                override fun profileDidInitialize(CleverTapID: String) {
                     println(
                         "CleverTap DeviceID from Application class= $CleverTapID"
                     )
@@ -267,7 +267,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
 
-    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
+    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>) {
         Log.i(TAG, "onNotificationClickedPayloadReceived = $payload")
     }
 
@@ -311,13 +311,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun onActivityDestroyed(activity: Activity) {
     }
 
-    override fun onInboxButtonClick(payload: HashMap<String, String>?) {
+    override fun onInboxButtonClick(payload: HashMap<String, String>) {
         Log.i(TAG, "InboxButtonClick with payload: $payload")
         //dismissAppInbox()
     }
 
     override fun onInboxItemClicked(
-        message: CTInboxMessage?,
+        message: CTInboxMessage,
         contentPageIndex: Int,
         buttonIndex: Int
     ) {
@@ -327,13 +327,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         )
 
         //The contentPageIndex corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
-        val messageContentObject = message?.inboxMessageContents?.get(contentPageIndex)
+        val messageContentObject = message.inboxMessageContents[contentPageIndex]
 
         //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
         if (buttonIndex != -1) {
             //button is clicked
             val buttonObject: JSONObject? =
-                messageContentObject?.links?.get(buttonIndex) as JSONObject?
+                messageContentObject.links?.get(buttonIndex) as JSONObject?
             val buttonType = buttonObject?.optString("type")
             buttonType?.let {
                 when (it) {
@@ -373,7 +373,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         } else {
             //Item's body is clicked
-            Log.i(TAG, "type/template of App Inbox item: ${message?.type}")
+            Log.i(TAG, "type/template of App Inbox item: ${message.type}")
             //dismissAppInbox()
         }
     }

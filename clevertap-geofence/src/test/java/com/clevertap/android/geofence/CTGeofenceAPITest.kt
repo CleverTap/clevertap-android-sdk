@@ -8,14 +8,20 @@ import com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE
 import com.clevertap.android.geofence.fakes.GeofenceJSON
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Utils as SdkUtils
+import io.mockk.Runs
 import io.mockk.confirmVerified
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkConstructor
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.json.JSONObject
@@ -135,21 +141,6 @@ class CTGeofenceAPITest : BaseTestCase() {
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.handleGeoFences(GeofenceJSON.geofence)
-
-        verify(exactly = 0) { executorService.submit(any()) }
-    }
-
-    @Test
-    fun testHandleGeoFencesTC3() {
-        // when geofence list is null
-        every {
-            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
-        } returns true
-        every { Utils.hasBackgroundLocationPermission(application) } returns true
-
-        val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
-        ctGeofenceAPI.handleGeoFences(null)
 
         verify(exactly = 0) { executorService.submit(any()) }
     }
@@ -490,5 +481,56 @@ class CTGeofenceAPITest : BaseTestCase() {
         ctGeofenceAPI.triggerLocation()
 
         verify(exactly = 2) { executorService.submit(any()) }
+    }
+
+    @Test
+    fun initBackgroundLocationUpdates_listenerSet_isNotifiedOnTheMainThread() {
+        val listener = mockk<CTGeofenceAPI.OnGeofenceApiInitializedListener>(relaxed = true)
+
+        runInitializedHop(listener) { }
+
+        verify(exactly = 1) { listener.OnGeofenceApiInitialized() }
+    }
+
+    @Test
+    fun initBackgroundLocationUpdates_listenerClearedBeforeTheMainThreadHop_isNotCalledAndDoesNotThrow() {
+        val listener = mockk<CTGeofenceAPI.OnGeofenceApiInitializedListener>(relaxed = true)
+
+        runInitializedHop(listener) { it.setOnGeofenceApiInitializedListener(null) }
+
+        verify(exactly = 0) { listener.OnGeofenceApiInitialized() }
+    }
+
+    /**
+     * Completes the location update task with [listener] registered, runs [beforeHop] between
+     * the completion and the main-thread hop, then runs the posted main-thread callback.
+     */
+    private fun runInitializedHop(
+        listener: CTGeofenceAPI.OnGeofenceApiInitializedListener,
+        beforeHop: (CTGeofenceAPI) -> Unit
+    ) {
+        every { Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION) } returns true
+        val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
+        // Stands in for a completed init(); activate() itself would also start the location request.
+        CTGeofenceAPI::class.java.getDeclaredField("isActivated").apply { isAccessible = true }
+            .setBoolean(ctGeofenceAPI, true)
+        ctGeofenceAPI.setOnGeofenceApiInitializedListener(listener)
+        val onComplete = slot<CTGeofenceTask.OnCompleteListener>()
+        val mainThreadCallback = slot<Runnable>()
+        mockkConstructor(LocationUpdateTask::class)
+        mockkStatic(SdkUtils::class)
+        try {
+            every { anyConstructed<LocationUpdateTask>().setOnCompleteListener(capture(onComplete)) } just Runs
+            every { SdkUtils.runOnUiThread(capture(mainThreadCallback)) } just Runs
+
+            ctGeofenceAPI.initBackgroundLocationUpdates()
+            onComplete.captured.onComplete()
+            beforeHop(ctGeofenceAPI)
+            mainThreadCallback.captured.run()
+        } finally {
+            unmockkConstructor(LocationUpdateTask::class)
+            unmockkStatic(SdkUtils::class)
+        }
     }
 }

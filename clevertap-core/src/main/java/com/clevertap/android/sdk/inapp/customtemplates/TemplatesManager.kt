@@ -55,7 +55,16 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
             systemTemplates: Set<CustomTemplate>,
             templates: MutableSet<CustomTemplate>
         ) {
-            for (producedTemplate in producer.defineTemplates(ctInstanceConfig)) {
+            // A Java producer can still return null; treat that as no templates instead of an NPE.
+            val producedTemplates: Set<CustomTemplate>? = producer.defineTemplates(ctInstanceConfig)
+            if (producedTemplates == null) {
+                ctInstanceConfig.logger.debug(
+                    ctInstanceConfig.accountId,
+                    "CustomTemplates: ${producer.javaClass.name}.defineTemplates returned null, skipping it"
+                )
+                return
+            }
+            for (producedTemplate in producedTemplates) {
                 val registrationError = registrationError(
                     producedTemplate = producedTemplate,
                     systemTemplates = systemTemplates,

@@ -95,7 +95,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     @Test
     fun test_activityResumed_whenAppLaunchedIsPushed() {
         val geofenceCallback = object : GeofenceCallback{
-            override fun handleGeoFences(jsonObject: JSONObject?) {
+            override fun handleGeoFences(jsonObject: JSONObject) {
             }
 
             override fun triggerLocation() {
@@ -118,7 +118,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     @Test
     fun test_activityResumed_whenAppLaunchedIsNotPushed() {
         val geofenceCallback = object : GeofenceCallback{
-            override fun handleGeoFences(jsonObject: JSONObject?) {
+            override fun handleGeoFences(jsonObject: JSONObject) {
             }
 
             override fun triggerLocation() {

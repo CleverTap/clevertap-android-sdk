@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 
 import org.json.JSONObject;
@@ -11,8 +14,9 @@ import org.json.JSONObject;
  * </b><br>
  * <code>Use {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener)} instead</code>
  * <p>
- * Kept in Java on purpose (SDK-6395): Kotlin sees the parameters as platform types, so wrapper SDKs
- * and apps can override them with nullable or non-null types. Do not convert this file to Kotlin.
+ * Kept in Java on purpose (SDK-6395) so the 8.x bytecode shape stays the same. The parameters carry
+ * androidx nullability annotations that match what the SDK passes (SDK-6396), so a Kotlin override
+ * must declare the same nullability. Do not convert this file to Kotlin.
  *
  * @deprecated Deprecated as of version 4.2.0 and will be removed in future versions. Use
  * {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener)} instead
@@ -26,7 +30,7 @@ public interface SyncListener {
      *
      * @param updates the changed profile properties
      */
-    void profileDataUpdated(JSONObject updates);
+    void profileDataUpdated(@Nullable JSONObject updates);
 
     /**
      * Notifies Listener when deviceID is generated successfully.
@@ -36,5 +40,5 @@ public interface SyncListener {
      *                    <p><br><span style="color:red;background:#ffcc99" >&#9888; Callback will be received on main
      *                    thread, so avoid doing any lengthy operations from this callback </span></p>
      */
-    void profileDidInitialize(String CleverTapID);
+    void profileDidInitialize(@NonNull String CleverTapID);
 }
