@@ -233,9 +233,21 @@ Java callers and the binary API are unaffected. Kotlin callers may need small ed
   `CTInboxStyleConfig`/`UTMDetail` getters, instance-config region/proxy/domain getters).
 - Boxed results are nullable: `CTFeatureFlagsController.get`, product config
   `getBoolean/getDouble/getLong`.
-- ~~Listener callback parameter nullability is now fixed by the declaration~~ Not any more (SDK-6395):
-  the callback interfaces customers and wrappers implement are Java again, so Kotlin sees platform
-  types and both the nullable and the non-null override spellings compile, exactly as before 9.0.0.
+- **Callback parameter nullability is fixed by annotations (SDK-6396).** The callback interfaces
+  customers and wrappers implement are Java again (SDK-6395), and their parameters now carry androidx
+  `@NonNull` / `@Nullable` that match what the SDK actually passes. K2 treats these as strict for
+  overrides, so a Kotlin override must use the same nullability. Non-null (an override written `T?`
+  must become `T`): `beforeShow` / `onShow` / `onDismissed` `extras`, `onInAppButtonClick`,
+  `onInboxButtonClick`, `onInboxItemClicked` message, `onDisplayUnitsLoaded`, `profileDidInitialize`,
+  `onInitCleverTapID`, `onNotificationClickedPayloadReceived`, `onPushAmpPayloadReceived`,
+  `onGeofenceEnteredEvent` / `onGeofenceExitedEvent`, `VariableCallback.onValueChanged`,
+  `NotificationHandler.onMessageReceived` message, and the Kotlin
+  `DevicePushTokenRefreshListener.devicePushTokenDidRefresh(token: String, type: PushType)`. Nullable:
+  `onDismissed` `actionExtras`, `onLocationUpdates` location, `SyncListener.profileDataUpdated` (never
+  called), the `NotificationHandler` context / pushType / `onNewToken` arguments, and the
+  `DisplayUnitCache` arguments and returns (unchanged). Kotlin overrides that disagree no longer
+  compile; Java implementers and the bytecode are unaffected (annotations do not change descriptors).
+  The per-parameter evidence is in the SDK-6396 analysis.
 - Constants moved into companions (`HmsConstants`, `PTConstants`, `CTGeofenceSettings.ACCURACY_*`,
   `CTGeofenceAPI.GEOFENCE_LOG_TAG`): qualified use (`HmsConstants.HPS`) still works; a Kotlin
   `import ...HmsConstants.HPS` must become `import ...HmsConstants.Companion.HPS`.
@@ -322,8 +334,11 @@ class, real compiles of every wrapper) found these regressions; all are fixed:
   `removeVariablesChangedCallback(null)`, `removeOneTimeVariablesChangedCallback(null)` and
   `setRequestDevicePushTokenListener(null)` are no-ops; `CTFcmMessageHandler.processPushAmp(ctx, null)`
   is a no-op and `CTHmsMessageHandler.processPushAmp(ctx, null)` logs, as before.
-- **Wrapper source compatibility (option A).** The callback types clients implement are Java again, so
-  Kotlin implementations compile with either nullability: `InAppNotificationListener`,
+- **Wrapper source compatibility (option A).** The callback types clients implement are Java again,
+  with androidx nullability annotations that match the SDK logic (SDK-6396), so Kotlin implementations
+  must match those annotations; the Flutter, React Native and native-ui-kit listener proxies need
+  one-token `T?` -> `T` edits (patches in the SDK-6396 notes), and Java implementers are unaffected:
+  `InAppNotificationListener`,
   `InboxMessageListener`, `DisplayUnitListener`, `InAppNotificationButtonListener`,
   `InboxMessageButtonListener`, `SyncListener`, `OnInitCleverTapIDListener`,
   `CTPushNotificationListener`, `CTPushAmpListener`, `DisplayUnitCache`, `NotificationHandler`,
